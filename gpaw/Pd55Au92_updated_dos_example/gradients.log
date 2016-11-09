@@ -1,0 +1,15 @@
+BFGSLineSearch:   0  21:19:14     -441.506766       1.2797
+BFGSLineSearch:   1  21:41:44     -445.035286       1.1231
+BFGSLineSearch:   2  22:05:47     -447.050363       0.3949
+BFGSLineSearch:   3  23:17:37     -447.873283       0.2142
+BFGSLineSearch:   4  23:36:44     -447.995557       0.2008
+BFGSLineSearch:   5  23:51:58     -448.027052       0.1593
+BFGSLineSearch:   6  00:06:33     -448.056395       0.0410
+BFGSLineSearch:   7  00:21:02     -448.060665       0.0313
+BFGSLineSearch:   8  00:35:54     -448.061438       0.0286
+BFGSLineSearch:   9  00:49:27     -448.059060       0.0388
+BFGSLineSearch:  10  01:01:31     -448.060217       0.0120
+BFGSLineSearch:  11  01:13:32     -448.061068       0.0073
+Application 4225438 exit codes: 134
+Application 4225438 exit signals: Killed
+Application 4225438 resources: utime ~289443s, stime ~1344s
