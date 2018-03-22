@@ -1,95 +1,181 @@
+#!/usr/bin/env python
+
 import matplotlib.pyplot as plt
 import numpy as np
 import matplotlib.mlab as mlab
 import sys
 import pylab
+import argparse
 
-pylab.rcParams.update({'font.size': 32})
-input_files = sys.argv[1:]
-energies = [[0 for x in xrange(0)] for x in xrange(len(input_files))]
+pylab.rcParams.update({'font.size': 24})
+pylab.rcParams.update({'mathtext.fontset': 'stix'})
+#plt.xlabel(r'$\epsilon$ (eV)')
+#plt.ylabel('Density of States (1/eV)')
+
+parser = argparse.ArgumentParser()
+parser.add_argument('input_files', action='store',nargs="+",type=str,help="input filenames containing data tuples of energy and occupation")
+parser.add_argument('--interpolate', action='store_true',help="interpolate under graph")
+parser.add_argument('--lines', action='store_true',help="draw line graph")
+parser.add_argument('--align_to_homo', action='store_true',help="align x-axis values relative to homo")
+parser.add_argument('--split_updown', action='store_true',help="split spin-up and spin-down contributions")
+parser.add_argument('--letters', action='store_true',help="give letters labelling each graph")
+parser.add_argument('--xc_functionals', action='store',nargs="+",type=str,help="list of xc functional labels to iterate over for the filenames")
+parser.add_argument('--shades', action='store_true',help="colour in shades instead of different colours")
+args =  parser.parse_args()
+
+labels = ['(a)', '(b)', '(c)', '(d)', '(e)']
 colors = ['red','blue','violet','orange','blue','yellow','red','green','indigo']
+if args.shades:
+    #colors = ['LightCoral','red','darkred','brown']
+    colors = ['pink','violet','MediumOrchid','purple']
 interpolate_colors = ['Gold', 'MediumOrchid','LightCoral', 'LightGreen','LightPink','LightSkyBlue']
-
-if len(input_files) < 1:
-    print "Error: Input file not found"
-    sys.exit(1)
+line_types = ['solid', 'dashed', 'dashdot', 'dotted']
 
 ymax = 0
+plt.figure(1)
 
-for i in range(len(input_files)):
-    file = input_files[i]
-    with open(file, 'r') as file_input:
-        input_lines = file_input.readlines()
-    for word in input_lines:
-        energies[i].append(float(word))
+if not args.xc_functionals:
+    xc_functionals = [""]
+else:
+    xc_functionals = args.xc_functionals
 
-    points = 1000
-    values = [0]*points
-    min_point = -18
-    max_point = 5
+k = -1
+for xc in xc_functionals:
+    input_files = [ i.replace(xc_functionals[0],xc) for i in args.input_files ]
+    k = k + 1
 
-    for mean in energies[i]:
-        # Adjust specifically for PBC to match Ef
-        #if i == 0:
-                  #   VBM     + Vacuum Ef
-            #mean += (-8.73891 + 8.4889732)
-            #mean -= 0.43
-        #    continue
-        if mean > min_point and mean < max_point:
-            variance = 0.05 
-            sigma = np.sqrt(variance)
-            x = np.linspace(min_point,max_point,points)
-            values += mlab.normpdf(x,mean,sigma)
+    for i in range(len(input_files)):
 
-    # Normalise
-    max_values = max(values)
-    values /= max_values
+        energies = [0 for x in xrange(0)] 
+        occupancy = [0 for x in xrange(0)] 
+        homo = -999999.9
+        lumo = 999999.9 
 
-    plt.plot(x,values,lw ='4', color=colors[i], label=input_files[i])
+        file = input_files[i]
+        with open(file, 'r') as file_input:
+            input_lines = file_input.readlines()
 
-#    if i > 0:
-#        plt.plot(x,values,lw ='4', color=colors[i], label=input_files[i])
-#    else:
-#        plt.plot(x,values,lw ='4', color='grey', label=input_files[i])
+        count=1
 
-    # Work to rescale axes
-    ycurrent = max(values)+0.1*max(values)
-    if ycurrent > ymax:
-        ymax = ycurrent
-        pylab.axis([min_point, max_point, 0, ymax])
+        #print file
 
-    # Interpolate beneath curves
-    temp_values = [0]*points
-    int_counter = 0
-   
-#    if i > 0:
-#        continue 
-    for j in range(len(values)):
-    # Temp limit to highlight occupied states
-        if int_counter < 2:
-            if values[j] > 0.01:
-                temp_values[j] = values[j]
-                if j == len(values)-1:
-                    pylab.fill_between(x, temp_values, y2=0, where=None, facecolor=interpolate_colors[int_counter], lw=0.0, interpolate=True, alpha=0.85)
+        for sentence in input_lines:
+            #print sentence
+            split_sentence = sentence.split()
+            #print split_sentence
+            for word in split_sentence:
+                if count%2 != 0:
+                   #int(float(word))
+                    energies.append(float(word))
+                    #print "energy ", word
+                else:
+                    occupancy.append(float(word))
+                    #print sentence
+                count +=1
+            #print count
+
+        # Dirty hack if the file doesn't contain any results
+        if len(energies) == 0:
+            break 
+
+        for j in range(len(occupancy)-1):
+            #print occupancy[j]
+            # Check if the occupancy of this state is more than 1, and less than one in the next state
+            if occupancy[j] > 0.5 and occupancy[j+1] < 0.5:
+                # Check if we already have a HOMO value that is higher, e.g. spin-polarised systems
+                if energies[j] > homo:
+                    homo = energies[j]
+                if energies[j+1] < lumo:
+                    lumo = energies[j+1]
+                print "XC: ", xc,"; HOMO: ", homo, "; LUMO: ", lumo, "HOMO-LUMO: ", homo-lumo
+
+        # Align everything to the homo?
+        if args.align_to_homo:
+            energies[:] = [y-homo for y in energies] 
+            homo = 0.0
+            plt.xlabel(r'$\epsilon - \epsilon_{HOMO}$ (eV)')
+
+        points = 1000
+        plot_values = [[0.0]*points]*2 #spin-up and spin-down
+        min_point = homo - 20 
+        max_point = homo + 20
+        x = np.linspace(min_point,max_point,points)
+
+        last_energy = energies[0]
+	spin_counter = 1 
+
+        #print xc, spin_counter, last_energy
+        for energy in energies:
+	    if args.split_updown and last_energy > energy:
+	        spin_counter += 1
+                #print xc, spin_counter, last_energy, energy
+                  
+	    last_energy = energy
+            if energy > min_point and energy < max_point:
+                variance = 0.02
+                sigma = np.sqrt(variance)
+		plot_values[spin_counter-1] += mlab.normpdf(x,energy,sigma)
+
+	for j in range(spin_counter):
+	    # Normalise
+            max_value = max(plot_values[j])
+            #plot_values /= max_value
+            #No longer works so manually normalising over the array
+            prefactor = 1
+            if j > 0: 
+	        prefactor = -1
+            plot_values[j][:] = [prefactor*y/max_value for y in plot_values[j]]
+
+        #Subplots
+        ax1 = plt.subplot(len(input_files),1,1)
+        if i > 0:
+            ax1 = plt.subplot(len(input_files),1,1+i,sharex=ax1)
+        # Hack to set the y label where I want it
+        ax1.set_yticklabels([])
+        if i == len(input_files)/2:
+            plt.ylabel('Density of States (1/eV)')
+
+	for j in range(spin_counter):
+            #print j
+            #Line plot
+            if args.lines or not args.interpolate:
+                plt.plot(x,plot_values[j],lw ='4', color=colors[i], label=input_files[i], ls=line_types[k])
             else:
-                if j > 0:
-                    if values[j-1] > 0.01:
-                        pylab.fill_between(x, temp_values, y2=0, where=None, facecolor=interpolate_colors[int_counter], lw=0.0, interpolate=True, alpha=0.85)
-                        temp_values = [0]*points
-                        int_counter = int_counter + 1
-#    else:
-        # To deal with PBC
-#    pylab.fill_between(x, values, y2=0, where=None, facecolor='white', lw=0.0, interpolate=True)
-#    pylab.fill_between(x, values, y2=0, where=None, facecolor='grey', lw=0.0, interpolate=True, alpha=0.5)
+                plt.plot(x,plot_values[j],lw ='2', color='black', label=input_files[i], ls=line_types[k])
+            #Interpolate plot
+            if args.interpolate:
+                plt.fill_between(x, 0, plot_values[j],lw ='0', facecolor=colors[i], label=input_files[i], interpolate=True, alpha=0.5)
 
-pylab.rcParams.update({'mathtext.fontset': 'stix'})
+        # Work to rescale axes
+        # ycurrent = max(plot_values)+0.1*max(plot_values)
+        # The above normalises to 1, so the below should always hold
+        #ycurrent = 1.1
+        #if ycurrent > ymax:
+        ymax = 1.1 #ycurrent
+        ymin = 0
+        if args.split_updown:
+            ymin = -ymax
+        plt.ylim(ymin, ymax)
+        plt.xlim(min_point+10, max_point-10)
 
-plt.xlabel(r'$\epsilon$ (eV)')
-plt.ylabel('Density of States (1/eV)')
-# E_{f}
-plt.axvline(x=-.84889732E+01, ymin=0, ymax=ymax, ls='--', color='black', lw='4') # MFI
-#plt.axvline(x=-7.9, ymin=0, ymax=ymax, ls='--', color='black', lw='4')
+        # HOMO
+        plt.axvline(x=homo, ymin=-100, ymax=100, color=colors[i], lw='2', ls=line_types[k]) # MFI
+
+        # 0
+        if args.split_updown:
+            plt.axhline(y=0, xmin=-100, xmax=100, color='black', lw='2')
+
+        # Label, hacked
+        if args.letters:
+            plt.text(-4, 0.95, labels[i], verticalalignment='top')
+
 #plt.legend(loc='upper right')
 
+# Make sure this label is on the bottom graph
+#ax1 = plt.subplot(len(input_files),1,len(input_files),sharex=ax1)
+# Hack to set the y label where I want it
+#ax1.set_yticklabels([])
+plt.xlabel(r'$\epsilon$ (eV)')
+#plt.ylabel('Density of States (1/eV)')
 plt.show()
 

@@ -1,3 +1,4 @@
+#!/usr/bin/python
 import ase.io.vasp
 import sys
 if len(sys.argv) != 5:
