@@ -16,7 +16,7 @@ coordinates = model.get_positions()
 #write Distances in a .txt file
 w = open("Distances.txt", "w+")
 
-#iterate over 36 Pd atoms
+#iterate over 36 Pd atoms (3x3x4)
 for i in range(35):
 
     #get XYZ coordinates relative to 37th ie. C atom
