@@ -1,4 +1,3 @@
-import ase.io.vasp
 import sys
 if len(sys.argv) != 2:
     print 'Please give just a POSCAR/CONTCAR'
