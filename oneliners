@@ -1,1 +1,0 @@
-sed 's/[[:alpha:]]/\u&/' # convert first letter to upper case
