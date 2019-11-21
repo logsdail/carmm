@@ -48,6 +48,13 @@ for layer1 in os.listdir('.'):
 
                   #printing current directory to identify my values when importing to excel
                   print(os.getcwd()+": The_minimum_C-Pd_Distance_is: ", np.amin(list))
+                
+                  #if your folder structure is relevant to your data table turn the path into a list instead, e.g.:
+                  #current=os.getcwd()
+                  #split = current.split("/")
+                  #del split[0:3]                  
+                  #path = split
+                  #print(path, "The_minimum_C-Pd_Distance_is: ", np.amin(list))
 
 
                   os.chdir("..")
