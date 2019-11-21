@@ -1,0 +1,20 @@
+--------------------------------------------------------------------------------
+*** ajl340   Job: 1206123.sdb   starts: 12/04/13 20:38:15   host: phase3 ***
+*** ajl340   Job: 1206123.sdb   starts: 12/04/13 20:38:15   host: phase3 ***
+*** ajl340   Job: 1206123.sdb   starts: 12/04/13 20:38:15   host: phase3 ***
+*** ajl340   Job: 1206123.sdb   starts: 12/04/13 20:38:15   host: phase3 ***
+
+
+User may access requested budget
+Application 4235554 exit codes: 134
+Application 4235554 exit signals: Killed
+Application 4235554 resources: utime ~4s, stime ~128s
+--------------------------------------------------------------------------------
+
+Resources requested: mpparch=XT,mppnppn=32,mppwidth=1024,ncpus=1,place=pack,walltime=03:00:00
+Resources allocated: cpupercent=0,cput=00:00:01,mem=5216kb,ncpus=1,vmem=39100kb,walltime=00:01:47
+
+*** ajl340   Job: 1206123.sdb   ends: 12/04/13 20:40:02   queue: par:32n_3h ***
+*** ajl340   Job: 1206123.sdb   ends: 12/04/13 20:40:02   queue: par:32n_3h ***
+*** ajl340   Job: 1206123.sdb   ends: 12/04/13 20:40:02   queue: par:32n_3h ***
+*** ajl340   Job: 1206123.sdb   ends: 12/04/13 20:40:02   queue: par:32n_3h ***

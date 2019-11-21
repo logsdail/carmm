@@ -1,0 +1,92 @@
+from ase.io.trajectory import Trajectory
+from numpy import square, sum, asarray, floor
+from ase import units
+
+# Settings to change
+input_file = "moldyn_nvt.traj"
+timestep = 5 # fs
+steps_between_saved_images = 10 # How often the .traj is written 
+ignore_N_images = 50 # ignore non-converged data, just needed for testing. Set to 0 for pre-converged system
+
+# Diffusion coefficients worked out as per these pages: 
+# - http://www.cs.unc.edu/Research/nbody/pubs/external/Keffer/selfD.pdf
+# - https://docs.quantumwise.com/_downloads/diffusion_liquid_copper.pdf
+# - https://ws680.nist.gov/publication/get_pdf.cfm?pub_id=831759
+# This is the Einstein equation, as per https://en.wikibooks.org/wiki/Molecular_Simulation/Diffusion_Coefficients
+# Example diffusion coefficients available from literature here: https://en.wikipedia.org/wiki/Mass_diffusivity#Solids
+
+traj = Trajectory(input_file)
+time_between_images = timestep*steps_between_saved_images
+timesteps = []
+
+# As per http://www.cs.unc.edu/Research/nbody/pubs/external/Keffer/selfD.pdf, this is time averaged 
+# It would also be ideal to x, y and z directions independently so we can get statistical data (standard deviation, etc.)
+
+mean_square_displacements = [] 
+
+for i in range(ignore_N_images,len(traj)):
+    # New starting point for working out Mean Square Displacement (MSD)
+    mean_square_displacements.append([])
+
+    for j in range(i+1, len(traj)):
+        # For all snapshots beyond origin, we need to work out the MSD
+        mean_square_displacements[i-ignore_N_images].append(0.0)
+        
+        # Sum square displacements over all atoms
+        for k in range(len(traj[i])):
+            mean_square_displacements[i-ignore_N_images][j-i-1] += sum(square(traj[j].positions[k] - traj[i].positions[k])) 
+         
+        # Divide by number of atoms and degrees of freedom (2N)
+        mean_square_displacements[i-ignore_N_images][j-i-1] /= (len(traj[i]) * 6.0)
+    
+    #print(i, mean_square_displacements[i-ignore_N_images]) 
+
+# Timesteps is just the range over which we analyse the data. For now, this is the whole data span sampled
+timesteps = list(range((ignore_N_images+1) * time_between_images, len(traj) * time_between_images, time_between_images))
+
+# Analyse data
+import matplotlib.pyplot as plt
+from scipy import stats
+
+def fit_data_and_plot(x, y, plt, color, label):
+    # Generated linear fit
+    slope, intercept, r_value, p_value, std_err = stats.linregress(x,y)
+    line = slope*asarray(x)+intercept
+
+    if color != None:
+        plt.plot(x, y, color=color, marker='s', linewidth=0)
+        plt.plot(x, line, color=color)
+    else:
+        plt.plot(x, line, color='lightgrey')
+
+    # print(r'Intercept = %.10f $\AA^2$; Diffusion Coefficient = %.10f $\AA^2$/fs' % (intercept, slope))
+    # Converting to more common units of cm^2/s => multiply by 10^-1
+    # \AA^2 => cm^2 requires multiplying by (10^-8)^-2
+    # fs => s requires dividing by 10^-15
+    print(r'%10s: Intercept = %.10f cm^2; Diffusion Coefficient = %.10f cm^2/s, %.10f m^2/s' % (label, intercept/(10**8), slope*(0.1), slope*(10**-5)))
+
+    return slope, intercept
+
+images_to_sample = len(traj) - ignore_N_images - 1 # -1 is because the first data point is redundant, as there is no diffusion at time t = 0
+sample_length = int(floor(images_to_sample/2))
+
+slopes = []
+intercepts = []
+for i in range(sample_length):
+    slope, intercept = fit_data_and_plot(timesteps[i:sample_length+i], mean_square_displacements[i][:sample_length], plt, None, 'Sample '+str(i))
+    slopes.append(slope)
+    intercepts.append(intercept)
+
+fit_data_and_plot(timesteps, mean_square_displacements[0], plt, 'k', 'Total data')
+
+from statistics import mean, stdev
+line = mean(slopes)*asarray(timesteps)+mean(intercepts)
+plt.plot(timesteps, line, color='blue')
+print('---')
+print(r'Mean Diffusion Coefficient (X, Y and Z) = %.10f cm^2/s, %.10f m^2/s; Standard Deviation = %.10f cm^2/s, %.10f m^2/s' % (mean(slopes)*(0.1), mean(slopes)*(10**-5), stdev(slopes)*(0.1), stdev(slopes)*(10**-5)))
+print('---')
+
+plt.xlabel('Time (fs)')
+plt.ylabel(r'Diffusion ($\AA^2$)')
+plt.show()
+
