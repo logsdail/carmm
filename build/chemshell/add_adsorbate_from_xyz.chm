@@ -1,0 +1,61 @@
+#!/home/sacal6/software/chemsh-intel/scripts/chemsh
+#
+# Add molecule to cluster using xyz file
+#
+
+# EDIT THESE LINES ##########
+set job cha_opt 
+set convert_to_bohr 1
+set input_filename CHA_1_CH3OH.xyz
+set number_of_atoms_to_add 6
+#############################
+
+if { [info exists input_filename] } {
+#  Slurp up the data file
+  set fp [open $input_filename r]
+  set file_data [read $fp]
+  close $fp
+
+#  Process data file
+  set total_lines 0
+  set data [split $file_data "\n"]
+  foreach line $data {
+    set total_lines [ expr $total_lines + 1 ]
+  }
+
+  set target_lines [ expr $total_lines - $number_of_atoms_to_add ]
+  set counter 0
+  foreach line $data {
+     set counter [ expr $counter + 1 ]
+     if { $counter >= $target_lines } {
+        if { [string length $line] != 0 } {
+          set label [ lindex $line 0 ]
+          set x [ lindex $line 1 ]
+          set y [ lindex $line 2 ]
+          set z [ lindex $line 3 ]
+
+          if { $convert_to_bohr == 1 } { 
+            set x [ expr $x/0.529 ]
+            set y [ expr $y/0.529 ]
+            set z [ expr $z/0.529 ]
+          }
+
+          set i [ expr $counter-$target_lines+1 ]
+          set atom($i) " $label $x $y $z "
+        }
+     }
+  }
+}
+
+for { set i 1}  {$i <= $number_of_atoms_to_add} {incr i} {
+  puts stdout "Adding atom: $atom($i) "
+  add_atom_entry coords=$job.clus atom_entry= $atom($i)
+}
+
+#####################################
+# Check complete
+#####################################
+
+# To visualise result
+write_xyz file=${job}.xyz coords=${job}.clus
+
