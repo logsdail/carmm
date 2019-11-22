@@ -1,5 +1,5 @@
-# scripts
-General scripts for everyday computational chemistry.
+# Software
+General scripts and software for everyday computational chemistry.
 
 Folder names are designed to be self explanatory but just in case we have:
 
