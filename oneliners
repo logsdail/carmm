@@ -1,1 +1,6 @@
+#General
 sed 's/[[:alpha:]]/\u&/' # convert first letter to upper case
+
+# FHI-aims
+grep "Writing Kohn-Sham eigenvalues." fhi.out.tier2 -A 600 | tail -600 | grep "00000   " | awk '{ print $4" "$2 }' # scrape eigenvalues and occupation
+grep "Summary of the per-atom charge analysis:" -A 60 fhi.out.tier2 | awk '{ print $2"  "$3"  "$4 }' | grep -v "000000" | grep '[0-9]' # scrape charge on an atom
