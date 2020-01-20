@@ -161,7 +161,7 @@ def calculate_plot_values(min_point, max_point, separate_spin, energies, weights
             if energy > min_point and energy < max_point:
                 variance = 0.02
                 sigma = np.sqrt(variance)
-                plot_values[spin_counter-1] += weights[kpt]*mlab.normpdf(x,energy,sigma)
+                plot_values[spin_counter-1] += weights[kpt]*norm.pdf(x,energy,sigma)
 
     return x, plot_values, spin_counter
 
@@ -191,6 +191,7 @@ import matplotlib.pyplot as plt
 import sys
 import pylab
 import argparse
+from scipy.stats import norm
 
 pylab.rcParams.update({'font.size': 24})
 pylab.rcParams.update({'mathtext.fontset': 'stix'})
