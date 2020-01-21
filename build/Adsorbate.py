@@ -8,7 +8,7 @@ from ase.build import fcc111, add_adsorbate, surface, molecule, bulk
 import numpy as np
 from ase.visualize import view
 
-############ Start reading from line 69 ##############
+############ Start reading from line 62 ##############
 
 ########### ISAMBARD/FHI-AIMS SPECIFIC ###############
 #import os
@@ -22,39 +22,31 @@ from ase.visualize import view
 ## Calculator in this case -  FHI-AIMS, other choices available - see ase.calculators
 ## Check configuration/bugtest with EMT calculator
 
-
-calc_molecule = Aims(xc='pbe',
+def get_aims_calculator(n):
+    #"gas" for gas-phase reactants and "periodic" for a periodic systems
+    if(n=="gas"):
+        return Aims(xc='pbe',
            spin='none',
-           #k_grid=(3,3,1), #periodic system only
            vdw_correction_hirshfeld="True",
            relativistic=('atomic_zora','scalar'),
-           #use_dipole_correction='True', #periodic system only
-           compute_forces="true",
-           output=['mulliken'],
-           #elsi_restart=("write",1)
+           #use_dipole_correction='True',
+           #default_initial_moment=2.0,
+           compute_forces="true"
+           #output=['mulliken']
            )
-
-calc = Aims(xc='pbe',
-           spin='none',
-           k_grid=(3,3,1),
-           vdw_correction_hirshfeld="True",
-           relativistic=('atomic_zora','scalar'),
-           use_dipole_correction='True',
-           compute_forces="true",
-           output=['mulliken'],
-          # elsi_restart=("write",1)
-           )
-
-calc2=Aims(xc='pbe',
-           spin='none',
-           k_grid=(3,3,1),
-           vdw_correction_hirshfeld="True",
-           relativistic=('atomic_zora','scalar'),
-           use_dipole_correction='True',
-           compute_forces="true",
-           output=['mulliken'],
-           elsi_restart=("write",1)
-           )
+    else:
+        if(n=="periodic"):
+            return Aims(xc='pbe',
+                spin='none',
+                k_grid=(3,3,1),
+                vdw_correction_hirshfeld="True",
+                relativistic=('atomic_zora','scalar'),
+                use_dipole_correction='True',
+                # default_initial_moment=2.0,
+                compute_forces="true",
+                output=['mulliken'],
+                elsi_restart=("write",1)
+                )
 
 ## Make a new directory for all generated files
 ## Comment/remove this section if using on HAWK - backup created by the default submission script
@@ -71,7 +63,7 @@ os.chdir("data_folder")
 molecule=molecule("H2")
 #molecule.rotate(90, 'x')
 
-#molecule.set_calculator(calc_molecule)
+#molecule.set_calculator(get_aims_calculator("gas"))
 molecule.set_calculator(EMT())
 
 ## Optimize
@@ -80,7 +72,6 @@ molecule_opt.run(fmax=0.01)
 
 ## You can also read the file geometry e.g. .traj file instead of calculating every time
 #molecule = read("adsorbate.traj")
-
 
 ############SURFACE################################
 from math import sqrt
@@ -122,7 +113,7 @@ mask0 = [atom.tag > 2 for atom in slab]
 constraint0 = FixAtoms(mask=mask0)
 slab.set_constraint([constraint0])
 
-#slab.set_calculator(calc)
+#slab.set_calculator(get_aims_calculator("periodic"))
 slab.set_calculator(EMT())
 #print(slab.get_potential_energy())
 
@@ -149,7 +140,7 @@ add_adsorbate(slab, molecule, 2.0, 'ontop')
 mask1 = [atom.tag > 2 for atom in slab]
 constraint = FixAtoms(mask=mask1)
 slab.set_constraint([constraint])
-#slab.set_calculator(calc2)
+#slab.set_calculator(get_aims_calculator("periodic"))
 slab.set_calculator(EMT())
 ## Optimize
 dyn = BFGS(slab, trajectory='ads_slab.traj', restart="ads_slab.pckl")
