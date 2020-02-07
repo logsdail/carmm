@@ -5,7 +5,7 @@ from ase.calculators.emt import EMT
 from ase.calculators.aims import Aims
 from ase.visualize import view
 
-a = 4.0 # approximate lattice constant
+a = 4.0 # approximate lattice constant, use experimental data
 b = a / 2
 
 calc = Aims(xc='pbe',
@@ -60,7 +60,9 @@ energies = [bulk.get_potential_energy() for bulk in configs]
 eos = EquationOfState(volumes, energies, eos='birchmurnaghan')
 v0, e0, B = eos.fit()
 
-print("Volume: ", v0)
+# Return info on optimised system
+print("Volume: ", v0 + " Angstrom^3")
+print("Total energy at a0: " + e0 + " eV")
 print("FCC Lattice parameter a0: ", (4*v0)**(1/3), "Angstrom")
 #print("FCC Lattice parameter a0: ", (4*v0/NUMBER_OF_ATOMS_IN_UNIT_CELL)**(1/3), "Angstrom")
 print("Bulk modulus: ", B / kJ * 1.0e24, 'GPa')
