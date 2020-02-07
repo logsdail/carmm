@@ -63,15 +63,15 @@ os.chdir("data_folder")
 molecule=molecule("H2")
 #molecule.rotate(90, 'x')
 
+## You can also read the file geometry e.g. .traj file instead of calculating every time
+#molecule = read("adsorbate.traj")
+
 #molecule.set_calculator(get_aims_calculator("gas"))
 molecule.set_calculator(EMT())
 
 ## Optimize
 molecule_opt = BFGS(molecule, trajectory="adsorbate.traj", restart="adsorbate.pckl")
 molecule_opt.run(fmax=0.01)
-
-## You can also read the file geometry e.g. .traj file instead of calculating every time
-#molecule = read("adsorbate.traj")
 
 ############SURFACE################################
 from math import sqrt
