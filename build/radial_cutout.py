@@ -6,8 +6,12 @@ from ase import Atoms
 from ase.visualize import view
 from ase.constraints import FixAtoms
 
-# Read your trajectory/geometry file 
-atoms = read("geometry_supercell.in")
+## This script puts constrain on all atoms in a radius
+## around an atom of choice
+## check the desired atom index in ase gui
+
+# Read your trajectory/geometry file
+atoms = read("structure.traj")
 
 #count number of atoms
 tags = atoms.get_tags()
@@ -22,12 +26,12 @@ for i in range(n):
 
     #get distances between atom of interest and others - then constrain
     #all atoms beyond a certain radius
-    
+
     #################### Edit atom tag ###############################
-    ABdistance=np.linalg.norm((coordinates[237] - coordinates[i]))
-    
+    ABdistance=np.linalg.norm((coordinates[193] - coordinates[i]))
+
     ################ Edit distance in Angstrom here ###################
-    if ABdistance > 8.0:
+    if ABdistance > 7.0:
     ###################################################################
         select = 1
         mask.append(select)
@@ -39,4 +43,4 @@ atoms.set_constraint()
 atoms.set_constraint(FixAtoms(mask = mask))
 view(atoms)
 
-## in ase gui select all constrained atoms and delete!
+## for BSSE - in ase gui select all constrained atoms and delete!
