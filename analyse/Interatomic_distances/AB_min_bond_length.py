@@ -11,7 +11,7 @@ model = read("name.traj")
 coordinates = model.get_positions()
 
 #unhash the following to find the number of X atoms in model:
-# need to figure this out
+# print(len(model.get_tag()))
 
 #unhash the following to identify atoms
 #print(coordinates, model.get_atomic_numbers())
@@ -46,4 +46,4 @@ contents = contents.split()             #split into a list
 contents=map(float, contents)           #map the list for floats
 list = [float(s) for s in contents]     #output a list of floats
 
-print("The minimum C-Pd Distance is: ", np.amin(list))  #find the minimum distance
+print("The minimum A-B Distance is: ", np.amin(list))  #find the minimum distance
