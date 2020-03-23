@@ -8,8 +8,6 @@ from ase.build import fcc111, add_adsorbate, surface, molecule, bulk
 import numpy as np
 from ase.visualize import view
 
-############ Start reading from line 62 ##############
-
 ########### ISAMBARD/FHI-AIMS SPECIFIC ###############
 #import os
 #command="aprun -n "+os.environ["NPROCS"]+" /home/ca-alogsdail/fhi-aims-gnu/bin/aims."+os.environ["VERSION"]+".scalapack.mpi.x"
@@ -39,33 +37,23 @@ def get_aims_calculator(n):
             return Aims(xc='pbe',
                 spin='none',
                 k_grid=(3,3,1),
-                vdw_correction_hirshfeld="True",
+                #vdw_correction_hirshfeld="True",
                 relativistic=('atomic_zora','scalar'),
                 use_dipole_correction='True',
-                # default_initial_moment=2.0,
+                #default_initial_moment=2.0,
                 compute_forces="true",
-                output=['mulliken'],
-                elsi_restart=("write",1)
+                #output=['mulliken']
                 )
 
 ## Make a new directory for all generated files
-## Comment/remove this section if using on HAWK - backup created by the default submission script
-import os
-if os.path.exists("data_folder"):
-    print("Make sure to back up important data before running again in the same directory.")
-    print("All previous .traj configurations are overwritten")
-    print()
-os.mkdir("data_folder")
-os.chdir("data_folder")
+#import os
+#if not os.path.exists("data_folder"): os.mkdir("data_folder")
+#os.chdir("data_folder")
 
 ######ADSORBATE#########
 ## Define adsorbate, rotate and pre-optimize
 molecule=molecule("H2")
 #molecule.rotate(90, 'x')
-
-## You can also read the file geometry e.g. .traj file instead of calculating every time
-#molecule = read("adsorbate.traj")
-
 #molecule.set_calculator(get_aims_calculator("gas"))
 molecule.set_calculator(EMT())
 
@@ -73,9 +61,12 @@ molecule.set_calculator(EMT())
 molecule_opt = BFGS(molecule, trajectory="adsorbate.traj", restart="adsorbate.pckl")
 molecule_opt.run(fmax=0.01)
 
+## You can also read the file geometry e.g. .traj file instead of calculating every time
+#molecule = read("adsorbate.traj")
+
 ############SURFACE################################
 from math import sqrt
- 
+
 ## Edit these
 atomic_species='Au'
 shortest_M_M_distance=2.939
@@ -109,7 +100,8 @@ slab.center(vacuum=vacuum_region_size, axis=2)
 #slab3.center(vacuum=10, axis=2)
 
 ## Set constraint for surface/bulk characteristics
-mask0 = [atom.tag > 2 for atom in slab]
+top_layers = 2      #leave x top layers relaxed
+mask0 = [atom.tag > top_layers for atom in slab]
 constraint0 = FixAtoms(mask=mask0)
 slab.set_constraint([constraint0])
 
@@ -131,20 +123,23 @@ surface_opt.run(fmax=0.01)
 ##########ADDING ADSORBATE ONTO THE SURFACE######
 ## Remove constraints and add adsorbate
 slab.set_constraint()
-slab=slab
+
 ## If build using ase.build can specify adsorption sites
 add_adsorbate(slab, molecule, 2.0, 'ontop')
 ## Oherwise x-y coordinates - offset is specified in Angstrom
 #add_adsorbate(slab, molecule, 2.0, position=(4.0, 2.4))
+
 ## Generate a new mask based on the changed number of atoms and constrain last two layers
-mask1 = [atom.tag > 2 for atom in slab]
-constraint = FixAtoms(mask=mask1)
-slab.set_constraint([constraint])
+mask0 = [atom.tag > top_layers for atom in slab]
+constraint0 = FixAtoms(mask=mask0)
+slab.set_constraint([constraint0])
 #slab.set_calculator(get_aims_calculator("periodic"))
 slab.set_calculator(EMT())
+
 ## Optimize
 dyn = BFGS(slab, trajectory='ads_slab.traj', restart="ads_slab.pckl")
 dyn.run(fmax=0.01)   #tighten to min 0.01 eV/A for actual calculation
+
 ## Extract Binding energy from optimised structures
 optimised_molecule=read("adsorbate.traj")
 optimised_surface=read("surface.traj")
