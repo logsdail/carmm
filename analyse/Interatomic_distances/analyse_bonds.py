@@ -17,18 +17,19 @@ def analyse_bonds(file, A, B, C):
     AB_Bonds = analysis.get_bonds(A,B)
     ABC_Angle = analysis.get_angles(A,B,C)
 
-    print("there are {} "+print_AB+" bonds in BETA".format(len(AB_Bonds[0])))
-    print("there are {} "+print_ABC+" angles in BETA".format(len(ABC_Angle[0])))
-
     AB_BondsValues = analysis.get_values(AB_Bonds)
     ABC_AngleValues = analysis.get_values(ABC_Angle)
 
-    print("bond length data:")
-    print("the average "+print_AB+" bond length is {}.".format(np.average(AB_BondsValues)))
-    print("the minimum "+print_AB+" Distance is:", np.amin(AB_BondsValues))
-    print("the maximum "+print_AB+" Distance is:", np.amax(AB_BondsValues))
+    dash = "-"*40
 
-    print("bond angle data:")
-    print("the average "+print_ABC+" angle is {}.".format(np.average(ABC_AngleValues)))
-    print("the maximum "+print_ABC+" angle is:", np.amax(ABC_AngleValues))
-    print("the minimum "+print_ABC+" angle is:", np.amin(ABC_AngleValues))
+    print(dash)
+    print(print_AB+"       Distance / Angstrom")
+    print(dash)
+    print('{:<6.5s}{:>4.10s}{:^13.10s}{:>4.10s}'.format("count","average", "minimum", "maximum"))
+    print('{:<6.0f}{:>4.6f}{:^12.6f}{:>4.6f}'.format(len(AB_BondsValues[0]),np.average(AB_BondsValues),np.amin(AB_BondsValues),np.amax(AB_BondsValues)))
+
+    print(dash)
+    print(print_ABC+"       Angle / Degrees")
+    print(dash)
+    print('{:<6.5s}{:>4.10s}{:^13.10s}{:>4.10s}'.format("count","average", "minimum", "maximum"))
+    print('{:<6.0f}{:>4.4f}{:^12.4f}{:>4.4f}'.format(len(ABC_Angle[0]), np.average(ABC_AngleValues),np.amin(ABC_AngleValues),np.amax(ABC_AngleValues)))
