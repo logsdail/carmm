@@ -16,6 +16,9 @@ def switch_indices(model,A,B):
         print("Indices must be integers.")
 
     else:
+        if B < A:
+            A,B = B,A # make sure indices are in the right order
+
         for i in range(0,A):
             new_model += model[i]
         new_model +=model[B]
