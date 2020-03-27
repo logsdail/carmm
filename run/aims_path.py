@@ -1,5 +1,5 @@
 def get_aims_command(supercomputer='hawk', basis_set='light'):
-
+    import os
     # Choose supercomputer and basis_set to obtain FHI-aims run command.
     # Can be useful to e.g perform a calcaluation with a larger basis set
     # after a geometry optimisation.
@@ -11,7 +11,6 @@ def get_aims_command(supercomputer='hawk', basis_set='light'):
         os.environ['AIMS_SPECIES_DIR']="/home/scw1057/software/fhi-aims/species_defaults/"+basis_set
 
     elif supercomputer =='isambard':
-        import os
         command="aprun -n "+os.environ["NPROCS"]+" /home/ca-alogsdail/fhi-aims-gnu/bin/aims."+os.environ["VERSION"]+".scalapack.mpi.x"
         os.environ["ASE_AIMS_COMMAND"]=command
         os.environ["AIMS_SPECIES_DIR"]="/home/ca-alogsdail/fhi-aims-gnu/species_defaults/"+basis_set
