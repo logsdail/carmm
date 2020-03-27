@@ -1,27 +1,15 @@
-from ase.spacegroup import crystal
-from ase.io import write,read
-from ase.build import surface,supercells,cut
-from ase.build.supercells import make_supercell
-from ase.visualize import view
+def create_facets(bulk_model, layers=2, facets=[(1,1,1)], supercell =(1,1,1), vacuum=10):
+	from ase.spacegroup import crystal
+	from ase.io import write, read
+	from ase.build import surface
+	#input bulk geometry
+	if isinstance(bulk_model, str) is True:
+		bulk_model = read(bulk_model)
+	#loop for all surfaces
+	for face in facets:
+		slab = surface(bulk_model,(face),layers)		#cut the slab in face, last number is the number of layers
+		slab.repeat(supercell)					#repeat the slab in x,y,z direction and create a supercell
+		slab.center(vacuum=vacuum, axis=2)			#introduce vaccum around the supercell in y direction
 
-#input bulk geometry
-bulk=read('bulk.in')
-
-#list of faces
-facets=[(0,0,1),(0,1,1), (1,1,1), (1,1,0), (1,0,0), (1,0,1), (0,1,0)]
-
-#number of layers in z direction
-layers = 1
-
-#loop for all surfaces
-for face in facets:
-	slab = surface(bulk,(face),layers)		#cut the slab in face, last number is the number of layers
-	slab.repeat((1,1,1))					#repeat the slab in x,y,z direction and create a supercell
-	slab.center(vacuum=10, axis=2)			#introduce vaccum around the supercell in y direction
-	write('print.in', slab)					#output the file 
-
-
-
-## last line needs fixing to generate new name for each loop run. ##
-
-
+		#write into file, name based on facet type
+		write(str(face[0])+str(face[1])+str(face[2])+'.in', slab)
