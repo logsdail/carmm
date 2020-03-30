@@ -47,7 +47,7 @@ def analyse_all_angles(model):
     all_angles = product(list_of_symbols, repeat=3)
 
     print(dash)     #Table heading
-    print('{:<8.8s}{:<6.5s}{:>4.10s}{:^13.10s}{:>4.10s}'.format("Angle","Count","Average", "Minimum", "Maximum"))
+    print('{:<9.8s}{:<6.5s}{:>4.10s}{:^13.10s}{:>4.10s}'.format("Angle","Count","Average", "Minimum", "Maximum"))
     print(dash)
 
     for angles in all_angles:     #iterate over all arrangements of chemical symbols
@@ -60,7 +60,7 @@ def analyse_all_angles(model):
 
         if not ABC_Angle == [[]]:   #make sure angles exist before retrieving values
             ABC_AngleValues = analysis.get_values(ABC_Angle)
-            print('{:<8.8s}{:<6.0f}{:>4.4f}{:^12.4f}{:>4.4f}'.format(
+            print('{:<9.8s}{:<6.0f}{:>4.4f}{:^12.4f}{:>4.4f}'.format(
             print_ABC,len(ABC_Angle[0]), np.average(ABC_AngleValues),np.amin(ABC_AngleValues),np.amax(ABC_AngleValues)))
 
 
