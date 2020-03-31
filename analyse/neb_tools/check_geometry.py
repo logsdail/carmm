@@ -76,10 +76,10 @@ def check_interpolation(initial, final, n_max):
     '''
     Interpolates the provided geometries with n_max total images
     and checks whether any bond lengths below 0.74 Angstrom exist
-    saves the intepolation in interpolation.traj
+    saves the interpolation in interpolation.traj
 
     # TODO: incorporate ase.neighborlist.natural_cutoff
-    # for abnormal fond lengths based on typical A-B bonds
+    # for abnormal bond lengths based on typical A-B bonds
 
     Parameters:
 
