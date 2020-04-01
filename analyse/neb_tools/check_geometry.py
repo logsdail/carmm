@@ -1,6 +1,3 @@
-from ase import Atoms
-from ase.io import read, write
-
 def switch_indices(model, A, B):
     '''
     Function for rearranging atomic indices in the structure.
@@ -18,10 +15,11 @@ def switch_indices(model, A, B):
 
     '''
 
-    from ase import Atom, Atoms
+    from ase import Atoms
+    from ase.io import read
 
     if isinstance(model, str) is True:
-       model = read(model)
+        model = read(model)
 
     # Index manipulation
     if not isinstance(A, int) and isinstance(B, int):
@@ -35,34 +33,33 @@ def switch_indices(model, A, B):
     # needs to be adjusted.
     prev_calc = model.get_calculator()
     prev_calc_results = prev_calc.results
-    f=prev_calc_results["forces"]
+    f = prev_calc_results["forces"]
 
     # Other properties require rearrangement too.
-    t=model.get_tags()
+    t = model.get_tags()
     # TODO: magmoms + others
 
     # Atom count used later
     no_atoms = len(t)
 
-
     # Generate list of atoms that will be rearranged
-    for i in range(0,no_atoms):
+    for i in range(0, no_atoms):
         list_of_atoms += [model[i]]
 
     # Rearrange indices and Atoms object properties
-    list_of_atoms[A],list_of_atoms[B] = list_of_atoms[B], list_of_atoms[A]
+    list_of_atoms[A], list_of_atoms[B] = list_of_atoms[B], list_of_atoms[A]
     t[A], t[B] = t[B], t[A]
     # Ensure function works if force information empty
-    if not f==[]:
+    if not f == []:
         f[A], f[B] = f[B], f[A]
 
     # Generate a new model based on switched indices
     new_model = Atoms(list_of_atoms,
-                      pbc = model.get_pbc(),
-                      cell = model.get_cell(),
-                      tags = t,
-                      constraint = model._get_constraints(),
-                      calculator = prev_calc)
+                      pbc=model.get_pbc(),
+                      cell=model.get_cell(),
+                      tags=t,
+                      constraint=model._get_constraints(),
+                      calculator=prev_calc)
 
     # Trick calculator check_state by replacing atoms information
     # Can now use energy and forces as no changes in geometry detected
@@ -71,6 +68,7 @@ def switch_indices(model, A, B):
 
     # User can interact with the new model
     return new_model
+
 
 def check_interpolation(initial, final, n_max):
     '''
@@ -94,17 +92,16 @@ def check_interpolation(initial, final, n_max):
         including start and end point.
     '''
 
-    from ase import io
-    import copy
     from ase.neb import NEB
     from software.analyse.Interatomic_distances.analyse_bonds import search_abnormal_bonds
     from ase.io.trajectory import Trajectory
+    from ase.io import read
 
     # Pre-requirements
     if isinstance(initial, str) is True:
-       initial = read(initial)
+        initial = read(initial)
     if isinstance(final, str) is True:
-       final = read(final)
+        final = read(final)
     if not isinstance(n_max, int):
         raise ValueError
         print("Max number of images must be an integer.")
@@ -117,14 +114,15 @@ def check_interpolation(initial, final, n_max):
     # Interpolate linearly the potisions of the middle images:
     neb.interpolate()
 
-    t2=Trajectory('interpolation.traj', 'w')
+    t = Trajectory('interpolation.traj', 'w')
 
-    for i in range(0,n_max):
-        print("Assessing image",str(i+1)+'.')
+    for i in range(0, n_max):
+        print("Assessing image", str(i+1) + '.')
         search_abnormal_bonds(images[i])
-        t2.write(images[i])
+        t.write(images[i])
 
-    t2.close()
+    t.close()
+
 
 '''
 def switch_indices_old(model, A, B, output_file):
