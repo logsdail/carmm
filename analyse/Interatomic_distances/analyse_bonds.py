@@ -1,13 +1,6 @@
 import numpy as np
-import os
-from ase.io.trajectory import Trajectory
 from ase.io import read
 from ase.geometry.analysis import Analysis
-from ase import Atoms
-
-## Use analyse_all_bonds and analyse_all_angles unless you are interested
-## in specific values that are hard to get using visualizer.
-## The functions take either a filename or a Atoms object.
 
 
 def analyse_all_bonds(model):
@@ -24,7 +17,7 @@ def analyse_all_bonds(model):
         model = read(model)
 
     analysis = Analysis(model)
-    dash = "-"*40
+    dash = "-" * 40
 
     # set() to ensure unique chemical symbols list
     list_of_symbols = list(set(model.get_chemical_symbols()))
@@ -32,7 +25,8 @@ def analyse_all_bonds(model):
 
     # Table heading
     print(dash)
-    print('{:<6.5s}{:<6.5s}{:>4.10s}{:^13.10s}{:>4.10s}'.format("Bond","Count","Average", "Minimum", "Maximum"))
+    print('{:<6.5s}{:<6.5s}{:>4.10s}{:^13.10s}{:>4.10s}'.format(
+        "Bond", "Count", "Average", "Minimum", "Maximum"))
     print(dash)
 
     # Iterate over all arrangements of chemical symbols
@@ -41,13 +35,15 @@ def analyse_all_bonds(model):
         B = bonds[1]
 
         print_AB = A+'-'+B
-        AB_Bonds = analysis.get_bonds(A,B)
+        AB_Bonds = analysis.get_bonds(A, B)
 
-        # Make sure bond exist before retrieving values, then print table contents
+        # Make sure bond exist before retrieving values, then print contents
         if not AB_Bonds == [[]]:
             AB_BondsValues = analysis.get_values(AB_Bonds)
             print('{:<8.8s}{:<6.0f}{:>4.6f}{:^12.6f}{:>4.6f}'.format(
-            print_AB,len(AB_BondsValues[0]),np.average(AB_BondsValues),np.amin(AB_BondsValues),np.amax(AB_BondsValues)))
+                print_AB, len(AB_BondsValues[0]), np.average(AB_BondsValues),
+                np.amin(AB_BondsValues), np.amax(AB_BondsValues)))
+
 
 def analyse_all_angles(model):
     '''
@@ -63,14 +59,15 @@ def analyse_all_angles(model):
         model = read(model)
 
     analysis = Analysis(model)
-    dash = "-"*40
+    dash = "-" * 40
     # set() to ensure unique chemical symbols list
     list_of_symbols = list(set(model.get_chemical_symbols()))
     all_angles = product(list_of_symbols, repeat=3)
 
     # Table heading
     print(dash)
-    print('{:<9.8s}{:<6.5s}{:>4.10s}{:^13.10s}{:>4.10s}'.format("Angle","Count","Average", "Minimum", "Maximum"))
+    print('{:<9.8s}{:<6.5s}{:>4.10s}{:^13.10s}{:>4.10s}'.format(
+        "Angle", "Count", "Average", "Minimum", "Maximum"))
     print(dash)
 
     # Iterate over all arrangements of chemical symbols
@@ -80,13 +77,14 @@ def analyse_all_angles(model):
         C = angles[2]
 
         print_ABC = A+'-'+B+'-'+C
-        ABC_Angle = analysis.get_angles(A,B,C)
+        ABC_Angle = analysis.get_angles(A, B, C)
 
         # Make sure angles exist before retrieving values, print table contents
         if not ABC_Angle == [[]]:
             ABC_AngleValues = analysis.get_values(ABC_Angle)
             print('{:<9.8s}{:<6.0f}{:>4.4f}{:^12.4f}{:>4.4f}'.format(
-            print_ABC,len(ABC_Angle[0]), np.average(ABC_AngleValues),np.amin(ABC_AngleValues),np.amax(ABC_AngleValues)))
+                print_ABC, len(ABC_Angle[0]), np.average(ABC_AngleValues),
+                np.amin(ABC_AngleValues), np.amax(ABC_AngleValues)))
 
 
 def analyse_bonds(model, A, B):
@@ -102,18 +100,22 @@ def analyse_bonds(model, A, B):
         model = read(model)
 
     analysis = Analysis(model)
-    dash = "-"*40
-    print_AB = A +"-"+B
+    dash = "-" * 40
+    print_AB = A + "-" + B
     # Retrieve bonds and values
-    AB_Bonds = analysis.get_bonds(A,B)
+    AB_Bonds = analysis.get_bonds(A, B)
     AB_BondsValues = analysis.get_values(AB_Bonds)
     # Table header
     print(dash)
     print(print_AB+"       Distance / Angstrom")
     print(dash)
-    print('{:<6.5s}{:>4.10s}{:^13.10s}{:>4.10s}'.format("count","average", "minimum", "maximum"))
+    print('{:<6.5s}{:>4.10s}{:^13.10s}{:>4.10s}'.format(
+        "count", "average", "minimum", "maximum"))
     # Table contents
-    print('{:<6.0f}{:>4.6f}{:^12.6f}{:>4.6f}'.format(len(AB_BondsValues[0]),np.average(AB_BondsValues),np.amin(AB_BondsValues),np.amax(AB_BondsValues)))
+    print('{:<6.0f}{:>4.6f}{:^12.6f}{:>4.6f}'.format(
+        len(AB_BondsValues[0]), np.average(AB_BondsValues),
+        np.amin(AB_BondsValues), np.amax(AB_BondsValues)))
+
 
 def analyse_angles(model, A, B, C):
     '''
@@ -130,17 +132,21 @@ def analyse_angles(model, A, B, C):
 
     analysis = Analysis(model)
     dash = "-"*40
-    print_ABC = A +"-"+B+"-"+C
+    print_ABC = A + "-" + B + "-" + C
     # Retrieve bonds and values
-    ABC_Angle = analysis.get_angles(A,B,C)
+    ABC_Angle = analysis.get_angles(A, B, C)
     ABC_AngleValues = analysis.get_values(ABC_Angle)
     # Table header
     print(dash)
     print(print_ABC+"       Angle / Degrees")
     print(dash)
-    print('{:<6.5s}{:>4.10s}{:^13.10s}{:>4.10s}'.format("count","average", "minimum", "maximum"))
+    print('{:<6.5s}{:>4.10s}{:^13.10s}{:>4.10s}'.format(
+        "count", "average", "minimum", "maximum"))
     # Table contents
-    print('{:<6.0f}{:>4.4f}{:^12.4f}{:>4.4f}'.format(len(ABC_Angle[0]), np.average(ABC_AngleValues),np.amin(ABC_AngleValues),np.amax(ABC_AngleValues)))
+    print('{:<6.0f}{:>4.4f}{:^12.4f}{:>4.4f}'.format(
+        len(ABC_Angle[0]), np.average(ABC_AngleValues),
+        np.amin(ABC_AngleValues), np.amax(ABC_AngleValues)))
+
 
 def search_abnormal_bonds(model):
     '''
@@ -156,7 +162,7 @@ def search_abnormal_bonds(model):
     if isinstance(model, str) is True:
         model = read(model)
 
-    #define lists of variables
+    # Define lists of variables
     abnormal_bonds = []
     list_of_abnormal_bonds = []
 
@@ -171,21 +177,22 @@ def search_abnormal_bonds(model):
         B = bonds[1]
 
         print_AB = A+'-'+B
-        AB_Bonds = analysis.get_bonds(A,B)
+        AB_Bonds = analysis.get_bonds(A, B)
 
         # Make sure bond exist before retrieving values
         if not AB_Bonds == [[]]:
             AB_BondsValues = analysis.get_values(AB_Bonds)
 
-            for i in range(0,len(AB_BondsValues)):
+            for i in range(0, len(AB_BondsValues)):
                 for values in AB_BondsValues[i]:
                     if values < 0.74:
                         abnormal_bonds += [1]
                         list_of_abnormal_bonds = list_of_abnormal_bonds + [print_AB]
 
     # Abnormality check
-    if not len(abnormal_bonds)==0:
-        print("A total of", len(abnormal_bonds), "abnormal bond lengths observed (<0.74 A).")
+    if not len(abnormal_bonds) == 0:
+        print("A total of", len(abnormal_bonds),
+        "abnormal bond lengths observed (<0.74 A).")
         print("Identities:", list_of_abnormal_bonds)
     else:
         print("OK")
