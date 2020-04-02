@@ -1,8 +1,11 @@
+'''This file is work in progress'''
+
 def translation(model):
     '''
     Takes X arguments: filename/Atoms object,
     TODO: manipulate cell, rotate and change position of atoms
     consistent with symmetry - WITHOUT changing indices
+    For now - specific to fcc111
 
     Parameters:
     model: Atoms object or string
@@ -15,15 +18,15 @@ def translation(model):
     import math
     from software.analyse.neb_tools.check_geometry import switch_indices
 
-    def sort_by_xyz(model):
-        '''
+    def sort_by_xyz_old(model):
+        ''' NEEDS TO BE SEQUENTIAL BY TAGS INSTEAD OF Z AXIS SORTING
         Sorting indices by xyz coordinates
         Returns sorted index list
         '''
         from ase.build import sort
         sort(model)
         xyz = model.get_positions()
-        sorted_xyz = sorted(xyz, key=lambda k: [k[2], k[1]])
+        sorted_xyz = sorted(xyz, key=lambda k: [k[2], k[1], k[0]])
         index_by_xyz = []
         current_index = -1
 
@@ -44,7 +47,38 @@ def translation(model):
             print(switch[0])
             change_xyz += [switch[0]]
 
-        return change_xyz
+        return model[change_xyz]
+
+    def sort_by_xyz(model):
+        ''' WORK IN PROGRESS
+        Sorting indices by xyz coordinates
+        Returns sorted index list
+        '''
+        from ase.build import sort
+        sort(model)
+        xyz = model.get_positions()
+        sorted_xyz = sorted(xyz, key=lambda k: [k[2], k[1], k[0]])
+        index_by_xyz = []
+        current_index = -1
+
+        # Find sequence in which atoms are now arranged by xyz
+        for positions in xyz: # [x,y,z]
+            current_index += 1
+            count_iter = - 1  # Indexing in Atoms object starts from 0 not 1
+            for sorted_positions in sorted_xyz:
+                count_iter += 1
+                if (sorted_positions == positions).all():
+                    index_by_xyz = index_by_xyz + [[current_index, count_iter]]
+
+        # Find the sequence to switch indices correctly
+        index_by_xyz = sorted(index_by_xyz, key=lambda k:[k[1]])
+        change_xyz = []
+
+        for switch in index_by_xyz:
+            print(switch[0])
+            change_xyz += [switch[0]]
+
+        return model[change_xyz]
 
     if isinstance(model, str) is True:
         model = read(model)
@@ -60,7 +94,7 @@ def translation(model):
     indices_to_move = []
     # Retrieve constraints from the model for later
     constraint = model._get_constraints()
-    indices_old = sort_by_xyz(model)
+    # indices_old = sort_by_xyz(model)
 
 
     '''Section on moving atoms'''
@@ -97,10 +131,10 @@ def translation(model):
 
     '''Section on index correction'''
     model.rotate(30, 'z', rotate_cell=True)
-    indices_new = sort_by_xyz(model)
-    index_pairs = zip(indices_new, indices_old)
+    #indices_new = sort_by_xyz(model)
+    #index_pairs = zip(indices_new, indices_old)
 
-    model = model[indices_new]
-
+    model = sort_by_xyz(model)
+    model.rotate(-30, 'z', rotate_cell=True)
     # model.set_constraint(constraint)
     return model
