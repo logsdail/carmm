@@ -32,6 +32,7 @@ def switch_indices(model, A, B):
     # Retrieve calculator information as forces array
     # needs to be adjusted.
     prev_calc = model.get_calculator()
+
     prev_calc_results = prev_calc.results
     f = prev_calc_results["forces"]
 
@@ -64,7 +65,7 @@ def switch_indices(model, A, B):
     # Trick calculator check_state by replacing atoms information
     # Can now use energy and forces as no changes in geometry detected
     prev_calc.atoms = new_model
-    print(new_model.get_tags())
+    
 
     # User can interact with the new model
     return new_model
