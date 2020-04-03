@@ -36,6 +36,8 @@ facets, slabs = create_facets.generate(element)
 
 #########
 
+#### Assertion tests ####
+
 # Scale all cell vectors to match those defined previously
 for i in range(len(slabs)):
     slabs[i].set_cell(slabs[i].get_cell()*(lattice_parameter/slabs[i].get_cell()[1][0]))
