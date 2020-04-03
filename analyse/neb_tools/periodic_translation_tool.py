@@ -1,4 +1,90 @@
 '''This file is work in progress'''
+def sort_by_xyz_old(model):
+    ''' NEEDS TO BE SEQUENTIAL BY TAGS INSTEAD OF Z AXIS SORTING
+    Sorting indices by xyz coordinates
+    Returns sorted index list
+    '''
+    from ase.build import sort
+    sort(model)
+    xyz = model.get_positions()
+    sorted_xyz = sorted(xyz, key=lambda k: [k[2], k[1], k[0]])
+    index_by_xyz = []
+    current_index = -1
+
+    # Find sequence in which atoms are now arranged by xyz
+    for positions in xyz: # [x,y,z]
+        current_index += 1
+        count_iter = - 1  # Indexing in Atoms object starts from 0 not 1
+        for sorted_positions in sorted_xyz:
+            count_iter += 1
+            if (sorted_positions == positions).all():
+                index_by_xyz = index_by_xyz + [[current_index, count_iter]]
+
+    # Find the sequence to switch indices correctly
+    index_by_xyz = sorted(index_by_xyz, key=lambda k:[k[1]])
+    change_xyz = []
+
+    for switch in index_by_xyz:
+        print(switch[0])
+        change_xyz += [switch[0]]
+
+    return model[change_xyz]
+
+
+def sort_by_xyz(model):
+    ''' WORK IN PROGRESS
+    Sorting indices by xyz coordinates
+    Returns sorted index list
+    '''
+    import numpy as np
+    # sort z direction by tags
+    # reverse, need to start from bottom, ie. last tag
+    tags = list(set(model.get_tags()))
+    tags = sorted(tags, reverse=True)
+    index_by_xyz = []
+    xyz_all = model.get_positions()
+
+    for tag in tags:
+        index_by_tag = [atom.index for atom in model if atom.tag == tag]
+        xyz = model[index_by_tag].get_positions()
+
+        if not tag == 0:
+            all_AB = model[index_by_tag].get_all_distances()
+            shortest_ABs = []
+            # Figure minimum bond lengths in this set of atoms
+            for distance in all_AB:
+                # Need to remove 0.0 from array before finding min value
+                distance = np.amin(np.setdiff1d(distance,np.array(0.0)))
+                shortest_ABs += [distance]
+                # print(shortest_ABs)
+            def sort_y_tag(xyz):
+                y_tag = np.int(np.round((xyz[1])/(
+                            np.sin(np.radians(60))*np.amin(shortest_ABs))))
+                return y_tag
+
+            sorted_xyz = sorted(
+                xyz, key=lambda k: [sort_y_tag(k),
+                                    k[0]])  # Y/ABmin - integer
+        else:
+            sorted_xyz = sorted(
+                xyz, key=lambda k: [k[1], k[0]])
+
+        # check all positions by tags and append a list
+        for coordinate in sorted_xyz:
+            test = (np.int((coordinate[1])/(
+                np.sin(np.radians(60))*np.amin(shortest_ABs))))
+            #print(coordinate[0])
+            #print(index_by_xyz)
+            for index in index_by_tag:
+                if (coordinate == model[index].position).all():
+                    index_by_xyz += [index]
+
+    sort_test = np.argsort(index_by_xyz)
+
+    print(index_by_xyz)
+    model = model[index_by_xyz]
+
+    return model
 
 def translation(model):
     '''
@@ -11,74 +97,16 @@ def translation(model):
     model: Atoms object or string
         If string, e.g.: 'name.traj', a file of this name will be read
         to retrieve model.
+    TODO:
+    a: float
+        lattice parameter
+    surface: string
+        e.g. "fcc111", "fcc110"
     '''
 
     from ase.io import read
     import numpy as np
     import math
-    from software.analyse.neb_tools.check_geometry import switch_indices
-
-    def sort_by_xyz_old(model):
-        ''' NEEDS TO BE SEQUENTIAL BY TAGS INSTEAD OF Z AXIS SORTING
-        Sorting indices by xyz coordinates
-        Returns sorted index list
-        '''
-        from ase.build import sort
-        sort(model)
-        xyz = model.get_positions()
-        sorted_xyz = sorted(xyz, key=lambda k: [k[2], k[1], k[0]])
-        index_by_xyz = []
-        current_index = -1
-
-        # Find sequence in which atoms are now arranged by xyz
-        for positions in xyz: # [x,y,z]
-            current_index += 1
-            count_iter = - 1  # Indexing in Atoms object starts from 0 not 1
-            for sorted_positions in sorted_xyz:
-                count_iter += 1
-                if (sorted_positions == positions).all():
-                    index_by_xyz = index_by_xyz + [[current_index, count_iter]]
-
-        # Find the sequence to switch indices correctly
-        index_by_xyz = sorted(index_by_xyz, key=lambda k:[k[1]])
-        change_xyz = []
-
-        for switch in index_by_xyz:
-            print(switch[0])
-            change_xyz += [switch[0]]
-
-        return model[change_xyz]
-
-    def sort_by_xyz(model):
-        ''' WORK IN PROGRESS
-        Sorting indices by xyz coordinates
-        Returns sorted index list
-        '''
-        from ase.build import sort
-        sort(model)
-        xyz = model.get_positions()
-        sorted_xyz = sorted(xyz, key=lambda k: [k[2], k[1], k[0]])
-        index_by_xyz = []
-        current_index = -1
-
-        # Find sequence in which atoms are now arranged by xyz
-        for positions in xyz: # [x,y,z]
-            current_index += 1
-            count_iter = - 1  # Indexing in Atoms object starts from 0 not 1
-            for sorted_positions in sorted_xyz:
-                count_iter += 1
-                if (sorted_positions == positions).all():
-                    index_by_xyz = index_by_xyz + [[current_index, count_iter]]
-
-        # Find the sequence to switch indices correctly
-        index_by_xyz = sorted(index_by_xyz, key=lambda k:[k[1]])
-        change_xyz = []
-
-        for switch in index_by_xyz:
-            print(switch[0])
-            change_xyz += [switch[0]]
-
-        return model[change_xyz]
 
     if isinstance(model, str) is True:
         model = read(model)
@@ -130,11 +158,6 @@ def translation(model):
                                                         (shift_dist, 0, 0)))
 
     '''Section on index correction'''
-    model.rotate(30, 'z', rotate_cell=True)
-    #indices_new = sort_by_xyz(model)
-    #index_pairs = zip(indices_new, indices_old)
-
     model = sort_by_xyz(model)
-    model.rotate(-30, 'z', rotate_cell=True)
-    # model.set_constraint(constraint)
+
     return model
