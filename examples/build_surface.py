@@ -3,23 +3,23 @@
 from ase.build import fcc111
 from math import sqrt
 
-# Edit these
-atomic_species='Au'
+#### Traditional ASE functionality #####
+
+element='Au'
 lattice_parameter=2.939
-unit_cell_depth=4
-unit_cell_width=4
-slab_depth=4
-vacuum_region_size=10.0
+width_a=2
+width_b=2
+depth=2
+vacuum=10.0
 
 # Create surface
-slab = fcc111(atomic_species, a=lattice_parameter*sqrt(2), size=(unit_cell_width,unit_cell_depth,slab_depth))
-#slab = fcc100(atomic_species, a=lattice_parameter*sqrt(2), size=(unit_cell_width,unit_cell_depth,slab_depth))
+slab = fcc111(element, a=lattice_parameter*sqrt(2), size=(width_a,width_b,depth))
+
+# Add vacuum
+slab.center(vacuum=vacuum, axis=2)
 
 # Enable to add H at an ontop position
 #add_adsorbate(slab, 'H', 1.5, 'ontop')
-
-# Add vacuum
-slab.center(vacuum=vacuum_region_size, axis=2)
 
 # Allows you to visualise the slab
 # view(slab)
@@ -27,5 +27,22 @@ slab.center(vacuum=vacuum_region_size, axis=2)
 # Writes surface to file
 #write('slab_geometry.in',slab,format='aims')
 
+#########
+
+#### Functionality to create all surfaces ####
 from software.build import create_facets
-#TODO Add in example usage of create_facets
+
+facets, slabs = create_facets.generate(element)
+
+#########
+
+# Scale all cell vectors to match those defined previously
+for i in range(len(slabs)):
+    slabs[i].set_cell(slabs[i].get_cell()*(lattice_parameter/slabs[i].get_cell()[1][0]))
+
+# This is an assertion - it checks the same results are given by both methods
+# Note I don't test the vacuum direction. This differs by a small value, for reasons of no concern.
+eps = 1e-10
+for i in range(2):
+    for j in range(3):
+        assert(slab.get_cell()[i][j] - slabs[0].get_cell()[i][j] < eps)
