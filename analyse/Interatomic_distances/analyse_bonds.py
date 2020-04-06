@@ -185,6 +185,7 @@ def search_abnormal_bonds(model):
 
             for i in range(0, len(AB_BondsValues)):
                 for values in AB_BondsValues[i]:
+                    # TODO: Update using https://wiki.fysik.dtu.dk/ase/ase/data.html
                     if values < 0.74:
                         abnormal_bonds += [1]
                         list_of_abnormal_bonds = list_of_abnormal_bonds + [print_AB]
