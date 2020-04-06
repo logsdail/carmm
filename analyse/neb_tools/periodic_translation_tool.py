@@ -4,11 +4,16 @@
 def translation(model, a, axis=0, surface="111"):
     '''
     Performs a translaton of the model by manipulation of the unit cell,
-    maintaining the optimised geometry. After translation original Atoms object
-    is permanently changed and cannot, e.g. be viewed.
+    maintaining the optimised geometry and forces. After translation original Atoms object
+    is permanently changed.
 
     TODO:
-    FOR NOW requires surface to have tags for layers of atoms in Z-direction
+    - Is forces array shifting with the atoms in the Atoms object?
+            Adjustment added in sort_by_xyz - test required to make sure it is
+            performed twice.
+    - FOR NOW requires surface to have tags for layers of atoms in Z-direction
+    - functionality beyond FCC? or higher index?
+    - provide a reasonable example
 
     Parameters:
     model: Atoms object or string
@@ -49,6 +54,7 @@ def translation(model, a, axis=0, surface="111"):
     '''Section on moving atoms'''
     if axis == 0:
         # TODO: get rid of the rotation, it is there because math is easier
+        #       would require editing sort_y_tag function
         # align atoms perpendicular to x-axis
         if surface == "111":
             model.rotate(30, 'z', rotate_cell=True)
@@ -143,16 +149,26 @@ def translation(model, a, axis=0, surface="111"):
 
 def sort_by_xyz(model, surface):
     ''' WORK IN PROGRESS
-    Sorting indices by xyz coordinates
-    Returns sorted index list
+    Sorting indices by xyz coordinates for periodic surface models.
+    Returns Atoms object with atom indices sorted.
+
+    Parameters:
+    model: Atoms object
+        periodic surface model, so far FCC100, 111, 110 supported
+    surface: string
+        Face centered cubic low index surfce - "111", "110" or "110"
     '''
     import numpy as np
 
+    # Retrieve forces for forces array adjustments
+    calc = model.get_calculator()
+    calc_results = calc.results
+    f = calc_results["forces"]
+
     # Sorting mechanism for Y tags
-    # Specific to fcc111 needs to be universal
-    # TODO: adjust for fcc110, fcc100
     def sort_y_tag(xyz, surface):
         import numpy as np
+        #
         if surface == "111":
             y_tag = np.int(np.round((xyz[1])/(
                         np.sin(np.radians(60))*np.amin(shortest_ABs))))
@@ -193,5 +209,10 @@ def sort_by_xyz(model, surface):
                     index_by_xyz += [index]
 
     model = model[index_by_xyz]
+    # Ensure function works if force information empty and rearrange
+    # TODO: CHECK IF THIS IS NECESSARY
+    if not f == []:
+        f = f[index_by_xyz]
+
 
     return model
