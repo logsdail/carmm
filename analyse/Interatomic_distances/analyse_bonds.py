@@ -158,6 +158,9 @@ def search_abnormal_bonds(model):
 
     # Combination as AB = BA for bonds, avoiding redundancy
     from itertools import combinations_with_replacement
+    # Imports necessary to work out accurate minimum bond distances
+    from ase.data import chemical_symbols, covalent_radii
+
     # Read file or Atoms object
     if isinstance(model, str) is True:
         model = read(model)
@@ -172,9 +175,12 @@ def search_abnormal_bonds(model):
     all_bonds = combinations_with_replacement(list_of_symbols, 2)
 
     # Iterate over all arrangements of chemical symbols
+
     for bonds in all_bonds:
         A = bonds[0]
         B = bonds[1]
+        # For softcoded bond cutoff
+        sum_of_covalent_radii = covalent_radii[chemical_symbols.index(A)]+covalent_radii[chemical_symbols.index(B)]
 
         print_AB = A+'-'+B
         AB_Bonds = analysis.get_bonds(A, B)
@@ -185,15 +191,15 @@ def search_abnormal_bonds(model):
 
             for i in range(0, len(AB_BondsValues)):
                 for values in AB_BondsValues[i]:
-                    # TODO: Update using https://wiki.fysik.dtu.dk/ase/ase/data.html
-                    if values < 0.74:
+                    # TODO: move the 75% of sum_of_covalent_radii before the loops
+                    if values < max(0.4, sum_of_covalent_radii*0.75):
                         abnormal_bonds += [1]
                         list_of_abnormal_bonds = list_of_abnormal_bonds + [print_AB]
 
     # Abnormality check
     if not len(abnormal_bonds) == 0:
         print("A total of", len(abnormal_bonds),
-        "abnormal bond lengths observed (<0.74 A).")
+        "abnormal bond lengths observed (<" + max(0.4, sum_of_covalent_radii*0.75) + " A).")
         print("Identities:", list_of_abnormal_bonds)
     else:
         print("OK")
