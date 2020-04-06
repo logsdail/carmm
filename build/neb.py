@@ -76,7 +76,7 @@ def switch_indices(model, A, B):
     # User can interact with the new model
     return new_model
 
-def check_interpolation(initial, final, n_max, verbose=True, save=True):
+def check_interpolation(initial, final, n_max, interpolation="linear", verbose=True, save=True):
     '''
     Interpolates the provided geometries with n_max total images
     and checks whether any bond lengths are below sane defaults.
@@ -93,6 +93,9 @@ def check_interpolation(initial, final, n_max, verbose=True, save=True):
     n_max: integer
         Desired total number of images for the interpolation
         including start and end point.
+    interpolation: string
+        "linear" or "idpp". First better for error identification, latter for
+        use in NEB calculation
     verbose: boolean
         If verbose output of information is required
     save: boolean
@@ -119,7 +122,7 @@ def check_interpolation(initial, final, n_max, verbose=True, save=True):
     images += [final]
     neb = NEB(images, climb=True)
     # Interpolate linearly the potisions of the middle images:
-    neb.interpolate()
+    neb.interpolate(interpolation)
 
     #TODO: Tidy up this horrible mix of if statements.
     if save:
