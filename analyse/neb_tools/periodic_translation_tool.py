@@ -1,4 +1,5 @@
 '''This file is work in progress'''
+
 def sort_by_xyz(model):
     ''' WORK IN PROGRESS
     Sorting indices by xyz coordinates
@@ -50,20 +51,23 @@ def sort_by_xyz(model):
 
     return model
 
-def translation(model):
+def translation(model, a, axis=0):
     '''
     Takes X arguments: filename/Atoms object,
     TODO: manipulate cell, rotate and change position of atoms
     consistent with symmetry - WITHOUT changing indices
     For now - specific to fcc111
+    After translation original Atoms object is permanently changed.
 
     Parameters:
     model: Atoms object or string
         If string, e.g.: 'name.traj', a file of this name will be read
         to retrieve model.
-    TODO:
     a: float
         lattice parameter
+    axis: integer
+        choice - 0, 1 representing axis x, y
+    TODO:
     surface: string
         e.g. "fcc111", "fcc110"
     '''
@@ -75,47 +79,94 @@ def translation(model):
     if isinstance(model, str) is True:
         model = read(model)
 
-    '''Section on variables'''
-    # XY SHIFT
-    # take 2.0 A worth of atoms to the other side. then all cordinates - 2.0A
-    a = 3.914
-    shift_dist = a * (2**(1/2)/2)
-    # Take into account the  deg rotation, include tolerance for surf atoms
-    shift_coordinate = shift_dist * math.cos(math.radians(60))
-    indices_to_move = []
     # Retrieve constraints, calculator from the model for later
     constraint = model._get_constraints()
     prev_calc  = model.get_calculator()
-    # indices_old = sort_by_xyz(model)
 
+    '''Section on variables'''
+    if axis == 0:
+        # XY SHIFT
+        # take atoms to the other side. Then align unit cell again
+        #TODO: if function based on surface type
+        shift_dist = a * (2**(1/2)/2)
+        # Take into account the  deg rotation, include tolerance for surf atoms
+        shift_coordinate = shift_dist * math.cos(math.radians(60))
+        indices_to_move = []
+    elif axis == 1:
+        # XY SHIFT
+        # take atoms to the other side. Then align unit cell again
+        #TODO: if function based on surface type
+        shift_dist = a * (2**(1/2)/2)
+        # Take into account the  deg rotation, include tolerance for surf atoms
+        shift_coordinate = shift_dist * math.cos(math.radians(30))
+        shift_x = shift_dist * math.cos(math.radians(60))
+        shift_y = shift_dist * math.cos(math.radians(30))
+        indices_to_move = []
+    else:
+        raise ValueError
+        print("Axis index must be an integer - 0 or 1.")
 
     '''Section on moving atoms'''
-    # align atoms perpendicular to x-axis
-    model.rotate(30, 'z', rotate_cell=True)
+    if axis == 0:
+        # TODO: get rid of the rotation, it is there because math is easier
+        # align atoms perpendicular to x-axis
+        model.rotate(30, 'z', rotate_cell=True)
 
-    positions = model.get_positions()
-    count_iter = 0
-    for coordinate in positions:
-        count_iter = count_iter + 1
-        if coordinate[0] < shift_coordinate:
-            indices_to_move = indices_to_move + [count_iter - 1]
+        positions = model.get_positions()
+        count_iter = 0
+        for coordinate in positions:
+            count_iter = count_iter + 1
+            if coordinate[0] < shift_coordinate:
+                indices_to_move = indices_to_move + [count_iter - 1]
 
-    model.rotate(-30, 'z', rotate_cell=True)
+        model.rotate(-30, 'z', rotate_cell=True)
 
-    # rpt cell, take from one side and add temp, exchange change positions
-    temp_model = model.repeat((2, 1, 1))
-    temp_model.set_constraint()
-    model.set_constraint()
-    temp_indices = np.array(indices_to_move) + len(model.get_tags())
-    # Merge list of indices to switch
-    index_pairs = zip(indices_to_move, temp_indices)
+        # rpt cell, take from one side and add temp, exchange change positions
+        temp_model = model.repeat((2, 1, 1))
+        temp_model.set_constraint()
+        model.set_constraint()
+        temp_indices = np.array(indices_to_move) + len(model.get_tags())
+        # Merge list of indices to switch
+        index_pairs = zip(indices_to_move, temp_indices)
 
-    for pairs in index_pairs:
-        model[pairs[0]].position = temp_model[pairs[1]].position
+        for pairs in index_pairs:
+            model[pairs[0]].position = temp_model[pairs[1]].position
 
-    model.set_positions(
-                    np.array(model.get_positions()) - np.array(
-                                                        (shift_dist, 0, 0)))
+        del temp_model
+
+        model.set_positions(
+                        np.array(model.get_positions()) - np.array(
+                                                            (shift_dist, 0, 0)))
+    elif axis == 1:
+        # identify atoms to be moved
+        positions = model.get_positions()
+        count_iter = 0
+        for coordinate in positions:
+            count_iter = count_iter + 1
+            # Include some tolerance for surface atoms
+            if coordinate[1] < shift_y*0.95:
+                indices_to_move = indices_to_move + [count_iter - 1]
+
+        # rpt cell, take from one side and add temp, exchange change positions
+        temp_model = model.repeat((1, 2, 1))
+        temp_model.set_constraint()
+        model.set_constraint()
+        temp_indices = np.array(indices_to_move) + len(model.get_tags())
+        # Merge list of indices to switch
+        index_pairs = zip(indices_to_move, temp_indices)
+
+        for pairs in index_pairs:
+            model[pairs[0]].position = temp_model[pairs[1]].position
+
+        del temp_model
+
+        model.set_positions(
+                        np.array(model.get_positions()) - np.array(
+                            (shift_x, shift_y, 0)))
+    else:
+        raise ValueError
+        print("Axis index must be an integer - 0 or 1.")
+
 
     '''Section on index correction'''
     model = sort_by_xyz(model)
