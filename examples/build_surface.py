@@ -30,9 +30,9 @@ slab.center(vacuum=vacuum, axis=2)
 #########
 
 #### Functionality to create all surfaces ####
-from software.build import create_facets
+from software.build import facets
 
-facets, slabs = create_facets.generate(element)
+facets, slabs = facets.generate(element)
 
 #########
 
