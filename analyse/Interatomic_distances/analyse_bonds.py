@@ -197,6 +197,7 @@ def search_abnormal_bonds(model):
                         list_of_abnormal_bonds = list_of_abnormal_bonds + [print_AB]
 
     # Abnormality check
+    # is it possible to make a loop with different possible values instead of 0.75 and takes the average
     if not len(abnormal_bonds) == 0:
         print("A total of", len(abnormal_bonds),
         "abnormal bond lengths observed (<" + str(max(0.4, sum_of_covalent_radii*0.75)) + " A).")
