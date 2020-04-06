@@ -1,6 +1,7 @@
 '''This file is work in progress'''
 
-def translation(model, a, axis=0):
+
+def translation(model, a, axis=0, surface="111"):
     '''
     Performs a translaton of the model by manipulation of the unit cell,
     maintaining the optimised geometry. After translation original Atoms object
@@ -8,7 +9,6 @@ def translation(model, a, axis=0):
 
     TODO:
     FOR NOW requires surface to have tags for layers of atoms in Z-direction
-    AND is specific to fcc111.
 
     Parameters:
     model: Atoms object or string
@@ -18,9 +18,8 @@ def translation(model, a, axis=0):
         lattice parameter used in the model
     axis: integer
         Choice - 0, 1 representing axis x, y
-    TODO:
     surface: string
-        e.g. "fcc111", "fcc110"
+        FCC surface - so far supports "111", "110", "100"
     '''
 
     from ase.io import read
@@ -32,45 +31,38 @@ def translation(model, a, axis=0):
 
     # Retrieve constraints, calculator from the model for later
     constraint = model._get_constraints()
-    prev_calc  = model.get_calculator()
+    prev_calc = model.get_calculator()
 
     '''Section on variables'''
-    if axis == 0:
-        # XY SHIFT
-        # take atoms to the other side. Then align unit cell again
-        #TODO: if function based on surface type
-        shift_dist = a * (2**(1/2)/2)
-        # Take into account the  deg rotation, include tolerance for surf atoms
-        shift_coordinate = shift_dist * math.cos(math.radians(60))
-        indices_to_move = []
-    elif axis == 1:
-        # XY SHIFT
-        # take atoms to the other side. Then align unit cell again
-        #TODO: if function based on surface type
-        shift_dist = a * (2**(1/2)/2)
-        # Take into account the  deg rotation, include tolerance for surf atoms
-        shift_coordinate = shift_dist * math.cos(math.radians(30))
+    indices_to_move = []
+    shift_dist = a * (2**(1/2)/2)
+    if surface == "110":
+        shift_x = shift_dist
+        shift_y = shift_dist
+    elif surface == "111":
         shift_x = shift_dist * math.cos(math.radians(60))
         shift_y = shift_dist * math.cos(math.radians(30))
-        indices_to_move = []
-    else:
-        raise ValueError
-        print("Axis index must be an integer - 0 or 1.")
+    elif surface == "100":
+        shift_x = shift_dist * math.cos(math.radians(30))
+        shift_y = shift_dist
 
     '''Section on moving atoms'''
     if axis == 0:
         # TODO: get rid of the rotation, it is there because math is easier
         # align atoms perpendicular to x-axis
-        model.rotate(30, 'z', rotate_cell=True)
+        if surface == "111":
+            model.rotate(30, 'z', rotate_cell=True)
 
         positions = model.get_positions()
         count_iter = 0
         for coordinate in positions:
             count_iter = count_iter + 1
-            if coordinate[0] < shift_coordinate:
+            # Include tolerance
+            if coordinate[0] < shift_x*1.02:
                 indices_to_move = indices_to_move + [count_iter - 1]
 
-        model.rotate(-30, 'z', rotate_cell=True)
+        if surface == "111":
+            model.rotate(-30, 'z', rotate_cell=True)
 
         # rpt cell, take from one side and add temp, exchange change positions
         temp_model = model.repeat((2, 1, 1))
@@ -85,9 +77,18 @@ def translation(model, a, axis=0):
 
         del temp_model
 
-        model.set_positions(
-                        np.array(model.get_positions()) - np.array(
-                                                            (shift_dist, 0, 0)))
+        if surface == "111":
+            model.set_positions(
+                            np.array(model.get_positions()) - np.array(
+                                (shift_dist, 0, 0)))
+        elif surface == "100":
+            model.set_positions(
+                            np.array(model.get_positions()) - np.array(
+                                (shift_dist, 0, 0)))
+        elif surface == "110":
+            model.set_positions(
+                            np.array(model.get_positions()) - np.array(
+                                (a, 0, 0)))
     elif axis == 1:
         # identify atoms to be moved
         positions = model.get_positions()
@@ -95,7 +96,7 @@ def translation(model, a, axis=0):
         for coordinate in positions:
             count_iter = count_iter + 1
             # Include some tolerance for surface atoms
-            if coordinate[1] < shift_y*0.95:
+            if coordinate[1] < shift_y*0.98:
                 indices_to_move = indices_to_move + [count_iter - 1]
 
         # rpt cell, take from one side and add temp, exchange change positions
@@ -111,16 +112,26 @@ def translation(model, a, axis=0):
 
         del temp_model
 
-        model.set_positions(
-                        np.array(model.get_positions()) - np.array(
-                            (shift_x, shift_y, 0)))
+        if surface == "111":
+            model.set_positions(
+                            np.array(model.get_positions()) - np.array(
+                                (shift_x, shift_y, 0)))
+        elif surface == "100":
+            model.set_positions(
+                            np.array(model.get_positions()) - np.array(
+                                (0, shift_y, 0)))
+        elif surface == "110":
+            model.set_positions(
+                            np.array(model.get_positions()) - np.array(
+                                (0, shift_y, 0)))
+
     else:
         raise ValueError
         print("Axis index must be an integer - 0 or 1.")
 
 
     '''Section on index correction'''
-    model = sort_by_xyz(model)
+    model = sort_by_xyz(model, surface)
 
     # Retain calculator information and constraint
     prev_calc.atoms = model
@@ -130,7 +141,7 @@ def translation(model, a, axis=0):
     return model
 
 
-def sort_by_xyz(model):
+def sort_by_xyz(model, surface):
     ''' WORK IN PROGRESS
     Sorting indices by xyz coordinates
     Returns sorted index list
@@ -140,9 +151,13 @@ def sort_by_xyz(model):
     # Sorting mechanism for Y tags
     # Specific to fcc111 needs to be universal
     # TODO: adjust for fcc110, fcc100
-    def sort_y_tag(xyz):
-        y_tag = np.int(np.round((xyz[1])/(
-                    np.sin(np.radians(60))*np.amin(shortest_ABs))))
+    def sort_y_tag(xyz, surface):
+        import numpy as np
+        if surface == "111":
+            y_tag = np.int(np.round((xyz[1])/(
+                        np.sin(np.radians(60))*np.amin(shortest_ABs))))
+        if surface == "110" or "100":
+            y_tag = np.int(np.round((xyz[1])/(np.amin(shortest_ABs))))
         return y_tag
 
     # sort z direction by tags
@@ -167,7 +182,7 @@ def sort_by_xyz(model):
                 shortest_ABs += [distance]
 
             sorted_xyz = sorted(
-                xyz, key=lambda k: [sort_y_tag(k), k[0]])  # Y/ABmin - integer
+                xyz, key=lambda k: [sort_y_tag(k, surface), k[0]])  # Y/ABmin - integer
         else:
             sorted_xyz = xyz
 
