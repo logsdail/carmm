@@ -1,72 +1,23 @@
 '''This file is work in progress'''
 
-def sort_by_xyz(model):
-    ''' WORK IN PROGRESS
-    Sorting indices by xyz coordinates
-    Returns sorted index list
-    '''
-    import numpy as np
-
-    # Sorting mechanism for Y tags
-    # Specific to fcc111 needs to be universal
-    # TODO: adjust for fcc110, fcc100
-    def sort_y_tag(xyz):
-        y_tag = np.int(np.round((xyz[1])/(
-                    np.sin(np.radians(60))*np.amin(shortest_ABs))))
-        return y_tag
-
-    # sort z direction by tags
-    # TODO: identify tags like y-tags above
-    # reverse, need to start from bottom, ie. last tag
-    tags = list(set(model.get_tags()))
-    tags = sorted(tags, reverse=True)
-    index_by_xyz = []
-    xyz_all = model.get_positions()
-
-    for tag in tags:
-        index_by_tag = [atom.index for atom in model if atom.tag == tag]
-        xyz = model[index_by_tag].get_positions()
-
-        if not tag == 0:
-            all_AB = model[index_by_tag].get_all_distances()
-            shortest_ABs = []
-            # Figure minimum bond lengths in this set of atoms
-            for distance in all_AB:
-                # Need to remove 0.0 from array before finding min value
-                distance = np.amin(np.setdiff1d(distance,np.array(0.0)))
-                shortest_ABs += [distance]
-
-            sorted_xyz = sorted(
-                xyz, key=lambda k: [sort_y_tag(k), k[0]])  # Y/ABmin - integer
-        else:
-            sorted_xyz = xyz
-
-        # Identify sequence that will correctly reorder Atoms based on xyz
-        for coordinate in sorted_xyz:
-            for index in index_by_tag:
-                if (coordinate == model[index].position).all():
-                    index_by_xyz += [index]
-
-    model = model[index_by_xyz]
-
-    return model
-
 def translation(model, a, axis=0):
     '''
-    Takes X arguments: filename/Atoms object,
-    TODO: manipulate cell, rotate and change position of atoms
-    consistent with symmetry - WITHOUT changing indices
-    For now - specific to fcc111
-    After translation original Atoms object is permanently changed.
+    Performs a translaton of the model by manipulation of the unit cell,
+    maintaining the optimised geometry. After translation original Atoms object
+    is permanently changed and cannot, e.g. be viewed.
+
+    TODO:
+    FOR NOW requires surface to have tags for layers of atoms in Z-direction
+    AND is specific to fcc111.
 
     Parameters:
     model: Atoms object or string
         If string, e.g.: 'name.traj', a file of this name will be read
         to retrieve model.
     a: float
-        lattice parameter
+        lattice parameter used in the model
     axis: integer
-        choice - 0, 1 representing axis x, y
+        Choice - 0, 1 representing axis x, y
     TODO:
     surface: string
         e.g. "fcc111", "fcc110"
@@ -175,5 +126,57 @@ def translation(model, a, axis=0):
     prev_calc.atoms = model
     model.set_calculator(prev_calc)
     model.set_constraint(constraint)
+
+    return model
+
+
+def sort_by_xyz(model):
+    ''' WORK IN PROGRESS
+    Sorting indices by xyz coordinates
+    Returns sorted index list
+    '''
+    import numpy as np
+
+    # Sorting mechanism for Y tags
+    # Specific to fcc111 needs to be universal
+    # TODO: adjust for fcc110, fcc100
+    def sort_y_tag(xyz):
+        y_tag = np.int(np.round((xyz[1])/(
+                    np.sin(np.radians(60))*np.amin(shortest_ABs))))
+        return y_tag
+
+    # sort z direction by tags
+    # TODO: identify z-tags like y-tags above, for models not created in ASE
+    # reverse, need to start from bottom, ie. last tag
+    tags = list(set(model.get_tags()))
+    tags = sorted(tags, reverse=True)
+    index_by_xyz = []
+    xyz_all = model.get_positions()
+
+    for tag in tags:
+        index_by_tag = [atom.index for atom in model if atom.tag == tag]
+        xyz = model[index_by_tag].get_positions()
+
+        if not tag == 0:
+            all_AB = model[index_by_tag].get_all_distances()
+            shortest_ABs = []
+            # Figure minimum bond lengths in this set of atoms
+            for distance in all_AB:
+                # Need to remove 0.0 from array before finding min value
+                distance = np.amin(np.setdiff1d(distance,np.array(0.0)))
+                shortest_ABs += [distance]
+
+            sorted_xyz = sorted(
+                xyz, key=lambda k: [sort_y_tag(k), k[0]])  # Y/ABmin - integer
+        else:
+            sorted_xyz = xyz
+
+        # Identify sequence that will correctly reorder Atoms based on xyz
+        for coordinate in sorted_xyz:
+            for index in index_by_tag:
+                if (coordinate == model[index].position).all():
+                    index_by_xyz += [index]
+
+    model = model[index_by_xyz]
 
     return model
