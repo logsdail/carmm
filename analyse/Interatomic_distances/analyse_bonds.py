@@ -199,7 +199,7 @@ def search_abnormal_bonds(model):
     # Abnormality check
     if not len(abnormal_bonds) == 0:
         print("A total of", len(abnormal_bonds),
-        "abnormal bond lengths observed (<" + max(0.4, sum_of_covalent_radii*0.75) + " A).")
+        "abnormal bond lengths observed (<" + str(max(0.4, sum_of_covalent_radii*0.75)) + " A).")
         print("Identities:", list_of_abnormal_bonds)
     else:
         print("OK")
