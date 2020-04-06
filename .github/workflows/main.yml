@@ -35,14 +35,10 @@ jobs:
     - name: Setup Python environment
       run: |
         echo $PWD
-        echo $PYTHONPATH
         echo "::set-env name=PYTHONPATH::/home/runner/work/software"
-        echo $PYTHONPATH
-    # export PYTHONPATH=$PWD:$PYTHONPATH
     
     # Runs a set of commands using the runners shell
     - name: Run the examples
       run: |
-        echo $PYTHONPATH
         python3 examples/build_surface.py
-    # python3 examples/build_NEB.py
+        python3 examples/build_NEB.py
