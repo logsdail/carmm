@@ -39,7 +39,9 @@ jobs:
     
     # Runs a set of commands using the runners shell
     - name: Run the examples
-      run: bash run_all.sh
+      run: |
+        cd examples
+        bash run_all.sh
     #  run: |
     #    python3 examples/build_surface.py
     #    python3 examples/build_NEB.py
