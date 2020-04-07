@@ -172,7 +172,10 @@ def sort_by_xyz(model, surface):
         if surface == "111":
             y_tag = np.int(np.round((xyz[1])/(
                         np.sin(np.radians(60))*np.amin(shortest_ABs))))
-        if surface == "110" or "100":
+        if surface == "110":
+            y_tag = np.int(np.round((xyz[1])/(np.amin(shortest_ABs))))
+
+        if surface == "100":
             y_tag = np.int(np.round((xyz[1])/(np.amin(shortest_ABs))))
         return y_tag
 
@@ -182,7 +185,6 @@ def sort_by_xyz(model, surface):
     tags = list(set(model.get_tags()))
     tags = sorted(tags, reverse=True)
     index_by_xyz = []
-    xyz_all = model.get_positions()
 
     for tag in tags:
         index_by_tag = [atom.index for atom in model if atom.tag == tag]
@@ -194,11 +196,11 @@ def sort_by_xyz(model, surface):
             # Figure minimum bond lengths in this set of atoms
             for distance in all_AB:
                 # Need to remove 0.0 from array before finding min value
-                distance = np.amin(np.setdiff1d(distance,np.array(0.0)))
+                distance = np.amin(np.setdiff1d(distance, np.array(0.0)))
                 shortest_ABs += [distance]
 
             sorted_xyz = sorted(
-                xyz, key=lambda k: [sort_y_tag(k, surface), k[0]])  # Y/ABmin - integer
+                xyz, key=lambda k: [sort_y_tag(k, surface), k[0]])  # Y-tag
         else:
             sorted_xyz = xyz
 
@@ -213,6 +215,5 @@ def sort_by_xyz(model, surface):
     # TODO: CHECK IF THIS IS NECESSARY
     if not f == []:
         f = f[index_by_xyz]
-
 
     return model
