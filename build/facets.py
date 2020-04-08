@@ -1,6 +1,6 @@
 #TODO: How about we change facets to "highest_index_facet", and it just generates all possible facets up to this number?
-			#I would prefer it as a list of facets, so that we can generate just one face if thats the requirement. 
-#      I'm also going to change this so it doesn't write by default, as I'd prefer it to return an object
+# I would prefer it as a list of facets, so that we can generate just one face if thats the requirement.
+# I'm also going to change this so it doesn't write by default, as I'd prefer it to return an object
 def generate(bulk_model, layers=2, facets=[(1,1,1)], supercell =(1,1,1), vacuum=10, save=False):
 	'''
 	Function to create variety of different facets

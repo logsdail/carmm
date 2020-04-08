@@ -148,7 +148,7 @@ def analyse_angles(model, A, B, C):
         np.amin(ABC_AngleValues), np.amax(ABC_AngleValues)))
 
 
-def search_abnormal_bonds(model):
+def search_abnormal_bonds(model, verbose=True):
     '''
     Check all bond lengths in the model for abnormally
     short ones, ie. less than 0.74 Angstrom.
@@ -198,12 +198,16 @@ def search_abnormal_bonds(model):
 
     # Abnormality check
     # is it possible to make a loop with different possible values instead of 0.75 and takes the average
-    if not len(abnormal_bonds) == 0:
-        print("A total of", len(abnormal_bonds),
-        "abnormal bond lengths observed (<" + str(max(0.4, sum_of_covalent_radii*0.75)) + " A).")
-        print("Identities:", list_of_abnormal_bonds)
+    if len(abnormal_bonds) > 0:
+        if verbose:
+            print("A total of", len(abnormal_bonds),
+            "abnormal bond lengths observed (<" + str(max(0.4, sum_of_covalent_radii*0.75)) + " A).")
+            print("Identities:", list_of_abnormal_bonds)
+        return False
     else:
-        print("OK")
+        if verbose:
+            print("OK")
+        return True
 
 
 

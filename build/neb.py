@@ -16,9 +16,9 @@ def switch_indices(model, A, B):
     '''
 
     from ase import Atoms
-    from ase.io import read
 
-    if isinstance(model, str) is True:
+    if isinstance(model, str):
+        from ase.io import read
         model = read(model)
 
     # Index manipulation
@@ -29,12 +29,15 @@ def switch_indices(model, A, B):
     # Defining list of manipulated atoms
     list_of_atoms = []
 
-    # Retrieve calculator information as forces array
-    # needs to be adjusted.
-    prev_calc = model.get_calculator()
-
-    prev_calc_results = prev_calc.results
-    f = prev_calc_results["forces"]
+    # Retrieve calculator information
+    # TODO: Move this after the creation of the atoms object, so we reduce if statements.
+    if model.get_calculator() is not None:
+        # If it exists, forces array needs to be adjusted.
+        prev_calc = model.get_calculator()
+        prev_calc_results = prev_calc.results
+        f = prev_calc_results["forces"]
+    else:
+        f = []
 
     # Other properties require rearrangement too.
     t = model.get_tags()
@@ -51,7 +54,8 @@ def switch_indices(model, A, B):
     list_of_atoms[A], list_of_atoms[B] = list_of_atoms[B], list_of_atoms[A]
     t[A], t[B] = t[B], t[A]
     # Ensure function works if force information empty
-    if not f == []:
+    # TODO: Where is this information subsequently used?
+    if f:
         f[A], f[B] = f[B], f[A]
 
     # Generate a new model based on switched indices
@@ -60,25 +64,23 @@ def switch_indices(model, A, B):
                       cell=model.get_cell(),
                       tags=t,
                       constraint=model._get_constraints(),
-                      calculator=prev_calc)
+                      #calculator=prev_calc
+                      )
 
-    # Trick calculator check_state by replacing atoms information
-    # Can now use energy and forces as no changes in geometry detected
-    prev_calc.atoms = new_model
-    
+    if model.get_calculator() is not None:
+        new_model.set_calculator(prev_calc)
+        # Trick calculator check_state by replacing atoms information
+        # Can now use energy and forces as no changes in geometry detected
+        prev_calc.atoms = new_model
 
     # User can interact with the new model
     return new_model
 
-
-def check_interpolation(initial, final, n_max):
+def check_interpolation(initial, final, n_max, interpolation="linear", verbose=True, save=True):
     '''
     Interpolates the provided geometries with n_max total images
-    and checks whether any bond lengths below 0.74 Angstrom exist
-    saves the interpolation in interpolation.traj
-
-    # TODO: incorporate ase.neighborlist.natural_cutoff
-    # for abnormal bond lengths based on typical A-B bonds
+    and checks whether any bond lengths are below sane defaults.
+    Saves the interpolation in interpolation.traj
 
     Parameters:
 
@@ -91,17 +93,24 @@ def check_interpolation(initial, final, n_max):
     n_max: integer
         Desired total number of images for the interpolation
         including start and end point.
+    interpolation: string
+        "linear" or "idpp". First better for error identification, latter for
+        use in NEB calculation
+    verbose: boolean
+        If verbose output of information is required
+    save: boolean
+        Whether to save the trajectory for transfer on to an NEB calculation
     '''
 
     from ase.neb import NEB
-    from software.analyse.Interatomic_distances.analyse_bonds import search_abnormal_bonds
+    from software.analyse.bonds import search_abnormal_bonds
     from ase.io.trajectory import Trajectory
     from ase.io import read
 
     # Pre-requirements
-    if isinstance(initial, str) is True:
+    if isinstance(initial, str):
         initial = read(initial)
-    if isinstance(final, str) is True:
+    if isinstance(final, str):
         final = read(final)
     if not isinstance(n_max, int):
         raise ValueError
@@ -113,17 +122,26 @@ def check_interpolation(initial, final, n_max):
     images += [final]
     neb = NEB(images, climb=True)
     # Interpolate linearly the potisions of the middle images:
-    neb.interpolate()
+    neb.interpolate(interpolation)
 
-    t = Trajectory('interpolation.traj', 'w')
+    #TODO: Tidy up this horrible mix of if statements.
+    if save:
+        t = Trajectory('interpolation.traj', 'w')
 
+    flag = True
     for i in range(0, n_max):
-        print("Assessing image", str(i+1) + '.')
-        search_abnormal_bonds(images[i])
-        t.write(images[i])
+        if verbose:
+            print("Assessing image", str(i+1) + '.')
+        updated_flag = search_abnormal_bonds(images[i], verbose)
+        if save:
+            t.write(images[i])
+        if (not updated_flag):
+            flag = updated_flag
 
-    t.close()
+    if save:
+        t.close()
 
+    return flag
 
 '''
 def switch_indices_old(model, A, B, output_file):
