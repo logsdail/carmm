@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 from software.build.neb import switch_indices, check_interpolation
 from ase.build import molecule
 

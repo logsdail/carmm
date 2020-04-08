@@ -21,10 +21,12 @@ slab.center(vacuum=vacuum, axis=2)
 # Enable to add H at an ontop position
 #add_adsorbate(slab, 'H', 1.5, 'ontop')
 
-# Allows you to visualise the slab
+# Enable to visualise the slab
+# from ase.visualize impoty view
 # view(slab)
 
 # Writes surface to file
+# from ase.io import write
 #write('slab_geometry.in',slab,format='aims')
 
 #########
