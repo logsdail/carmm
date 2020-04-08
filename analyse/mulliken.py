@@ -1,3 +1,4 @@
+# TODO: Duplicate this for spin.
 def extract_mulliken_charge(fn, natoms):
     '''
     Function to extract and return the Mulliken charges from an FHI-aims output.
