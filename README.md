@@ -12,7 +12,7 @@ General scripts and software for everyday computational chemistry. Folder names 
 
 Insert this folder directory into your systems PYTHONPATH variable (e.g. ~/.bashrc) and it should automatically pick up the functions in the child folders. 
 
-~Example: export PYTHONPATH:$PWD:$PYTHONPATH~
+*Example: export PYTHONPATH:$PWD:$PYTHONPATH*
  
 If you want to contribute, great! Here are excellent resources on:
 - best programming practice: https://gist.github.com/sloria/7001839.
