@@ -154,7 +154,12 @@ class MullikenData:
                         if self.atoms[atom].spin[sp].kpts[kpt].energies[res] > self.homo:
                             self.homo = self.atoms[atom].spin[sp].kpts[kpt].energies[res]
 
-        return self.homo
+        # Even though we calculate the HOMO, for periodic systems the x-axis is shifted so
+        # the HOMO is zero. Therefore return zero to match the x-axis returned.
+        if self.get_nkpts() > 1:
+            return 0.0
+        else:
+            return self.homo
 
     def get_all_plot_data(self):
         return self.get_plot_data(atoms=range(self.get_natoms()),
@@ -238,7 +243,10 @@ class MullikenData:
                                                 self.atoms[atom].spin[sp].kpts[kpt].weight * \
                                                 norm.pdf(x, energy, sigma)
 
-        return x, data
+        if self.get_nkpts() > 1:
+            return x-self.homo, data
+        else:
+            return x, data
 
     def get_data_integrity(self):
         x, md = self.get_all_plot_data()

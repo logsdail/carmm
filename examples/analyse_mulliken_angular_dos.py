@@ -38,8 +38,13 @@ for sp in range(len(s)):
         plt.plot(x, -(s[sp]+p[sp]+d[sp]), lw=2, color='blue', ls=get_graph_linetype())
         plt.plot(x, -(s[sp]+p[sp]+d[sp]+f[sp]), lw=2, color='black', ls=get_graph_linetype())
 
-# Work to rescale axes. Extracts the maximum y-value
-set_graph_axes(plt, x, s+p+d+f, mulliken_data.get_homo(), mulliken_data.get_graph_xlabel())
+# Collect all data, which is necessary for managing the axes
+all_data = [ s[0] + p[0] +d[0] +f[0] ]
+if len(s) > 1:
+    all_data.append(s[1] + p[1] +d[1] +f[1])
+
+# Work to rescale axes. Extracts the maximum y-values
+set_graph_axes(plt, x, all_data, mulliken_data.get_homo(), mulliken_data.get_graph_xlabel())
 
 # Display the graphs
 # plt.show()
