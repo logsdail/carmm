@@ -178,7 +178,7 @@ class MullikenData:
             kpts = range(self.get_nkpts())
         return self.get_plot_data(atoms, spin, kpts, 'f')
 
-    def get_plot_data(self, atoms, spin, kpts, angular, ymin=-20, ymax=+20, npoints=1000):
+    def get_plot_data(self, atoms, spin, kpts, angular, ymin=-15, ymax=+10, npoints=1000, variance=0.02):
 
         import numpy as np
         from scipy.stats import norm
@@ -194,7 +194,6 @@ class MullikenData:
         # Plotting variables
         data = [ [ 0.0 ] * npoints ] * (len(spin))
         x = np.linspace(ymin, ymax, npoints)
-        variance = 0.02
         sigma = np.sqrt(variance)
 
         # Collect information in data object. Note two sets of results, for spin up and down.
@@ -252,4 +251,7 @@ def get_graph_colour(choice=0):
 def get_graph_linetype(choice=0):
     line_types = ['solid', 'dashed', 'dashdot', 'dotted']
     return line_types[choice]
+
+def get_indices_of_elements(list_of_symbols, symbol):
+    return [i for i, x in enumerate(list_of_symbols) if x == symbol.capitalize()]
 
