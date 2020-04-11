@@ -209,7 +209,7 @@ def search_abnormal_bonds(model, verbose=True):
             print("OK")
         return True
 
-def compare_structures(atoms1, atoms2, cutoff=0.01):
+def compare_structures(atoms1, atoms2):
     '''
 
     '''
