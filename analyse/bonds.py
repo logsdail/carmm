@@ -209,8 +209,41 @@ def search_abnormal_bonds(model, verbose=True):
             print("OK")
         return True
 
+
+def compare_structures(atoms1, atoms2, cutoff=0.01):
+
+    from math import sqrt
+
+    if len(atoms1) != len(atoms2):
+        print("The inputs don't contain the same number of atoms.")
+        exit()
+
+    # Configure arrays
+    differences = []
+    atoms2_indices = []
+    # Iterate over indices of all atoms in structure 1 and compare to structure 2.
+    for i in range(len(atoms1.positions)):
+        xyz = atoms1.positions[i]
+        distance_sq = 999999.9
+        temp_index = 0
+        for j in range(len(atoms2.positions)):
+            temp_distance_sq = ((atoms2.positions[j][0] - xyz[0]) * (atoms2.positions[j][0] - xyz[0])
+                                + (atoms2.positions[j][1] - xyz[1]) * (atoms2.positions[j][1] - xyz[1])
+                                + (atoms2.positions[j][2] - xyz[2]) * (atoms2.positions[j][2] - xyz[2]))
+
+            if distance_sq > temp_distance_sq and \
+                    atoms1.symbols[i] == atoms2.symbols[j]:
+                distance_sq = temp_distance_sq
+                temp_index = j
+
+        atoms2_indices.append(temp_index)
+        differences.append(sqrt(distance_sq))
+
+    return atoms2_indices, differences
+
 def get_indices_of_elements(list_of_symbols, symbol):
     return [i for i, x in enumerate(list_of_symbols) if x == symbol.capitalize()]
+
 
 
 '''

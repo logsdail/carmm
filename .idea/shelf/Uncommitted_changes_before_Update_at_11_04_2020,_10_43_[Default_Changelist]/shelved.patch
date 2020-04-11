@@ -1,0 +1,225 @@
+Index: examples/analyse_mulliken_angular_dos.py
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>#!/usr/bin/env python3\n\nimport matplotlib.pyplot as plt\nfrom software.analyse.mulliken import parse_mulliken_file, get_graph_linetype\n\n# Read in data from file\nfile = \"data/CO/Mulliken.out\"\nwith open(file, 'r') as read_stream:\n    lines = read_stream.readlines()\n\n# Parse data from Mulliken file\nmulliken_data = parse_mulliken_file(lines)\n\n# Debug statements to check we have read everything correctly\nprint(\"Atoms    : \", mulliken_data.get_natoms())\nprint(\"Spins    : \", mulliken_data.get_nspin())\nprint(\"K-points : \", mulliken_data.get_nkpts())\nprint(\"States   : \", mulliken_data.get_nstates())\nprint(\"Data Integrity : \", mulliken_data.get_data_integrity())\n\n#TODO: homo, lumo = atoms.get_homo_lumo_data()\n# Collect the data to plot as a function of angular momenta\nx, s = mulliken_data.get_s_plot_data()\nx, p = mulliken_data.get_p_plot_data()\nx, d = mulliken_data.get_d_plot_data()\nx, f = mulliken_data.get_f_plot_data()\n\n# Put this at the end so it covers everything else and shows the outline of the DOS correctly\nfor sp in range(len(s)):\n    if sp == 0:\n        plt.plot(x, s[sp], lw=2, color='red', label=file, ls=get_graph_linetype())\n        plt.plot(x, s[sp]+p[sp], lw=2, color='green', label=file, ls=get_graph_linetype())\n        plt.plot(x, s[sp]+p[sp]+d[sp], lw=2, color='blue', label=file, ls=get_graph_linetype())\n        plt.plot(x, s[sp]+p[sp]+d[sp]+f[sp], lw=2, color='black', label=file, ls=get_graph_linetype())\n    else: # (sp == 1)\n        plt.plot(x, -(s[sp]), lw=2, color='red', label=file, ls=get_graph_linetype())\n        plt.plot(x, -(s[sp]+p[sp]), lw=2, color='green', label=file, ls=get_graph_linetype())\n        plt.plot(x, -(s[sp]+p[sp]+d[sp]), lw=2, color='blue', label=file, ls=get_graph_linetype())\n        plt.plot(x, -(s[sp]+p[sp]+d[sp]+f[sp]), lw=2, color='black', label=file, ls=get_graph_linetype())\n\n# Work to rescale axes. Extracts the maximum y-value\nymax = max(map(max, s+p+d+f))*1.1\nymin = 0\nif len(s) > 1:\n    ymin = -ymax\n    plt.axhline(y=0, xmin=min(x), xmax=max(x), color='black', lw=2)\nplt.ylim(ymin, ymax)\nplt.yticks([])\nplt.ylabel('Density of States (1/eV)')\n\n# Organise x-axis\n#plt.xlim(min_point+10, max_point-10)\nplt.xlabel(mulliken_data.get_graph_xlabel())\n\n# HOMO\n#plt.axvline(x=homo, ymin=-100, ymax=100, color='black', lw=2, ls=line_types[k]) # MFI\n\n# Display the graphs\n#plt.show()
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- examples/analyse_mulliken_angular_dos.py	(revision 7692ddf042dca7371aee5fabf33a5c1d1ed14b91)
++++ examples/analyse_mulliken_angular_dos.py	(date 1586598116099)
+@@ -11,15 +11,16 @@
+ # Parse data from Mulliken file
+ mulliken_data = parse_mulliken_file(lines)
+ 
+-# Debug statements to check we have read everything correctly
+-print("Atoms    : ", mulliken_data.get_natoms())
+-print("Spins    : ", mulliken_data.get_nspin())
+-print("K-points : ", mulliken_data.get_nkpts())
+-print("States   : ", mulliken_data.get_nstates())
+-print("Data Integrity : ", mulliken_data.get_data_integrity())
++#### Assertion statements ####
++assert(mulliken_data.get_natoms() == 2)
++assert(mulliken_data.get_nspin() == 2)
++assert(mulliken_data.get_nkpts() == 1)
++assert(mulliken_data.get_nstates() == 13)
++assert(mulliken_data.get_data_integrity())
++#####
+ 
+ #TODO: homo, lumo = atoms.get_homo_lumo_data()
+-# Collect the data to plot as a function of angular momenta
++# Collect the density of states data to plot as a function of angular momenta
+ x, s = mulliken_data.get_s_plot_data()
+ x, p = mulliken_data.get_p_plot_data()
+ x, d = mulliken_data.get_d_plot_data()
+@@ -28,15 +29,15 @@
+ # Put this at the end so it covers everything else and shows the outline of the DOS correctly
+ for sp in range(len(s)):
+     if sp == 0:
+-        plt.plot(x, s[sp], lw=2, color='red', label=file, ls=get_graph_linetype())
+-        plt.plot(x, s[sp]+p[sp], lw=2, color='green', label=file, ls=get_graph_linetype())
+-        plt.plot(x, s[sp]+p[sp]+d[sp], lw=2, color='blue', label=file, ls=get_graph_linetype())
+-        plt.plot(x, s[sp]+p[sp]+d[sp]+f[sp], lw=2, color='black', label=file, ls=get_graph_linetype())
++        plt.plot(x, s[sp], lw=2, color='red', ls=get_graph_linetype())
++        plt.plot(x, s[sp]+p[sp], lw=2, color='green', ls=get_graph_linetype())
++        plt.plot(x, s[sp]+p[sp]+d[sp], lw=2, color='blue', ls=get_graph_linetype())
++        plt.plot(x, s[sp]+p[sp]+d[sp]+f[sp], lw=2, color='black', ls=get_graph_linetype())
+     else: # (sp == 1)
+-        plt.plot(x, -(s[sp]), lw=2, color='red', label=file, ls=get_graph_linetype())
+-        plt.plot(x, -(s[sp]+p[sp]), lw=2, color='green', label=file, ls=get_graph_linetype())
+-        plt.plot(x, -(s[sp]+p[sp]+d[sp]), lw=2, color='blue', label=file, ls=get_graph_linetype())
+-        plt.plot(x, -(s[sp]+p[sp]+d[sp]+f[sp]), lw=2, color='black', label=file, ls=get_graph_linetype())
++        plt.plot(x, -(s[sp]), lw=2, color='red', ls=get_graph_linetype())
++        plt.plot(x, -(s[sp]+p[sp]), lw=2, color='green', ls=get_graph_linetype())
++        plt.plot(x, -(s[sp]+p[sp]+d[sp]), lw=2, color='blue', ls=get_graph_linetype())
++        plt.plot(x, -(s[sp]+p[sp]+d[sp]+f[sp]), lw=2, color='black', ls=get_graph_linetype())
+ 
+ # Work to rescale axes. Extracts the maximum y-value
+ ymax = max(map(max, s+p+d+f))*1.1
+Index: examples/analyse_mulliken_total_dos.py
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>#!/usr/bin/env python3\n\nimport matplotlib.pyplot as plt\nfrom software.analyse.mulliken import parse_mulliken_file, get_graph_linetype\n\n# Read in data from file\nfile = \"data/Fe/Mulliken.out\"\nwith open(file, 'r') as read_stream:\n    lines = read_stream.readlines()\n\n# Parse data from Mulliken file\nmulliken_data = parse_mulliken_file(lines)\n\n# Debug statements to check we have read everything correctly\nprint(\"Atoms    : \", mulliken_data.get_natoms())\nprint(\"Spins    : \", mulliken_data.get_nspin())\nprint(\"K-points : \", mulliken_data.get_nkpts())\nprint(\"States   : \", mulliken_data.get_nstates())\nprint(\"Data Integrity : \", mulliken_data.get_data_integrity())\n\n#TODO: homo, lumo = atoms.get_homo_lumo_data()\n# Collect the data to plot as a function of angular momenta\nx, data = mulliken_data.get_all_plot_data()\n\n# Put this at the end so it covers everything else and shows the outline of the DOS correctly\nfor sp in range(len(data)):\n    if sp == 0:\n        plt.plot(x, data[sp], lw=2, color='black', label=file, ls=get_graph_linetype())\n    else: # (sp == 1)\n        plt.plot(x, -(data[sp]), lw=2, color='black', label=file, ls=get_graph_linetype())\n\n# Work to rescale axes. Extracts the maximum y-value\nymax = max(map(max, data))*1.1\nymin = 0\nif len(data) > 1:\n    ymin = -ymax\n    plt.axhline(y=0, xmin=min(x), xmax=max(x), color='black', lw=2)\nplt.ylim(ymin, ymax)\nplt.yticks([])\nplt.ylabel('Density of States (1/eV)')\n\n# Organise x-axis\n#plt.xlim(min_point+10, max_point-10)\nplt.xlabel(mulliken_data.get_graph_xlabel())\n\n# HOMO\n#plt.axvline(x=homo, ymin=-100, ymax=100, color='black', lw=2, ls=line_types[k]) # MFI\n\n# Display the graphs\n#plt.show()
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- examples/analyse_mulliken_total_dos.py	(revision 7692ddf042dca7371aee5fabf33a5c1d1ed14b91)
++++ examples/analyse_mulliken_total_dos.py	(date 1586598116102)
+@@ -11,23 +11,24 @@
+ # Parse data from Mulliken file
+ mulliken_data = parse_mulliken_file(lines)
+ 
+-# Debug statements to check we have read everything correctly
+-print("Atoms    : ", mulliken_data.get_natoms())
+-print("Spins    : ", mulliken_data.get_nspin())
+-print("K-points : ", mulliken_data.get_nkpts())
+-print("States   : ", mulliken_data.get_nstates())
+-print("Data Integrity : ", mulliken_data.get_data_integrity())
++#### Assertion statements ####
++assert(mulliken_data.get_natoms() == 1)
++assert(mulliken_data.get_nspin() == 2)
++assert(mulliken_data.get_nkpts() == 1)
++assert(mulliken_data.get_nstates() == 19)
++assert(mulliken_data.get_data_integrity())
++#####
+ 
+ #TODO: homo, lumo = atoms.get_homo_lumo_data()
+-# Collect the data to plot as a function of angular momenta
++# Collect all the density of states data to plot
+ x, data = mulliken_data.get_all_plot_data()
+ 
+ # Put this at the end so it covers everything else and shows the outline of the DOS correctly
+ for sp in range(len(data)):
+     if sp == 0:
+-        plt.plot(x, data[sp], lw=2, color='black', label=file, ls=get_graph_linetype())
++        plt.plot(x, data[sp], lw=2, color='black', ls=get_graph_linetype())
+     else: # (sp == 1)
+-        plt.plot(x, -(data[sp]), lw=2, color='black', label=file, ls=get_graph_linetype())
++        plt.plot(x, -(data[sp]), lw=2, color='black', ls=get_graph_linetype())
+ 
+ # Work to rescale axes. Extracts the maximum y-value
+ ymax = max(map(max, data))*1.1
+@@ -47,4 +48,4 @@
+ #plt.axvline(x=homo, ymin=-100, ymax=100, color='black', lw=2, ls=line_types[k]) # MFI
+ 
+ # Display the graphs
+-#plt.show()
+\ No newline at end of file
++plt.show()
+\ No newline at end of file
+Index: analyse/mulliken.py
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+># TODO: Duplicate this for spin.\ndef extract_mulliken_charge(fn, natoms):\n    '''\n    Function to extract and return the Mulliken charges from an FHI-aims output.\n    A list of relative charges is returned, with +q meaning charg depletion and -q meaning charge accummulation\n\n    Parameters:\n\n    fn: string\n        Filename from which the Mulliken data should be extracted\n    natoms: int\n        Number of atoms in the calculation\n\n    '''\n\n    with open(fn, 'r') as f:\n        output = f.readlines()\n\n    # Focus on just the Mulliken data\n    mulliken_line = 0\n    output_line = len(output) - 1\n    while output_line and not mulliken_line:\n        if \"Starting Mulliken Analysis\" in output[output_line]:\n            mulliken_line = output_line\n            # 8 lines from text label to start of data (spin-paired)\n            mulliken_line += 8\n        else:\n            output_line -= 1\n\n    mulliken_data = [q.split()[3] for q in output[mulliken_line:mulliken_line + natoms]]\n\n    return mulliken_data\n\ndef parse_mulliken_file(lines):\n    '''\n\n    :param lines:\n    :return:\n    '''\n\n    natoms = 1\n    nspin = 1\n    nkpts = 1\n    nstates = 1\n    # Prescan Mulliken file for natoms, nspin, nkpts so we can then digest data.\n    for line in lines:\n        words = line.split()\n        if (len(words)) > 0:\n            if words[0] == \"Atom\":\n                # Outer loop for Mulliken is over each atom\n                current_atom = int(words[2].replace(\":\", \"\"))\n                if current_atom > natoms:\n                    natoms = current_atom\n            elif words[0] == \"Spin\":\n                # Middle loop is over spins. Keyword only present if spin is present\n                nspin = 2\n            elif words[0] == \"k\":\n                # Inside loop is over k-points.\n                current_k_point = int(words[3].replace(\":\",\"\"))\n                if current_k_point > nkpts:\n                    nkpts = current_k_point\n            else:\n                try:\n                    current_state = int(words[0])\n                    if current_state > nstates:\n                        nstates = current_state\n                except ValueError:\n                    pass\n\n    # Setup all data structures containing all information for each atom\n    md = MullikenData(natoms, nspin, nkpts, nstates)\n\n    current_atom = 1\n    current_spin = 1\n    current_k_point = 1\n    for line in lines:\n        words = line.split()\n        if len(words) > 0:\n            if words[0] == \"Atom\":\n                # Outer loop for Mulliken is over each atom\n                current_atom = int(words[2].replace(\":\", \"\"))\n            elif words[0] == \"Spin\":\n                current_spin += 1\n                if current_spin > 2:\n                    current_spin = 1\n            elif words[0] == \"k\":\n                # Inside loop is over k-points.\n                current_k_point = int(words[3].replace(\":\",\"\"))\n                if len(words) > 9:\n                    md.atoms[current_atom-1].spin[current_spin-1].kpts[current_k_point-1].weight = float(words[10])\n            else:\n                try:\n                    current_state = int(words[0])\n                    md.atoms[current_atom-1].spin[current_spin-1].kpts[current_k_point-1].energies[\n                        current_state-1] =  float(words[1])\n                    md.atoms[current_atom-1].spin[current_spin-1].kpts[current_k_point-1].occupancies[\n                        current_state-1] = float(words[2])\n                    md.atoms[current_atom-1].spin[current_spin-1].kpts[current_k_point-1].all_mulliken[\n                        current_state-1] = float(words[3])\n                    for i in range(len(words) - 4):\n                        md.atoms[current_atom-1].spin[current_spin-1].kpts[current_k_point-1].orbitals[i][current_state-1] = float(words[i+4])\n                except ValueError:\n                    pass\n\n    return md\n\nclass Kpt:\n    def __init__(self, nstates):\n        self.weight = 1.0\n        self.energies = [ 0.0 for i in range(nstates) ]\n        self.occupancies = [ 0.0 for i in range(nstates) ]\n        self.all_mulliken = [ 0.0 for i in range(nstates) ]\n        self.orbitals = [ [ 0.0 for i in range(nstates) ] for j in range(5) ] # Up to l = 4, which is g.\n\nclass Spin:\n    def __init__(self, nkpts, nstates):\n        self.kpts = [ Kpt(nstates) for i in range(nkpts) ]\n\nclass Atom:\n    def __init__(self, nspin, nkpts, nstates):\n        self.spin = [ Spin(nkpts, nstates) for i in range(nspin) ]\n\nclass MullikenData:\n    def __init__(self, natoms, nspin, nkpts, nstates):\n        self.atoms = [ Atom(nspin, nkpts, nstates) for i in range(natoms) ]\n\n    def get_natoms(self):\n        return len(self.atoms)\n\n    def get_nspin(self):\n        return len(self.atoms[0].spin)\n\n    def get_nkpts(self):\n        return len(self.atoms[0].spin[0].kpts)\n\n    def get_nstates(self):\n        return len(self.atoms[0].spin[0].kpts[0].energies)\n\n    def get_all_plot_data(self):\n        return self.get_plot_data(atoms=range(self.get_natoms()),\n                                  spin=range(self.get_nspin()),\n                                  kpts=range(self.get_nkpts()),\n                                  angular='all')\n\n    def get_s_plot_data(self, atoms=None, spin=None, kpts=None):\n        if atoms is None:\n            atoms = range(self.get_natoms())\n        if spin is None:\n            spin = range(self.get_nspin())\n        if kpts is None:\n            kpts = range(self.get_nkpts())\n        return self.get_plot_data(atoms, spin, kpts, 's')\n\n    def get_p_plot_data(self, atoms=None, spin=None, kpts=None):\n        if atoms is None:\n            atoms = range(self.get_natoms())\n        if spin is None:\n            spin = range(self.get_nspin())\n        if kpts is None:\n            kpts = range(self.get_nkpts())\n        return self.get_plot_data(atoms, spin, kpts, 'p')\n\n    def get_d_plot_data(self, atoms=None, spin=None, kpts=None):\n        if atoms is None:\n            atoms = range(self.get_natoms())\n        if spin is None:\n            spin = range(self.get_nspin())\n        if kpts is None:\n            kpts = range(self.get_nkpts())\n        return self.get_plot_data(atoms, spin, kpts, 'd')\n\n    def get_f_plot_data(self, atoms=None, spin=None, kpts=None):\n        if atoms is None:\n            atoms = range(self.get_natoms())\n        if spin is None:\n            spin = range(self.get_nspin())\n        if kpts is None:\n            kpts = range(self.get_nkpts())\n        return self.get_plot_data(atoms, spin, kpts, 'f')\n\n    def get_plot_data(self, atoms, spin, kpts, angular, ymin=-20, ymax=+20, npoints=1000):\n\n        import numpy as np\n        from scipy.stats import norm\n\n        # Dictionary to simplify pulling out the angular decomposition\n        angular_momenta = {'s': 0, 'p': 1, 'd': 2, 'f': 3, 'g': 4}\n\n        # Make sure ymin and ymax are sane\n        if ymin > ymax:\n            temp = ymax\n            ymax = ymin\n            ymin = temp\n        # Plotting variables\n        data = [ [ 0.0 ] * npoints ] * (len(spin))\n        x = np.linspace(ymin, ymax, npoints)\n        variance = 0.02\n        sigma = np.sqrt(variance)\n\n        # Collect information in data object. Note two sets of results, for spin up and down.\n        for atom in atoms:\n            for sp in spin:\n                for kpt in kpts:\n                    for e in range(self.get_nstates()):\n                        energy = self.atoms[atom].spin[sp].kpts[kpt].energies[e]\n\n                        if energy > ymin and energy < ymax:\n                            if angular == 'all':\n                                data[sp] += self.atoms[atom].spin[sp].kpts[kpt].all_mulliken[e] * \\\n                                            self.atoms[atom].spin[sp].kpts[kpt].weight * \\\n                                            norm.pdf(x, energy, sigma)\n                            else:\n                                for n in angular:\n                                    data[sp] += self.atoms[atom].spin[sp].kpts[kpt].orbitals[angular_momenta[n]][e] * \\\n                                                self.atoms[atom].spin[sp].kpts[kpt].weight * \\\n                                                norm.pdf(x, energy, sigma)\n\n        return x, data\n\n    def get_data_integrity(self):\n        x, md = self.get_all_plot_data()\n        x, md_spdfg = self.get_plot_data(range(self.get_natoms()),\n                                         range(self.get_nspin()),\n                                         range(self.get_nkpts()),'spdfg')\n\n        total_diff = 0.0\n        total_md = 0.0\n        for sp in range(self.get_nspin()):\n            #print(abs(sum(md[sp] - md_spdfg[sp])), \"( \" + str(100*abs(sum(md[sp] - md_spdfg[sp]))/sum(md[sp])) + \"% )\" )\n            total_diff += abs(sum(md[sp] - md_spdfg[sp]))\n            total_md += sum(md[sp])\n\n        # Checks that the difference of integrals of data are less than 0.001 %\n        try:\n            assert(total_diff/total_md < 1e-5)\n            return True\n        except:\n            print(\"Data integrity seems compromised - check your data rigorously before further use\")\n            return False\n\n    def get_graph_xlabel(self):\n        if self.get_nkpts() > 1:\n            xlabel = '$\\epsilon - \\epsilon_{HOMO}$ (eV)'\n        else:\n            xlabel = '$\\epsilon$ (eV)'\n        return xlabel\n\ndef get_graph_colour(choice=0):\n    colours = ['red', 'blue', 'green', 'yellow', 'orange', 'indigo', 'violet']\n    return colours[choice]\n\ndef get_graph_linetype(choice=0):\n    line_types = ['solid', 'dashed', 'dashdot', 'dotted']\n    return line_types[choice]\n\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- analyse/mulliken.py	(revision 7692ddf042dca7371aee5fabf33a5c1d1ed14b91)
++++ analyse/mulliken.py	(date 1586598162256)
+@@ -178,7 +178,7 @@
+             kpts = range(self.get_nkpts())
+         return self.get_plot_data(atoms, spin, kpts, 'f')
+ 
+-    def get_plot_data(self, atoms, spin, kpts, angular, ymin=-20, ymax=+20, npoints=1000):
++    def get_plot_data(self, atoms, spin, kpts, angular, ymin=-15, ymax=+10, npoints=1000, variance=0.02):
+ 
+         import numpy as np
+         from scipy.stats import norm
+@@ -194,7 +194,6 @@
+         # Plotting variables
+         data = [ [ 0.0 ] * npoints ] * (len(spin))
+         x = np.linspace(ymin, ymax, npoints)
+-        variance = 0.02
+         sigma = np.sqrt(variance)
+ 
+         # Collect information in data object. Note two sets of results, for spin up and down.
+@@ -253,3 +252,6 @@
+     line_types = ['solid', 'dashed', 'dashdot', 'dotted']
+     return line_types[choice]
+ 
++def get_indices_of_elements(list_of_symbols, symbol):
++    return [i for i, x in enumerate(list_of_symbols) if x == symbol.capitalize()]
++
+Index: examples/analyse_mulliken_atomic.py
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- examples/analyse_mulliken_atomic.py	(date 1586598188727)
++++ examples/analyse_mulliken_atomic.py	(date 1586598188727)
+@@ -0,0 +1,75 @@
++#!/usr/bin/env python3
++
++import matplotlib.pyplot as plt
++from software.analyse.mulliken import parse_mulliken_file, get_graph_linetype, get_indices_of_elements
++
++# Read in atoms information
++output_file = "data/Fe-CO/fe-co_light.log"
++from ase.io import read
++atoms = read(output_file)
++
++# Read in Mulliken data from file
++mulliken_file = "data/Fe-CO/Mulliken.out"
++with open(mulliken_file, 'r') as read_stream:
++    lines = read_stream.readlines()
++
++# Parse data from Mulliken file
++mulliken_data = parse_mulliken_file(lines)
++
++#### Assertion statements ####
++assert(mulliken_data.get_natoms() == 3)
++assert(mulliken_data.get_nspin() == 2)
++assert(mulliken_data.get_nkpts() == 1)
++assert(mulliken_data.get_nstates() == 32)
++assert(mulliken_data.get_data_integrity())
++#####
++
++#TODO: homo, lumo = atoms.get_homo_lumo_data()
++# Collect all the density of states data to plot
++x, all_data = mulliken_data.get_all_plot_data()
++
++# Collect the indices for each element we are interested in
++fe_indices = get_indices_of_elements(atoms.get_chemical_symbols(), 'fe')
++c_indices = get_indices_of_elements(atoms.get_chemical_symbols(), 'c')
++o_indices = get_indices_of_elements(atoms.get_chemical_symbols(), 'o')
++
++# Collect the density of states data to plot as a function of atomic label
++x, fe = mulliken_data.get_plot_data(fe_indices, range(mulliken_data.get_nspin()),
++                                    range(mulliken_data.get_nkpts()), 'all')
++x, c = mulliken_data.get_plot_data(c_indices, range(mulliken_data.get_nspin()),
++                                    range(mulliken_data.get_nkpts()), 'all')
++x, o = mulliken_data.get_plot_data(o_indices, range(mulliken_data.get_nspin()),
++                                    range(mulliken_data.get_nkpts()), 'all')
++
++# Put this at the end so it covers everything else and shows the outline of the DOS correctly
++for sp in range(len(all_data)):
++    if sp == 0:
++        plt.plot(x, fe[sp], lw=2, color='red', ls=get_graph_linetype())
++        plt.plot(x, fe[sp]+c[sp], lw=2, color='green', ls=get_graph_linetype())
++        plt.plot(x, fe[sp]+c[sp]+o[sp], lw=2, color='blue', ls=get_graph_linetype())
++        plt.plot(x, all_data[sp], lw=2, color='black', ls=get_graph_linetype())
++    else: # (sp == 1)
++        plt.plot(x, -(fe[sp]), lw=2, color='red', ls=get_graph_linetype())
++        plt.plot(x, -(fe[sp]+c[sp]), lw=2, color='green', ls=get_graph_linetype())
++        plt.plot(x, -(fe[sp]+c[sp]+o[sp]), lw=2, color='blue', ls=get_graph_linetype())
++        plt.plot(x, -(all_data[sp]), lw=2, color='black', ls=get_graph_linetype())
++
++# Work to rescale axes. Extracts the maximum y-value
++ymax = max(map(max, all_data))*1.1
++ymin = 0
++if len(all_data) > 1:
++    ymin = -ymax
++    plt.axhline(y=0, xmin=min(x), xmax=max(x), color='black', lw=2)
++plt.ylim(ymin, ymax)
++plt.yticks([])
++plt.ylabel('Density of States (1/eV)')
++
++# Organise x-axis
++#plt.xlim(min_point+10, max_point-10)
++plt.xlabel(mulliken_data.get_graph_xlabel())
++
++# HOMO
++#plt.axvline(x=homo, ymin=-100, ymax=100, color='black', lw=2, ls=line_types[k]) # MFI
++
++# Display the graphs
++#plt.show()
+\ No newline at end of file
