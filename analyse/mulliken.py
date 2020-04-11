@@ -271,38 +271,7 @@ class MullikenData:
 
     def get_graph_xlabel(self):
         if self.get_nkpts() > 1:
-            xlabel = '$\epsilon - \epsilon_{HOMO}$ (eV)'
+            xlabel = '$\epsilon - \epsilon_{f}$ (eV)'
         else:
             xlabel = '$\epsilon$ (eV)'
         return xlabel
-
-#TODO: Find a better place for these settings. Perhaps a separate graph file?
-
-def get_graph_colour(choice=0):
-    colours = ['red', 'blue', 'green', 'yellow', 'orange', 'indigo', 'violet']
-    return colours[choice]
-
-def get_graph_linetype(choice=0):
-    line_types = ['solid', 'dashed', 'dashdot', 'dotted']
-    return line_types[choice]
-
-def get_indices_of_elements(list_of_symbols, symbol):
-    return [i for i, x in enumerate(list_of_symbols) if x == symbol.capitalize()]
-
-def set_graph_axes(plt, x, y, homo, xlabel='$\epsilon$ (eV)', ylabel='Density of States (1/eV)'):
-    ymax = max(map(max, y))*1.1
-    ymin = 0
-    xmax = homo + 10
-    xmin = homo - 10
-    if len(y) > 1:
-        ymin = -ymax
-        # Add zero line for spin-polarised systems
-        plt.axhline(y=0, xmin=xmin, xmax=xmax, color='black', lw=2)
-    plt.ylim(ymin, ymax)
-    plt.xlim(xmin, xmax)
-    plt.yticks([])
-    # Plot HOMO line
-    plt.axvline(x=homo, ymin=ymin, ymax=ymax, color='black', lw=2, ls='--')
-    # Label axes
-    plt.ylabel(ylabel)
-    plt.xlabel(xlabel)

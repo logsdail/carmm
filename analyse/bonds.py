@@ -209,7 +209,8 @@ def search_abnormal_bonds(model, verbose=True):
             print("OK")
         return True
 
-
+def get_indices_of_elements(list_of_symbols, symbol):
+    return [i for i, x in enumerate(list_of_symbols) if x == symbol.capitalize()]
 
 
 '''
