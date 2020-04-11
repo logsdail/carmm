@@ -28,10 +28,10 @@ x, f = mulliken_data.get_f_plot_data()
 # Put this at the end so it covers everything else and shows the outline of the DOS correctly
 for sp in range(len(s)):
     if sp == 0:
-        plt.plot(x, s[sp], lw=2, color='red', ls=get_graph_linetype())
-        plt.plot(x, s[sp]+p[sp], lw=2, color='green', ls=get_graph_linetype())
-        plt.plot(x, s[sp]+p[sp]+d[sp], lw=2, color='blue', ls=get_graph_linetype())
-        plt.plot(x, s[sp]+p[sp]+d[sp]+f[sp], lw=2, color='black', ls=get_graph_linetype())
+        plt.plot(x, s[sp], lw=2, color='red', label='s', ls=get_graph_linetype())
+        plt.plot(x, s[sp]+p[sp], lw=2, color='green', label='p', ls=get_graph_linetype())
+        plt.plot(x, s[sp]+p[sp]+d[sp], lw=2, color='blue', label='d', ls=get_graph_linetype())
+        plt.plot(x, s[sp]+p[sp]+d[sp]+f[sp], lw=2, color='black', label='f', ls=get_graph_linetype())
     else: # (sp == 1)
         plt.plot(x, -(s[sp]), lw=2, color='red', ls=get_graph_linetype())
         plt.plot(x, -(s[sp]+p[sp]), lw=2, color='green', ls=get_graph_linetype())
@@ -46,5 +46,8 @@ if len(s) > 1:
 # Work to rescale axes. Extracts the maximum y-values
 set_graph_axes(plt, x, all_data, mulliken_data.get_homo(), mulliken_data.get_graph_xlabel())
 
+# Add a legend
+plt.legend()
+
 # Display the graphs
-# plt.show()
+#plt.show()

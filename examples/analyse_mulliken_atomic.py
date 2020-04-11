@@ -43,9 +43,9 @@ x, o = mulliken_data.get_plot_data(o_indices, range(mulliken_data.get_nspin()),
 # Put this at the end so it covers everything else and shows the outline of the DOS correctly
 for sp in range(len(all_data)):
     if sp == 0:
-        plt.plot(x, fe[sp], lw=2, color='red', ls=get_graph_linetype())
-        plt.plot(x, fe[sp]+c[sp], lw=2, color='green', ls=get_graph_linetype())
-        plt.plot(x, fe[sp]+c[sp]+o[sp], lw=2, color='blue', ls=get_graph_linetype())
+        plt.plot(x, fe[sp], lw=2, color='red', label='Fe', ls=get_graph_linetype())
+        plt.plot(x, fe[sp]+c[sp], lw=2, color='green', label='C', ls=get_graph_linetype())
+        plt.plot(x, fe[sp]+c[sp]+o[sp], lw=2, color='blue', label='O', ls=get_graph_linetype())
         plt.plot(x, all_data[sp], lw=2, color='black', ls=get_graph_linetype())
     else: # (sp == 1)
         plt.plot(x, -(fe[sp]), lw=2, color='red', ls=get_graph_linetype())
@@ -56,5 +56,8 @@ for sp in range(len(all_data)):
 # Work to rescale axes. Extracts the maximum y-value
 set_graph_axes(plt, x, all_data, mulliken_data.get_homo(), mulliken_data.get_graph_xlabel())
 
+# Add a legend
+plt.legend()
+
 # Display the graphs
-# plt.show()
+plt.show()
