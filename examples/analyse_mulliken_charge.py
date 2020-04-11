@@ -20,7 +20,7 @@ atoms.set_initial_charges(mulliken_charge)
 # The classical colour map would be bwr = Blue - White - Red; to get this working you must
 # reverse the min/max aspects of the colour scale, as the default (unusual) colours are -ve = blue, +ve = red.
 ### ENABLE TO VIEW
-from ase.visualize import view
-view(atoms)
+#from ase.visualize import view
+#view(atoms)
 
 #TODO: Add in assertion so this is a rigorous QA test.

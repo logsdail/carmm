@@ -22,7 +22,7 @@ slab.center(vacuum=vacuum, axis=2)
 #add_adsorbate(slab, 'H', 1.5, 'ontop')
 
 # Enable to visualise the slab
-# from ase.visualize impoty view
+# from ase.visualize import view
 # view(slab)
 
 # Writes surface to file
