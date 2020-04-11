@@ -123,6 +123,7 @@ class Atom:
 class MullikenData:
     def __init__(self, natoms, nspin, nkpts, nstates):
         self.atoms = [ Atom(nspin, nkpts, nstates) for i in range(natoms) ]
+        self.homo = None
 
     def get_natoms(self):
         return len(self.atoms)
@@ -135,6 +136,25 @@ class MullikenData:
 
     def get_nstates(self):
         return len(self.atoms[0].spin[0].kpts[0].energies)
+
+    def get_homo(self):
+        if self.homo is None:
+            # Arbitrarily set the HOMO to the first state we can sample
+            self.homo = self.atoms[0].spin[0].kpts[0].energies[0]
+            # Iterate through all atoms, spins and k-points to get the true HOMO
+            for atom in range(self.get_natoms()):
+                for sp in range(self.get_nspin()):
+                    for kpt in range(self.get_nkpts()):
+                        # Get first value for this k-point where the occupancies are below 0.5
+                        # We then subtract one from this to get the last "occupied" state
+                        # Note: This doesn't deal well with delocalised charge over degenerate states.
+                        # TODO: Configure so it'll test subsequent states for degeneracy and split occupancy
+                        res = next(x for x, val in enumerate(self.atoms[atom].spin[sp].kpts[kpt].occupancies)
+                                if val < 0.5) - 1
+                        if self.atoms[atom].spin[sp].kpts[kpt].energies[res] > self.homo:
+                            self.homo = self.atoms[atom].spin[sp].kpts[kpt].energies[res]
+
+        return self.homo
 
     def get_all_plot_data(self):
         return self.get_plot_data(atoms=range(self.get_natoms()),
@@ -178,7 +198,7 @@ class MullikenData:
             kpts = range(self.get_nkpts())
         return self.get_plot_data(atoms, spin, kpts, 'f')
 
-    def get_plot_data(self, atoms, spin, kpts, angular, ymin=-15, ymax=+10, npoints=1000, variance=0.02):
+    def get_plot_data(self, atoms, spin, kpts, angular, ymin=-20, ymax=+20, npoints=1000, variance=0.02):
 
         import numpy as np
         from scipy.stats import norm
@@ -195,6 +215,10 @@ class MullikenData:
         data = [ [ 0.0 ] * npoints ] * (len(spin))
         x = np.linspace(ymin, ymax, npoints)
         sigma = np.sqrt(variance)
+
+        # Check whether we have the HOMO; if not, calculate.
+        if self.homo is None:
+            homo = self.get_homo()
 
         # Collect information in data object. Note two sets of results, for spin up and down.
         for atom in atoms:
@@ -244,6 +268,8 @@ class MullikenData:
             xlabel = '$\epsilon$ (eV)'
         return xlabel
 
+#TODO: Find a better place for these settings. Perhaps a separate graph file?
+
 def get_graph_colour(choice=0):
     colours = ['red', 'blue', 'green', 'yellow', 'orange', 'indigo', 'violet']
     return colours[choice]
@@ -255,3 +281,20 @@ def get_graph_linetype(choice=0):
 def get_indices_of_elements(list_of_symbols, symbol):
     return [i for i, x in enumerate(list_of_symbols) if x == symbol.capitalize()]
 
+def set_graph_axes(plt, x, y, homo, xlabel='$\epsilon$ (eV)', ylabel='Density of States (1/eV)'):
+    ymax = max(map(max, y))*1.1
+    ymin = 0
+    xmax = homo + 10
+    xmin = homo - 10
+    if len(y) > 1:
+        ymin = -ymax
+        # Add zero line for spin-polarised systems
+        plt.axhline(y=0, xmin=xmin, xmax=xmax, color='black', lw=2)
+    plt.ylim(ymin, ymax)
+    plt.xlim(xmin, xmax)
+    plt.yticks([])
+    # Plot HOMO line
+    plt.axvline(x=homo, ymin=ymin, ymax=ymax, color='black', lw=2, ls='--')
+    # Label axes
+    plt.ylabel(ylabel)
+    plt.xlabel(xlabel)

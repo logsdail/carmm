@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 import matplotlib.pyplot as plt
-from software.analyse.mulliken import parse_mulliken_file, get_graph_linetype
+from software.analyse.mulliken import parse_mulliken_file, get_graph_linetype, set_graph_axes
 
 # Read in data from file
 file = "data/CO/Mulliken.out"
@@ -19,7 +19,6 @@ assert(mulliken_data.get_nstates() == 13)
 assert(mulliken_data.get_data_integrity())
 #####
 
-#TODO: homo, lumo = atoms.get_homo_lumo_data()
 # Collect the density of states data to plot as a function of angular momenta
 x, s = mulliken_data.get_s_plot_data()
 x, p = mulliken_data.get_p_plot_data()
@@ -40,21 +39,7 @@ for sp in range(len(s)):
         plt.plot(x, -(s[sp]+p[sp]+d[sp]+f[sp]), lw=2, color='black', ls=get_graph_linetype())
 
 # Work to rescale axes. Extracts the maximum y-value
-ymax = max(map(max, s+p+d+f))*1.1
-ymin = 0
-if len(s) > 1:
-    ymin = -ymax
-    plt.axhline(y=0, xmin=min(x), xmax=max(x), color='black', lw=2)
-plt.ylim(ymin, ymax)
-plt.yticks([])
-plt.ylabel('Density of States (1/eV)')
-
-# Organise x-axis
-#plt.xlim(min_point+10, max_point-10)
-plt.xlabel(mulliken_data.get_graph_xlabel())
-
-# HOMO
-#plt.axvline(x=homo, ymin=-100, ymax=100, color='black', lw=2, ls=line_types[k]) # MFI
+set_graph_axes(plt, x, s+p+d+f, mulliken_data.get_homo(), mulliken_data.get_graph_xlabel())
 
 # Display the graphs
-#plt.show()
+# plt.show()

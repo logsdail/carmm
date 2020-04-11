@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 import matplotlib.pyplot as plt
-from software.analyse.mulliken import parse_mulliken_file, get_graph_linetype, get_indices_of_elements
+from software.analyse.mulliken import parse_mulliken_file, get_graph_linetype, get_indices_of_elements, set_graph_axes
 
 # Read in atoms information
 output_file = "data/Fe-CO/fe-co_light.log"
@@ -24,7 +24,6 @@ assert(mulliken_data.get_nstates() == 32)
 assert(mulliken_data.get_data_integrity())
 #####
 
-#TODO: homo, lumo = atoms.get_homo_lumo_data()
 # Collect all the density of states data to plot
 x, all_data = mulliken_data.get_all_plot_data()
 
@@ -55,21 +54,7 @@ for sp in range(len(all_data)):
         plt.plot(x, -(all_data[sp]), lw=2, color='black', ls=get_graph_linetype())
 
 # Work to rescale axes. Extracts the maximum y-value
-ymax = max(map(max, all_data))*1.1
-ymin = 0
-if len(all_data) > 1:
-    ymin = -ymax
-    plt.axhline(y=0, xmin=min(x), xmax=max(x), color='black', lw=2)
-plt.ylim(ymin, ymax)
-plt.yticks([])
-plt.ylabel('Density of States (1/eV)')
-
-# Organise x-axis
-#plt.xlim(min_point+10, max_point-10)
-plt.xlabel(mulliken_data.get_graph_xlabel())
-
-# HOMO
-#plt.axvline(x=homo, ymin=-100, ymax=100, color='black', lw=2, ls=line_types[k]) # MFI
+set_graph_axes(plt, x, all_data, mulliken_data.get_homo(), mulliken_data.get_graph_xlabel())
 
 # Display the graphs
-#plt.show()
+# plt.show()
