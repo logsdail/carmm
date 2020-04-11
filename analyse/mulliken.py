@@ -205,7 +205,7 @@ class MullikenData:
                         energy = self.atoms[atom].spin[sp].kpts[kpt].energies[e]
 
                         if energy > ymin and energy < ymax:
-                            if angular is 'all':
+                            if angular == 'all':
                                 data[sp] += self.atoms[atom].spin[sp].kpts[kpt].all_mulliken[e] * \
                                             self.atoms[atom].spin[sp].kpts[kpt].weight * \
                                             norm.pdf(x, energy, sigma)
