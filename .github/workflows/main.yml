@@ -40,9 +40,10 @@ jobs:
     # Runs a set of commands using the runners shell
     - name: Run the examples
       run: |
-        for f in `ls examples/*.py`
+        cd examples
+        for f in `ls *.py`
         do 
-        echo $f
+        echo "examples/$f"
         python3 $f
         done
     #  run: |
