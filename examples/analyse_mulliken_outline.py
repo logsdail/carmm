@@ -34,4 +34,4 @@ for sp in range(len(data)):
 set_graph_axes_mulliken(plt, x, data, mulliken_data.get_homo(), mulliken_data.get_graph_xlabel())
 
 # Display the graphs
-plt.show()
+# plt.show()
