@@ -231,8 +231,7 @@ def compare_structures(atoms1, atoms2, cutoff=0.01):
                                 + (atoms2.positions[j][1] - xyz[1]) * (atoms2.positions[j][1] - xyz[1])
                                 + (atoms2.positions[j][2] - xyz[2]) * (atoms2.positions[j][2] - xyz[2]))
 
-            if distance_sq > temp_distance_sq and \
-                    atoms1.symbols[i] == atoms2.symbols[j]:
+            if distance_sq > temp_distance_sq and atoms1.symbols[i] == atoms2.symbols[j]:
                 distance_sq = temp_distance_sq
                 temp_index = j
 
