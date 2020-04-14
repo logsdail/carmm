@@ -1,14 +1,12 @@
-def read_dos_from_files(files):
-    ef, energy, dos = read_dos_from_file(filename)
-
-    print
-    "Ef: ", ef
-    for i in range(len(energy)):
-        print
-        energy[i], ",", dos[i]
-
-
 def read_dos_from_old_pickle(filename):
+    '''
+    Description
+
+    Parameters:
+
+    filename: String
+        Name of the pickle file we are reading
+    '''
     import pickle
 
     ef = 0

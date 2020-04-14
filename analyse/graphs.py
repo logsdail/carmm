@@ -1,12 +1,47 @@
 def get_graph_colour(choice=0):
+    '''
+    Description
+
+    Parameters:
+
+    choice: Integer
+        The colour choice to return from the colours array
+    '''
     colours = ['red', 'blue', 'green', 'yellow', 'orange', 'indigo', 'violet']
     return colours[choice]
 
 def get_graph_linetype(choice=0):
+    '''
+    Description
+
+    Parameters:
+
+    choice: Integer
+        The linetype choice to return from the array of options
+
+    '''
     line_types = ['solid', 'dashed', 'dashdot', 'dotted']
     return line_types[choice]
 
 def set_graph_axes_mulliken(plt, x, y, homo, xlabel='$\epsilon$ (eV)', ylabel='Density of States (1/eV)'):
+    '''
+    Description
+
+    Parameters:
+
+    plt:
+
+    x:
+
+    y:
+
+    homo:
+
+    xlabel:
+
+    ylabel:
+
+    '''
     ymax = max(map(max, y))*1.1
     ymin = 0
     if homo == 0.0:
@@ -29,6 +64,14 @@ def set_graph_axes_mulliken(plt, x, y, homo, xlabel='$\epsilon$ (eV)', ylabel='D
     plt.xlabel(xlabel)
 
 def load_xyz_data_from_csv(fname):
+    '''
+    Description
+
+    Parameters:
+
+    fname: String
+        filename for the CSV that is to be read in
+    '''
     import numpy as np
     # Load data from csv
     dat = np.genfromtxt(fname, delimiter=', ',skip_header=0)
@@ -46,6 +89,18 @@ def load_xyz_data_from_csv(fname):
     return X, Y, Z
 
 def set_graph_axes_heatmap(plt, x, y):
+    '''
+    Description
+
+    Parameters:
+
+    plt:
+
+    x:
+
+    y:
+
+    '''
     # Aesthetic values
     plt.colorbar()
     plt.xlim(min(x), max(x))

@@ -34,8 +34,12 @@ def extract_mulliken_charge(fn, natoms):
 def parse_mulliken_file(fname):
     '''
 
-    :param fname:
-    :return:
+    Description
+
+    Parameters:
+
+    fname: String
+        Filename of the Mulliken.out file we are reading in and parsing.
     '''
 
     # Read in the Mulliken data
@@ -115,7 +119,18 @@ def parse_mulliken_file(fname):
     return md
 
 class Kpt:
+    '''
+    Description
+    '''
     def __init__(self, nstates):
+        '''
+        Description
+
+        Parameters:
+
+        nstates: Integer
+            Number of electronic states to be stored in the data object
+        '''
         self.weight = 1.0
         self.energies = [ 0.0 for i in range(nstates) ]
         self.occupancies = [ 0.0 for i in range(nstates) ]
@@ -123,31 +138,91 @@ class Kpt:
         self.orbitals = [ [ 0.0 for i in range(nstates) ] for j in range(5) ] # Up to l = 4, which is g.
 
 class Spin:
+    '''
+    Description
+    '''
     def __init__(self, nkpts, nstates):
+        '''
+        Description
+
+        Parameters:
+
+        nkpts: Integer
+            Number of k-points in the model
+        nstates: Integer
+            Number of electronic states to be stored in the data object
+        '''
         self.kpts = [ Kpt(nstates) for i in range(nkpts) ]
 
 class Atom:
+    '''
+    Description
+    '''
     def __init__(self, nspin, nkpts, nstates):
+        '''
+        Description
+
+        Parameters:
+
+        nspin: Integer
+            Number of spin channels in the data object
+        nkpts: Integer
+            Number of k-points in the model
+        nstates: Integer
+            Number of electronic states to be stored in the data object
+        '''
         self.spin = [ Spin(nkpts, nstates) for i in range(nspin) ]
 
 class MullikenData:
+    '''
+    Description
+    '''
     def __init__(self, natoms, nspin, nkpts, nstates):
+        '''
+        Description
+
+        Parameters:
+
+        natoms: Integer
+            Number of atoms in the Mulliken data object
+        nspin: Integer
+            Number of spin channels in the data object
+        nkpts: Integer
+            Number of k-points in the model
+        nstates: Integer
+            Number of electronic states to be stored in the data object
+        '''
         self.atoms = [ Atom(nspin, nkpts, nstates) for i in range(natoms) ]
         self.homo = None
 
     def get_natoms(self):
+        '''
+        Description
+        '''
         return len(self.atoms)
 
     def get_nspin(self):
+        '''
+        Description
+        '''
         return len(self.atoms[0].spin)
 
     def get_nkpts(self):
+        '''
+        Description
+        '''
         return len(self.atoms[0].spin[0].kpts)
 
     def get_nstates(self):
+        '''
+        Description
+        '''
         return len(self.atoms[0].spin[0].kpts[0].energies)
 
     def get_homo(self):
+        '''
+        Description
+        '''
         if self.homo is None:
             # Arbitrarily set the HOMO to the first state we can sample
             self.homo = self.atoms[0].spin[0].kpts[0].energies[0]
@@ -172,12 +247,27 @@ class MullikenData:
             return self.homo
 
     def get_all_plot_data(self):
+        '''
+        Description
+        '''
         return self.get_plot_data(atoms=range(self.get_natoms()),
                                   spin=range(self.get_nspin()),
                                   kpts=range(self.get_nkpts()),
                                   angular='all')
 
     def get_s_plot_data(self, atoms=None, spin=None, kpts=None):
+        '''
+        Description
+
+        Parameters:
+
+        atoms: List of Integers
+            Indices of atoms that are to be included in the data acquisition
+        spin: List of Integers
+            Indices of spins that are to be included - either [0] or [0,1] for none or collinear
+        kpts: List of Integers
+            Indices of kpts to be included
+        '''
         if atoms is None:
             atoms = range(self.get_natoms())
         if spin is None:
@@ -187,6 +277,18 @@ class MullikenData:
         return self.get_plot_data(atoms, spin, kpts, 's')
 
     def get_p_plot_data(self, atoms=None, spin=None, kpts=None):
+        '''
+        Description
+
+        Parameters:
+
+        atoms: List of Integers
+            Indices of atoms that are to be included in the data acquisition
+        spin: List of Integers
+            Indices of spins that are to be included - either [0] or [0,1] for none or collinear
+        kpts: List of Integers
+            Indices of kpts to be included
+        '''
         if atoms is None:
             atoms = range(self.get_natoms())
         if spin is None:
@@ -196,6 +298,18 @@ class MullikenData:
         return self.get_plot_data(atoms, spin, kpts, 'p')
 
     def get_d_plot_data(self, atoms=None, spin=None, kpts=None):
+        '''
+        Description
+
+        Parameters:
+
+        atoms: List of Integers
+            Indices of atoms that are to be included in the data acquisition
+        spin: List of Integers
+            Indices of spins that are to be included - either [0] or [0,1] for none or collinear
+        kpts: List of Integers
+            Indices of kpts to be included
+        '''
         if atoms is None:
             atoms = range(self.get_natoms())
         if spin is None:
@@ -205,6 +319,18 @@ class MullikenData:
         return self.get_plot_data(atoms, spin, kpts, 'd')
 
     def get_f_plot_data(self, atoms=None, spin=None, kpts=None):
+        '''
+        Description
+
+        Parameters:
+
+        atoms: List of Integers
+            Indices of atoms that are to be included in the data acquisition
+        spin: List of Integers
+            Indices of spins that are to be included - either [0] or [0,1] for none or collinear
+        kpts: List of Integers
+            Indices of kpts to be included
+        '''
         if atoms is None:
             atoms = range(self.get_natoms())
         if spin is None:
@@ -213,7 +339,29 @@ class MullikenData:
             kpts = range(self.get_nkpts())
         return self.get_plot_data(atoms, spin, kpts, 'f')
 
-    def get_plot_data(self, atoms, spin, kpts, angular, ymin=-20, ymax=+20, npoints=1000, variance=0.02):
+    def get_plot_data(self, atoms, spin, kpts, angular, xmin=-20, xmax=+20, npoints=1000, variance=0.02):
+        '''
+        Description
+
+        Parameters:
+
+        atoms: List of Integers
+            Indices of atoms that are to be included in the data acquisition
+        spin: List of Integers
+            Indices of spins that are to be included - either [0] or [0,1] for none or collinear
+        kpts: List of Integers
+            Indices of kpts to be included
+        angular: String
+            Letters for angular momenta to be returned (any combination from spdfg) or 'all' for everything
+        xmin: Float
+            Minimum on the x-axis for the energy range
+        xmax: Float
+            Maximum on the x-axis for the energy range
+        npoints: Integer
+            Number of 'bins' on the x-axis when expanding Gaussians on the eigenvalues
+        variance: Float
+            Variance for the Gaussian when added to each eigenfunction
+        '''
 
         import numpy as np
         from scipy.stats import norm
@@ -221,14 +369,14 @@ class MullikenData:
         # Dictionary to simplify pulling out the angular decomposition
         angular_momenta = {'s': 0, 'p': 1, 'd': 2, 'f': 3, 'g': 4}
 
-        # Make sure ymin and ymax are sane
-        if ymin > ymax:
-            temp = ymax
-            ymax = ymin
-            ymin = temp
+        # Make sure xmin and xmax are sane
+        if xmin > xmax:
+            temp = xmax
+            xmax = xmin
+            xmin = temp
         # Plotting variables
         data = [ [ 0.0 ] * npoints ] * (len(spin))
-        x = np.linspace(ymin, ymax, npoints)
+        x = np.linspace(xmin, xmax, npoints)
         sigma = np.sqrt(variance)
 
         # Check whether we have the HOMO; if not, calculate.
@@ -242,7 +390,7 @@ class MullikenData:
                     for e in range(self.get_nstates()):
                         energy = self.atoms[atom].spin[sp].kpts[kpt].energies[e]
 
-                        if energy > ymin and energy < ymax:
+                        if energy > xmin and energy < xmax:
                             if angular == 'all':
                                 data[sp] += self.atoms[atom].spin[sp].kpts[kpt].all_mulliken[e] * \
                                             self.atoms[atom].spin[sp].kpts[kpt].weight * \
@@ -259,6 +407,9 @@ class MullikenData:
             return x, data
 
     def get_data_integrity(self):
+        '''
+        Description
+        '''
         x, md = self.get_all_plot_data()
         x, md_spdfg = self.get_plot_data(range(self.get_natoms()),
                                          range(self.get_nspin()),
@@ -280,6 +431,9 @@ class MullikenData:
             return False
 
     def get_graph_xlabel(self):
+        '''
+        Return label for the x-axis depending on whether the model is periodic or not
+        '''
         if self.get_nkpts() > 1:
             xlabel = '$\epsilon - \epsilon_{f}$ (eV)'
         else:

@@ -6,8 +6,11 @@ from ase.geometry.analysis import Analysis
 def analyse_all_bonds(model):
     '''
     Returns a table of bond distance analysis for the supplied model.
-            model: Atoms object or string. If string it will read a file
-            in the same folder, e.g. "name.traj"
+
+    Parameters:
+
+    model: Atoms object or string. If string it will read a file
+    in the same folder, e.g. "name.traj"
     '''
     # Combination as AB = BA for bonds, avoiding redundancy
     from itertools import combinations_with_replacement
@@ -48,8 +51,12 @@ def analyse_all_bonds(model):
 def analyse_all_angles(model):
     '''
     Returns a table of bond angle analysis for the supplied model.
-            model: Atoms object or string. If string it will read a file
-            in the same folder, e.g. "name.traj"
+
+    Parameters:
+
+    model: Atoms object or string. If string it will read a file
+    in the same folder, e.g. "name.traj"
+
     '''
 
     # Product to get all possible arrangements
@@ -92,8 +99,10 @@ def analyse_bonds(model, A, B):
     Check A-B distances present in the model.
         model: Atoms object or string. If string it will read a file
         in the same folder, e.g. "name.traj"
-        A: string, chemical symbol, e.g. "H"
-        B: string, chemical symbol, e.g. "H"
+
+    Parameters:
+    A: string, chemical symbol, e.g. "H"
+    B: string, chemical symbol, e.g. "H"
     '''
     # Read file or Atoms object
     if isinstance(model, str) is True:
@@ -120,11 +129,13 @@ def analyse_bonds(model, A, B):
 def analyse_angles(model, A, B, C):
     '''
     Check A-B distances present in the model.
-        model: Atoms object or string. If string it will read a file
+
+    Parameters:
+    model: Atoms object or string. If string it will read a file
         in the same folder, e.g. "name.traj"
-        A: string, chemical symbol, e.g. "O"
-        B: string, chemical symbol, e.g. "C"
-        C: string, chemical symbol, e.g. "O"
+    A: string, chemical symbol, e.g. "O"
+    B: string, chemical symbol, e.g. "C"
+    C: string, chemical symbol, e.g. "O"
     '''
     # Read file or Atoms object
     if isinstance(model, str) is True:
@@ -152,7 +163,9 @@ def search_abnormal_bonds(model, verbose=True):
     '''
     Check all bond lengths in the model for abnormally
     short ones, ie. less than 0.74 Angstrom.
-        model: Atoms object or string. If string it will read a file
+
+    Parameters:
+    model: Atoms object or string. If string it will read a file
         in the same folder, e.g. "name.traj"
     '''
 
@@ -212,6 +225,14 @@ def search_abnormal_bonds(model, verbose=True):
 def compare_structures(atoms1, atoms2):
     '''
 
+    Description
+
+    Parameters:
+
+    atoms1: Atoms object or trajectory of individual atoms
+
+    atoms2: Atoms object or trajectory of individual atoms
+
     '''
     from math import sqrt
 
@@ -242,6 +263,16 @@ def compare_structures(atoms1, atoms2):
     return atoms2_indices, differences
 
 def get_indices_of_elements(list_of_symbols, symbol):
+    '''
+
+    Description
+
+    Parameters:
+
+    list_of_symbols:
+
+    symbol:
+    '''
     return [i for i, x in enumerate(list_of_symbols) if x == symbol.capitalize()]
 
 
