@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 import matplotlib.pyplot as plt
-from software.analyse.mulliken import parse_mulliken_file
+from software.analyse.mulliken import parse_mulliken_file, write_to_csv
 from software.analyse.graphs import get_graph_linetype, set_graph_axes_mulliken
 
 # Read in data from file
@@ -28,6 +28,9 @@ for sp in range(len(data)):
 
 # Work to rescale axes. Extracts the maximum y-value
 set_graph_axes_mulliken(plt, x, data, mulliken_data.get_homo(), mulliken_data.get_graph_xlabel())
+
+# Example of how to save data to csv file for exporting
+# write_to_csv('all_data.csv', x, data)
 
 # Display the graphs
 # plt.show()

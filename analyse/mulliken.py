@@ -31,6 +31,33 @@ def extract_mulliken_charge(fn, natoms):
 
     return mulliken_data
 
+def write_to_csv(fname, x, y):
+    '''
+    Description
+
+    Parameters:
+    fname: String
+        Filename to save the CSV data in too.
+    x: 1D array of floats
+        Array of x-axis values
+    y: 2D array of floats
+        2D array of y-axis values, possibly spin-paired or spin-polarised
+    '''
+
+    import csv
+
+    with open(fname, mode='w') as output_stream:
+        csv_writer = csv.writer(output_stream, delimiter=',')
+
+        if len(y) == 1: # spin = None
+            csv_writer.writerow(['x', 'all spin density'])
+            for i in range(len(x)):
+                csv_writer.writerow([x[i]. y[0][i]])
+        else: # len(y) == 2, spin = collinear
+            csv_writer.writerow(['x', 'spin up', 'spin down'])
+            for i in range(len(x)):
+                csv_writer.writerow([x[i], y[0][i], y[1][i]])
+
 def parse_mulliken_file(fname):
     '''
 
@@ -439,3 +466,5 @@ class MullikenData:
         else:
             xlabel = '$\epsilon$ (eV)'
         return xlabel
+
+
