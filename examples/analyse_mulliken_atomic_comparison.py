@@ -71,4 +71,4 @@ assert(mulliken_data.get_homo() == -4.22285)
 ########
 
 # Display the graphs
-# plt.show()
+plt.show()

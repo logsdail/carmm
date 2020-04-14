@@ -71,8 +71,14 @@ def parse_mulliken_file(lines):
     md = MullikenData(natoms, nspin, nkpts, nstates)
 
     current_atom = 1
-    current_spin = 1
+    current_spin = 0
     current_k_point = 1
+
+    # Spin keywords are different depending on whether included in the calculation
+    # For spin-paired systems, we won't hit a keyword and so need to force increment this value
+    if nspin == 1:
+        current_spin = 1
+
     for line in lines:
         words = line.split()
         if len(words) > 0:
