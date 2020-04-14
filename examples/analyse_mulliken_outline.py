@@ -6,11 +6,7 @@ from software.analyse.graphs import get_graph_linetype, set_graph_axes_mulliken
 
 # Read in data from file
 file = "data/Fe/Mulliken.out"
-with open(file, 'r') as read_stream:
-    lines = read_stream.readlines()
-
-# Parse data from Mulliken file
-mulliken_data = parse_mulliken_file(lines)
+mulliken_data = parse_mulliken_file(file)
 
 #### Assertion statements ####
 assert(mulliken_data.get_natoms() == 1)

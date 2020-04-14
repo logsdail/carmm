@@ -12,11 +12,7 @@ atoms = read(output_file)
 
 # Read in Mulliken data from file
 mulliken_file = "data/TiO2/Mulliken.out"
-with open(mulliken_file, 'r') as read_stream:
-    lines = read_stream.readlines()
-
-# Parse data from Mulliken file
-mulliken_data = parse_mulliken_file(lines)
+mulliken_data = parse_mulliken_file(mulliken_file)
 
 #### Assertion statements ####
 assert(mulliken_data.get_natoms() == 6)

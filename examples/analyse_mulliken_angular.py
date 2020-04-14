@@ -6,11 +6,7 @@ from software.analyse.graphs import get_graph_linetype, get_graph_colour, set_gr
 
 # Read in data from file
 file = "data/CO/Mulliken.out"
-with open(file, 'r') as read_stream:
-    lines = read_stream.readlines()
-
-# Parse data from Mulliken file
-mulliken_data = parse_mulliken_file(lines)
+mulliken_data = parse_mulliken_file(file)
 
 #### Assertion statements ####
 assert(mulliken_data.get_natoms() == 2)

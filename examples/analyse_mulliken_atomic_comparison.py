@@ -19,11 +19,7 @@ for i in range(len(output_files)):
 
     # Read in Mulliken data from file
     mulliken_file = mulliken_files[i]
-    with open(mulliken_file, 'r') as read_stream:
-        lines = read_stream.readlines()
-
-    # Parse data from Mulliken file
-    mulliken_data = parse_mulliken_file(lines)
+    mulliken_data = parse_mulliken_file(mulliken_file)
 
     # Collect all the density of states data to plot
     x, all_data = mulliken_data.get_all_plot_data()

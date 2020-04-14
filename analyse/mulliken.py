@@ -31,12 +31,16 @@ def extract_mulliken_charge(fn, natoms):
 
     return mulliken_data
 
-def parse_mulliken_file(lines):
+def parse_mulliken_file(fname):
     '''
 
-    :param lines:
+    :param fname:
     :return:
     '''
+
+    # Read in the Mulliken data
+    with open(fname, 'r') as read_stream:
+        lines = read_stream.readlines()
 
     natoms = 1
     nspin = 1
