@@ -27,3 +27,26 @@ def set_graph_axes_mulliken(plt, x, y, homo, xlabel='$\epsilon$ (eV)', ylabel='D
     # Label axes
     plt.ylabel(ylabel)
     plt.xlabel(xlabel)
+
+def load_xyz_data_from_csv(fname):
+    import numpy as np
+    # Load data from csv
+    dat = np.genfromtxt(fname, delimiter=', ',skip_header=0)
+    X_dat = dat[:,0]
+    Y_dat = dat[:,1]
+    Z_dat = dat[:,2]
+
+    # Convert from pandas dataframes to numpy arrays
+    X, Y, Z, = np.array([]), np.array([]), np.array([])
+    for i in range(len(X_dat)):
+        X = np.append(X,X_dat[i])
+        Y = np.append(Y,Y_dat[i])
+        Z = np.append(Z,Z_dat[i])
+
+    return X, Y, Z
+
+def set_graph_axes_heatmap(plt, x, y):
+    # Aesthetic values
+    plt.colorbar()
+    plt.xlim(min(x), max(x))
+    plt.ylim(min(y), max(y))
