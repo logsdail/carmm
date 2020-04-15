@@ -27,7 +27,7 @@ def switch_indices(model, A, B):
         print("Indices must be integers.")
 
     # Defining list of manipulated atoms
-    list_of_atoms = []
+    t = [atom.index for atom in model]
 
     # Retrieve calculator information
     # TODO: Move this after the creation of the atoms object, so we reduce if statements.
@@ -39,33 +39,14 @@ def switch_indices(model, A, B):
     else:
         f = []
 
-    # Other properties require rearrangement too.
-    t = model.get_tags()
-    # TODO: magmoms + others
-
-    # Atom count used later
-    no_atoms = len(t)
-
-    # Generate list of atoms that will be rearranged
-    for i in range(0, no_atoms):
-        list_of_atoms += [model[i]]
-
-    # Rearrange indices and Atoms object properties
-    list_of_atoms[A], list_of_atoms[B] = list_of_atoms[B], list_of_atoms[A]
     t[A], t[B] = t[B], t[A]
     # Ensure function works if force information empty
     # TODO: Where is this information subsequently used?
-    if f:
+    if not f == []:
         f[A], f[B] = f[B], f[A]
 
     # Generate a new model based on switched indices
-    new_model = Atoms(list_of_atoms,
-                      pbc=model.get_pbc(),
-                      cell=model.get_cell(),
-                      tags=t,
-                      constraint=model._get_constraints(),
-                      #calculator=prev_calc
-                      )
+    new_model = model[t]
 
     if model.get_calculator() is not None:
         new_model.set_calculator(prev_calc)
