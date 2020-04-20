@@ -4,8 +4,8 @@
 def translation(model, a, axis=0, surface="111"):
     '''
     Performs a translaton of the model by manipulation of the unit cell,
-    maintaining the optimised geometry and forces. After translation original Atoms object
-    is permanently changed.
+    maintaining the optimised geometry and forces. After translation original
+    Atoms object is permanently changed.
 
     TODO:
     - Is forces array shifting with the atoms in the Atoms object?
