@@ -1,6 +1,6 @@
 def read_dos_from_old_pickle(filename):
     '''
-    Description
+    Method to read in DOS data from pickle files (GPAW, outdated)
 
     Parameters:
 

@@ -225,13 +225,14 @@ def search_abnormal_bonds(model, verbose=True):
 def compare_structures(atoms1, atoms2):
     '''
 
-    Description
+    Comparison of two input structures to identify equivalent atoms but incorrect index ordering
 
     Parameters:
 
     atoms1: Atoms object or trajectory of individual atoms
-
+        An atoms object
     atoms2: Atoms object or trajectory of individual atoms
+        Another atoms object
 
     '''
     from math import sqrt
@@ -265,13 +266,14 @@ def compare_structures(atoms1, atoms2):
 def get_indices_of_elements(list_of_symbols, symbol):
     '''
 
-    Description
+    Check an atoms object for occurences of symbols given and return indices
 
     Parameters:
 
-    list_of_symbols:
-
+    list_of_symbols: List of strings
+        Symbols from an atoms object in structural order
     symbol:
+        Symbol to search for
     '''
     return [i for i, x in enumerate(list_of_symbols) if x == symbol.capitalize()]
 

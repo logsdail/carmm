@@ -34,14 +34,13 @@ def set_graph_axes_mulliken(plt, x, y, homo, xlabel='$\epsilon$ (eV)', ylabel='D
     x: list of Floats
         The x-axis data object (i.e. range of x-axis values)
     y: list of Floats
-        The y-axis data objects, corresponding
-
-    homo:
-
-    xlabel:
-
-    ylabel:
-
+        The y-axis data objects, corresponding to the plotted data
+    homo: Float
+        Reference level for the HOMO, which is the middle point of the x-axis
+    xlabel: String
+        Label for x-axis
+    ylabel: String
+        Label for y-axis
     '''
     ymax = max(map(max, y))*1.1
     ymin = 0
@@ -66,7 +65,7 @@ def set_graph_axes_mulliken(plt, x, y, homo, xlabel='$\epsilon$ (eV)', ylabel='D
 
 def load_xyz_data_from_csv(fname):
     '''
-    Description
+    Read in x, y and z-axis data from a CSV file for plotting (3D)
 
     Parameters:
 
@@ -91,16 +90,16 @@ def load_xyz_data_from_csv(fname):
 
 def set_graph_axes_heatmap(plt, x, y):
     '''
-    Description
+    Construct a suitable axes for displating a 3D heatmap
 
     Parameters:
 
-    plt:
-
-    x:
-
-    y:
-
+    plt: Matplotlib structure
+        Incoming plot containing data and for which the axes need adjustment
+    x: List of Floats
+        X-axis data
+    y: List of Floats
+        Y-axis data
     '''
     # Aesthetic values
     plt.colorbar()
