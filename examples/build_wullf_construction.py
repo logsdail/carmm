@@ -22,7 +22,7 @@ particle = SingleCrystal(surface_energies,
                          natoms=5000)
 
 #### Assertion test to make sure code works ####
-assert(abs(particle.area - 8885.065282 < 1e-5 ))
+assert(abs(particle.area - 8885.065282) < 1e-5 )
 assert(len(particle.atoms) == 5079)
 ########
 
