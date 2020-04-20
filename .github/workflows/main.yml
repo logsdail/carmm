@@ -29,7 +29,9 @@ jobs:
     
     # Install ASE so we can run our tests 
     - name: Install dependencies
-      run: python -m pip install --upgrade ase
+      run: |
+        python -m pip install --upgrade ase
+        python -m pip install --upgrade wulffpack
     
     # Setup Python environment
     - name: Setup Python environment
