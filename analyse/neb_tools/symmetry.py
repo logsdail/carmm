@@ -220,6 +220,7 @@ def sort_by_xyz(model, surface):
 
     return model
 
+
 def mirror(model, center_index, plane="y", surf="111"):
     '''
     Function that returns a mirror image of the adsorbate in the x or y axis
@@ -252,14 +253,14 @@ def mirror(model, center_index, plane="y", surf="111"):
         prev_calc = model.get_calculator()
 
     no_atoms = len(model.get_tags())
-    translate = model.positions[index][axis]
+    translate = model.positions[center_index][axis]
 
     for i in [atom.index for atom in model if atom.tag == 0]:
         model.positions[i][axis] = -model.positions[i][axis] + (2*translate)
     for i in [atom.index for atom in model if atom.tag > 0]:
         model.positions[i][axis] = -model.positions[i][
             axis] + model.get_cell_lengths_and_angles()[axis]*(2/3)
-            # TODO: this should be based on no atoms in x or y direction
+        # TODO: this should be based on no. atoms in x or y direction
 
     indices_to_move = []
     positions = model.get_positions()
