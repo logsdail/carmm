@@ -223,6 +223,7 @@ def sort_by_xyz(model, surface):
 
 def mirror(model, center_index, plane="y", surf="111"):
     '''
+    WORK IN PROGRESS
     Function that returns a mirror image of the adsorbate in the x or y axis
     and shifts the surface atoms accordingly.
 
