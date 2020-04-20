@@ -223,7 +223,6 @@ def sort_by_xyz(model, surface):
 
 def mirror(model, center_index, plane="y", surf="111"):
     '''
-    WORK IN PROGRESS
     Function that returns a mirror image of the adsorbate in the x or y axis
     and shifts the surface atoms accordingly.
 
@@ -256,11 +255,12 @@ def mirror(model, center_index, plane="y", surf="111"):
     no_atoms = len(model.get_tags())
     translate = model.positions[center_index][axis]
 
-    for i in [atom.index for atom in model if atom.tag == 0]:
-        model.positions[i][axis] = -model.positions[i][axis] + (2*translate)
-    for i in [atom.index for atom in model if atom.tag > 0]:
-        model.positions[i][axis] = -model.positions[i][
-            axis] + model.get_cell_lengths_and_angles()[axis]*(2/3)
+    for i in [atom.index for atom in model]:
+        model.positions[i][axis] = (-model.positions[i][axis] + (2*translate))
+    # final allignment
+    zero = model.positions[0][axis]
+    for i in [atom.index for atom in model]:
+        model.positions[i][axis] = model.positions[i][axis] - zero + 2/3*model.get_cell_lengths_and_angles()[axis]
         # TODO: this should be based on no. atoms in x or y direction
 
     indices_to_move = []
