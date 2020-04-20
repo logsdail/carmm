@@ -1,6 +1,6 @@
 def get_graph_colour(choice=0):
     '''
-    Description
+    Return some nice graph colours
 
     Parameters:
 
@@ -12,7 +12,7 @@ def get_graph_colour(choice=0):
 
 def get_graph_linetype(choice=0):
     '''
-    Description
+    Return linetypes that match the matplotlib options
 
     Parameters:
 
@@ -25,15 +25,16 @@ def get_graph_linetype(choice=0):
 
 def set_graph_axes_mulliken(plt, x, y, homo, xlabel='$\epsilon$ (eV)', ylabel='Density of States (1/eV)'):
     '''
-    Description
+    Function to automate setting up the plot axes for a DOS
 
     Parameters:
 
-    plt:
-
-    x:
-
-    y:
+    plt: Matplotlib plot object
+        This has data predrawn from the x- and y-axis data also provided
+    x: list of Floats
+        The x-axis data object (i.e. range of x-axis values)
+    y: list of Floats
+        The y-axis data objects, corresponding
 
     homo:
 

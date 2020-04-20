@@ -1,5 +1,10 @@
 #!/usr/bin/env python3
 
+'''
+TODO: Description Needed
+
+'''
+
 from ase.build import fcc111
 from math import sqrt
 

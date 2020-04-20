@@ -1,5 +1,10 @@
 #!/usr/bin/env python3
 
+'''
+TODO: Description Needed
+
+'''
+
 from software.build.neb import switch_indices, check_interpolation
 from software.analyse.bonds import compare_structures
 from ase.build import molecule
