@@ -55,8 +55,3 @@ jobs:
     #    python3 examples/build_surface.py
     #    python3 examples/build_NEB.py
     
-    # Include coveralls
-    - name: Coveralls GitHub Action
-      uses: coverallsapp/github-action@v1.0.1
-      with:
-        github-token: ${{ secrets.GITHUB_TOKEN }}
