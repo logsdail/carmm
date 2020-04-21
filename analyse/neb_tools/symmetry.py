@@ -40,6 +40,7 @@ def translation(model, a, axis=0, surface="111"):
 
     '''Section on variables'''
     indices_to_move = []
+    # TODO: Make lattice parameter independent based on closest neighbours
     shift_dist = a * (2**(1/2)/2)
     if surface == "110":
         shift_x = shift_dist
@@ -140,7 +141,8 @@ def translation(model, a, axis=0, surface="111"):
     model = sort_by_xyz(model, surface)
 
     # Retain calculator information and constraint
-    prev_calc.atoms = model
+    if model.get_calculator() is not None:
+        prev_calc.atoms = model
     model.set_calculator(prev_calc)
     model.set_constraint(constraint)
 
@@ -164,7 +166,10 @@ def sort_by_xyz(model, surface):
         # Retrieve forces for forces array adjustments
         calc = model.get_calculator()
         calc_results = calc.results
-        f = calc_results["forces"]
+        if "forces" in calc_results:
+            f = calc_results["forces"]
+        else:
+            f = []
 
     # Sorting mechanism for Y tags
     def sort_y_tag(xyz, surface):
@@ -215,7 +220,7 @@ def sort_by_xyz(model, surface):
     model = model[index_by_xyz]
     # Ensure function works if force information empty and rearrange
     # TODO: CHECK IF THIS IS NECESSARY
-    if not f == []:
+    if model.get_calculator() is not None:
         f = f[index_by_xyz]
 
     return model
@@ -257,35 +262,55 @@ def mirror(model, center_index, plane="y", surf="111"):
 
     for i in [atom.index for atom in model]:
         model.positions[i][axis] = (-model.positions[i][axis] + (2*translate))
-    # final allignment
-    zero = model.positions[0][axis]
-    for i in [atom.index for atom in model]:
-        model.positions[i][axis] = model.positions[i][axis] - zero + 2/3*model.get_cell_lengths_and_angles()[axis]
-        # TODO: this should be based on no. atoms in x or y direction
+    # align to position zero
+    zero = (model[[atom.index for atom in model if atom.tag == 1][0]].position[axis])
 
-    indices_to_move = []
-    positions = model.get_positions()
-    constraint = model._get_constraints()
-    count_iter = 0
-    for coordinate in positions:
-        count_iter = count_iter + 1
-        # Include some tolerance for surface atoms
-        if coordinate[axis] < -1.00:
-           indices_to_move = indices_to_move + [count_iter - 1]
+    for i in reversed([atom.index for atom in model]):
+        model.positions[i][axis] = (model.positions[i][axis] - zero)
 
-    if axis == 1:
-        temp_model = model.repeat((1, 2, 1))
-    elif axis == 0:
-        temp_model = model.repeat((2, 1, 1))
+    def borrow_positions(model, axis, surf):
+        ''' TODO: detach and reuse elsewhere '''
+        from software.analyse.neb_tools.symmetry import sort_by_xyz
 
-    temp_model.set_constraint()
-    model.set_constraint()
-    for i in indices_to_move:
-        model[i].position[axis] = temp_model[i+len(
-            model.get_tags())].position[axis]
+        indices_to_move = []
+        constraint = model._get_constraints()
+        count_iter = 0
+        # align axis
+        if surf == "111":
+            model.rotate(30, 'z', rotate_cell=True)
+        positions = model.get_positions()
 
-    # Add retrieved constraints, calculator
-    model.set_constraint(constraint)
+        # Mark atoms that need moving
+        for coordinate in positions:
+            count_iter = count_iter + 1
+            # Include some tolerance for surface atoms
+            if coordinate[axis] < -1.0:
+               indices_to_move = indices_to_move + [count_iter - 1]
+        # Return cell to original shape
+        if surf == "111":
+            model.rotate(-30, 'z', rotate_cell=True)
+
+        if axis == 1:
+            iemp_model = model.repeat((1, 2, 1))
+        elif axis == 0:
+            temp_model = model.repeat((2, 1, 1))
+
+        temp_model.set_constraint()
+        model.set_constraint()
+        for i in indices_to_move:
+            model[i].position[axis] = temp_model[i+len(
+                model.get_tags())].position[axis]
+
+        # Add retrieved constraints, calculator
+        model.set_constraint(constraint)
+        model = sort_by_xyz(model, surf)
+        return model
+
+    from ase.visualize import view
+    # TODO: Execute x times to ensure no axis coordinate below -0.50
+    model = borrow_positions(model, axis, surf)
+    model = borrow_positions(model, axis, surf)
+
     if model.get_calculator() is not None:
         prev_calc.atoms = model
         model.set_calculator(prev_calc)
