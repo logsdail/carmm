@@ -50,7 +50,7 @@ model = get_example_model()
 # Retrieve index of the C atom
 index = [atom.index for atom in model if atom.symbol == "C"]
 # Mirror lattice in the x plane with respect to C atom
-# C atom remains in place, the rest of unit cell is shifted 
+# C atom remains in place, the rest of unit cell is shifted
 model = mirror(model, center_index=index[0], plane='x', surf="111")
 #view(model)
 
@@ -65,3 +65,8 @@ model = translation(model, **kwargs_y)
 model = translation(model, **kwargs_x)
 model = translation(model, **kwargs_y)
 #view(model)
+
+### ASSERTION ###
+# Check if Oxygen moves as expected
+eps = 1e-8
+assert((model[19].position - [4.01974776, 2.0844678, 15.26547259] < [eps, eps, eps]).all())
