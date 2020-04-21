@@ -291,7 +291,7 @@ def mirror(model, center_index, plane="y", surf="111"):
             model.rotate(-30, 'z', rotate_cell=True)
 
         if axis == 1:
-            iemp_model = model.repeat((1, 2, 1))
+            temp_model = model.repeat((1, 2, 1))
         elif axis == 0:
             temp_model = model.repeat((2, 1, 1))
 
