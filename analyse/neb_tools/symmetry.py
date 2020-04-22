@@ -1,7 +1,7 @@
 '''This file is work in progress'''
 
 
-def translation(model, a, axis=0, surface="111"):
+def translation(model, axis=0, surface="111"):
     '''
     Performs a translaton of the model by manipulation of the unit cell,
     maintaining the optimised geometry and forces. After translation original
@@ -12,6 +12,7 @@ def translation(model, a, axis=0, surface="111"):
             Adjustment added in sort_by_xyz - test required to make sure it is
             performed twice.
     - FOR NOW requires surface to have tags for layers of atoms in Z-direction
+    - extract a from bottom layer, limit user input
     - functionality beyond FCC? or higher index?
     - provide a reasonable example
 
@@ -40,8 +41,15 @@ def translation(model, a, axis=0, surface="111"):
 
     '''Section on variables'''
     indices_to_move = []
-    # TODO: Make lattice parameter independent based on closest neighbours
-    shift_dist = a * (2**(1/2)/2)
+    # Extraction of lattice parameter from bottom layers
+    max_tag = np.amax(list(set(model.get_tags())))
+
+    # need to convert array into list
+    bottom_layer = ([atom.index for atom in model if atom.tag == max_tag])
+
+    dist_matrix = model[bottom_layer].get_all_distances()
+    shift_dist = np.amin(np.setdiff1d(dist_matrix, np.array(0.0)))
+
     if surface == "110":
         shift_x = shift_dist
         shift_y = shift_dist
@@ -95,7 +103,7 @@ def translation(model, a, axis=0, surface="111"):
         elif surface == "110":
             model.set_positions(
                             np.array(model.get_positions()) - np.array(
-                                (a, 0, 0)))
+                                (shift_dist*2/(2**1/2), 0, 0)))
     elif axis == 1:
         # identify atoms to be moved
         positions = model.get_positions()
@@ -145,6 +153,13 @@ def translation(model, a, axis=0, surface="111"):
         prev_calc.atoms = model
     model.set_calculator(prev_calc)
     model.set_constraint(constraint)
+
+    zero_x = (model[[atom.index for atom in model if atom.tag == 1][0]].position[0])
+    zero_y = (model[[atom.index for atom in model if atom.tag == 1][0]].position[1])
+    # Reset to zero
+    for i in reversed([atom.index for atom in model]):
+        model.positions[i][0] = (model.positions[i][0] - zero_x)
+        model.positions[i][1] = (model.positions[i][1] - zero_y)
 
     return model
 
@@ -226,6 +241,51 @@ def sort_by_xyz(model, surface):
     return model
 
 
+def borrow_positions(model, axis, surf, sort=True):
+    ''' TODO: detach and reuse elsewhere + update description '''
+    from software.analyse.neb_tools.symmetry import sort_by_xyz
+
+    indices_to_move = []
+    constraint = model._get_constraints()
+    count_iter = 0
+    # align axis
+    if surf == "111":
+        if axis==0:
+            model.rotate(30, 'z', rotate_cell=True)
+    positions = model.get_positions()
+
+    # Mark atoms that need moving
+    for coordinate in positions:
+        count_iter = count_iter + 1
+        # Include some tolerance for surface atoms
+        if coordinate[axis] < -0.7:
+           indices_to_move = indices_to_move + [count_iter - 1]
+    # Return cell to original shape
+    if surf == "111":
+        if axis==0:
+            model.rotate(-30, 'z', rotate_cell=True)
+
+    if axis == 1:
+        temp_model = model.repeat((1, 2, 1))
+    elif axis == 0:
+        temp_model = model.repeat((2, 1, 1))
+
+    temp_model.set_constraint()
+    model.set_constraint()
+    for i in indices_to_move:
+        model[i].position[axis] = temp_model[i+len(
+            model.get_tags())].position[axis]
+
+    # Add retrieved constraints, calculator
+    model.set_constraint(constraint)
+
+    if sort == True:
+        model = sort_by_xyz(model, surf)
+    elif sort == False:
+        pass
+    return model
+
+
 def mirror(model, center_index, plane="y", surf="111"):
     '''
     Function that returns a mirror image of the adsorbate in the x or y axis
@@ -257,7 +317,8 @@ def mirror(model, center_index, plane="y", surf="111"):
     if model.get_calculator() is not None:
         prev_calc = model.get_calculator()
 
-    no_atoms = len(model.get_tags())
+    # Save initial center atom position
+    center_atom_position = model[center_index].position
     translate = model.positions[center_index][axis]
 
     for i in [atom.index for atom in model]:
@@ -266,56 +327,132 @@ def mirror(model, center_index, plane="y", surf="111"):
     zero = (model[[atom.index for atom in model if atom.tag == 1][0]].position[axis])
 
     for i in reversed([atom.index for atom in model]):
-        model.positions[i][axis] = (model.positions[i][axis] - zero)
+        model.positions[i][axis] = (model.positions[i][axis] - zero - model.get_cell_lengths_and_angles()[axis])
 
-    def borrow_positions(model, axis, surf):
-        ''' TODO: detach and reuse elsewhere '''
-        from software.analyse.neb_tools.symmetry import sort_by_xyz
-
-        indices_to_move = []
-        constraint = model._get_constraints()
-        count_iter = 0
-        # align axis
-        if surf == "111":
-            model.rotate(30, 'z', rotate_cell=True)
-        positions = model.get_positions()
-
-        # Mark atoms that need moving
-        for coordinate in positions:
-            count_iter = count_iter + 1
-            # Include some tolerance for surface atoms
-            if coordinate[axis] < -1.0:
-               indices_to_move = indices_to_move + [count_iter - 1]
-        # Return cell to original shape
-        if surf == "111":
-            model.rotate(-30, 'z', rotate_cell=True)
-
-        if axis == 1:
-            temp_model = model.repeat((1, 2, 1))
-        elif axis == 0:
-            temp_model = model.repeat((2, 1, 1))
-
-        temp_model.set_constraint()
-        model.set_constraint()
-        for i in indices_to_move:
-            model[i].position[axis] = temp_model[i+len(
-                model.get_tags())].position[axis]
-
-        # Add retrieved constraints, calculator
-        model.set_constraint(constraint)
-        model = sort_by_xyz(model, surf)
-        return model
-
-    from ase.visualize import view
+    from software.analyse.neb_tools.symmetry import borrow_positions
     # TODO: Execute x times to ensure no axis coordinate below -0.50
     model = borrow_positions(model, axis, surf)
     model = borrow_positions(model, axis, surf)
+    model = borrow_positions(model, axis, surf)
+    model = borrow_positions(model, axis, surf)
+
+    # Return to around the position of the center_index
+    from software.analyse.neb_tools.symmetry import translation
+    current_pos = model[center_index].position
+
+    # shift in Y and return to initial position by translation. Removes error
+    # in atom placement
+    model = translation(model, axis=0, surface=surf)
+    # Safety break
+    x = 0
+    # Align in x-direction
+    while 0.7 < (current_pos[0] - center_atom_position[0]):
+        x = x+1
+        current_pos = model[center_index].position
+        model = translation(model, axis=0, surface=surf)
+        if x > 10:
+            break
+
+    from software.analyse.neb_tools.symmetry import sort_by_xyz
+    model = sort_by_xyz(model, surf)
 
     if model.get_calculator() is not None:
         prev_calc.atoms = model
         model.set_calculator(prev_calc)
 
+
+
+    return model
+
+
+def rotate_fcc(model, center_index, surf):
+    '''
+    Rotate FCC cell with respect to an atom by allowed increments, ie.
+    "111" - 120 degrees
+    "100" - 90 degrees
+    "110" - 180 degrees
+
+    Parameters:
+    model:in Atoms object
+        FCC low index surface, (111), (110) or (100)
+    center_index: int
+        index of an atom as the center of the rotation operation
+    surf: str
+        "111", "110", "100" allowed
+    '''
     from software.analyse.neb_tools.symmetry import sort_by_xyz
+    import numpy as np
+
+    if surf == "111":
+        degrees = -120
+    elif surf == "100":
+        degrees = 90
+    elif surf == "110":
+        degrees = 180
+    else:
+        pass
+        # TODO Error message
+
+    # align to position zero
+    # WIP
+    if not model._get_constraints() == []:
+        prev_const = model._get_constraints()
+        # retrieve indices of the fixed atoms
+        constrained_indices = np.ndarray.tolist(prev_const[0].index)
+        eps = 1e-8
+        #index_const_at_zero = [atom.index for atom in model[constrained_indices] if -eps < atom.position[0] < eps][0]
+        index_const_at_zero = None
+    else:
+       prev_const = None
+       index_const_at_zero = None
+
+    # Remove constraints for rotation operation
+    model.set_constraint()
+    center_atom_position = model[center_index].position
+
+    model.rotate(degrees, 'z', center=center_atom_position)
     model = sort_by_xyz(model, surf)
+
+    if index_const_at_zero is not None:
+        zero_x = index_const_at_zero.position[0]
+        zero_y = index_const_at_zero.position[1]
+    else:
+        zero_x = (model[[atom.index for atom in model if atom.tag == 1][0]].position[0])
+        zero_y = (model[[atom.index for atom in model if atom.tag == 1][0]].position[1])
+    # Reset to zero
+    for i in reversed([atom.index for atom in model]):
+        model.positions[i][0] = (model.positions[i][0] - zero_x)
+        model.positions[i][1] = (model.positions[i][1] - zero_y)
+
+    # Wrap function works better after alignment for fcc111 - could be
+    # coincidental, but seems to work for the example provided
+    model.wrap()
+
+    # Return to around the position of the center_index
+    from software.analyse.neb_tools.symmetry import translation
+    current_pos = model[center_index].position
+
+    # Safety break
+    x = 0
+    # Align in y-direction
+    while 0.7 < (current_pos[1] - center_atom_position[1]):
+        x = x+1
+        current_pos = model[center_index].position
+        model = translation(model, axis=1, surface=surf)
+        if x > 10:
+            break
+    # Align in x-direction
+    x = 0
+    while 0.7 < (current_pos[0] - center_atom_position[0]):
+        x = x+1
+        current_pos = model[center_index].position
+        model = translation(model, axis=0, surface=surf)
+        if x > 10:
+            break
+
+    # Reapply constraints ince operation is complete
+    if prev_const is not None:
+        model.set_constraint(prev_const)
+
 
     return model
