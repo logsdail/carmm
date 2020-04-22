@@ -42,13 +42,8 @@ def translation(model, axis=0, surface="111"):
     '''Section on variables'''
     indices_to_move = []
     # Extraction of lattice parameter from bottom layers
-    max_tag = np.amax(list(set(model.get_tags())))
-
-    # need to convert array into list
-    bottom_layer = ([atom.index for atom in model if atom.tag == max_tag])
-
-    dist_matrix = model[bottom_layer].get_all_distances()
-    shift_dist = np.amin(np.setdiff1d(dist_matrix, np.array(0.0)))
+    from software.analyse.neb_tools.symmetry import get_a
+    shift_dist = get_a(model)
 
     if surface == "110":
         shift_x = shift_dist
@@ -154,14 +149,31 @@ def translation(model, axis=0, surface="111"):
     model.set_calculator(prev_calc)
     model.set_constraint(constraint)
 
+    # TODO: Zero should be based on similarity to the surface atom. Does not
+    #   work as intended for odd number of layers, might not be required with
+    #   get_a in place
+    '''
     zero_x = (model[[atom.index for atom in model if atom.tag == 1][0]].position[0])
     zero_y = (model[[atom.index for atom in model if atom.tag == 1][0]].position[1])
     # Reset to zero
     for i in reversed([atom.index for atom in model]):
         model.positions[i][0] = (model.positions[i][0] - zero_x)
         model.positions[i][1] = (model.positions[i][1] - zero_y)
-
+    '''
     return model
+
+
+def get_a(model):
+    ''' Retrieve minimum M-M distance from bottom layer of a slab'''
+    import numpy as np
+    max_tag = np.amax(list(set(model.get_tags())))
+
+    # need to convert array into list
+    bottom_layer = ([atom.index for atom in model if atom.tag == max_tag])
+
+    dist_matrix = model[bottom_layer].get_all_distances()
+    a = np.amin(np.setdiff1d(dist_matrix, np.array(0.0)))
+    return a
 
 
 def sort_by_xyz(model, surface):
@@ -386,9 +398,9 @@ def rotate_fcc(model, center_index, surf):
     if surf == "111":
         degrees = -120
     elif surf == "100":
-        degrees = 90
+        degrees = -90
     elif surf == "110":
-        degrees = 180
+        degrees = -180
     else:
         pass
         # TODO Error message
@@ -430,29 +442,34 @@ def rotate_fcc(model, center_index, surf):
 
     # Return to around the position of the center_index
     from software.analyse.neb_tools.symmetry import translation
+    # Force translations to remove inconsistencies
+    model = translation(model, axis=0, surface=surf)
+    model = translation(model, axis=1, surface=surf)
+
     current_pos = model[center_index].position
 
     # Safety break
     x = 0
     # Align in y-direction
-    while 0.7 < (current_pos[1] - center_atom_position[1]):
+    from software.analyse.neb_tools.symmetry import get_a
+    a = get_a(model)
+    while not (a/2 > (current_pos[1] - center_atom_position[1]) > -a/2):
         x = x+1
         current_pos = model[center_index].position
         model = translation(model, axis=1, surface=surf)
-        if x > 10:
+        if x > 9:
             break
     # Align in x-direction
     x = 0
-    while 0.7 < (current_pos[0] - center_atom_position[0]):
+    while not a/2 > (current_pos[0] - center_atom_position[0]) > -a/2:
         x = x+1
         current_pos = model[center_index].position
         model = translation(model, axis=0, surface=surf)
-        if x > 10:
+        if x > 9:
             break
 
     # Reapply constraints ince operation is complete
     if prev_const is not None:
         model.set_constraint(prev_const)
-
 
     return model
