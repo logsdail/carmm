@@ -222,7 +222,7 @@ def search_abnormal_bonds(model, verbose=True):
             print("OK")
         return True
 
-def compare_structures(atoms1, atoms2):
+def compare_structures(atoms1, atoms2, label=None):
     '''
 
     Comparison of two input structures to identify equivalent atoms but incorrect index ordering
@@ -233,7 +233,8 @@ def compare_structures(atoms1, atoms2):
         An atoms object
     atoms2: Atoms object or trajectory of individual atoms
         Another atoms object
-
+    label: String of elemental character
+        Only necessary to limit search to specific atomic species
     '''
     from math import sqrt
 
@@ -250,13 +251,14 @@ def compare_structures(atoms1, atoms2):
         distance_sq = 999999.9
         temp_index = 0
         for j in range(len(atoms2.positions)):
-            temp_distance_sq = ((atoms2.positions[j][0] - xyz[0]) * (atoms2.positions[j][0] - xyz[0])
-                                + (atoms2.positions[j][1] - xyz[1]) * (atoms2.positions[j][1] - xyz[1])
-                                + (atoms2.positions[j][2] - xyz[2]) * (atoms2.positions[j][2] - xyz[2]))
+            if atoms1.symbols[i] == atoms2.symbols[j] and (atoms1.symbols[i] == label or label == None):
+                temp_distance_sq = ((atoms2.positions[j][0] - xyz[0]) * (atoms2.positions[j][0] - xyz[0])
+                                    + (atoms2.positions[j][1] - xyz[1]) * (atoms2.positions[j][1] - xyz[1])
+                                    + (atoms2.positions[j][2] - xyz[2]) * (atoms2.positions[j][2] - xyz[2]))
 
-            if distance_sq > temp_distance_sq and atoms1.symbols[i] == atoms2.symbols[j]:
-                distance_sq = temp_distance_sq
-                temp_index = j
+                if distance_sq > temp_distance_sq:
+                    distance_sq = temp_distance_sq
+                    temp_index = j
 
         atoms2_indices.append(temp_index)
         differences.append(sqrt(distance_sq))
