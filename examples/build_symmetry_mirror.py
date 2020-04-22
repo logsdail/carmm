@@ -36,7 +36,7 @@ def get_example_model():
 ###### EXAMPLE OF USE ########
 from ase.visualize import view
 from math import sqrt
-from software.analyse.neb_tools.symmetry import mirror, translation
+from software.analyse.neb_tools.symmetry import mirror, translation, rotate_fcc
 
 # Toy model of CO2 on top of Au FCC(111)
 model = get_example_model()
@@ -49,10 +49,9 @@ index = [atom.index for atom in model if atom.symbol == "C"]
 model = mirror(model, center_index=index[0], plane='x', surf="111")
 #view(model)
 
-surf = "111"
-lattice_parameter = 2.939/(sqrt(2)/2)
-kwargs_x={"a":3.914, "axis":0, "surface":surf}
-kwargs_y={"a":3.914, "axis":1, "surface":surf}
+
+kwargs_x={"axis":0, "surface":"111"}
+kwargs_y={"axis":1, "surface":"111"}
 
 # Translate one row of atoms at a time in x and y
 model = translation(model, **kwargs_x)
@@ -65,3 +64,6 @@ model = translation(model, **kwargs_y)
 # Check if Oxygen moves as expected
 eps = 1e-8
 assert((model[19].position - [4.01974776, 2.0844678, 15.39968345] < [eps, eps, eps]).all())
+
+model = rotate_fcc(model, center_index=index[0], surf=surf)
+#view(model)
