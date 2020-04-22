@@ -350,21 +350,31 @@ def mirror(model, center_index, plane="y", surf="111"):
 
     # Return to around the position of the center_index
     from software.analyse.neb_tools.symmetry import translation
+    # Force translations to remove inconsistencies
+    model = translation(model, axis=0, surface=surf)
+    model = translation(model, axis=1, surface=surf)
+
     current_pos = model[center_index].position
 
-    # shift in Y and return to initial position by translation. Removes error
-    # in atom placement
-    model = translation(model, axis=0, surface=surf)
     # Safety break
     x = 0
+    # Align in y-direction
+    from software.analyse.neb_tools.symmetry import get_a
+    a = get_a(model)
+    while not (a/2 > (current_pos[1] - center_atom_position[1]) > -a/2):
+        x = x+1
+        current_pos = model[center_index].position
+        model = translation(model, axis=1, surface=surf)
+        if x > 9:
+            break
     # Align in x-direction
-    while 0.7 < (current_pos[0] - center_atom_position[0]):
+    x = 0
+    while not a/2 > (current_pos[0] - center_atom_position[0]) > -a/2:
         x = x+1
         current_pos = model[center_index].position
         model = translation(model, axis=0, surface=surf)
-        if x > 10:
+        if x > 9:
             break
-
     from software.analyse.neb_tools.symmetry import sort_by_xyz
     model = sort_by_xyz(model, surf)
 
