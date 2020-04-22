@@ -57,6 +57,39 @@ def switch_indices(model, A, B):
     # User can interact with the new model
     return new_model
 
+def switch_all_indices(model, new_indices):
+    '''
+    Method to update all indices in a model all at once,
+    assuming the new indexing order is available from e.g. compare_structures
+
+    Parameters:
+
+    model: ASE atoms object or String
+        Input structure to be reordered
+    new_indices: List of Integers
+        New indices for each atom in model
+
+    TODO: Add an example to the QA tests.
+    '''
+
+    # Necessary to do this here as we need to keep updating the model
+    # as we change indices for atoms
+    if isinstance(model, str):
+        from ase.io import read
+        model = read(model)
+
+    # List of indices that have been swapped
+    swapped = []
+
+    # TODO: Add a sanity check to make sure the length of new_indices matches the size
+    #       of the model!
+    for i in range(len(new_indices)):
+        if new_indices[i] is not i and i not in swapped:
+            model = switch_indices(model, i, new_indices[i])
+            swapped.append(new_indices[i])
+
+    return model
+
 def check_interpolation(initial, final, n_max, interpolation="linear", verbose=True, save=True):
     '''
     Interpolates the provided geometries with n_max total images
