@@ -65,5 +65,5 @@ model = translation(model, **kwargs_y)
 eps = 1e-8
 assert((model[19].position - [4.01974776, 2.0844678, 15.39968345] < [eps, eps, eps]).all())
 
-model = rotate_fcc(model, center_index=index[0], surf=surf)
+model = rotate_fcc(model, center_index=index[0], surf="111")
 #view(model)
