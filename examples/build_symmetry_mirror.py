@@ -16,19 +16,14 @@ def get_example_model():
 
     element='Au'
     lattice_parameter=2.939
-    width_a=3
-    width_b=3
+    width=3
     depth=2
     vacuum=10.0
 
     # Create surface
-    slab = fcc111(element, a=lattice_parameter*sqrt(2), size=(width_a, width_b, depth))
+    slab = fcc111(element, a=lattice_parameter*sqrt(2),
+                  size=(width, width, depth), vacuum=vacuum)
 
-    # Add vacuum
-    slab.center(vacuum=vacuum, axis=2)
-    slab.set_calculator(EMT())
-    opt = BFGS(slab)
-    opt.run(fmax=0.05)
 
     CO2 = molecule("CO2")
     CO2.rotate(90, 'x')
@@ -69,4 +64,4 @@ model = translation(model, **kwargs_y)
 ### ASSERTION ###
 # Check if Oxygen moves as expected
 eps = 1e-8
-assert((model[19].position - [4.01974776, 2.0844678, 15.26547259] < [eps, eps, eps]).all())
+assert((model[19].position - [4.01974776, 2.0844678, 15.39968345] < [eps, eps, eps]).all())

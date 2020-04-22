@@ -12,16 +12,13 @@ from math import sqrt
 
 element='Au'
 lattice_parameter=2.939
-width_a=2
-width_b=2
+width=2
 depth=2
 vacuum=10.0
 
 # Create surface
-slab = fcc111(element, a=lattice_parameter*sqrt(2), size=(width_a,width_b,depth))
-
-# Add vacuum
-slab.center(vacuum=vacuum, axis=2)
+slab = fcc111(element, a=lattice_parameter*sqrt(2),
+              size=(width,width,depth), vacuum=vacuum)
 
 # Enable to add H at an ontop position
 #add_adsorbate(slab, 'H', 1.5, 'ontop')
