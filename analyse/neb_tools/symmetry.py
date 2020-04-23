@@ -395,7 +395,7 @@ def mirror(model, center_index, plane="y", surf="111"):
     '''
     # software.analyse.neb_tools.symmetry import borrow_positions
     # TODO: Execute x times to ensure no axis coordinate below -0.50
-    '''
+    
     model = borrow_positions(model, 1, surf)
     model = borrow_positions(model, 0, surf)
     model = borrow_positions(model, 1, surf)
