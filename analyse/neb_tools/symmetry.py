@@ -152,14 +152,16 @@ def translation(model, axis=0, surface="111"):
     # TODO: Zero should be based on similarity to the surface atom. Does not
     #   work as intended for odd number of layers, might not be required with
     #   get_a in place
-    '''
-    zero_x = (model[[atom.index for atom in model if atom.tag == 1][0]].position[0])
-    zero_y = (model[[atom.index for atom in model if atom.tag == 1][0]].position[1])
+    from software.analyse.neb_tools.symmetry import get_zero_from_constrained_atoms
+    zero_index = get_zero_from_constrained_atoms(model)
+    import copy
+    zero_x = copy.deepcopy((model[zero_index].position[0]))
+    zero_y = copy.deepcopy((model[zero_index].position[1]))
     # Reset to zero
     for i in reversed([atom.index for atom in model]):
         model.positions[i][0] = (model.positions[i][0] - zero_x)
         model.positions[i][1] = (model.positions[i][1] - zero_y)
-    '''
+
     return model
 
 
@@ -298,6 +300,34 @@ def borrow_positions(model, axis, surf, sort=True):
     return model
 
 
+def get_zero_from_constrained_atoms(model):
+    import numpy as np
+    zero_index = None
+    first_layer_atom = [atom.index for atom in model if atom.tag == 1][0]
+    if not model._get_constraints() == []:
+        prev_const = model._get_constraints()
+        # retrieve indices of the fixed atoms
+        constrained_indices = np.ndarray.tolist(prev_const[0].index)
+        # allow room for surface layer distortion when matching
+        eps = 0.3
+
+        sort_y = [atom.index for atom in model[constrained_indices] if
+            eps > atom.position[1] - model[first_layer_atom].position[1] > -eps]
+
+        zero_index = [atom.index for atom in model[sort_y] if
+            eps > atom.position[0] - model[first_layer_atom].position[0] > -eps][0]
+
+        zero_index = sort_y[zero_index]
+
+    # if no constrained layers detected - return index of 1st atom in top layer
+    if zero_index is None:
+        zero_index = first_layer_atom
+    else:
+        pass
+
+    return zero_index
+
+
 def mirror(model, center_index, plane="y", surf="111"):
     '''
     Function that returns a mirror image of the adsorbate in the x or y axis
@@ -335,15 +365,25 @@ def mirror(model, center_index, plane="y", surf="111"):
     # Solution: a deepcopy required to retain functionality? Confirmed.
     import copy
     center_atom_position = copy.deepcopy(model[center_index].position)
-    translate = model.positions[center_index][axis]
 
-    for i in [atom.index for atom in model]:
-        model.positions[i][axis] = (-model.positions[i][axis] + (2*translate))
-    # align to position zero
-    zero = (model[[atom.index for atom in model if atom.tag == 1][0]].position[axis])
+    if axis == 0:
+        translate = model.positions[center_index][1]
+        for i in [atom.index for atom in model]:
+            model.positions[i][1] = (-model.positions[i][1] + (2*translate))
+    if axis == 1:
+        translate = model.positions[center_index][0]
+        for i in [atom.index for atom in model]:
+            model.positions[i][0] = (-model.positions[i][0] + (2*translate))
+
+    # align to position zero - constrained atoms aligned with surface atoms
+    zero_index = get_zero_from_constrained_atoms(model)
+
+    zero_x = (model[zero_index].position[0])
+    zero_y = (model[zero_index].position[1])
 
     for i in reversed([atom.index for atom in model]):
-        model.positions[i][axis] = (model.positions[i][axis] - zero - model.get_cell_lengths_and_angles()[axis])
+        model.positions[i][0] = (model.positions[i][0] - zero_x - model.get_cell_lengths_and_angles()[0])
+        model.positions[i][1] = (model.positions[i][1] - zero_y - model.get_cell_lengths_and_angles()[1])
 
     from software.analyse.neb_tools.symmetry import borrow_positions
     # TODO: Execute x times to ensure no axis coordinate below -0.50
@@ -407,6 +447,7 @@ def rotate_fcc(model, center_index, surf):
     '''
     from software.analyse.neb_tools.symmetry import sort_by_xyz
     import numpy as np
+    import copy
 
     if surf == "111":
         degrees = -120
@@ -425,7 +466,7 @@ def rotate_fcc(model, center_index, surf):
         # retrieve indices of the fixed atoms
         constrained_indices = np.ndarray.tolist(prev_const[0].index)
         eps = 1e-8
-        #index_const_at_zero = [atom.index for atom in model[constrained_indices] if -eps < atom.position[0] < eps][0]
+
         index_const_at_zero = None
     else:
        prev_const = None
@@ -433,7 +474,8 @@ def rotate_fcc(model, center_index, surf):
 
     # Remove constraints for rotation operation
     model.set_constraint()
-    center_atom_position = model[center_index].position
+    # this variable does not survive other operations unchanged, hence deepcopy
+    center_atom_position = copy.deepcopy(model[center_index].position)
 
     model.rotate(degrees, 'z', center=center_atom_position)
     model = sort_by_xyz(model, surf)
@@ -454,18 +496,22 @@ def rotate_fcc(model, center_index, surf):
     model.wrap()
 
     # Return to around the position of the center_index
-    from software.analyse.neb_tools.symmetry import translation
     # Force translations to remove inconsistencies
-    model = translation(model, axis=0, surface=surf)
-    model = translation(model, axis=1, surface=surf)
-
+    from software.analyse.neb_tools.symmetry import translation
+    from software.analyse.neb_tools.symmetry import get_a
+    a = get_a(model)
     current_pos = model[center_index].position
+
+    if a/2 > (current_pos[1] - center_atom_position[1]) > -a/2:
+        model = translation(model, axis=1, surface=surf)
+        current_pos = model[center_index].position
+    if a/2 > (current_pos[0] - center_atom_position[0]) > -a/2:
+        model = translation(model, axis=0, surface=surf)
+        current_pos = model[center_index].position
 
     # Safety break
     x = 0
-    # Align in y-direction
-    from software.analyse.neb_tools.symmetry import get_a
-    a = get_a(model)
+        # Align in y-directio
     while not (a/2 > (current_pos[1] - center_atom_position[1]) > -a/2):
         x = x+1
         current_pos = model[center_index].position
