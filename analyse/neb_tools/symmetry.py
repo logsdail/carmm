@@ -262,7 +262,7 @@ def borrow_positions(model, axis, surf, sort=True):
     count_iter = 0
     # align axis
     if surf == "111":
-        if axis==0:
+        if axis == 0:
             model.rotate(30, 'z', rotate_cell=True)
     positions = model.get_positions()
 
@@ -271,10 +271,10 @@ def borrow_positions(model, axis, surf, sort=True):
         count_iter = count_iter + 1
         # Include some tolerance for surface atoms
         if coordinate[axis] < -0.7:
-           indices_to_move = indices_to_move + [count_iter - 1]
+            indices_to_move = indices_to_move + [count_iter - 1]
     # Return cell to original shape
     if surf == "111":
-        if axis==0:
+        if axis == 0:
             model.rotate(-30, 'z', rotate_cell=True)
 
     if axis == 1:
@@ -291,9 +291,9 @@ def borrow_positions(model, axis, surf, sort=True):
     # Add retrieved constraints, calculator
     model.set_constraint(constraint)
 
-    if sort == True:
+    if sort is True:
         model = sort_by_xyz(model, surf)
-    elif sort == False:
+    elif sort is False:
         pass
     return model
 
@@ -330,7 +330,11 @@ def mirror(model, center_index, plane="y", surf="111"):
         prev_calc = model.get_calculator()
 
     # Save initial center atom position
-    center_atom_position = model[center_index].position
+    # Hypothesis: center_atom_position is a shallow reference that does not
+    #    survive other operations unchanged.
+    # Solution: a deepcopy required to retain functionality? Confirmed.
+    import copy
+    center_atom_position = copy.deepcopy(model[center_index].position)
     translate = model.positions[center_index][axis]
 
     for i in [atom.index for atom in model]:
@@ -367,6 +371,7 @@ def mirror(model, center_index, plane="y", surf="111"):
         model = translation(model, axis=1, surface=surf)
         if x > 9:
             break
+
     # Align in x-direction
     x = 0
     while not a/2 > (current_pos[0] - center_atom_position[0]) > -a/2:
@@ -381,8 +386,6 @@ def mirror(model, center_index, plane="y", surf="111"):
     if model.get_calculator() is not None:
         prev_calc.atoms = model
         model.set_calculator(prev_calc)
-
-
 
     return model
 
