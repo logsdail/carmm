@@ -256,7 +256,10 @@ def sort_by_xyz(model, surface):
 
 
 def borrow_positions(model, axis, surf, sort=True):
-    ''' TODO: detach and reuse elsewhere + update description '''
+    ''' TODO: detach and reuse elsewhere + update description
+    But it seems that this function is broken + not useful with automatic
+    alignment in place, will get deleted soon, unless fixed and used elsewhere.
+    '''
     from software.analyse.neb_tools.symmetry import sort_by_xyz
 
     indices_to_move = []
@@ -375,6 +378,10 @@ def mirror(model, center_index, plane="y", surf="111"):
         for i in [atom.index for atom in model]:
             model.positions[i][0] = (-model.positions[i][0] + (2*translate))
 
+    # Sort after changing the model prior to alignment
+    from software.analyse.neb_tools.symmetry import sort_by_xyz
+    model = sort_by_xyz(model, surf)
+
     # align to position zero - constrained atoms aligned with surface atoms
     zero_index = get_zero_from_constrained_atoms(model)
 
@@ -385,13 +392,15 @@ def mirror(model, center_index, plane="y", surf="111"):
         model.positions[i][0] = (model.positions[i][0] - zero_x - model.get_cell_lengths_and_angles()[0])
         model.positions[i][1] = (model.positions[i][1] - zero_y - model.get_cell_lengths_and_angles()[1])
 
-    from software.analyse.neb_tools.symmetry import borrow_positions
+    '''
+    # software.analyse.neb_tools.symmetry import borrow_positions
     # TODO: Execute x times to ensure no axis coordinate below -0.50
-    model = borrow_positions(model, axis, surf)
-    model = borrow_positions(model, axis, surf)
-    model = borrow_positions(model, axis, surf)
-    model = borrow_positions(model, axis, surf)
-
+    '''
+    model = borrow_positions(model, 1, surf)
+    model = borrow_positions(model, 0, surf)
+    model = borrow_positions(model, 1, surf)
+    model = borrow_positions(model, 0, surf)
+    '''
     # Return to around the position of the center_index
     from software.analyse.neb_tools.symmetry import translation
     # Force translations to remove inconsistencies
@@ -420,7 +429,7 @@ def mirror(model, center_index, plane="y", surf="111"):
         model = translation(model, axis=0, surface=surf)
         if x > 9:
             break
-    from software.analyse.neb_tools.symmetry import sort_by_xyz
+
     model = sort_by_xyz(model, surf)
 
     if model.get_calculator() is not None:
