@@ -22,7 +22,7 @@ index = [atom.index for atom in model if atom.symbol == "C"]
 
 # Mirror model in the x plane with respect to C atom
 # C atom remains in place, the rest of unit cell is shifted accordingly
-model = mirror(model, center_index=index[0], plane='x', surf="111")
+model = mirror(model, center_index=index[0], plane='y', surf="111")
 #view(model)
 
 # Translate one row of atoms at a time in x and y
