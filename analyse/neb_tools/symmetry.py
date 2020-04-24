@@ -143,12 +143,6 @@ def translation(model, axis=0, surface="111"):
     '''Section on index correction'''
     model = sort_by_xyz(model, surface)
 
-    # Retain calculator information and constraint
-    if model.get_calculator() is not None:
-        prev_calc.atoms = model
-    model.set_calculator(prev_calc)
-    model.set_constraint(constraint)
-
     # TODO: Zero should be based on similarity to the surface atom. Does not
     #   work as intended for odd number of layers, might not be required with
     #   get_a in place
@@ -161,6 +155,14 @@ def translation(model, axis=0, surface="111"):
     for i in reversed([atom.index for atom in model]):
         model.positions[i][0] = (model.positions[i][0] - zero_x)
         model.positions[i][1] = (model.positions[i][1] - zero_y)
+
+    # Retain calculator information and constraint
+    if model.get_calculator() is not None:
+        prev_calc.atoms = model
+    model.set_calculator(prev_calc)
+    model.set_constraint(constraint)
+
+    model = sort_by_xyz(model, surface)
 
     return model
 
@@ -303,10 +305,14 @@ def borrow_positions(model, axis, surf, sort=True):
     return model
 
 
-def get_zero_from_constrained_atoms(model):
+def get_zero_from_constrained_atoms(model, mirror=False):
+    ''' TODO: Description required. Part of function used for alignment '''
     import numpy as np
     zero_index = None
-    first_layer_atom = [atom.index for atom in model if atom.tag == 1][0]
+    tag = 1
+    if mirror is True:
+        tag = 2
+    first_layer_atom = [atom.index for atom in model if atom.tag == tag][0]
     if not model._get_constraints() == []:
         prev_const = model._get_constraints()
         # retrieve indices of the fixed atoms
@@ -329,6 +335,81 @@ def get_zero_from_constrained_atoms(model):
         pass
 
     return zero_index
+
+
+def check_for_negative_positions(model, axis, surf=None):
+    '''
+    Check if negative positions persist after a symmetry operation
+    and if yes - perform a translation until all atoms are wrapped into
+    the unit cell
+
+    Parameters:
+    model: Atoms object
+    axis: 0 or 1 # for "x" and "y"
+    surf: str
+        "111", "110", "100"
+        fcc surface "111" has a special operation for axis = 0
+
+    '''
+
+    still_negative = False
+
+    # align  atoms in y for x-coordinate check
+    if surf == "111":
+        if axis == 0:
+            model.rotate(30, 'z', rotate_cell=True)
+        else:
+            pass
+    else:
+        pass
+
+    # check if there are negative coordinates
+    for i in [atom.index for atom in model]:
+        if model[i].position[axis] < -1.0:
+            still_negative = True
+
+    if surf == "111":
+        if axis == 0:
+            model.rotate(-30, 'z', rotate_cell=True)
+        else:
+            pass
+    else:
+        pass
+
+    x = 0
+    while still_negative is True:
+        x += 1
+        model = translation(model, axis, surf)
+        check = 0
+
+        if surf == "111":
+            if axis == 0:
+                model.rotate(30, 'z', rotate_cell=True)
+            else:
+                pass
+        else:
+            pass
+
+        # check for negative coordinates outside of unit cell in axis
+        for i in [atom.index for atom in model]:
+            if model[i].position[axis] < -1.0:
+                check += 1
+
+        if surf == "111":
+            if axis == 0:
+                model.rotate(-30, 'z', rotate_cell=True)
+            else:
+                pass
+        else:
+            pass
+
+        # if no negative coordinates - stop
+        if check == 0:
+            still_negative = False
+        else:
+            pass
+
+    return model
 
 
 def mirror(model, center_index, plane="y", surf="111"):
@@ -383,7 +464,10 @@ def mirror(model, center_index, plane="y", surf="111"):
     model = sort_by_xyz(model, surf)
 
     # align to position zero - constrained atoms aligned with surface atoms
-    zero_index = get_zero_from_constrained_atoms(model)
+    if plane == "y":
+        zero_index = get_zero_from_constrained_atoms(model, mirror=True)
+    elif plane == "x":
+        zero_index = get_zero_from_constrained_atoms(model)
 
     zero_x = (model[zero_index].position[0])
     zero_y = (model[zero_index].position[1])
@@ -392,21 +476,27 @@ def mirror(model, center_index, plane="y", surf="111"):
         model.positions[i][0] = (model.positions[i][0] - zero_x - model.get_cell_lengths_and_angles()[0])
         model.positions[i][1] = (model.positions[i][1] - zero_y - model.get_cell_lengths_and_angles()[1])
 
+    model = sort_by_xyz(model, surf)
+
     '''
     # software.analyse.neb_tools.symmetry import borrow_positions
     # TODO: Execute x times to ensure no axis coordinate below -0.50
-    
+
     model = borrow_positions(model, 1, surf)
     model = borrow_positions(model, 0, surf)
     model = borrow_positions(model, 1, surf)
     model = borrow_positions(model, 0, surf)
     '''
     # Return to around the position of the center_index
-    from software.analyse.neb_tools.symmetry import translation
     # Force translations to remove inconsistencies
-    model = translation(model, axis=0, surface=surf)
-    model = translation(model, axis=1, surface=surf)
+    from software.analyse.neb_tools.symmetry import translation
+    from software.analyse.neb_tools.symmetry import get_a
+    from software.analyse.neb_tools.symmetry import check_for_negative_positions
 
+    model = check_for_negative_positions(model, 1, surf)
+    model = check_for_negative_positions(model, 0, surf)
+
+    a = get_a(model)
     current_pos = model[center_index].position
 
     # Safety break
