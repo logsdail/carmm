@@ -7,37 +7,43 @@ So far, functionality is implemented only for low index surfaces:
 
 These come in handy when setting up NEBs.
 '''
-###### EXAMPLE OF USE - MIRROR AND TRANSLATION ########
-from ase.visualize import view
-from math import sqrt
-from software.examples.data.model_gen import get_example_slab_with_adsorbate as slab
-from software.analyse.neb_tools.symmetry import mirror, translation, rotate_fcc
 
-# Toy model of CO2 on top of Au FCC(111)
-model = slab()
-#view(model)
+def test_build_symmetry_mirror():
 
-# Retrieve index of the C atom
-index = [atom.index for atom in model if atom.symbol == "C"]
+    ###### EXAMPLE OF USE - MIRROR AND TRANSLATION ########
+    from ase.visualize import view
+    from math import sqrt
+    from software.examples.data.model_gen import get_example_slab_with_adsorbate as slab
+    from software.analyse.neb_tools.symmetry import mirror, translation, rotate_fcc
 
-# Mirror model in the x plane with respect to C atom
-# C atom remains in place, the rest of unit cell is shifted accordingly
-model = mirror(model, center_index=index[0], plane='y', surf="111")
-#view(model)
+    # Toy model of CO2 on top of Au FCC(111)
+    model = slab()
+    #view(model)
 
-# Translate one row of atoms at a time in x and y
-# Move adsorbate to the middle of the unit cell
-model = translation(model, axis=0, surface="111")
-model = translation(model, axis=1, surface="111")
-#view(model)
+    # Retrieve index of the C atom
+    index = [atom.index for atom in model if atom.symbol == "C"]
+
+    # Mirror model in the x plane with respect to C atom
+    # C atom remains in place, the rest of unit cell is shifted accordingly
+    model = mirror(model, center_index=index[0], plane='y', surf="111")
+    #view(model)
+
+    # Translate one row of atoms at a time in x and y
+    # Move adsorbate to the middle of the unit cell
+    model = translation(model, axis=0, surface="111")
+    model = translation(model, axis=1, surface="111")
+    #view(model)
 
 
-### ASSERTION ###
-# Check if Oxygen moves as expected
-eps = 1e-8
-assert((model[19].position
-    - [4.01974776, 2.0844678, 15.39968345] < [eps, eps, eps]).all())
+    ### ASSERTION ###
+    # Check if Oxygen moves as expected
+    eps = 1e-8
+    assert((model[19].position
+        - [4.01974776, 2.0844678, 15.39968345] < [eps, eps, eps]).all())
 
-### Rotation example ###
-model = rotate_fcc(model, center_index=index[0], surf="111")
-#view(model)
+    ### Rotation example ###
+    model = rotate_fcc(model, center_index=index[0], surf="111")
+    #view(model)
+
+#Run the example
+test_build_symmetry_mirror()
