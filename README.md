@@ -1,5 +1,5 @@
-[![github_action] (https://github.com/logsdail/software/workflows/build)] (https://github.com/logsdail/software/workflows/build/badge.svg)
-[![codecov.io] (https://codecov.io/gh/logsdail/software)](https://codecov.io/gh/logsdail/software/coverage.svg)
+[![github](https://github.com/logsdail/software/workflows/build/badge.svg)](https://github.com/logsdail/software/workflows/build)
+[![codecov.io](https://codecov.io/gh/logsdail/software/coverage.svg)](https://codecov.io/gh/logsdail/software)
 
 # Software
 
