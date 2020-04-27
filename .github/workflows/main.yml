@@ -39,7 +39,7 @@ jobs:
       run: |
         echo $PWD
         ls -lrt
-        echo "::set-env name=PYTHONPATH::/home/runner/work/carmm"
+        echo "::set-env name=PYTHONPATH::/home/runner/work/carmm/carmm"
     
     # Runs a set of commands using the runners shell
     # Updated to run on pytest so we might be able to export data
