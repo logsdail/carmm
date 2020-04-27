@@ -5,15 +5,15 @@
 
 General scripts and software for everyday computational chemistry. Folder names are designed to be self explanatory but just in case we have:
 
-**build** - contains functions to build stuff
+**carmm/build** - contains functions to build stuff
 
-**run** - contains functions to help with runtime
+**carmm/run** - contains functions to help with runtime
 
-**analyse** - contains functions for post-processing
+**carmm/analyse** - contains functions for post-processing
 
 **examples** - example usage, for quality assurance tests and user guidance
 
-Insert this folder directory into your systems PYTHONPATH variable (e.g. ~/.bashrc) and it should automatically pick up the functions in the child folders. 
+Insert the carmm subdirectory into your systems PYTHONPATH variable (e.g. ~/.bashrc) and it should automatically pick up the functions in the child folders. 
 
 *Example: export PYTHONPATH=$PWD/carmm:$PYTHONPATH*
  
