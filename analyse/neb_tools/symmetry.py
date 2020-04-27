@@ -37,7 +37,7 @@ def translation(model, axis=0, surface="111"):
     '''Section on variables'''
     indices_to_move = []
     # Extraction of lattice parameter from bottom layers
-    from software.analyse.neb_tools.symmetry import get_a
+    from carmm.analyse.neb_tools.symmetry import get_a
     shift_dist = get_a(model)
 
     if surface == "110":

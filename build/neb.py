@@ -120,7 +120,7 @@ def check_interpolation(initial, final, n_max, interpolation="linear", verbose=T
     '''
 
     from ase.neb import NEB
-    from software.analyse.bonds import search_abnormal_bonds
+    from carmm.analyse.bonds import search_abnormal_bonds
     from ase.io.trajectory import Trajectory
     from ase.io import read
 
