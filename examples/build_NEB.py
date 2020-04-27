@@ -29,12 +29,6 @@ def test_build_NEB():
     assert(not check_interpolation(initial, updated_final, 10, verbose=False, save=False))
     ########
 
-    ## Add in a calculator to make things bit more complete on the testing
-    ## No need to actually calculate energies - only calc existence is tested in QA
-    from ase.calculators.emt import EMT
-    initial.set_calculator(EMT())
-    updated_final.set_calculator(EMT())
-
     #### Functionality to identify indices that would need swapping automatically
     indices_to_swap, distances = compare_structures(initial, updated_final)
     reupdated_final = switch_all_indices(updated_final, indices_to_swap)
