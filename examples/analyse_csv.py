@@ -6,7 +6,7 @@ TODO: Description Needed
 '''
 
 def test_analyse_csv():
-    from software.analyse.graphs import load_xyz_data_from_csv, set_graph_axes_heatmap
+    from carmm.analyse.graphs import load_xyz_data_from_csv, set_graph_axes_heatmap
     import matplotlib.pyplot as plt
 
     # Load and triangulate the data

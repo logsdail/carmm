@@ -8,8 +8,8 @@ TODO: Description Needed
 def test_mulliken_outline():
 
     import matplotlib.pyplot as plt
-    from software.analyse.mulliken import parse_mulliken_file, write_to_csv
-    from software.analyse.graphs import get_graph_linetype, get_graph_colour, set_graph_axes_mulliken
+    from carmm.analyse.mulliken import parse_mulliken_file, write_to_csv
+    from carmm.analyse.graphs import get_graph_linetype, get_graph_colour, set_graph_axes_mulliken
 
     # Read in data from file
     file = "data/Fe/Mulliken.out"

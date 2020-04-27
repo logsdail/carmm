@@ -7,10 +7,10 @@ TODO: Description Needed
 
 def test_alloy():
 
-    from software.build.alloy import binary_alloy
+    from carmm.build.alloy import binary_alloy
 
     #### Traditional ASE functionality #####
-    from software.examples.data.model_gen import get_example_slab as slab
+    from carmm.examples.data.model_gen import get_example_slab as slab
     slab = slab()
     #########
 

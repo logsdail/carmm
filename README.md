@@ -1,5 +1,5 @@
-[![github](https://github.com/logsdail/software/workflows/build/badge.svg)](https://github.com/logsdail/software/actions)
-[![codecov.io](https://codecov.io/gh/logsdail/software/coverage.svg)](https://codecov.io/gh/logsdail/software)
+[![github](https://github.com/logsdail/carmm/workflows/build/badge.svg)](https://github.com/logsdail/carmm/actions)
+[![codecov.io](https://codecov.io/gh/logsdail/carmm/coverage.svg)](https://codecov.io/gh/logsdail/carmm)
 
 # Cardiff Molecular Modelling
 

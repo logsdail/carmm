@@ -8,9 +8,9 @@ TODO: Description Needed
 def test_analyse_mulliken_atomic_angular():
 
     import matplotlib.pyplot as plt
-    from software.analyse.mulliken import parse_mulliken_file
-    from software.analyse.graphs import get_graph_linetype, get_graph_colour, set_graph_axes_mulliken
-    from software.analyse.bonds import get_indices_of_elements
+    from carmm.analyse.mulliken import parse_mulliken_file
+    from carmm.analyse.graphs import get_graph_linetype, get_graph_colour, set_graph_axes_mulliken
+    from carmm.analyse.bonds import get_indices_of_elements
 
     # Read in atoms information
     output_file = "data/TiO2/tio2_rutile_light.log"

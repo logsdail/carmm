@@ -8,9 +8,9 @@ TODO: Description Needed
 def test_analyse_mulliken_atomic_comparison():
 
     import matplotlib.pyplot as plt
-    from software.analyse.mulliken import parse_mulliken_file
-    from software.analyse.graphs import get_graph_linetype, get_graph_colour, set_graph_axes_mulliken
-    from software.analyse.bonds import get_indices_of_elements
+    from carmm.analyse.mulliken import parse_mulliken_file
+    from carmm.analyse.graphs import get_graph_linetype, get_graph_colour, set_graph_axes_mulliken
+    from carmm.analyse.bonds import get_indices_of_elements
 
     output_files = ['data/CO/co_light.log', 'data/Fe/fe_light.log', 'data/Fe-CO/fe-co_light.log']
     mulliken_files = ['data/CO/Mulliken.out', 'data/Fe/Mulliken.out', 'data/Fe-CO/Mulliken.out']

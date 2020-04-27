@@ -7,7 +7,7 @@ TODO: Description Needed
 
 def test_analyse_mulliken_charge():
 
-    from software.analyse.mulliken import extract_mulliken_charge
+    from carmm.analyse.mulliken import extract_mulliken_charge
 
     # This is the filename that would need changing for each FHI-aims input e.g. fhiaims.hawk.output.log.XXXXXXX
     filename = "data/CO/co_light.log"

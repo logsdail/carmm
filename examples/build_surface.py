@@ -8,12 +8,12 @@ TODO: Description Needed
 def test_build_surface():
 
     #### Traditional ASE functionality #####
-    from software.examples.data.model_gen import get_example_slab as slab
+    from carmm.examples.data.model_gen import get_example_slab as slab
     slab = slab()
     #########
 
     #### Functionality to create all surfaces ####
-    from software.build.facets import generate
+    from carmm.build.facets import generate
     facets, slabs = generate('Au', save=True)
     #### Assertion test for save ####
     import os
