@@ -64,21 +64,3 @@ def _save(facets, models):
 	for i in range(len(facets)):
 		face = facets[i]
 		write(str(face[0])+str(face[1])+str(face[2])+'.in', models[i])
-
-def create_supercell(atoms, repeat_a, repeat_b, repeat_c=1):
-	'''
-	Method to convert and return any atoms object into a supercell
-
-	Parameters:
-
-	Atoms: Atoms object
-		Incoming structure
-	repeat_a: Integer
-		Extension in x-direction
-	repeat_b: Integer
-		Extension in y-direction
-	repeat_c: Integer
-		Extension in z-direction
-	'''
-
-	return atoms*(repeat_a, repeat_b, repeat_c)

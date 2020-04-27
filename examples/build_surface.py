@@ -12,16 +12,9 @@ def test_build_surface():
     slab = slab()
     #########
 
-    #### Test method to create supercell ####
-    from software.build.facets import create_supercell
-    superslab = create_supercell(slab,2,2)
-    #### Assertion test ####
-    assert(len(superslab) == 72)
-    ########
-
     #### Functionality to create all surfaces ####
     from software.build.facets import generate
-    facets, slabs = generate('Au')
+    facets, slabs = generate('Au', save=True)
     #########
 
     #### Assertion tests ####
