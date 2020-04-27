@@ -1,6 +1,6 @@
 # This is a basic workflow to help you get started with Actions
 
-name: build
+name: ci-tests
 
 # Controls when the action will run. Triggers the workflow on push or pull request
 # events but only for the master branch
@@ -38,7 +38,7 @@ jobs:
     - name: Setup Python environment
       run: |
         echo $PWD
-        echo "::set-env name=PYTHONPATH::/home/runner/work/software"
+        echo "::set-env name=PYTHONPATH::/home/runner/work/carmm"
     
     # Runs a set of commands using the runners shell
     # Updated to run on pytest so we might be able to export data
