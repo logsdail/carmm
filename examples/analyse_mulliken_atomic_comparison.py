@@ -14,13 +14,12 @@ def test_analyse_mulliken_atomic_comparison():
 
     output_files = ['data/CO/co_light.log', 'data/Fe/fe_light.log', 'data/Fe-CO/fe-co_light.log']
     mulliken_files = ['data/CO/Mulliken.out', 'data/Fe/Mulliken.out', 'data/Fe-CO/Mulliken.out']
+
     # Store the axes for different graphs - this is a matplotlib specific aspect.
-    axes = []
+    # Instead of drawing in data on to the plt object, here we plot on to the axes objects.
+    fig, axes = plt.subplots(len(output_files),1)
 
     for i in range(len(output_files)):
-        # Subplots
-        axes.append(plt.subplot(len(output_files),1,i+1))
-
         # Read in atoms information
         output_file = output_files[i]
         from ase.io import read
@@ -69,7 +68,7 @@ def test_analyse_mulliken_atomic_comparison():
         set_graph_axes_mulliken(axes[i], x, all_data, mulliken_data.get_homo(), mulliken_data.get_graph_xlabel())
 
         # Add a legend
-        plt.legend()
+        axes[i].legend()
 
     #### Shoe-horn an assertion test in on final HOMO ####
     assert(mulliken_data.get_homo() == -4.22285)
