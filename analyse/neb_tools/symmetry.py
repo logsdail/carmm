@@ -8,13 +8,8 @@ def translation(model, axis=0, surface="111"):
     Atoms object is permanently changed.
 
     TODO:
-    - Is forces array shifting with the atoms in the Atoms object?
-            Adjustment added in sort_by_xyz - test required to make sure it is
-            performed twice.
     - FOR NOW requires surface to have tags for layers of atoms in Z-direction
-    - extract a from bottom layer, limit user input
     - functionality beyond FCC? or higher index?
-    - provide a reasonable example
 
     Parameters:
     model: Atoms object or string
@@ -168,7 +163,13 @@ def translation(model, axis=0, surface="111"):
 
 
 def get_a(model):
-    ''' Retrieve minimum M-M distance from bottom layer of a slab'''
+    '''
+    Retrieve minimum M-M distance from bottom layer of a slab
+
+    Parameters:
+    model: Atoms Object
+        FCC surface model that has atom tags associated with layers
+    '''
     import numpy as np
     max_tag = np.amax(list(set(model.get_tags())))
 
@@ -181,7 +182,7 @@ def get_a(model):
 
 
 def sort_by_xyz(model, surface):
-    ''' WORK IN PROGRESS
+    '''
     Sorting indices by xyz coordinates for periodic surface models.
     Returns Atoms object with atom indices sorted.
 
@@ -257,56 +258,22 @@ def sort_by_xyz(model, surface):
     return model
 
 
-def borrow_positions(model, axis, surf, sort=True):
-    ''' TODO: detach and reuse elsewhere + update description
-    But it seems that this function is broken + not useful with automatic
-    alignment in place, will get deleted soon, unless fixed and used elsewhere.
-    '''
-    from software.analyse.neb_tools.symmetry import sort_by_xyz
-
-    indices_to_move = []
-    constraint = model._get_constraints()
-    count_iter = 0
-    # align axis
-    if surf == "111":
-        if axis == 0:
-            model.rotate(30, 'z', rotate_cell=True)
-    positions = model.get_positions()
-
-    # Mark atoms that need moving
-    for coordinate in positions:
-        count_iter = count_iter + 1
-        # Include some tolerance for surface atoms
-        if coordinate[axis] < -0.7:
-            indices_to_move = indices_to_move + [count_iter - 1]
-    # Return cell to original shape
-    if surf == "111":
-        if axis == 0:
-            model.rotate(-30, 'z', rotate_cell=True)
-
-    if axis == 1:
-        temp_model = model.repeat((1, 2, 1))
-    elif axis == 0:
-        temp_model = model.repeat((2, 1, 1))
-
-    temp_model.set_constraint()
-    model.set_constraint()
-    for i in indices_to_move:
-        model[i].position[axis] = temp_model[i+len(
-            model.get_tags())].position[axis]
-
-    # Add retrieved constraints, calculator
-    model.set_constraint(constraint)
-
-    if sort is True:
-        model = sort_by_xyz(model, surf)
-    elif sort is False:
-        pass
-    return model
-
-
 def get_zero_from_constrained_atoms(model, mirror=False):
-    ''' TODO: Description required. Part of function used for alignment '''
+    '''
+    Function retrieving and index of an atom in the bottom layer of surface
+    supplied. Based on the assumption that model:
+    i) contains constrained bottom layers
+    ii) contains tags associated with layers in Z-direction
+    If no contraints - align with the top layer atom.
+
+    Parameters:
+    model: Atoms object
+        FCC surface model
+    mirror: boolean
+        If True chooses a different layer to account for mirroring of the model
+
+    TODO: What if no tags associated with layers in z-direction?
+    '''
     import numpy as np
     zero_index = None
     tag = 1
@@ -414,8 +381,8 @@ def check_for_negative_positions(model, axis, surf=None):
 
 def mirror(model, center_index, plane="y", surf="111"):
     '''
-    Function that returns a mirror image of the adsorbate in the x or y axis
-    and shifts the surface atoms accordingly.
+    Function that returns a mirror image of an FCC model in the x or y axis
+    with respect to an adsorbate and atom shifts the surface atoms accordingly.
 
     Parameters:
     model: Atoms object
@@ -428,9 +395,6 @@ def mirror(model, center_index, plane="y", surf="111"):
         mirrored.
     surf: string
         Surface type. Supported "111", "110", "100" of the FCC lattice
-
-    # TODO: turn into a function that can take either x or y and a specific
-    # index of an adsorbate atom as the center
     '''
     if plane == "x":
         axis = 0
@@ -478,15 +442,6 @@ def mirror(model, center_index, plane="y", surf="111"):
 
     model = sort_by_xyz(model, surf)
 
-    '''
-    # software.analyse.neb_tools.symmetry import borrow_positions
-    # TODO: Execute x times to ensure no axis coordinate below -0.50
-
-    model = borrow_positions(model, 1, surf)
-    model = borrow_positions(model, 0, surf)
-    model = borrow_positions(model, 1, surf)
-    model = borrow_positions(model, 0, surf)
-    '''
     # Return to around the position of the center_index
     # Force translations to remove inconsistencies
     from software.analyse.neb_tools.symmetry import translation
