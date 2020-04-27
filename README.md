@@ -1,7 +1,7 @@
 [![github](https://github.com/logsdail/software/workflows/build/badge.svg)](https://github.com/logsdail/software/actions)
 [![codecov.io](https://codecov.io/gh/logsdail/software/coverage.svg)](https://codecov.io/gh/logsdail/software)
 
-# Software
+# Cardiff Molecular Modelling
 
 General scripts and software for everyday computational chemistry. Folder names are designed to be self explanatory but just in case we have:
 
