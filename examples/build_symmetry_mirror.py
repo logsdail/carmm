@@ -12,12 +12,11 @@ def test_build_symmetry_mirror():
 
     ###### EXAMPLE OF USE - MIRROR AND TRANSLATION ########
     from ase.visualize import view
-    from math import sqrt
-    from software.examples.data.model_gen import get_example_slab_with_adsorbate as slab
+    from software.examples.data.model_gen import get_example_slab as slab
     from software.analyse.neb_tools.symmetry import mirror, translation, rotate_fcc
 
     # Toy model of CO2 on top of Au FCC(111)
-    model = slab()
+    model = slab(adsorbate=True)
     #view(model)
 
     # Retrieve index of the C atom

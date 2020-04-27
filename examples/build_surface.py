@@ -7,44 +7,26 @@ TODO: Description Needed
 
 def test_build_surface():
 
-    from ase.build import fcc111
-    from math import sqrt
-
     #### Traditional ASE functionality #####
-
-    element='Au'
-    lattice_parameter=2.939
-    width=2
-    depth=2
-    vacuum=10.0
-
-    # Create surface
-    slab = fcc111(element, a=lattice_parameter*sqrt(2),
-                  size=(width,width,depth), vacuum=vacuum)
-
-    # Enable to add H at an ontop position
-    #add_adsorbate(slab, 'H', 1.5, 'ontop')
-
-    # Enable to visualise the slab
-    # from ase.visualize import view
-    # view(slab)
-
-    # Writes surface to file
-    # from ase.io import write
-    #write('slab_geometry.in',slab,format='aims')
-
+    from software.examples.data.model_gen import get_example_slab as slab
+    slab = slab()
     #########
 
+    #### Test method to create supercell ####
+    from software.build.facets import create_supercell
+    superslab = create_supercell(slab,2,2)
+    #### Assertion test ####
+    assert(len(superslab) == 72)
+    ########
+
     #### Functionality to create all surfaces ####
-    from software.build import facets
-
-    facets, slabs = facets.generate(element)
-
+    from software.build.facets import generate
+    facets, slabs = generate('Au')
     #########
 
     #### Assertion tests ####
-
-    # Scale all cell vectors to match those defined previously
+    # Scale all cell vectors to match those defined in the ASE version
+    lattice_parameter=2.939
     for i in range(len(slabs)):
         slabs[i].set_cell(slabs[i].get_cell()*(lattice_parameter/slabs[i].get_cell()[1][0]))
 
@@ -53,7 +35,8 @@ def test_build_surface():
     eps = 1e-10
     for i in range(2):
         for j in range(3):
-            assert(slab.get_cell()[i][j] - slabs[0].get_cell()[i][j] < eps)
+            # *1.5 is because the test slab is 3 units wide, and the generated slab is 2 units wide.
+            assert(slab.get_cell()[i][j] - slabs[0].get_cell()[i][j]*1.5 < eps)
 
 # Run the example
 test_build_surface()

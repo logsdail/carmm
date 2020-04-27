@@ -9,10 +9,10 @@ def test_build_NEB():
 
     from software.build.neb import switch_indices, switch_all_indices, check_interpolation
     from software.analyse.bonds import compare_structures
-    from ase.build import molecule
+    from software.examples.data.model_gen import get_example_adsorbate as co2
 
-    initial = molecule("CO2")
-    final = molecule("CO2")
+    initial = co2()
+    final = co2()
 
     #check_interpolation('initial.traj','final.traj',10)
     #### Assertion tests ####
