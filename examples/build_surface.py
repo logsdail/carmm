@@ -15,6 +15,9 @@ def test_build_surface():
     #### Functionality to create all surfaces ####
     from software.build.facets import generate
     facets, slabs = generate('Au', save=True)
+    #### Assertion test for save ####
+    import os
+    assert(os.path.exists('111.in'))
     #########
 
     #### Assertion tests ####
