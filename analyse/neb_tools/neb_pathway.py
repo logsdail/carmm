@@ -6,11 +6,11 @@ TODO: Design a process where optimal initial/final adsorbate
     of symmetry operations and form a sequence before attempting
     the operations to reduce computational time.
 '''
-from software.examples.data.model_gen import get_example_slab
+from carmm.examples.data.model_gen import get_example_slab
 from ase.build import molecule, add_adsorbate
 from ase import Atom
-from software.analyse.bonds import compare_structures
-from software.build.neb import switch_indices, switch_all_indices
+from carmm.analyse.bonds import compare_structures
+from carmm.build.neb import switch_indices, switch_all_indices
 
 # Work case for automatic neb setup
 # initial geometry

@@ -548,7 +548,7 @@ def rotate_fcc(model, center_index, surf):
 
     # Return to around the position of the center_index
     # Force translations to remove inconsistencies
-    from software.analyse.neb_tools.symmetry import translation, get_a
+    from carmm.analyse.neb_tools.symmetry import translation, get_a
     a = get_a(model)
     current_pos = model[center_index].position
 
