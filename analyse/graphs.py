@@ -23,7 +23,7 @@ def get_graph_linetype(choice=0):
     line_types = ['solid', 'dashed', 'dashdot', 'dotted']
     return line_types[choice]
 
-def set_graph_axes_mulliken(plt, x, y, homo, xlabel='$\\epsilon$ (eV)', ylabel='Density of States (1/eV)'):
+def set_graph_axes_mulliken(axis, x, y, homo, xlabel='$\\epsilon$ (eV)', ylabel='Density of States (1/eV)'):
     '''
     Function to automate setting up the plot axes for a DOS
 
@@ -43,6 +43,12 @@ def set_graph_axes_mulliken(plt, x, y, homo, xlabel='$\\epsilon$ (eV)', ylabel='
     ylabel: String
         Label for y-axis
     '''
+
+    # Determine if this is a plot instance, and if so extract axes
+    from matplotlib.axes._subplots import Axes
+    if(not isinstance(axis,Axes)):
+        axis = axis.gca()
+    # Set all the axes limits and labels
     ymax = max(map(max, y))*1.1
     ymin = 0
     if homo == 0.0:
@@ -54,15 +60,15 @@ def set_graph_axes_mulliken(plt, x, y, homo, xlabel='$\\epsilon$ (eV)', ylabel='
     if len(y) > 1:
         ymin = -ymax
         # Add zero line for spin-polarised systems
-        plt.axhline(y=0, xmin=min(x), xmax=max(x), color='black', lw=2)
-    plt.ylim(ymin, ymax)
-    plt.xlim(xmin, xmax)
-    plt.yticks([])
+        axis.axhline(y=0, xmin=min(x), xmax=max(x), color='black', lw=2)
+    axis.set_ylim(ymin, ymax)
+    axis.set_xlim(xmin, xmax)
+    axis.set_yticks([])
     # Plot HOMO line
-    plt.axvline(x=homo, ymin=ymin, ymax=ymax, color='black', lw=2, ls='--')
+    axis.axvline(x=homo, ymin=ymin, ymax=ymax, color='black', lw=2, ls='--')
     # Label axes
-    plt.ylabel(ylabel)
-    plt.xlabel(xlabel)
+    axis.set_ylabel(ylabel)
+    axis.set_xlabel(xlabel)
 
 def load_xyz_data_from_csv(fname):
     '''

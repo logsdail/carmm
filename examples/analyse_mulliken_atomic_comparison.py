@@ -66,8 +66,7 @@ def test_analyse_mulliken_atomic_comparison():
                 axes[i].plot(x, -(all_data[sp]), lw=1, color='black', ls=get_graph_linetype())
 
         # Work to rescale axes. Extracts the maximum y-value
-        # TODO: Pass in the axes object, axes[i], instead of plt. How I do this and not ruin the functionality?
-        set_graph_axes_mulliken(plt, x, all_data, mulliken_data.get_homo(), mulliken_data.get_graph_xlabel())
+        set_graph_axes_mulliken(axes[i], x, all_data, mulliken_data.get_homo(), mulliken_data.get_graph_xlabel())
 
         # Add a legend
         plt.legend()
@@ -77,7 +76,7 @@ def test_analyse_mulliken_atomic_comparison():
     ########
 
     # Display the graphs
-    #plt.show()
+    # plt.show()
 
 # Run the example
 test_analyse_mulliken_atomic_comparison()
