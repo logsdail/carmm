@@ -23,7 +23,7 @@ def get_graph_linetype(choice=0):
     line_types = ['solid', 'dashed', 'dashdot', 'dotted']
     return line_types[choice]
 
-def set_graph_axes_mulliken(plt, x, y, homo, xlabel='$\epsilon$ (eV)', ylabel='Density of States (1/eV)'):
+def set_graph_axes_mulliken(plt, x, y, homo, xlabel='$\\epsilon$ (eV)', ylabel='Density of States (1/eV)'):
     '''
     Function to automate setting up the plot axes for a DOS
 
@@ -31,6 +31,7 @@ def set_graph_axes_mulliken(plt, x, y, homo, xlabel='$\epsilon$ (eV)', ylabel='D
 
     plt: Matplotlib plot object
         This has data predrawn from the x- and y-axis data also provided
+        TODO: Allow this to be an axes object as an alternative
     x: list of Floats
         The x-axis data object (i.e. range of x-axis values)
     y: list of Floats

@@ -42,16 +42,11 @@ def test_analyse_mulliken_atomic_angular():
     x, o_p = mulliken_data.get_plot_data(o_indices, range(mulliken_data.get_nspin()),
                                         range(mulliken_data.get_nkpts()), 'p')
 
+    # Plot the specific cases we are interested in; notice that this is spin-paired
+    plt.plot(x, ti_d[0], lw=2, label='Ti 3d', color=get_graph_colour(0), ls=get_graph_linetype())
+    plt.plot(x, ti_d[0]+o_p[0], lw=2, label='O 2p', color=get_graph_colour(1), ls=get_graph_linetype())
     # Put this at the end so it covers everything else and shows the outline of the DOS correctly
-    for sp in range(len(all_data)):
-        if sp == 0:
-            plt.plot(x, ti_d[sp], lw=2, label='Ti 3d', color=get_graph_colour(0), ls=get_graph_linetype())
-            plt.plot(x, ti_d[sp]+o_p[sp], lw=2, label='O 2p', color=get_graph_colour(1), ls=get_graph_linetype())
-            plt.plot(x, all_data[sp], lw=2, label='All', color='black', ls=get_graph_linetype())
-        else: # (sp == 1)
-            plt.plot(x, -(ti_d[sp]), lw=2, color=get_graph_colour(0), ls=get_graph_linetype())
-            plt.plot(x, -(ti_d[sp]+o_p[sp]), lw=2, color=get_graph_colour(1), ls=get_graph_linetype())
-            plt.plot(x, -(all_data[sp]), lw=2, label='All', color='black,', ls=get_graph_linetype())
+    plt.plot(x, all_data[0], lw=2, label='All', color='black', ls=get_graph_linetype())
 
     # Work to rescale axes. Extracts the maximum y-value
     set_graph_axes_mulliken(plt, x, all_data, mulliken_data.get_homo(), mulliken_data.get_graph_xlabel())
@@ -60,7 +55,7 @@ def test_analyse_mulliken_atomic_angular():
     plt.legend()
 
     # Display the graphs
-    # plt.show()
+    plt.show()
 
 # Run the example
 test_analyse_mulliken_atomic_angular()

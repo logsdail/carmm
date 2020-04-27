@@ -14,10 +14,12 @@ def test_analyse_mulliken_atomic_comparison():
 
     output_files = ['data/CO/co_light.log', 'data/Fe/fe_light.log', 'data/Fe-CO/fe-co_light.log']
     mulliken_files = ['data/CO/Mulliken.out', 'data/Fe/Mulliken.out', 'data/Fe-CO/Mulliken.out']
+    # Store the axes for different graphs - this is a matplotlib specific aspect.
+    axes = []
 
     for i in range(len(output_files)):
         # Subplots
-        ax1 = plt.subplot(len(output_files),1,i+1)
+        axes.append(plt.subplot(len(output_files),1,i+1))
 
         # Read in atoms information
         output_file = output_files[i]
@@ -49,21 +51,22 @@ def test_analyse_mulliken_atomic_comparison():
             if sp == 0:
                 # Here we are filling between lines, rather than plotting a single line.
                 # Hence we provide two y-values to plot between.
-                plt.fill_between(x, [ 0 * len(x) ], fe[sp], lw=0, facecolor=get_graph_colour(0), label='Fe', interpolate=True)
-                plt.fill_between(x, fe[sp], fe[sp]+c[sp], lw=0, facecolor=get_graph_colour(1), label='C', interpolate=True)
-                plt.fill_between(x, fe[sp]+c[sp], fe[sp]+c[sp]+o[sp], lw=0, facecolor=get_graph_colour(2), label='O', interpolate=True)
-                plt.plot(x, all_data[sp], lw=1, color='black', ls=get_graph_linetype())
+                axes[i].fill_between(x, [ 0 * len(x) ], fe[sp], lw=0, facecolor=get_graph_colour(0), label='Fe', interpolate=True)
+                axes[i].fill_between(x, fe[sp], fe[sp]+c[sp], lw=0, facecolor=get_graph_colour(1), label='C', interpolate=True)
+                axes[i].fill_between(x, fe[sp]+c[sp], fe[sp]+c[sp]+o[sp], lw=0, facecolor=get_graph_colour(2), label='O', interpolate=True)
+                axes[i].plot(x, all_data[sp], lw=1, color='black', ls=get_graph_linetype())
             else: # (sp == 1)
                 # Note the slightly different definition of the y-axis data here
                 # There is a chance that the element doesn't exist in the system, which returns a DOS of zero,
                 # and you cannot take the negative of a list of zeros (it transpires)
                 # Instead, the approach given just makes each value in the list its negative value separately
-                plt.fill_between(x, [0 * len(x)], [-i for i in fe[sp]], lw=0, facecolor=get_graph_colour(0), interpolate=True)
-                plt.fill_between(x, [-i for i in fe[sp]], [-i for i in fe[sp]+c[sp]], lw=0, facecolor=get_graph_colour(1), interpolate=True)
-                plt.fill_between(x, [-i for i in fe[sp]+c[sp]], [-i for i in fe[sp]+c[sp]+o[sp]], lw=0, facecolor=get_graph_colour(2), interpolate=True)
-                plt.plot(x, -(all_data[sp]), lw=1, color='black', ls=get_graph_linetype())
+                axes[i].fill_between(x, [0 * len(x)], [-i for i in fe[sp]], lw=0, facecolor=get_graph_colour(0), interpolate=True)
+                axes[i].fill_between(x, [-i for i in fe[sp]], [-i for i in fe[sp]+c[sp]], lw=0, facecolor=get_graph_colour(1), interpolate=True)
+                axes[i].fill_between(x, [-i for i in fe[sp]+c[sp]], [-i for i in fe[sp]+c[sp]+o[sp]], lw=0, facecolor=get_graph_colour(2), interpolate=True)
+                axes[i].plot(x, -(all_data[sp]), lw=1, color='black', ls=get_graph_linetype())
 
         # Work to rescale axes. Extracts the maximum y-value
+        # TODO: Pass in the axes object, axes[i], instead of plt. How I do this and not ruin the functionality?
         set_graph_axes_mulliken(plt, x, all_data, mulliken_data.get_homo(), mulliken_data.get_graph_xlabel())
 
         # Add a legend

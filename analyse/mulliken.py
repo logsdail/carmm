@@ -462,9 +462,9 @@ class MullikenData:
         Return label for the x-axis depending on whether the model is periodic or not
         '''
         if self.get_nkpts() > 1:
-            xlabel = '$\epsilon - \epsilon_{f}$ (eV)'
+            xlabel = '$\\epsilon - \\epsilon_{f}$ (eV)'
         else:
-            xlabel = '$\epsilon$ (eV)'
+            xlabel = '$\\epsilon$ (eV)'
         return xlabel
 
 
