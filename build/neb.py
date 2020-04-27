@@ -35,7 +35,10 @@ def switch_indices(model, A, B):
         # If it exists, forces array needs to be adjusted.
         prev_calc = model.get_calculator()
         prev_calc_results = prev_calc.results
-        f = prev_calc_results["forces"]
+        if "forces" in prev_calc_results:
+            f = prev_calc_results["forces"]
+        else:
+            f = []
     else:
         f = []
 
