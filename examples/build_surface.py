@@ -8,7 +8,7 @@ TODO: Description Needed
 def test_build_surface():
 
     #### Traditional ASE functionality #####
-    from carmm.examples.data.model_gen import get_example_slab as slab
+    from data.model_gen import get_example_slab as slab
     slab = slab()
     #########
 

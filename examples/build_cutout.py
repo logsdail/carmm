@@ -10,7 +10,7 @@ def test_cutout():
     from carmm.build.cutout import cutout_sphere
 
     #### Traditional ASE functionality #####
-    from carmm.examples.data.model_gen import get_example_slab as slab
+    from data.model_gen import get_example_slab as slab
     slab = slab(adsorbate=True)
     #########
 
