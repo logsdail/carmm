@@ -1,4 +1,4 @@
-def analyse_all_bonds(model, verbose=True):
+def analyse_all_bonds(model, verbose=True, abnormal=False):
     '''
     Returns a table of bond distance analysis for the supplied model.
     TODO: - Setup method to return information
@@ -22,34 +22,44 @@ def analyse_all_bonds(model, verbose=True):
 
     from ase.geometry.analysis import Analysis
     analysis = Analysis(model)
-    dash = "-" * 40
 
     # set() to ensure unique chemical symbols list
     list_of_symbols = list(set(model.get_chemical_symbols()))
     all_bonds = combinations_with_replacement(list_of_symbols, 2)
 
+    if abnormal:
+        # Define lists of variables
+        abnormal_bonds = []
+        list_of_abnormal_bonds = []
+
     # Table heading
     if verbose:
-        print(dash)
+        print("-" * 40)
         print('{:<6.5s}{:<6.5s}{:>4.10s}{:^13.10s}{:>4.10s}'.format(
             "Bond", "Count", "Average", "Minimum", "Maximum"))
-        print(dash)
+        print("-" * 40)
 
+    from ase.data import chemical_symbols, covalent_radii
     # Iterate over all arrangements of chemical symbols
     for bonds in all_bonds:
-        AB_Bonds, AB_BondsValues = analyse_bonds(model, bonds[0], bonds[1], verbose=False)
+        print_AB, AB_Bonds, AB_BondsValues = analyse_bonds(model, bonds[0], bonds[1], verbose=verbose, multirow=True)
 
-        print_AB = bonds[0]+'-'+bonds[1]
-        #AB_Bonds = analysis.get_bonds(A, B)
+        if abnormal and AB_BondsValues is not None:
+            sum_of_covalent_radii = covalent_radii[chemical_symbols.index(bonds[0])] + covalent_radii[chemical_symbols.index(bonds[1])]
 
-        # Make sure bond exist before retrieving values, then print contents
-        if verbose and AB_BondsValues is not None:
-            #AB_BondsValues = analysis.get_values(AB_Bonds)
-            print('{:<8.8s}{:<6.0f}{:>4.6f}{:^12.6f}{:>4.6f}'.format(
-                print_AB, len(AB_BondsValues[0]), np.average(AB_BondsValues),
-                np.amin(AB_BondsValues), np.amax(AB_BondsValues)))
+            for i in range(0, len(AB_BondsValues)):
+                for values in AB_BondsValues[i]:
+                    # TODO: move the 75% of sum_of_covalent_radii before the loops
+                    if values < max(0.4, sum_of_covalent_radii*0.75):
+                        abnormal_bonds += [1]
+                        list_of_abnormal_bonds = list_of_abnormal_bonds + [print_AB]
 
-def analyse_bonds(model, A, B, verbose=True):
+    # This is horrible. TODO: Make this a bit more bulletproof for standard bond analysis
+    # i.e. give some meaningful results back to the user.
+    if abnormal:
+        return abnormal_bonds, list_of_abnormal_bonds
+
+def analyse_bonds(model, A, B, verbose=True, multirow=False):
     '''
     Check A-B distances present in the model.
         model: Atoms object or string. If string it will read a file
@@ -61,6 +71,9 @@ def analyse_bonds(model, A, B, verbose=True):
     B: string, chemical symbol, e.g. "H"
     verbose: Boolean
         Whether to print information to screen
+    multirow: Boolean
+        Whether we are working with analyse_all_bonds, so the output is multirow,
+        or just one specific analysis of a bond, in which case the table header is needed.
     '''
 
     # Read file or Atoms object
@@ -70,7 +83,7 @@ def analyse_bonds(model, A, B, verbose=True):
 
     from ase.geometry.analysis import Analysis
     analysis = Analysis(model)
-    dash = "-" * 40
+
     print_AB = A + "-" + B
     # Retrieve bonds and values
     AB_Bonds = analysis.get_bonds(A, B)
@@ -80,19 +93,18 @@ def analyse_bonds(model, A, B, verbose=True):
         AB_BondsValues = analysis.get_values(AB_Bonds)
 
     if verbose and AB_BondsValues is not None:
-        # Table header
-        print(dash)
-        print(print_AB+"       Distance / Angstrom")
-        print(dash)
-        print('{:<6.5s}{:>4.10s}{:^13.10s}{:>4.10s}'.format(
-            "count", "average", "minimum", "maximum"))
+        if not multirow:
+            print('-'*40)
+            print('{:<6.5s}{:<6.5s}{:>4.10s}{:^13.10s}{:>4.10s}'.format(
+                "Bond", "Count", "Average", "Minimum", "Maximum"))
+            print('-'*40)
         # Table contents
         import numpy as np
-        print('{:<6.0f}{:>4.6f}{:^12.6f}{:>4.6f}'.format(
-            len(AB_BondsValues[0]), np.average(AB_BondsValues),
+        print('{:<8.8s}{:<6.0f}{:>4.6f}{:^12.6f}{:>4.6f}'.format(
+            print_AB, len(AB_BondsValues[0]), np.average(AB_BondsValues),
             np.amin(AB_BondsValues), np.amax(AB_BondsValues)))
 
-    return AB_Bonds, AB_BondsValues
+    return print_AB, AB_Bonds, AB_BondsValues
 
 def search_abnormal_bonds(model, verbose=True):
     '''
@@ -104,51 +116,9 @@ def search_abnormal_bonds(model, verbose=True):
         in the same folder, e.g. "name.traj"
     '''
 
-    # Combination as AB = BA for bonds, avoiding redundancy
-    from itertools import combinations_with_replacement
-    # Imports necessary to work out accurate minimum bond distances
-    from ase.data import chemical_symbols, covalent_radii
-
-    # Read file or Atoms object
-    if isinstance(model, str) is True:
-        from ase.io import read
-        model = read(model)
-
-    # Define lists of variables
-    abnormal_bonds = []
-    list_of_abnormal_bonds = []
-
-    from ase.geometry.analysis import Analysis
-    analysis = Analysis(model)
-    # set() to ensure unique chemical symbols list
-    list_of_symbols = list(set(model.get_chemical_symbols()))
-    all_bonds = combinations_with_replacement(list_of_symbols, 2)
-
-    # Iterate over all arrangements of chemical symbols
-    for bonds in all_bonds:
-        A = bonds[0]
-        B = bonds[1]
-        # For softcoded bond cutoff
-        sum_of_covalent_radii = covalent_radii[chemical_symbols.index(A)]+covalent_radii[chemical_symbols.index(B)]
-
-        print_AB = A+'-'+B
-        AB_Bonds = analysis.get_bonds(A, B)
-        # With the exception of the sum of covalent radii, everything up to here is identical to
-        # analyse_all_bonds
-        # TODO: Combine with functionality for analyse_all_bonds so the duplication is removed.
-
-        # Make sure bond exist before retrieving values
-        if not AB_Bonds == [[]]:
-            AB_BondsValues = analysis.get_values(AB_Bonds)
-
-            for i in range(0, len(AB_BondsValues)):
-                for values in AB_BondsValues[i]:
-                    # TODO: move the 75% of sum_of_covalent_radii before the loops
-                    if values < max(0.4, sum_of_covalent_radii*0.75):
-                        abnormal_bonds += [1]
-                        list_of_abnormal_bonds = list_of_abnormal_bonds + [print_AB]
-
     # Abnormality check
+    abnormal_bonds, list_of_abnormal_bonds = analyse_all_bonds(model, verbose=False, abnormal=True)
+
     # is it possible to make a loop with different possible values instead of 0.75 and takes the average
     if len(abnormal_bonds) > 0:
         if verbose:
