@@ -11,7 +11,7 @@ def analyse_all_bonds(model, verbose=True, abnormal=False):
     verbose: Boolean
     Determines whether the output should be printed to screen
     '''
-    import numpy as np
+
     # Combination as AB = BA for bonds, avoiding redundancy
     from itertools import combinations_with_replacement
 
@@ -19,9 +19,6 @@ def analyse_all_bonds(model, verbose=True, abnormal=False):
     if isinstance(model, str) is True:
         from ase.io import read
         model = read(model)
-
-    from ase.geometry.analysis import Analysis
-    analysis = Analysis(model)
 
     # set() to ensure unique chemical symbols list
     list_of_symbols = list(set(model.get_chemical_symbols()))
@@ -34,10 +31,7 @@ def analyse_all_bonds(model, verbose=True, abnormal=False):
 
     # Table heading
     if verbose:
-        print("-" * 40)
-        print('{:<6.5s}{:<6.5s}{:>4.10s}{:^13.10s}{:>4.10s}'.format(
-            "Bond", "Count", "Average", "Minimum", "Maximum"))
-        print("-" * 40)
+        print_bond_table_header()
 
     from ase.data import chemical_symbols, covalent_radii
     # Iterate over all arrangements of chemical symbols
@@ -47,7 +41,7 @@ def analyse_all_bonds(model, verbose=True, abnormal=False):
         if abnormal and AB_BondsValues is not None:
             sum_of_covalent_radii = covalent_radii[chemical_symbols.index(bonds[0])] + covalent_radii[chemical_symbols.index(bonds[1])]
 
-            for i in range(0, len(AB_BondsValues)):
+            for i in range(len(AB_BondsValues)):
                 for values in AB_BondsValues[i]:
                     # TODO: move the 75% of sum_of_covalent_radii before the loops
                     if values < max(0.4, sum_of_covalent_radii*0.75):
@@ -94,10 +88,7 @@ def analyse_bonds(model, A, B, verbose=True, multirow=False):
 
     if verbose and AB_BondsValues is not None:
         if not multirow:
-            print('-'*40)
-            print('{:<6.5s}{:<6.5s}{:>4.10s}{:^13.10s}{:>4.10s}'.format(
-                "Bond", "Count", "Average", "Minimum", "Maximum"))
-            print('-'*40)
+            print_bond_table_header()
         # Table contents
         import numpy as np
         print('{:<8.8s}{:<6.0f}{:>4.6f}{:^12.6f}{:>4.6f}'.format(
@@ -105,6 +96,12 @@ def analyse_bonds(model, A, B, verbose=True, multirow=False):
             np.amin(AB_BondsValues), np.amax(AB_BondsValues)))
 
     return print_AB, AB_Bonds, AB_BondsValues
+
+def print_bond_table_header():
+    print("-" * 40)
+    print('{:<6.5s}{:<6.5s}{:>4.10s}{:^13.10s}{:>4.10s}'.format(
+        "Bond", "Count", "Average", "Minimum", "Maximum"))
+    print("-" * 40)
 
 def search_abnormal_bonds(model, verbose=True):
     '''
@@ -117,18 +114,18 @@ def search_abnormal_bonds(model, verbose=True):
     '''
 
     # Abnormality check
-    abnormal_bonds, list_of_abnormal_bonds = analyse_all_bonds(model, verbose=False, abnormal=True)
+    abnormal_bonds, list_of_abnormal_bonds = analyse_all_bonds(model, verbose=verbose, abnormal=True)
 
     # is it possible to make a loop with different possible values instead of 0.75 and takes the average
     if len(abnormal_bonds) > 0:
         if verbose:
+            print("-"*40)
             print("A total of", len(abnormal_bonds),
             "abnormal bond lengths observed (<" + str(max(0.4, sum_of_covalent_radii*0.75)) + " A).")
             print("Identities:", list_of_abnormal_bonds)
+            print("-"*40)
         return False
     else:
-        if verbose:
-            print("OK")
         return True
 
 def compare_structures(atoms1, atoms2, label=None):
@@ -154,6 +151,7 @@ def compare_structures(atoms1, atoms2, label=None):
     # Configure arrays
     differences = []
     atoms2_indices = []
+
     # Iterate over indices of all atoms in structure 1 and compare to structure 2.
     for i in range(len(atoms1.positions)):
         xyz = atoms1.positions[i]

@@ -13,24 +13,19 @@ def analyse_all_angles(model, verbose=True):
 
     # Product to get all possible arrangements
     from itertools import product
+
     # Read file or Atoms object
     if isinstance(model, str) is True:
         from ase.io import read
         model = read(model)
 
-    from ase.geometry.analysis import Analysis
-    analysis = Analysis(model)
-    dash = "-" * 40
     # set() to ensure unique chemical symbols list
     list_of_symbols = list(set(model.get_chemical_symbols()))
     all_angles = product(list_of_symbols, repeat=3)
 
     # Table heading
     if verbose:
-        print(dash)
-        print('{:<9.8s}{:<6.5s}{:>4.10s}{:^13.10s}{:>4.10s}'.format(
-            "Angle", "Count", "Average", "Minimum", "Maximum"))
-        print(dash)
+        print_angles_table_header()
 
     # Iterate over all arrangements of chemical symbols
     for angles in all_angles:
@@ -51,7 +46,7 @@ def analyse_angles(model, A, B, C, verbose=True, multirow=False):
     multirow: Boolean
         Whether we are returning multiple sets of results in a Table
     '''
-    import numpy as np
+
     # Read file or Atoms object
     if isinstance(model, str) is True:
         from ase.io import read
@@ -71,16 +66,20 @@ def analyse_angles(model, A, B, C, verbose=True, multirow=False):
     if verbose and ABC_AngleValues is not None:
         # Table header
         if not multirow:
-            print(dash)
-            print('{:<9.8s}{:<6.5s}{:>4.10s}{:^13.10s}{:>4.10s}'.format(
-                "Angle", "Count", "Average", "Minimum", "Maximum"))
-            print(dash)
+            print_angles_table_header()
         # Table contents
+        import numpy as np
         print('{:<9.8s}{:<6.0f}{:>4.4f}{:^12.4f}{:>4.4f}'.format(
             print_ABC, len(ABC_Angle[0]), np.average(ABC_AngleValues),
             np.amin(ABC_AngleValues), np.amax(ABC_AngleValues)))
 
     return ABC_Angle, ABC_AngleValues
+
+def print_angles_table_header():
+    print("-" * 40)
+    print('{:<9.8s}{:<6.5s}{:>4.10s}{:^13.10s}{:>4.10s}'.format(
+        "Angle", "Count", "Average", "Minimum", "Maximum"))
+    print("-" * 40)
 
 '''
 ## not working as intended as specific indices are needed
