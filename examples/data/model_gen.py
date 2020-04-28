@@ -31,6 +31,10 @@ def get_example_slab(adsorbate=False):
         add_adsorbate(slab, CO2, 3.0, position=(
             slab[17].position[0], slab[17].position[1]))
 
+    # Make the model a bit more technically complete - include a calculator.
+    from ase.calculators.emt import EMT
+    slab.set_calculator(EMT())
+
     return slab
 
 def get_example_adsorbate():
@@ -40,4 +44,9 @@ def get_example_adsorbate():
 
     from ase.build import molecule
 
-    return molecule("CO2")
+    atoms = molecule("CO2")
+    # Make the model a bit more technically complete - include a calculator.
+    from ase.calculators.emt import EMT
+    atoms.set_calculator(EMT())
+
+    return atoms
