@@ -5,7 +5,7 @@ TODO: Description Needed
 
 '''
 
-def test_alloy():
+def test_build_alloy():
 
     from carmm.build.alloy import binary_alloy
 
@@ -18,4 +18,4 @@ def test_alloy():
     assert(alloy_slab.get_chemical_symbols().count('Pd') == 8)
     assert(alloy_slab.get_chemical_symbols().count('Au') == 10)
 
-test_alloy()
+test_build_alloy()

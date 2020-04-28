@@ -5,16 +5,16 @@ TODO: Description Needed
 
 '''
 
-def test_build_cutout():
+def test_analyse_angles():
 
-    from carmm.build.cutout import cutout_sphere
+    from carmm.analyse.angles import analyse_all_angles
 
     #### Traditional ASE functionality #####
     from data.model_gen import get_example_slab as slab
     slab = slab(adsorbate=True)
     #########
 
-    cutout = cutout_sphere(slab, 13)
-    assert(len(cutout) == 12)
+    analyse_all_angles(slab)
+    # TODO: Add assertion test
 
-test_build_cutout()
+test_analyse_angles()
