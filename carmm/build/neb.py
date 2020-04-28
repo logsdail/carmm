@@ -6,20 +6,12 @@ def switch_indices(model, A, B):
 
     Parameters:
 
-    model: Atoms object or string
+    model: Atoms object
         Structure requiring atom index rearrangement.
-        If a string, e.g. 'name.traj', a file of this name will
-        be read.
     A, B: integer
         Indices of atoms that need to be switched
 
     '''
-
-    from ase import Atoms
-
-    if isinstance(model, str):
-        from ase.io import read
-        model = read(model)
 
     # Index manipulation
     if not isinstance(A, int) and isinstance(B, int):
@@ -67,19 +59,13 @@ def switch_all_indices(model, new_indices):
 
     Parameters:
 
-    model: ASE atoms object or String
+    model: ASE atoms object
         Input structure to be reordered
     new_indices: List of Integers
         New indices for each atom in model
 
     TODO: Add an example to the QA tests.
     '''
-
-    # Necessary to do this here as we need to keep updating the model
-    # as we change indices for atoms
-    if isinstance(model, str):
-        from ase.io import read
-        model = read(model)
 
     # List of indices that have been swapped
     swapped = []
@@ -102,11 +88,9 @@ def check_interpolation(initial, final, n_max, interpolation="linear", verbose=T
     Parameters:
 
     initial: Atoms object or string
-        If a string, e.g. 'initial.traj', a file of this name will
-        be read. Starting geometry for interpolation.
+        Starting geometry for interpolation.
     final: Atoms object or string
-        If a string, e.g. 'final.traj', a file of this name will
-        be read. End point geometry for interpolation
+        End point geometry for interpolation
     n_max: integer
         Desired total number of images for the interpolation
         including start and end point.
@@ -125,10 +109,6 @@ def check_interpolation(initial, final, n_max, interpolation="linear", verbose=T
     from ase.io import read
 
     # Pre-requirements
-    if isinstance(initial, str):
-        initial = read(initial)
-    if isinstance(final, str):
-        final = read(final)
     if not isinstance(n_max, int):
         raise ValueError
         print("Max number of images must be an integer.")

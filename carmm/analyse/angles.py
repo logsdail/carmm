@@ -5,16 +5,11 @@ def analyse_all_angles(model, verbose=True):
 
     Parameters:
 
-    model: Atoms object or string. If string it will read a file
-    in the same folder, e.g. "name.traj"
+    model: Atoms object
+        XXX
     verbose: Boolean
         Whether to print information to screen
     '''
-
-    # Read file or Atoms object
-    if isinstance(model, str) is True:
-        from ase.io import read
-        model = read(model)
 
     # set() to ensure unique chemical symbols list
     list_of_symbols = list(set(model.get_chemical_symbols()))
@@ -35,8 +30,8 @@ def analyse_angles(model, A, B, C, verbose=True, multirow=False):
     Check A-B-C angles present in the model.
 
     Parameters:
-    model: Atoms object or string. If string it will read a file
-        in the same folder, e.g. "name.traj"
+    model: Atoms object
+        XXX
     A: string, chemical symbol, e.g. "O"
     B: string, chemical symbol, e.g. "C"
     C: string, chemical symbol, e.g. "O"
@@ -45,11 +40,6 @@ def analyse_angles(model, A, B, C, verbose=True, multirow=False):
     multirow: Boolean
         Whether we are returning multiple sets of results in a Table
     '''
-
-    # Read file or Atoms object
-    if isinstance(model, str) is True:
-        from ase.io import read
-        model = read(model)
 
     from ase.geometry.analysis import Analysis
     analysis = Analysis(model)

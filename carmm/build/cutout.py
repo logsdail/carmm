@@ -6,8 +6,8 @@ def cutout_sphere(atoms, centre, distance_cutoff=5.0):
 
     Parameters:
 
-    atoms: Atoms object or String
-        Input structure to cutout from, or the file containing this information
+    atoms: Atoms object
+        Input structure to cutout from
     centre: Integer
         Index of central atom in cutout
     distance_cutoff: Float
@@ -15,10 +15,6 @@ def cutout_sphere(atoms, centre, distance_cutoff=5.0):
     '''
 
     import numpy as np
-
-    if isinstance(atoms, str):
-        from ase.io import read
-        atoms = read(atoms)
 
     atoms_to_delete = []
     for i in range(len(atoms)):

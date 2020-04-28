@@ -4,8 +4,8 @@ def binary_alloy(atoms, second_element, n_second_element, random_level=1):
 
     Parameters:
 
-    atoms: Atoms object or String
-        Either atoms object to turn into a binary alloy, or the filename for such a structure
+    atoms: Atoms object
+        Atoms object to turn into a binary alloy
     second_element: String
         Name of the new element to introduce
     n_second_element: Integer
@@ -15,10 +15,6 @@ def binary_alloy(atoms, second_element, n_second_element, random_level=1):
     '''
 
     import math, random
-
-    if isinstance(atoms, str):
-        from ase.io import read
-        atoms = read(atoms)
 
     count = 0
     labels = atoms.get_chemical_symbols()

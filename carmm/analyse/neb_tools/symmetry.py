@@ -12,9 +12,8 @@ def translation(model, axis=0, surface="111"):
     - functionality beyond FCC? or higher index?
 
     Parameters:
-    model: Atoms object or string
-        If string, e.g.: 'name.traj', a file of this name will be read
-        to retrieve model.
+    model: Atoms object
+        XXX
     a: float
         lattice parameter used in the model
     axis: integer
@@ -23,12 +22,8 @@ def translation(model, axis=0, surface="111"):
         FCC surface - so far supports "111", "110", "100"
     '''
 
-    from ase.io import read
     import numpy as np
     import math
-
-    if isinstance(model, str) is True:
-        model = read(model)
 
     # Retrieve constraints, calculator from the model for later
     constraint = model._get_constraints()

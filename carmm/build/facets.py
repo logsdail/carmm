@@ -8,7 +8,7 @@ def generate(bulk_model, layers=2, facets=[(1,1,1)], supercell =(1,1,1), vacuum=
 	Parameters:
 
 	bulk_model: Atoms object or string
-		specify the unit cell of the bulk geometry.
+		specify the unit cell of the bulk geometry, or element from which to construct default bulk
 	layers: int
 		specify the repeating layers along the direction defined in 'axis' of the 'center' function
 	facets: list of array of ints
@@ -21,12 +21,6 @@ def generate(bulk_model, layers=2, facets=[(1,1,1)], supercell =(1,1,1), vacuum=
 	'''
 
 	from ase.build import surface
-
-	#input bulk geometry
-	#if string, check if atomic label, in which case we don't read from file
-	if isinstance(bulk_model, str) and len(bulk_model) > 2:
-		from ase.io import read
-		bulk_model = read(bulk_model)
 
 	slabs = []
 	#loop for all surfaces
