@@ -37,19 +37,17 @@ def analyse_all_bonds(model, verbose=True):
 
     # Iterate over all arrangements of chemical symbols
     for bonds in all_bonds:
-        A = bonds[0]
-        B = bonds[1]
+        AB_Bonds, AB_BondsValues = analyse_bonds(model, bonds[0], bonds[1], verbose=False)
 
-        print_AB = A+'-'+B
-        AB_Bonds = analysis.get_bonds(A, B)
+        print_AB = bonds[0]+'-'+bonds[1]
+        #AB_Bonds = analysis.get_bonds(A, B)
 
         # Make sure bond exist before retrieving values, then print contents
-        if not AB_Bonds == [[]]:
-            AB_BondsValues = analysis.get_values(AB_Bonds)
-            if verbose:
-                print('{:<8.8s}{:<6.0f}{:>4.6f}{:^12.6f}{:>4.6f}'.format(
-                    print_AB, len(AB_BondsValues[0]), np.average(AB_BondsValues),
-                    np.amin(AB_BondsValues), np.amax(AB_BondsValues)))
+        if verbose and AB_BondsValues is not None:
+            #AB_BondsValues = analysis.get_values(AB_Bonds)
+            print('{:<8.8s}{:<6.0f}{:>4.6f}{:^12.6f}{:>4.6f}'.format(
+                print_AB, len(AB_BondsValues[0]), np.average(AB_BondsValues),
+                np.amin(AB_BondsValues), np.amax(AB_BondsValues)))
 
 def analyse_bonds(model, A, B, verbose=True):
     '''
@@ -64,7 +62,7 @@ def analyse_bonds(model, A, B, verbose=True):
     verbose: Boolean
         Whether to print information to screen
     '''
-    import numpy as np
+
     # Read file or Atoms object
     if isinstance(model, str) is True:
         from ase.io import read
@@ -76,8 +74,12 @@ def analyse_bonds(model, A, B, verbose=True):
     print_AB = A + "-" + B
     # Retrieve bonds and values
     AB_Bonds = analysis.get_bonds(A, B)
-    AB_BondsValues = analysis.get_values(AB_Bonds)
-    if verbose:
+    if AB_Bonds == [[]]:
+        AB_BondsValues = None
+    else:
+        AB_BondsValues = analysis.get_values(AB_Bonds)
+
+    if verbose and AB_BondsValues is not None:
         # Table header
         print(dash)
         print(print_AB+"       Distance / Angstrom")
@@ -85,9 +87,12 @@ def analyse_bonds(model, A, B, verbose=True):
         print('{:<6.5s}{:>4.10s}{:^13.10s}{:>4.10s}'.format(
             "count", "average", "minimum", "maximum"))
         # Table contents
+        import numpy as np
         print('{:<6.0f}{:>4.6f}{:^12.6f}{:>4.6f}'.format(
             len(AB_BondsValues[0]), np.average(AB_BondsValues),
             np.amin(AB_BondsValues), np.amax(AB_BondsValues)))
+
+    return AB_Bonds, AB_BondsValues
 
 def search_abnormal_bonds(model, verbose=True):
     '''
@@ -122,6 +127,7 @@ def search_abnormal_bonds(model, verbose=True):
     # Iterate over all arrangements of chemical symbols
 
     for bonds in all_bonds:
+        # TODO: Use the functionality available from analyse_bonds
         A = bonds[0]
         B = bonds[1]
         # For softcoded bond cutoff
