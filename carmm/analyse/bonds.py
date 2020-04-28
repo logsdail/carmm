@@ -125,9 +125,7 @@ def search_abnormal_bonds(model, verbose=True):
     all_bonds = combinations_with_replacement(list_of_symbols, 2)
 
     # Iterate over all arrangements of chemical symbols
-
     for bonds in all_bonds:
-        # TODO: Use the functionality available from analyse_bonds
         A = bonds[0]
         B = bonds[1]
         # For softcoded bond cutoff
@@ -135,6 +133,9 @@ def search_abnormal_bonds(model, verbose=True):
 
         print_AB = A+'-'+B
         AB_Bonds = analysis.get_bonds(A, B)
+        # With the exception of the sum of covalent radii, everything up to here is identical to
+        # analyse_all_bonds
+        # TODO: Combine with functionality for analyse_all_bonds so the duplication is removed.
 
         # Make sure bond exist before retrieving values
         if not AB_Bonds == [[]]:
