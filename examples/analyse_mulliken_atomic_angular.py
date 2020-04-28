@@ -55,7 +55,7 @@ def test_analyse_mulliken_atomic_angular():
     plt.legend()
 
     # Display the graphs
-    plt.show()
+    # plt.show()
 
 # Run the example
 test_analyse_mulliken_atomic_angular()

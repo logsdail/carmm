@@ -8,7 +8,7 @@ TODO: Description Needed
 def test_mulliken_outline():
 
     import matplotlib.pyplot as plt
-    from carmm.analyse.mulliken import parse_mulliken_file, write_to_csv
+    from carmm.analyse.mulliken import parse_mulliken_file, write_dos_to_csv
     from carmm.analyse.graphs import get_graph_linetype, get_graph_colour, set_graph_axes_mulliken
 
     # Read in data from file
@@ -49,7 +49,7 @@ def test_mulliken_outline():
     set_graph_axes_mulliken(plt, x, data, mulliken_data.get_homo(), mulliken_data.get_graph_xlabel())
 
     # Example of how to save data to csv file for exporting
-    # write_to_csv('all_data.csv', x, data)
+    write_dos_to_csv('all_data.csv', x, data)
 
     # Display the graphs
     plt.legend()

@@ -31,7 +31,7 @@ def extract_mulliken_charge(fn, natoms):
 
     return mulliken_data
 
-def write_to_csv(fname, x, y):
+def write_dos_to_csv(fname, x, y):
     '''
     Description
 
