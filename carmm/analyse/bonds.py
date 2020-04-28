@@ -12,9 +12,6 @@ def analyse_all_bonds(model, verbose=True, abnormal=False):
     Determines whether the output should be printed to screen
     '''
 
-    # Combination as AB = BA for bonds, avoiding redundancy
-    from itertools import combinations_with_replacement
-
     # Read file or Atoms object
     if isinstance(model, str) is True:
         from ase.io import read
@@ -22,6 +19,8 @@ def analyse_all_bonds(model, verbose=True, abnormal=False):
 
     # set() to ensure unique chemical symbols list
     list_of_symbols = list(set(model.get_chemical_symbols()))
+    # Combination as AB = BA for bonds, avoiding redundancy
+    from itertools import combinations_with_replacement
     all_bonds = combinations_with_replacement(list_of_symbols, 2)
 
     if abnormal:
@@ -58,7 +57,6 @@ def analyse_bonds(model, A, B, verbose=True, multirow=False):
     Check A-B distances present in the model.
         model: Atoms object or string. If string it will read a file
         in the same folder, e.g. "name.traj"
-    TODO: Setup method to return information
 
     Parameters:
     A: string, chemical symbol, e.g. "H"

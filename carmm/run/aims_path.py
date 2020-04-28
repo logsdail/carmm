@@ -11,11 +11,9 @@ def set_aims_command(supercomputer='hawk', basis_set='light'):
         os.environ['AIMS_SPECIES_DIR']="/home/scw1057/software/fhi-aims/species_defaults/"+basis_set
 
     elif supercomputer =='isambard':
-        command="time aprun -n "+os.environ["NPROCS"]+" /home/ca-alogsdail/fhi-aims-gnu/bin/aims."+os.environ["VERSION"]+".scalapack.mpi.x"
-        os.environ["ASE_AIMS_COMMAND"]=command
+        os.environ["ASE_AIMS_COMMAND"]="time aprun -n $NPROCS /home/ca-alogsdail/fhi-aims-gnu/bin/aims.$VERSION.scalapack.mpi.x"
         os.environ["AIMS_SPECIES_DIR"]="/home/ca-alogsdail/fhi-aims-gnu/species_defaults/"+basis_set
 
     elif supercomputer =='archer':
-        command="time aprun -n "+os.environ["NPROCS"]+" /home3/e05/e05/ajl340/fhi-aims-src-intel/bin/aims."+os.environ["VERSION"]+".scalapack.mpi.x"
-        os.environ["ASE_AIMS_COMMAND"]=command
+        os.environ["ASE_AIMS_COMMAND"]="time aprun -n $NPROCS /home3/e05/e05/ajl340/fhi-aims-src-intel/bin/aims.$VERSION.scalapack.mpi.x"
         os.environ["AIMS_SPECIES_DIR"]="/home3/e05/e05/ajl340/fhi-aims-src-intel/species_defaults/"+basis_set

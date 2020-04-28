@@ -11,9 +11,6 @@ def analyse_all_angles(model, verbose=True):
         Whether to print information to screen
     '''
 
-    # Product to get all possible arrangements
-    from itertools import product
-
     # Read file or Atoms object
     if isinstance(model, str) is True:
         from ase.io import read
@@ -21,6 +18,8 @@ def analyse_all_angles(model, verbose=True):
 
     # set() to ensure unique chemical symbols list
     list_of_symbols = list(set(model.get_chemical_symbols()))
+    # Product to get all possible arrangements
+    from itertools import product
     all_angles = product(list_of_symbols, repeat=3)
 
     # Table heading
