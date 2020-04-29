@@ -19,7 +19,7 @@ def set_aims_command(hpc='hawk', basis_set='light'):
     # TODO: Be a bit more rigorous on system variables. We could load them here
     #       and then not reference them in further strings?
     mpirun = "time mpirun -np $SLURM_NTASKS "
-    aprun = "time aprun -n $NPROCS /home"
+    aprun = "time aprun -n $NPROCS "
     executable = "bin/aims.$VERSION.scalapack.mpi.x"
     species = "species_defaults/"+basis_set
 
