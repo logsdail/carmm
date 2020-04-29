@@ -1,6 +1,8 @@
 def get_aims_calculator(dimensions):
     '''
     Method to return a "default" FHI-aims calculator.
+    Note: This file should not be changed without consultation,
+          as changes could affect many users in the group.
 
     TODO: Some of these variables should probably be softcoded e.g. k-grid
 
@@ -8,6 +10,7 @@ def get_aims_calculator(dimensions):
 
     dimensions: Integer
         Determines whether we have a "gas"-phase (0) or "periodic" structure (2 or 3)
+
     '''
 
     from ase.calculators.aims import Aims
@@ -16,7 +19,8 @@ def get_aims_calculator(dimensions):
     if dimensions == 0:
         return Aims(xc='pbe',
                     spin='none',
-                    vdw_correction_hirshfeld="True",
+                    # This is a scary default, as people might not know it's on
+                    # vdw_correction_hirshfeld="True",
                     relativistic=('atomic_zora','scalar'),
                     compute_forces="true"
                     )
@@ -24,8 +28,10 @@ def get_aims_calculator(dimensions):
         return Aims(xc='pbe',
                     spin='none',
                     k_grid=(3, 3, 1),
-                    vdw_correction_hirshfeld="True",
+                    # This is a scary default
+                    # vdw_correction_hirshfeld="True",
                     relativistic=('atomic_zora','scalar'),
+                    # This should be included for all slab work
                     use_dipole_correction='True',
                     compute_forces="true",
                     )
@@ -33,7 +39,8 @@ def get_aims_calculator(dimensions):
         return Aims(xc='pbe',
                     spin='none',
                     k_grid=(3, 3, 3),
-                    vdw_correction_hirshfeld="True",
+                    # This is a scary default
+                    # vdw_correction_hirshfeld="True",
                     relativistic=('atomic_zora', 'scalar'),
                     compute_forces="true",
                     )
