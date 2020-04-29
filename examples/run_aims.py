@@ -13,7 +13,7 @@ def test_run_aims():
 
     from carmm.run.aims_calculator import get_aims_calculator
 
-    for state in ['gas', 'periodic']:
+    for state in range(4):
         calc = get_aims_calculator(state)
 
     # TODO: Add an actual assertion test
