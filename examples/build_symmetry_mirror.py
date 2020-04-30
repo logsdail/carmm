@@ -13,7 +13,7 @@ def test_build_symmetry_mirror():
     ###### EXAMPLE OF USE - MIRROR AND TRANSLATION ########
     #from ase.visualize import view
     from data.model_gen import get_example_slab as slab
-    from carmm.analyse.neb_tools.symmetry import mirror, translation, rotate_fcc
+    from carmm.build.neb.symmetry import mirror, translation, rotate_fcc
 
     # Toy model of CO2 on top of Au FCC(111)
     model = slab(adsorbate=True)

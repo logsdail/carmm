@@ -32,7 +32,7 @@ def translation(model, axis=0, surface="111"):
     '''Section on variables'''
     indices_to_move = []
     # Extraction of lattice parameter from bottom layers
-    from carmm.analyse.neb_tools.symmetry import get_a
+    # from carmm.build.neb import get_a
     shift_dist = get_a(model)
 
     if surface == "110":
@@ -136,7 +136,8 @@ def translation(model, axis=0, surface="111"):
     # TODO: Zero should be based on similarity to the surface atom. Does not
     #   work as intended for odd number of layers, might not be required with
     #   get_a in place
-    from carmm.analyse.neb_tools.symmetry import get_zero_from_constrained_atoms
+    # No need for these imports as the functions are in this file!
+    # from carmm.build.neb import get_zero_from_constrained_atoms
     zero_index = get_zero_from_constrained_atoms(model)
     import copy
     zero_x = copy.deepcopy((model[zero_index].position[0]))
@@ -419,7 +420,7 @@ def mirror(model, center_index, plane="y", surf="111"):
             model.positions[i][0] = (-model.positions[i][0] + (2*translate))
 
     # Sort after changing the model prior to alignment
-    from carmm.analyse.neb_tools.symmetry import sort_by_xyz
+    # from carmm.build.neb import sort_by_xyz
     model = sort_by_xyz(model, surf)
 
     # align to position zero - constrained atoms aligned with surface atoms
@@ -439,7 +440,7 @@ def mirror(model, center_index, plane="y", surf="111"):
 
     # Return to around the position of the center_index
     # Force translations to remove inconsistencies
-    from carmm.analyse.neb_tools.symmetry import translation, get_a, check_for_negative_positions
+    # from carmm.build.neb import translation, get_a, check_for_negative_positions
 
     model = check_for_negative_positions(model, 1, surf)
     model = check_for_negative_positions(model, 0, surf)
@@ -491,7 +492,7 @@ def rotate_fcc(model, center_index, surf):
     surf: str
         "111", "110", "100" allowed
     '''
-    from carmm.analyse.neb_tools.symmetry import sort_by_xyz
+    #from carmm.build.neb import sort_by_xyz
     import numpy as np
     import copy
 
@@ -543,7 +544,7 @@ def rotate_fcc(model, center_index, surf):
 
     # Return to around the position of the center_index
     # Force translations to remove inconsistencies
-    from carmm.analyse.neb_tools.symmetry import translation, get_a
+    # from carmm.build.neb import translation, get_a
     a = get_a(model)
     current_pos = model[center_index].position
 

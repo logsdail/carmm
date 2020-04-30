@@ -7,7 +7,8 @@ TODO: Description Needed
 
 def test_build_NEB():
 
-    from carmm.build.neb import switch_indices, switch_all_indices, check_interpolation
+    from carmm.build.neb.indices import switch_indices, switch_all_indices
+    from carmm.build.neb.interpolation import check_interpolation
     from carmm.analyse.bonds import compare_structures
     from data.model_gen import get_example_adsorbate as co2
 
