@@ -46,3 +46,6 @@ def binary_alloy(atoms, second_element, n_second_element, random_level=1):
         atoms.set_chemical_symbols(new_labels)
 
     return atoms
+
+def ternary_alloy()
+    #TODO: Fill this space
