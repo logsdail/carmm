@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
 
 '''
-TODO: Description Needed
+This is a simple example and QA test for extracting and plotting Mulliken data from FHI-aims
+Note that this routine plots a graph with both spin-up and spin-down data.
 
+This is useful when trying to understand the electronic structure of your model
 '''
 
 def test_mulliken_outline():
@@ -31,19 +33,19 @@ def test_mulliken_outline():
     x, d = mulliken_data.get_d_plot_data()
     x, f = mulliken_data.get_f_plot_data()
 
-    # Put this at the end so it covers everything else and shows the outline of the DOS correctly
-    for sp in range(len(data)):
-        if sp == 0:
+    # The returned array has either one entries if spin-collinear, or two entries for spin up and down.
+    for spin in range(mulliken_data.get_nspin()):
+        if spin == 0:
             # Plot the total outline last
-            plt.plot(x, data[sp], lw=2, color='black', ls=get_graph_linetype())
-        else: # (sp == 1)
+            plt.plot(x, data[spin], lw=2, color='black', ls=get_graph_linetype())
+        else: # (spin == 1)
             # Plot all the angular contributions to show what is possible
-            plt.fill_between(x, [0 * len(s[sp])], -s[sp], lw=2, color=get_graph_colour(0), ls=get_graph_linetype(), label='s')
-            plt.fill_between(x, -s[sp], -(s[sp]+p[sp]), lw=2, color=get_graph_colour(1), ls=get_graph_linetype(), label='p')
-            plt.fill_between(x, -(s[sp]+p[sp]),-(s[sp]+p[sp]+d[sp]), lw=2, color=get_graph_colour(2), ls=get_graph_linetype(), label='d')
-            plt.fill_between(x, -(s[sp]+p[sp]+d[sp]), -(s[sp]+p[sp]+d[sp]+f[sp]), lw=2, color=get_graph_colour(3), ls=get_graph_linetype(), label='f')
+            plt.fill_between(x, [0 * len(s[spin])], -s[spin], lw=2, color=get_graph_colour(0), ls=get_graph_linetype(), label='s')
+            plt.fill_between(x, -s[spin], -(s[spin]+p[spin]), lw=2, color=get_graph_colour(1), ls=get_graph_linetype(), label='p')
+            plt.fill_between(x, -(s[spin]+p[spin]),-(s[spin]+p[spin]+d[spin]), lw=2, color=get_graph_colour(2), ls=get_graph_linetype(), label='d')
+            plt.fill_between(x, -(s[spin]+p[spin]+d[spin]), -(s[spin]+p[spin]+d[spin]+f[spin]), lw=2, color=get_graph_colour(3), ls=get_graph_linetype(), label='f')
             # Plot the total outline last
-            plt.plot(x, -(data[sp]), lw=2, color='black', ls=get_graph_linetype())
+            plt.plot(x, -(data[spin]), lw=2, color='black', ls=get_graph_linetype())
 
     # Work to rescale axes. Extracts the maximum y-value
     set_graph_axes_mulliken(plt, x, data, mulliken_data.get_homo(), mulliken_data.get_graph_xlabel())

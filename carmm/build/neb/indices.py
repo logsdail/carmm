@@ -67,6 +67,10 @@ def switch_all_indices(model, new_indices):
     TODO: Add an example to the QA tests.
     '''
 
+    # Prevents unexpected editing of parent object in place
+    # Now ensures returned object is different to incoming atoms
+    new_model = model.copy()
+
     # List of indices that have been swapped
     swapped = []
 
@@ -74,10 +78,10 @@ def switch_all_indices(model, new_indices):
     #       of the model!
     for i in range(len(new_indices)):
         if new_indices[i] is not i and i not in swapped:
-            model = switch_indices(model, i, new_indices[i])
+            new_model = switch_indices(new_model, i, new_indices[i])
             swapped.append(new_indices[i])
 
-    return model
+    return new_model
 
 '''
 def switch_indices_old(model, A, B, output_file):

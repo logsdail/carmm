@@ -1,8 +1,11 @@
 #!/usr/bin/env python3
 
 '''
-TODO: Description Needed
+This is a more complicated example and QA test for extracting and plotting Mulliken data from FHI-aims
+Note that this routine plots a graph with both spin-up and spin-down data, but also extracts
+information specific to atoms and angular momenta of interest, and plots all the data in separate graphs
 
+This is useful when trying to understand the electronic structure of your model
 '''
 
 def test_analyse_mulliken_atomic_comparison():
@@ -45,24 +48,24 @@ def test_analyse_mulliken_atomic_comparison():
         x, o = mulliken_data.get_plot_data(o_indices, range(mulliken_data.get_nspin()),
                                             range(mulliken_data.get_nkpts()), 'sp')
 
-        # Put this at the end so it covers everything else and shows the outline of the DOS correctly
-        for sp in range(len(all_data)):
-            if sp == 0:
+        # The returned array has either one entries if spin-collinear, or two entries for spin up and down.
+        for spin in range(mulliken_data.get_nspin()):
+            if spin == 0:
                 # Here we are filling between lines, rather than plotting a single line.
                 # Hence we provide two y-values to plot between.
-                axes[i].fill_between(x, [ 0 * len(x) ], fe[sp], lw=0, facecolor=get_graph_colour(0), label='Fe', interpolate=True)
-                axes[i].fill_between(x, fe[sp], fe[sp]+c[sp], lw=0, facecolor=get_graph_colour(1), label='C', interpolate=True)
-                axes[i].fill_between(x, fe[sp]+c[sp], fe[sp]+c[sp]+o[sp], lw=0, facecolor=get_graph_colour(2), label='O', interpolate=True)
-                axes[i].plot(x, all_data[sp], lw=1, color='black', ls=get_graph_linetype())
-            else: # (sp == 1)
+                axes[i].fill_between(x, [ 0 * len(x) ], fe[spin], lw=0, facecolor=get_graph_colour(0), label='Fe', interpolate=True)
+                axes[i].fill_between(x, fe[spin], fe[spin]+c[spin], lw=0, facecolor=get_graph_colour(1), label='C', interpolate=True)
+                axes[i].fill_between(x, fe[spin]+c[spin], fe[spin]+c[spin]+o[spin], lw=0, facecolor=get_graph_colour(2), label='O', interpolate=True)
+                axes[i].plot(x, all_data[spin], lw=1, color='black', ls=get_graph_linetype())
+            else: # (spin == 1)
                 # Note the slightly different definition of the y-axis data here
                 # There is a chance that the element doesn't exist in the system, which returns a DOS of zero,
                 # and you cannot take the negative of a list of zeros (it transpires)
                 # Instead, the approach given just makes each value in the list its negative value separately
-                axes[i].fill_between(x, [0 * len(x)], [-i for i in fe[sp]], lw=0, facecolor=get_graph_colour(0), interpolate=True)
-                axes[i].fill_between(x, [-i for i in fe[sp]], [-i for i in fe[sp]+c[sp]], lw=0, facecolor=get_graph_colour(1), interpolate=True)
-                axes[i].fill_between(x, [-i for i in fe[sp]+c[sp]], [-i for i in fe[sp]+c[sp]+o[sp]], lw=0, facecolor=get_graph_colour(2), interpolate=True)
-                axes[i].plot(x, -(all_data[sp]), lw=1, color='black', ls=get_graph_linetype())
+                axes[i].fill_between(x, [0 * len(x)], [-i for i in fe[spin]], lw=0, facecolor=get_graph_colour(0), interpolate=True)
+                axes[i].fill_between(x, [-i for i in fe[spin]], [-i for i in fe[spin]+c[spin]], lw=0, facecolor=get_graph_colour(1), interpolate=True)
+                axes[i].fill_between(x, [-i for i in fe[spin]+c[spin]], [-i for i in fe[spin]+c[spin]+o[spin]], lw=0, facecolor=get_graph_colour(2), interpolate=True)
+                axes[i].plot(x, -(all_data[spin]), lw=1, color='black', ls=get_graph_linetype())
 
         # Work to rescale axes. Extracts the maximum y-value
         set_graph_axes_mulliken(axes[i], x, all_data, mulliken_data.get_homo(), mulliken_data.get_graph_xlabel())

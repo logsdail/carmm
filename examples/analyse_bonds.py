@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 
 '''
-TODO: Description Needed
+This gives example usage when looking at how to get bond information from an Atoms object
 
+This comes in useful when analysing input/output structures
 '''
 
 def test_analyse_bonds():

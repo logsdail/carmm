@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 
 '''
-TODO: Description Needed
+This short example shows how to get all the angluar information from an atoms object
 
+This comes in useful when analysing input/output structures
 '''
 
 def test_analyse_angles():

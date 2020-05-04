@@ -33,7 +33,6 @@ def test_build_symmetry_mirror():
     model = translation(model, axis=1, surface="111")
     #view(model)
 
-
     ### ASSERTION ###
     # Check if Oxygen moves as expected
     eps = 1e-8

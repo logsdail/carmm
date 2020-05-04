@@ -1,8 +1,11 @@
 #!/usr/bin/env python3
 
 '''
-TODO: Description Needed
+This script presents an example and QA test for analysing the Mulliken charge data
+in an FHI-aims output, by imposing this charge data on an Atoms object and then
+allowing you to visualise the data in the ASE GUI.
 
+This is useful when trying to understand the electronic structure of your system
 '''
 
 def test_analyse_mulliken_charge():

@@ -12,6 +12,8 @@ def translation(model, axis=0, surface="111"):
     - functionality beyond FCC? or higher index?
 
     Parameters:
+    # TODO: This routine changes model in place (inadvertently).
+            Should it work with a copy of model for the "new model", to prevent editing of the old model?
     model: Atoms object
         XXX
     a: float
@@ -32,8 +34,7 @@ def translation(model, axis=0, surface="111"):
     '''Section on variables'''
     indices_to_move = []
     # Extraction of lattice parameter from bottom layers
-    # from carmm.build.neb import get_a
-    shift_dist = get_a(model)
+    shift_dist = get_lattice_constant(model)
 
     if surface == "110":
         shift_x = shift_dist
@@ -158,7 +159,7 @@ def translation(model, axis=0, surface="111"):
     return model
 
 
-def get_a(model):
+def get_lattice_constant(model):
     '''
     Retrieve minimum M-M distance from bottom layer of a slab
 
@@ -382,6 +383,8 @@ def mirror(model, center_index, plane="y", surf="111"):
 
     Parameters:
     model: Atoms object
+        # TODO: This routine I think inadvertently edits the incoming model
+        #       Should we make a copy as the model comes in, and work exclusively with that?
         periodic FCC surface model with an adsorbate. Tags required for surface
         layers.
     plane: string
@@ -440,18 +443,17 @@ def mirror(model, center_index, plane="y", surf="111"):
 
     # Return to around the position of the center_index
     # Force translations to remove inconsistencies
-    # from carmm.build.neb import translation, get_a, check_for_negative_positions
 
     model = check_for_negative_positions(model, 1, surf)
     model = check_for_negative_positions(model, 0, surf)
 
-    a = get_a(model)
+    a = get_lattice_constant(model)
     current_pos = model[center_index].position
 
     # Safety break
     x = 0
     # Align in y-direction
-    a = get_a(model)
+    a = get_lattice_constant(model)
     while not (a/2 > (current_pos[1] - center_atom_position[1]) > -a/2):
         x = x+1
         current_pos = model[center_index].position
@@ -486,6 +488,8 @@ def rotate_fcc(model, center_index, surf):
 
     Parameters:
     model:in Atoms object
+        # TODO: This inadvertently edits the old model.
+        #       Should we create a copy at the very start to prevent editing?
         FCC low index surface, (111), (110) or (100)
     center_index: int
         index of an atom as the center of the rotation operation
@@ -544,8 +548,7 @@ def rotate_fcc(model, center_index, surf):
 
     # Return to around the position of the center_index
     # Force translations to remove inconsistencies
-    # from carmm.build.neb import translation, get_a
-    a = get_a(model)
+    a = get_lattice_constant(model)
     current_pos = model[center_index].position
 
     if a/2 > (current_pos[1] - center_atom_position[1]) > -a/2:

@@ -1,8 +1,11 @@
 #!/usr/bin/env python3
 
 '''
-TODO: Description Needed
+This is a simple example and QA test for extracting and plotting Mulliken data from FHI-aims,
+specifically for a bulk material with k-points in the Mulliken data
+Note that this routine plots a graph with only one spin channel, as the calculation is spin-paired
 
+This is useful when trying to understand the electronic structure of your model
 '''
 
 def test_analyse_mulliken_atomic_angular():

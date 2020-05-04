@@ -16,6 +16,9 @@ def cutout_sphere(atoms, centre, distance_cutoff=5.0):
 
     import numpy as np
 
+    # Prevents unexpected editing of parent object in place
+    # Now ensures returned object is different to incoming atoms
+    atoms = atoms.copy()
     atoms_to_delete = []
     for i in range(len(atoms)):
 
