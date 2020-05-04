@@ -18,4 +18,9 @@ def test_build_alloy():
     assert(alloy_slab.get_chemical_symbols().count('Pd') == 8)
     assert(alloy_slab.get_chemical_symbols().count('Au') == 10)
 
+    #### Space for ternary_alloy test ####
+    from carmm.build.alloy import ternary_alloy
+
+    ternary_alloy()
+
 test_build_alloy()
