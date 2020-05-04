@@ -47,5 +47,5 @@ def binary_alloy(atoms, second_element, n_second_element, random_level=1):
 
     return atoms
 
-def ternary_alloy()
+def ternary_alloy():
     #TODO: Fill this space
