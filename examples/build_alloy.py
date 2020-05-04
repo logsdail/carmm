@@ -19,8 +19,14 @@ def test_build_alloy():
     assert(alloy_slab.get_chemical_symbols().count('Au') == 10)
 
     #### Space for ternary_alloy test ####
-    from carmm.build.alloy import ternary_alloy
+    
+#########
 
-    ternary_alloy()
+    ternary_slab = ternary_alloy(slab, 'Pd', 'Zn', 4, 5)
+
+    print(ternary_slab)
+    write("alloy_slab_AuPdZn.xyz", ternary_slab)
+    print()
+   
 
 test_build_alloy()
