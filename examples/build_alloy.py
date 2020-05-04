@@ -25,7 +25,7 @@ def test_build_alloy():
     ternary_slab = ternary_alloy(slab, 'Pd', 'Zn', 4, 5)
 
     print(ternary_slab)
-    write("alloy_slab_AuPdZn.xyz", ternary_slab)
+    
     print()
    
 
