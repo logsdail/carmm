@@ -21,7 +21,7 @@ def test_build_alloy():
     #### Space for ternary_alloy test ####
     
 #########
-
+    from carmm.build.alloy import ternary_alloy
     ternary_slab = ternary_alloy(slab, 'Pd', 'Zn', 4, 5)
 
     print(ternary_slab)
