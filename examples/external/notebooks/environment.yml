@@ -1,6 +1,0 @@
-name: notebooks
-channels:
-  - conda-forge
-dependencies:
-  - numpy
-  - matplotlib
