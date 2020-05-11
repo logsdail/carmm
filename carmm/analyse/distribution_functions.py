@@ -5,11 +5,8 @@ def distance_distributon_function(model):
     TODO: - normalise distribution, atoms at the opposite end of the cell are actually close together - need to account for this.
           - currently plot is a histogram need to chnage to be a gaussian '''
     from ase.io import read
-    from ase.geometry.analysis import Analysis
     from matplotlib import pyplot as plt
-    import numpy as np
-    import seaborn as sns
-    import scipy.stats as sps
+    
     #Read file or Atoms object
     if isinstance(model, str) is True:
         model = read(model)
@@ -37,11 +34,8 @@ def radial_distributon_function(model):
             - Normalise distribution
             - Gaussians over the histrogram '''
     from ase.io import read
-    from ase.geometry.analysis import Analysis
     from matplotlib import pyplot as plt
-    import numpy as np
-    import seaborn as sns
-    import scipy.stats as sps
+   
     #Read file or Atoms object
     if isinstance(model, str) is True:
         model = read(model)
