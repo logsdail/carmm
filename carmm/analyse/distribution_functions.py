@@ -3,7 +3,12 @@ def distance_distributon_function(model):
     '''Returns a plot of the distribution of the distance between each atom from atom_0.
     plot is currently a frequency vs distance. Current usage is for periodic solids
     TODO: - normalise distribution, atoms at the opposite end of the cell are actually close together - need to account for this.
-          - currently plot is a histogram need to chnage to be a gaussian '''
+            AJL: I think get_distances(mic=True) will help with this? Maybe from the Atoms object (https://wiki.fysik.dtu.dk/ase/ase/atoms.html#ase.Atoms.get_distance)
+            or also from the Geometry object: https://wiki.fysik.dtu.dk/ase/ase/geometry.html#ase.geometry.get_distances
+          - currently plot is a histogram need to chnage to be a gaussian
+            AJL: Could the plot be at the taste of the user, and the function just returns the data?
+            You could perhaps have a default x-axis or spacing of bins, and then this could be overwritten by user?
+    '''
     from ase.io import read
     from matplotlib import pyplot as plt
     
@@ -32,7 +37,9 @@ def radial_distributon_function(model):
     plot is currently a frequency vs distance. Current usage is for periodic solids
      TODO: - Ammend script to account for a radial function
             - Normalise distribution
-            - Gaussians over the histrogram '''
+            - Gaussians over the histrogram
+            AJL: What's the difference between this and difference_distribution_function?
+    '''
     from ase.io import read
     from matplotlib import pyplot as plt
    
