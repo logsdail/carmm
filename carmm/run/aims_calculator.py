@@ -1,4 +1,4 @@
-def get_aims_calculator(dimensions):
+def get_aims_calculator(dimensions, k_grid=None):
     '''
     Method to return a "default" FHI-aims calculator.
     Note: This file should not be changed without consultation,
@@ -10,37 +10,53 @@ def get_aims_calculator(dimensions):
 
     dimensions: Integer
         Determines whether we have a "gas"-phase (0) or "periodic" structure (2 or 3)
-
+    k_grid: List of integers
+        Gives the k-grid sampling in x-, y- and z- direction. e.g. [3, 3, 3]
     '''
 
     from ase.calculators.aims import Aims
 
-    #"gas" for gas-phase reactants and "periodic" for a periodic systems
-    if dimensions == 0:
-        return Aims(xc='pbe',
-                    spin='none',
-                    # This is a scary default, as people might not know it's on
-                    # vdw_correction_hirshfeld="True",
-                    relativistic=('atomic_zora','scalar'),
-                    compute_forces="true"
-                    )
-    elif dimensions == 2:
-        return Aims(xc='pbe',
-                    spin='none',
-                    k_grid=(3, 3, 1),
-                    # This is a scary default
-                    # vdw_correction_hirshfeld="True",
-                    relativistic=('atomic_zora','scalar'),
-                    # This should be included for all slab work
-                    use_dipole_correction='True',
-                    compute_forces="true",
-                    )
-    else: # dimensions == 3:
-        return Aims(xc='pbe',
-                    spin='none',
-                    k_grid=(3, 3, 3),
-                    # This is a scary default
-                    # vdw_correction_hirshfeld="True",
-                    relativistic=('atomic_zora', 'scalar'),
-                    compute_forces="true",
-                    )
+    # Default is suitable for molecular calculations
+    fhi_calc =  Aims(xc='pbe',
+                     spin='none',
+                     relativistic=('atomic_zora','scalar'),
+                     compute_forces="true"
+                     )
+
+    if dimensions == 2:
+        fhi_calc.set(use_dipole_correction='True')
+
+    if dimensions > 2:
+        fhi_calc.set(k_grid=k_grid)
+
+    return fhi_calc
+
+def get_aims_and_sockets_calculator(dimensions, k_grid=None, port=12345, logfile='socketio.log'):
+    '''
+    Method to return a sockets calculator (for i-Pi based socket connectivity)
+    and also an associated FHI-aims calculator for ASE
+
+    Args:
+        dimensions: Integer
+            See get_aims_calculator()
+        k_grid: List of integers
+            See get_aims_calculator()
+        port: Integer
+            The port for connection between FHI-aims and ASE with i-Pi sockets.
+            This is fairly arbitrary as long as it doesn't clash with local settings.
+
+    Returns:
+        Socket_calc: Wrapper for ASE calculator
+            Used for i-Pi connectvity, and should be assigned to optimisation/dynamics Object
+        FHI_calc: FHI-aims ASE calculator
+    '''
+
+    fhi_calc = get_aims_calculator(dimensions, k_grid)
+    # Add in PIMD command to get sockets working
+    fhi_calc.set(use_pimd_wrapper = ['localhost', port])
+
+    # Setup sockets calculator that "wraps" FHI-aims
+    from ase.calculators.socketio import SocketIOCalculator
+    socket_calc = SocketIOCalculator(fhi_calc, log=logfile, port=port)
+
+    return socket_calc, fhi_calc
