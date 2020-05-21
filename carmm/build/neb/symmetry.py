@@ -27,6 +27,11 @@ def translation(model, axis=0, surface="111"):
     import numpy as np
     import math
 
+    # Avoid changes to the original Atoms object
+    import copy
+    model = copy.deepcopy(model)
+
+
     # Retrieve constraints, calculator from the model for later
     constraint = model._get_constraints()
     prev_calc = model.get_calculator()
@@ -190,6 +195,9 @@ def sort_by_xyz(model, surface):
         Face centered cubic low index surfce - "111", "110" or "110"
     '''
     import numpy as np
+    # Avoid changes to the original Atoms object
+    import copy
+    model = copy.deepcopy(model)
 
     if model.get_calculator() is not None:
         # Retrieve forces for forces array adjustments
@@ -395,6 +403,10 @@ def mirror(model, center_index, plane="y", surf="111"):
     surf: string
         Surface type. Supported "111", "110", "100" of the FCC lattice
     '''
+    # Avoid changes to the original Atoms object
+    import copy
+    model = copy.deepcopy(model)
+
     if plane == "x":
         axis = 0
     elif plane == "y":
@@ -410,7 +422,6 @@ def mirror(model, center_index, plane="y", surf="111"):
     # Hypothesis: center_atom_position is a shallow reference that does not
     #    survive other operations unchanged.
     # Solution: a deepcopy required to retain functionality? Confirmed.
-    import copy
     center_atom_position = copy.deepcopy(model[center_index].position)
 
     if axis == 0:
@@ -498,7 +509,10 @@ def rotate_fcc(model, center_index, surf):
     '''
     #from carmm.build.neb import sort_by_xyz
     import numpy as np
+
+    # Avoid changes to the original Atoms object
     import copy
+    model = copy.deepcopy(model)
 
     if surf == "111":
         degrees = -120
