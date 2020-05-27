@@ -25,6 +25,7 @@ def get_aims_calculator(dimensions, k_grid=None):
 
     if dimensions == 2:
         fhi_calc.set(use_dipole_correction='True')
+        fhi_calc.set(k_grid=k_grid)
 
     if dimensions > 2:
         fhi_calc.set(k_grid=k_grid)
