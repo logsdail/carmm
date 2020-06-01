@@ -31,7 +31,11 @@ def get_aims_calculator(dimensions, k_grid=None):
 
     return fhi_calc
 
-def get_aims_and_sockets_calculator(dimensions, k_grid=None, port=12345, host='localhost', logfile='socketio.log'):
+def get_aims_and_sockets_calculator(dimensions, k_grid=None,
+                                    # i-Pi settings for sockets
+                                    port=12345, host='localhost', logfile='socketio.log',
+                                    # Debug setting
+                                    verbose=False):
     '''
     Method to return a sockets calculator (for i-Pi based socket connectivity)
     and also an associated FHI-aims calculator for ASE
@@ -46,31 +50,26 @@ def get_aims_and_sockets_calculator(dimensions, k_grid=None, port=12345, host='l
             This is fairly arbitrary as long as it doesn't clash with local settings.
         host: String
             Name of host computer for ASE. Necessary for calculations where MPI runs on the compute nodes
+        verbose: Boolean
+            For testing of the interface when searching for empty ports.
 
     Returns:
         Socket_calc: Wrapper for ASE calculator
             Used for i-Pi connectvity, and should be assigned to optimisation/dynamics Object
         FHI_calc: FHI-aims ASE calculator
     '''
-    import socket
-    from contextlib import closing
 
-    def check_socket(host, port):
-        with closing(socket.socket(socket.AF_INET, socket.SOCK_STREAM)) as sock:
-            if sock.connect_ex((host, port)) == 0:
-                check = 0
-            else:
-                check = 1
-                port += 1
-        return port, check
-
-
-    check = 1
-    while not check == 0:
-        port, check = check_socket(host, port)
+    port, port_closed = _check_socket(host, port)
+    while port_closed:
+        # Debug statement
+        if verbose: print("Port #"+str(port-1)+" is closed.")
+        # Check next port and update
+        port, port_closed = _check_socket(host, port)
+        # Raise issue if port number gets to big!
         if port > 65534:
-            print("No available ports found")
-            break
+            raise Exception("No available ports found")
+    # Debug statement
+    if verbose: print("Port #" + str(port) + " is open.")
 
     fhi_calc = get_aims_calculator(dimensions, k_grid)
     # Add in PIMD command to get sockets working
@@ -81,3 +80,27 @@ def get_aims_and_sockets_calculator(dimensions, k_grid=None, port=12345, host='l
     socket_calc = SocketIOCalculator(fhi_calc, log=logfile, port=port)
 
     return socket_calc, fhi_calc
+
+def _check_socket(host, port):
+    '''
+    Function to check if a port is open on the target machine.
+
+    Args:
+        host: string
+            Name of the host machine on which the port is being tested.
+        port: integer
+            Port value to test on this iteration
+
+    Returns:
+        Integer: Port number as received (if port is open) or updated (if port is closed)
+        Boolean: True if port is closed, False if port is open.
+    '''
+    import socket
+    from contextlib import closing
+
+    with closing(socket.socket(socket.AF_INET, socket.SOCK_STREAM)) as sock:
+        # Check if socket is open. Returns False if so, otherwise True and port is incremented
+        if sock.connect_ex((host, port)) == 0:
+            return port, False
+        else:
+            return port+1, True
