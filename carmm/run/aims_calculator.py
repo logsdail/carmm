@@ -31,7 +31,11 @@ def get_aims_calculator(dimensions, k_grid=None):
 
     return fhi_calc
 
-def get_aims_and_sockets_calculator(dimensions, k_grid=None, port=12345, host='localhost', logfile='socketio.log'):
+def get_aims_and_sockets_calculator(dimensions, k_grid=None,
+                                    #i-Pi socket settings
+                                    port=12345, host='localhost', logfile='socketio.log',
+                                    #Debug flag
+                                    verbose=False):
     '''
     Method to return a sockets calculator (for i-Pi based socket connectivity)
     and also an associated FHI-aims calculator for ASE
@@ -46,6 +50,8 @@ def get_aims_and_sockets_calculator(dimensions, k_grid=None, port=12345, host='l
             This is fairly arbitrary as long as it doesn't clash with local settings.
         host: String
             Name of host computer for ASE. Necessary for calculations where MPI runs on the compute nodes
+        verbose: Boolean
+            Whether to print out when searching for an open port.
 
     Returns:
         Socket_calc: Wrapper for ASE calculator
@@ -64,13 +70,12 @@ def get_aims_and_sockets_calculator(dimensions, k_grid=None, port=12345, host='l
                 port += 1
         return port, check
 
-
     check = 0
     while not check == 0:
         port, check = check_socket(host, port)
         if port > 65534:
-            print("No available ports found")
-            break
+            raise Exception("No available ports found")
+            #break
 
     fhi_calc = get_aims_calculator(dimensions, k_grid)
     # Add in PIMD command to get sockets working
