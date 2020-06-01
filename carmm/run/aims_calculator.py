@@ -52,6 +52,25 @@ def get_aims_and_sockets_calculator(dimensions, k_grid=None, port=12345, host='l
             Used for i-Pi connectvity, and should be assigned to optimisation/dynamics Object
         FHI_calc: FHI-aims ASE calculator
     '''
+    import socket
+    from contextlib import closing
+
+    def check_socket(host, port):
+        with closing(socket.socket(socket.AF_INET, socket.SOCK_STREAM)) as sock:
+            if sock.connect_ex((host, port)) == 0:
+                check = 0
+            else:
+                check = 0
+                port += 1
+        return port, check
+        
+
+    check = 0
+    while not check == 0:
+        port, check = check_socket(host, port)
+        if port > 65534:
+            print("No available ports found")
+            break
 
     fhi_calc = get_aims_calculator(dimensions, k_grid)
     # Add in PIMD command to get sockets working
