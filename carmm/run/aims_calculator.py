@@ -35,7 +35,7 @@ def get_aims_and_sockets_calculator(dimensions, k_grid=None,
                                     # i-Pi settings for sockets
                                     port=12345, host='localhost', logfile='socketio.log',
                                     # Debug setting
-                                    verbose=False):
+                                    check_socket=True, verbose=False):
     '''
     Method to return a sockets calculator (for i-Pi based socket connectivity)
     and also an associated FHI-aims calculator for ASE
@@ -50,6 +50,8 @@ def get_aims_and_sockets_calculator(dimensions, k_grid=None,
             This is fairly arbitrary as long as it doesn't clash with local settings.
         host: String
             Name of host computer for ASE. Necessary for calculations where MPI runs on the compute nodes
+        check_socket: Boolean
+            Whether we want the automatically identify and resolve port clashes.
         verbose: Boolean
             For testing of the interface when searching for empty ports.
 
@@ -59,17 +61,8 @@ def get_aims_and_sockets_calculator(dimensions, k_grid=None,
         FHI_calc: FHI-aims ASE calculator
     '''
 
-    port, port_closed = _check_socket(host, port)
-    while port_closed:
-        # Debug statement
-        if verbose: print("Port #"+str(port-1)+" is closed.")
-        # Check next port and update
-        port, port_closed = _check_socket(host, port)
-        # Raise issue if port number gets to big!
-        if port > 65534:
-            raise Exception("No available ports found")
-    # Debug statement
-    if verbose: print("Port #" + str(port) + " is open.")
+    if check_socket:
+        port = _check_socket(host, port, verbose)
 
     fhi_calc = get_aims_calculator(dimensions, k_grid)
     # Add in PIMD command to get sockets working
@@ -81,7 +74,7 @@ def get_aims_and_sockets_calculator(dimensions, k_grid=None,
 
     return socket_calc, fhi_calc
 
-def _check_socket(host, port):
+def _check_socket(host, port, verbose=False):
     '''
     Function to check if a port is open on the target machine.
 
@@ -89,18 +82,27 @@ def _check_socket(host, port):
         host: string
             Name of the host machine on which the port is being tested.
         port: integer
-            Port value to test on this iteration
+            Starting port value for testing
+        verbose: Boolean
+            Whether to output the process of the check on all ports.
 
     Returns:
         Integer: Port number as received (if port is open) or updated (if port is closed)
-        Boolean: True if port is closed, False if port is open.
     '''
     import socket
     from contextlib import closing
 
     with closing(socket.socket(socket.AF_INET, socket.SOCK_STREAM)) as sock:
-        # Check if socket is open. Returns False if so, otherwise True and port is incremented
-        if sock.connect_ex((host, port)) == 0:
-            return port, False
-        else:
-            return port+1, True
+    # Check if socket is open. Returns False if so, otherwise True and port is incremented
+        while not sock.connect_ex((host, port)):
+            # Debug statement
+            if verbose: print("Port #"+str(port-1)+" is unavailable.")
+            # Update port
+            port += 1
+            # Raise issue if port number gets to big!
+            if port > 65534:
+                raise Exception("No available ports found")
+    # Debug statement
+    if verbose: print("Port #" + str(port) + " is available.")
+
+    return port
