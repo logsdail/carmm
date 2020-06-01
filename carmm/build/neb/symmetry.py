@@ -497,7 +497,7 @@ def mirror(model, center_index, plane="y", surf="111", m_m_dist=None):
     return model
 
 
-def rotate_fcc(model, center_index, surf, m_m_dist):
+def rotate_fcc(model, center_index, surf, m_m_dist=None):
     '''
     Rotate FCC cell with respect to an atom by allowed increments, ie.
     "111" - 120 degrees

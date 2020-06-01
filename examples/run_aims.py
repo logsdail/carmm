@@ -19,7 +19,7 @@ def test_run_aims():
 
     for state in range(4):
         #fhi_calc = get_aims_calculator(state)
-        sockets_calc, fhi_calc = get_aims_and_sockets_calculator(state)
+        sockets_calc, fhi_calc = get_aims_and_sockets_calculator(state, verbose=True)
 
         # Assertion test that the correct calculators are being set
         assert(type(sockets_calc.calc) == Aims)
