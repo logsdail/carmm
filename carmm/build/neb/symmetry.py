@@ -1,7 +1,8 @@
 '''This file is work in progress'''
+# TODO: Enable lattice parameter input - important for alloys
 
 
-def translation(model, axis=0, surface="111"):
+def translation(model, axis=0, surface="111", m_m_dist=None):
     '''
     Performs a translaton of the model by manipulation of the unit cell,
     maintaining the optimised geometry and forces. After translation original
@@ -27,6 +28,11 @@ def translation(model, axis=0, surface="111"):
     import numpy as np
     import math
 
+    # Avoid changes to the original Atoms object
+    import copy
+    model = copy.deepcopy(model)
+
+
     # Retrieve constraints, calculator from the model for later
     constraint = model._get_constraints()
     prev_calc = model.get_calculator()
@@ -34,7 +40,10 @@ def translation(model, axis=0, surface="111"):
     '''Section on variables'''
     indices_to_move = []
     # Extraction of lattice parameter from bottom layers
-    shift_dist = get_lattice_constant(model)
+    if m_m_dist is not None:
+        shift_dist = m_m_dist
+    else:
+        shift_dist = get_lattice_constant(model)
 
     if surface == "110":
         shift_x = shift_dist
@@ -190,6 +199,9 @@ def sort_by_xyz(model, surface):
         Face centered cubic low index surfce - "111", "110" or "110"
     '''
     import numpy as np
+    # Avoid changes to the original Atoms object
+    import copy
+    model = copy.deepcopy(model)
 
     if model.get_calculator() is not None:
         # Retrieve forces for forces array adjustments
@@ -276,7 +288,8 @@ def get_zero_from_constrained_atoms(model, mirror=False):
     tag = 1
     if mirror is True:
         tag = 2
-    first_layer_atom = [atom.index for atom in model if atom.tag == tag][0]
+    first_layer_atoms = [atom.index for atom in model if atom.tag == tag]
+    first_layer_atom = first_layer_atoms[0]
     if not model._get_constraints() == []:
         prev_const = model._get_constraints()
         # retrieve indices of the fixed atoms
@@ -376,7 +389,7 @@ def check_for_negative_positions(model, axis, surf=None):
     return model
 
 
-def mirror(model, center_index, plane="y", surf="111"):
+def mirror(model, center_index, plane="y", surf="111", m_m_dist=None):
     '''
     Function that returns a mirror image of an FCC model in the x or y axis
     with respect to an adsorbate and atom shifts the surface atoms accordingly.
@@ -395,6 +408,10 @@ def mirror(model, center_index, plane="y", surf="111"):
     surf: string
         Surface type. Supported "111", "110", "100" of the FCC lattice
     '''
+    # Avoid changes to the original Atoms object
+    import copy
+    model = copy.deepcopy(model)
+
     if plane == "x":
         axis = 0
     elif plane == "y":
@@ -410,7 +427,6 @@ def mirror(model, center_index, plane="y", surf="111"):
     # Hypothesis: center_atom_position is a shallow reference that does not
     #    survive other operations unchanged.
     # Solution: a deepcopy required to retain functionality? Confirmed.
-    import copy
     center_atom_position = copy.deepcopy(model[center_index].position)
 
     if axis == 0:
@@ -447,13 +463,15 @@ def mirror(model, center_index, plane="y", surf="111"):
     model = check_for_negative_positions(model, 1, surf)
     model = check_for_negative_positions(model, 0, surf)
 
-    a = get_lattice_constant(model)
+    if m_m_dist is not None:
+        a = m_m_dist
+    else:
+        a = get_lattice_constant(model)
     current_pos = model[center_index].position
 
     # Safety break
     x = 0
     # Align in y-direction
-    a = get_lattice_constant(model)
     while not (a/2 > (current_pos[1] - center_atom_position[1]) > -a/2):
         x = x+1
         current_pos = model[center_index].position
@@ -479,7 +497,7 @@ def mirror(model, center_index, plane="y", surf="111"):
     return model
 
 
-def rotate_fcc(model, center_index, surf):
+def rotate_fcc(model, center_index, surf, m_m_dist):
     '''
     Rotate FCC cell with respect to an atom by allowed increments, ie.
     "111" - 120 degrees
@@ -498,7 +516,10 @@ def rotate_fcc(model, center_index, surf):
     '''
     #from carmm.build.neb import sort_by_xyz
     import numpy as np
+
+    # Avoid changes to the original Atoms object
     import copy
+    model = copy.deepcopy(model)
 
     if surf == "111":
         degrees = -120
@@ -548,7 +569,12 @@ def rotate_fcc(model, center_index, surf):
 
     # Return to around the position of the center_index
     # Force translations to remove inconsistencies
-    a = get_lattice_constant(model)
+
+    if m_m_dist is not None:
+        a = m_m_dist
+    else:
+        a = get_lattice_constant(model)
+
     current_pos = model[center_index].position
 
     if a/2 > (current_pos[1] - center_atom_position[1]) > -a/2:

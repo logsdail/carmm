@@ -1,0 +1,11 @@
+# This is a basic file to enable use of binder with the Jupyer notebooks
+# embedded in examples/external/notebooks
+
+name: notebooks
+
+# Load dependencies - add modules here if you need them
+dependencies:
+  - python
+  - numpy
+  - matplotlib
+  - wulffpack

@@ -108,7 +108,7 @@ def ternary_alloy(model, second_element, third_element, n_second_element, n_thir
     while n_third_element > count:
   
        j = int(math.floor(random.random() * len(new_model)))
-       if labels[j] != third_element.capitalize():
+       if labels[j] != third_element.capitalize() and labels[j] != second_element.capitalize():
           labels[j] = third_element.capitalize()
           count = count + 1
 

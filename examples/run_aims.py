@@ -14,11 +14,14 @@ def test_run_aims():
     for hpc in ['hawk', 'isambard', 'archer']:
         set_aims_command(hpc)
 
-    from carmm.run.aims_calculator import get_aims_calculator
+    from ase.calculators.aims import Aims
+    from carmm.run.aims_calculator import get_aims_and_sockets_calculator
 
     for state in range(4):
-        calc = get_aims_calculator(state)
+        #fhi_calc = get_aims_calculator(state)
+        sockets_calc, fhi_calc = get_aims_and_sockets_calculator(state)
 
-    # TODO: Add an actual assertion test
+        # Assertion test that the correct calculators are being set
+        assert(type(sockets_calc.calc) == Aims)
 
 test_run_aims()
