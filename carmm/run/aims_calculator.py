@@ -70,7 +70,7 @@ def get_aims_and_sockets_calculator(dimensions, k_grid=None,
                 port += 1
         return port, check
 
-    check = 0
+    check = 1
     while not check == 0:
         port, check = check_socket(host, port)
         if port > 65534:
