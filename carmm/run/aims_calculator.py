@@ -93,7 +93,8 @@ def _check_socket(host, port, verbose=False):
     from contextlib import closing
 
     with closing(socket.socket(socket.AF_INET, socket.SOCK_STREAM)) as sock:
-    # Check if socket is open. Returns False if so, otherwise True and port is incremented
+        # Check if socket is open. If so, it's unsuitable for use so the port number is updated.
+        # Repeat until we find a port number that is not in use currently.
         while not sock.connect_ex((host, port)):
             # Debug statement
             if verbose: print("Port #"+str(port-1)+" is unavailable.")
