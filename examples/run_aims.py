@@ -3,7 +3,7 @@
 '''
 TODO: Description Needed
 This modules tests aims calculator on different machines - Hawk, Isambard and archer.
-The dimensions from 0 to 3 test the different aims setting on as described in
+The dimensions from 0 to 3 test the different aims setting as described in
 carmm.run.get_aims_calculator
 
 '''
