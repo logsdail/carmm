@@ -75,7 +75,7 @@ def get_aims_and_sockets_calculator(dimensions, k_grid=None,
         port, check = check_socket(host, port)
         if port > 65534:
             raise Exception("No available ports found")
-            #break
+            ##break
 
     fhi_calc = get_aims_calculator(dimensions, k_grid)
     # Add in PIMD command to get sockets working
