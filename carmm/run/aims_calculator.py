@@ -31,7 +31,11 @@ def get_aims_calculator(dimensions, k_grid=None):
 
     return fhi_calc
 
-def get_aims_and_sockets_calculator(dimensions, k_grid=None, port=12345, host=None, logfile='socketio.log'):
+def get_aims_and_sockets_calculator(dimensions, k_grid=None,
+                                    # i-Pi settings for sockets
+                                    port=12345, host=None, logfile='socketio.log',
+                                    # Debug setting
+                                    check_socket=True, verbose=False):
     '''
     Method to return a sockets calculator (for i-Pi based socket connectivity)
     and also an associated FHI-aims calculator for ASE
@@ -50,6 +54,10 @@ def get_aims_and_sockets_calculator(dimensions, k_grid=None, port=12345, host=No
             Long-term, we should consider removing this variable to insulate the users from having to set it.
         logfile: String
             Location of output from sockets communication.
+        check_socket: Boolean
+            Whether we want the automatically identify and resolve port clashes.
+        verbose: Boolean
+            For testing of the interface when searching for empty ports.
 
     Returns:
         Socket_calc: Wrapper for ASE calculator
@@ -57,13 +65,17 @@ def get_aims_and_sockets_calculator(dimensions, k_grid=None, port=12345, host=No
         FHI_calc: FHI-aims ASE calculator
     '''
 
+    import socket
+
     if host is None:
         # On machines where ASE and FHI-aims are run separately (e.g. ASE on login node, FHI-aims on compute nodes)
         # we need to specifically state what the name of the login node is so the two packages can communicate
         # In order to manage this communication in all situations, here we will find and use the hostname *even*
         # if on the same computer (it should work irrespective)
-        import socket
         host=socket.gethostname()
+
+    if check_socket:
+        port = _check_socket(host, port, verbose)
 
     fhi_calc = get_aims_calculator(dimensions, k_grid)
     # Add in PIMD command to get sockets working
@@ -74,3 +86,37 @@ def get_aims_and_sockets_calculator(dimensions, k_grid=None, port=12345, host=No
     socket_calc = SocketIOCalculator(fhi_calc, log=logfile, port=port)
 
     return socket_calc, fhi_calc
+
+def _check_socket(host, port, verbose=False):
+    '''
+    Function to check if a port is open on the target machine.
+
+    Args:
+        host: string
+            Name of the host machine on which the port is being tested.
+        port: integer
+            Starting port value for testing
+        verbose: Boolean
+            Whether to output the process of the check on all ports.
+
+    Returns:
+        Integer: Port number as received (if port is open) or updated (if port is closed)
+    '''
+    import socket
+    from contextlib import closing
+
+    with closing(socket.socket(socket.AF_INET, socket.SOCK_STREAM)) as sock:
+        # Check if socket is open. If so, it's unsuitable for use so the port number is updated.
+        # Repeat until we find a port number that is not in use currently.
+        while not sock.connect_ex((host, port)):
+            # Debug statement
+            if verbose: print("Port #"+str(port-1)+" is unavailable.")
+            # Update port
+            port += 1
+            # Raise issue if port number gets to big!
+            if port > 65534:
+                raise Exception("No available ports found")
+    # Debug statement
+    if verbose: print("Port #" + str(port) + " is available.")
+
+    return port
