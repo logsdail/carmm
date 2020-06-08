@@ -36,11 +36,13 @@ def radial_distribution_function(model, radius):
     '''
     from ase.io import read
     from matplotlib import pyplot as plt
-    from software.dev.cutout import cutout_sphere
+    from carmm.build.cutout import cutout_sphere
 
     #Read file or Atoms object
 
-    model = read(model)
+    if isinstance(model, str) is True:
+        from ase.io import read
+        model = read(model)
     # Create a variable which represents the amount of atoms in the system
     positions = model.get_positions()
     number_atoms_in_model = len(positions)
