@@ -15,7 +15,11 @@ def test_analyse_angles():
     slab = slab(adsorbate=True)
     #########
 
-    analyse_all_angles(slab)
-    # TODO: Add assertion test
+    elements, indices, angles = analyse_all_angles(slab, verbose=True)
+
+    index_au = elements.index(('Au', 'Au', 'Au'))
+    assert(len(elements) == 2)
+    assert(len(indices) == 2 and len(indices[index_au]) == 648)
+    assert(len(angles) == 2 and len(angles[index_au]) == 648)
 
 test_analyse_angles()

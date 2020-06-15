@@ -1,29 +1,41 @@
 def analyse_all_angles(model, verbose=True):
     '''
     Returns a table of bond angle analysis for the supplied model.
-    TODO: - Setup method to return information
 
     Parameters:
 
     model: Atoms object
-        XXX
+        The structure that needs to be interrogated
     verbose: Boolean
         Whether to print information to screen
+    Returns:
+        - list of all elemental combinations
+        - list of indices for each elemental combination
+        - list of all angle values for each combination of indices
     '''
 
     # set() to ensure unique chemical symbols list
     list_of_symbols = list(set(model.get_chemical_symbols()))
     # Product to get all possible arrangements
     from itertools import product
-    all_angles = product(list_of_symbols, repeat=3)
+    angles_element_combinations = product(list_of_symbols, repeat=3)
 
     # Table heading
     if verbose:
         print_angles_table_header()
 
+    angles_elements = []
+    angles_indices = []
+    angles_values = []
     # Iterate over all arrangements of chemical symbols
-    for angles in all_angles:
-        ABC_Angle, ABC_AngleValues = analyse_angles(model, angles[0], angles[1], angles[2], verbose=verbose, multirow=True)
+    for angles in angles_element_combinations:
+        ABC_indices, ABC_values = analyse_angles(model, angles[0], angles[1], angles[2], verbose=verbose, multirow=True)
+        if len(ABC_indices[0]) > 0:
+            angles_elements.append(angles)
+            angles_indices.append(ABC_indices[0])
+            angles_values.append(ABC_values[0])
+
+    return angles_elements, angles_indices, angles_values
 
 def analyse_angles(model, A, B, C, verbose=True, multirow=False):
     '''
@@ -46,23 +58,23 @@ def analyse_angles(model, A, B, C, verbose=True, multirow=False):
 
     print_ABC = A + "-" + B + "-" + C
     # Retrieve bonds and values
-    ABC_Angle = analysis.get_angles(A, B, C)
-    if ABC_Angle == [[]]:
-        ABC_AngleValues = None
+    ABC_indices = analysis.get_angles(A, B, C)
+    if len(ABC_indices[0]) == 0:
+        ABC_values = None
     else:
-        ABC_AngleValues = analysis.get_values(ABC_Angle)
+        ABC_values = analysis.get_values(ABC_indices)
 
-    if verbose and ABC_AngleValues is not None:
+    if verbose and ABC_values is not None:
         # Table header
         if not multirow:
             print_angles_table_header()
         # Table contents
         import numpy as np
         print('{:<9.8s}{:<6.0f}{:>4.4f}{:^12.4f}{:>4.4f}'.format(
-            print_ABC, len(ABC_Angle[0]), np.average(ABC_AngleValues),
-            np.amin(ABC_AngleValues), np.amax(ABC_AngleValues)))
+            print_ABC, len(ABC_indices[0]), np.average(ABC_values),
+            np.amin(ABC_values), np.amax(ABC_values)))
 
-    return ABC_Angle, ABC_AngleValues
+    return ABC_indices, ABC_values
 
 def print_angles_table_header():
     print("-" * 40)
