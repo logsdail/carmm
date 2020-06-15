@@ -2,8 +2,12 @@ def distance_distribution_function(model):
     '''Returns a plot of the distribution of the distance between each atom from atom_0.
     plot is currently a frequency vs distance. Current usage is for periodic solids
    TODO: - currently plot is a histogram need to change to be a gaussian - separate the bins?
-            AJL: Could the plot be at the taste of the user, and the function just returns the data?
-            You could perhaps have a default x-axis or spacing of bins, and then this could be overwritten by user? '''
+           AJL: Could the plot be at the taste of the user, and the function just returns the data?
+           You could perhaps have a default x-axis or spacing of bins, and then this could be overwritten by user?
+         - Only calculates RDF with respect the first atom - needs to be generalised:
+            - what about for any other atom of interest?
+            - what about averaging over all atoms, as per standard EXAFS?
+        '''
     from matplotlib import pyplot as plt
     #Read file or Atoms object
     if isinstance(model, str) is True:
