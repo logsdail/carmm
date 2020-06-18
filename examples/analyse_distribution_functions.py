@@ -23,6 +23,6 @@ def test_analyse_radial_distribution_function():
     from data.model_gen import get_example_slab as slab_2
     slab_2 = slab_2(adsorbate=True)
 
-    radial_distribution_function(slab_2, 10)
+    radial_distribution_function(slab_2, 10, 0)
 
 test_analyse_radial_distribution_function()
