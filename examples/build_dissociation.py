@@ -32,7 +32,7 @@ def test_dissociation():
     atoms_list, distance_list = dissociation(slab, 18, 19, step_size=0.2, n_steps=10)
 
     # Do we need the optimisation for all species as part of the test? 
-    # No idea how long this takes - could be super quick!
+    # These are quick and when viewed show a nice energy plot of bond dissociation
     for atoms in atoms_list:
         atoms.set_calculator(EMT())
         opt = BFGS(atoms)

@@ -24,8 +24,6 @@ def dissociation(atoms, i1, i2, step_size=0.05, n_steps=20):
             Distance moved during dissociation in Angstrom per iteration
         n_steps: int
             Total number of steps, including initial
-        fmax: float
-            Force convergence criterion for geometry optimisation, default is 0.01 eV/Angstrom
     '''
 
     from ase.constraints import FixBondLength
