@@ -66,7 +66,8 @@ def dissociation(atoms, i1, i2, step_size=0.05, n_steps=20, traj_prefix="mep", f
             atoms.set_constraint([initial_constraint, new_constraint])
         else:
             atoms.set_constraint(new_constraint)
-        opt = BFGS(atoms, trajectory=traj_prefix+str(traj_counter)+".traj")
+        opt = BFGS(atoms, trajectory=traj_prefix+str(traj_counter)+".traj",
+                   restart=traj_prefix+str(traj_counter)+".pckl")
         opt.run(fmax=fmax)
 
     print("Have a nice day.")
