@@ -1,7 +1,7 @@
 '''
 Created on Fri 19/06/2020
 
-@author: Igor Kowalec
+@author: Igor Kowalec, David Willock
 '''
 
 def dissociation(atoms, i1, i2, step_size=0.05, n_steps=20, traj_prefix="mep", fmax=0.05):
