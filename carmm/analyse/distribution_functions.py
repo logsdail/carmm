@@ -1,4 +1,4 @@
-def distance_distribution_function(model):
+def distance_distribution_function(model, bin_sampling):
     '''Returns a plot of the distribution of the distance between all atoms
     plot is currently a frequency vs distance. Current usage is for periodic solids
    TODO: - currently plot is a histogram need to change to be a gaussian - separate the bins?
@@ -8,19 +8,24 @@ def distance_distribution_function(model):
             - what about for any other atom of interest?
             - what about averaging over all atoms, as per standard EXAFS?
               OB: amended distance_distribution to average over all atoms
+         - Need to account for density
 
         '''
+
     from matplotlib import pyplot as plt
+    from math import ceil
+
     # get all distances in the model
     distances = model.get_all_distances(mic=True, vector=False)
-    # current distance variable is an array of coordinates for each atom, average position for each atom:
-    a = (sum(distances) / 3)
-    # get the relative positions of atoms to eachother
-    norm = a - min(a)
+
+    individual_lengths = []
+    for i in range(len(distances)):
+        for j in range(i+1, len(distances[i])):
+            individual_lengths.append(distances[i][j])
 
     # plot these values as a histogram
     plt.figure()
-    plt.hist(norm, bins=len(distances), density=False, histtype='step', align='mid', stacked=True)
+    plt.hist(individual_lengths, bins= ceil(max(individual_lengths)/bin_sampling), density=False, histtype='step', align='mid', stacked=True)
     plt.xlabel('r/Å', fontsize=15)
     plt.ylabel('n(r)', fontsize=15)
     plt.xticks(fontsize=15)
@@ -36,7 +41,6 @@ def radial_distribution_function(model, radius, position):
     TODO:  - Gaussian over the histogram
             AJL: What's the difference between this and difference_distribution_function?
     '''
-    from ase.io import read
     from matplotlib import pyplot as plt
     from carmm.build.cutout import cutout_sphere
 
