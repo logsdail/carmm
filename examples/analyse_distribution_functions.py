@@ -12,7 +12,7 @@ def test_analyse_distribution_function():
     from data.model_gen import get_example_slab as slab
     slab = slab(adsorbate=True)
 
-    distance_distribution_function(slab)
+    distance_distribution_function(slab, 0.1)
 
 test_analyse_distribution_function()
 
@@ -25,4 +25,4 @@ def test_analyse_radial_distribution_function():
 
     radial_distribution_function(slab_2, 10, 0)
 
-test_analyse_radial_distribution_function()
+test_analyse__distribution_function()
