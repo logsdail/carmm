@@ -54,7 +54,7 @@ def dissociation(atoms, i1, i2, step_size=0.05, n_steps=20):
 
         if initial_constraint is not None:
             new_constraint = initial_constraint + [FixBondLength(i1, i2)]
-            atoms.set_constraint(new_constraint])
+            atoms.set_constraint(new_constraint)
         else:
             new_constraint = FixBondLength(i1, i2)
             atoms.set_constraint(new_constraint)
