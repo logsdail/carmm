@@ -34,8 +34,6 @@ def dissociation(atoms, i1, i2, step_size=0.05, n_steps=20):
     pos_diff = atoms[i1].position - atoms[i2].position
     initial_dist = np.linalg.norm(pos_diff)
 
-    # operate on deepcopy to avoid changes to original object in memory
-    atoms = copy.deepcopy(atoms)
     atoms_list = []
     distance_list = []
 
@@ -48,15 +46,17 @@ def dissociation(atoms, i1, i2, step_size=0.05, n_steps=20):
     for i in range(0, n_steps):
         # operate on a deepcopy for intended functionality
         atoms = copy.deepcopy(atoms)
-        #remove previous contraints and set up new ones
+        # remove previous contraints and set up new ones
         atoms.set_constraint()
         atoms.set_distance(i1, i2, (initial_dist + i * step_size), fix=0)
 
-        new_constraint = FixBondLength(i1, i2)
+
 
         if initial_constraint is not None:
-            atoms.set_constraint([initial_constraint, new_constraint])
+            new_constraint = initial_constraint + [FixBondLength(i1, i2)]
+            atoms.set_constraint(new_constraint)
         else:
+            new_constraint = FixBondLength(i1, i2)
             atoms.set_constraint(new_constraint)
 
         atoms_list += [copy.deepcopy(atoms)]
