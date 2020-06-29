@@ -4,7 +4,7 @@ Created on Fri 19/06/2020
 @author: Igor Kowalec, David Willock
 '''
 
-def dissociation(atoms, i1, i2, step_size=0.05, n_steps=20):
+def dissociation(atoms, i1, i2, step_size=0.05, n_steps=20, reverse=False):
 
     '''
     This function is a tool for investigating bond dissociation.
@@ -24,6 +24,8 @@ def dissociation(atoms, i1, i2, step_size=0.05, n_steps=20):
             Distance moved during dissociation in Angstrom per iteration
         n_steps: int
             Total number of steps, including initial
+        reverse: boolean
+            if True allows to examine association instead
     '''
 
     from ase.constraints import FixBondLength
@@ -48,7 +50,10 @@ def dissociation(atoms, i1, i2, step_size=0.05, n_steps=20):
         atoms = copy.deepcopy(atoms)
         # remove previous contraints and set up new ones
         atoms.set_constraint()
-        atoms.set_distance(i1, i2, (initial_dist + i * step_size), fix=0)
+        if reverse is False:
+            atoms.set_distance(i1, i2, (initial_dist + i * step_size), fix=0)
+        elif reverse is True:
+            atoms.set_distance(i1, i2, (initial_dist - i * step_size), fix=0)
 
 
 
@@ -60,6 +65,8 @@ def dissociation(atoms, i1, i2, step_size=0.05, n_steps=20):
             atoms.set_constraint(new_constraint)
 
         atoms_list += [copy.deepcopy(atoms)]
-        distance_list += [initial_dist + i * step_size]
-
+        if reverse is False:
+            distance_list += [initial_dist + i * step_size]
+        elif reverse is True:
+            distance_list += [initial_dist - i * step_size]
     return atoms_list, distance_list
