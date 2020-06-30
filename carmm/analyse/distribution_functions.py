@@ -1,9 +1,7 @@
 def distance_distribution_function(model, bin_sampling):
     '''Returns a plot of the distribution of the distance between all atoms
     plot is currently a frequency vs distance. Current usage is for periodic solids
-   TODO: - currently plot is a histogram need to change to be a gaussian - separate the bins?
-           AJL: Could the plot be at the taste of the user, and the function just returns the data?
-           You could perhaps have a default x-axis or spacing of bins, and then this could be overwritten by user?
+   TODO:
          - Only calculates RDF with respect the first atom - needs to be generalised:
             - what about for any other atom of interest?
             - what about averaging over all atoms, as per standard EXAFS?
@@ -14,6 +12,8 @@ def distance_distribution_function(model, bin_sampling):
 
     from matplotlib import pyplot as plt
     from math import ceil
+    import numpy as np
+    import pylab as pl
 
     # get all distances in the model
     distances = model.get_all_distances(mic=True, vector=False)
@@ -23,15 +23,19 @@ def distance_distribution_function(model, bin_sampling):
         for j in range(i+1, len(distances[i])):
             individual_lengths.append(distances[i][j])
 
-    # plot these values as a histogram
-    plt.figure()
-    plt.hist(individual_lengths, bins= ceil(max(individual_lengths)/bin_sampling), density=False, histtype='step', align='mid', stacked=True)
+    # plot these values as a histogram then as a line
+
+    y, binEdges = np.histogram(individual_lengths, bins=ceil(max(individual_lengths) / bin_sampling))
+    bincenters = 0.5 * (binEdges[1:] + binEdges[:-1])
+    pl.plot(bincenters, y, '-')
     plt.xlabel('r/Å', fontsize=15)
-    plt.ylabel('n(r)', fontsize=15)
+    plt.ylabel('g(r)', fontsize=15)
     plt.xticks(fontsize=15)
     plt.yticks(fontsize=15)
     plt.title('Distribution Function', fontsize=15)
+    pl.show()
     plt.show()
+
 
 
 def radial_distribution_function(model, radius, position):
@@ -64,13 +68,12 @@ def radial_distribution_function(model, radius, position):
 
     # plot these values as a histogram
     plt.figure()
-    plt.hist(distances ,bins=number_atoms_in_radial_model, density=False, color='b', histtype='step', align='mid', stacked=True)
+    plt.hist(distances, bins=number_atoms_in_radial_model, density=False, histtype='step', align='mid', stacked=True)
     plt.xlabel('r/Å', fontsize=15)
     plt.ylabel('g(r)', fontsize=15)
     plt.xticks(fontsize=15)
     plt.yticks(fontsize=15)
     plt.title('Radial Distribution Function', fontsize=15)
 
-    #plot data as gaussian function
-
+    # plot data as gaussian function
     plt.show()
