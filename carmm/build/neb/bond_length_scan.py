@@ -51,7 +51,7 @@ def dissociation(atoms, i1, i2, step_size=0.05, n_steps=20, reverse=False, final
     for i in range(1, n_steps+1):
         # operate on a deepcopy for intended functionality
         atoms = copy.deepcopy(atoms)
-        # remove previous contraints and set up new ones
+        # remove previous constraints and set up new ones
         atoms.set_constraint()
 
         # move atoms and fix bond length in fixed increments or fraction of final_distance
@@ -81,9 +81,6 @@ def dissociation(atoms, i1, i2, step_size=0.05, n_steps=20, reverse=False, final
 
         # Record the size of fixed bond
         atoms_list += [copy.deepcopy(atoms)]
-        if reverse is False:
-            distance_list += measured_distance
-        elif reverse is True:
-            distance_list += measured_distance
+        distance_list += [measured_distance]
 
     return atoms_list, distance_list
