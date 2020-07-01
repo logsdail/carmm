@@ -2,3 +2,7 @@
 /scratch/
 # Prevent log files from notebooks
 /examples/notebooks/external/*.log
+/examples/notebooks/external/*.csv
+/examples/notebooks/external/*.traj
+/examples/notebooks/external/*.pckl
+/examples/notebooks/external/*.png
