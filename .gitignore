@@ -1,2 +1,4 @@
 /.idea/
 /scratch/
+# Prevent log files from notebooks
+/examples/notebooks/external/*.log
