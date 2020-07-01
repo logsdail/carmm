@@ -65,7 +65,7 @@ def dissociation(atoms, i1, i2, step_size=0.05, n_steps=20, reverse=False, final
         elif reverse is True:
             if final_distance:
                 measured_distance = (initial_dist - (
-                    i/n_steps * (final_distance - initial_dist)))
+                    i/n_steps * (initial_dist - final_distance)))
             else:
                 measured_distance = (initial_dist - i * step_size)
 
