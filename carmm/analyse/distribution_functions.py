@@ -47,7 +47,8 @@ def radial_distribution_function(model, radius, position):
     '''
     from matplotlib import pyplot as plt
     from carmm.build.cutout import cutout_sphere
-
+    import numpy as np
+    import pylab as pl
     #Read file or Atoms object
 
     if isinstance(model, str) is True:
@@ -67,13 +68,14 @@ def radial_distribution_function(model, radius, position):
     distances = radial_model.get_distances(position, range(number_atoms_in_radial_model), mic=True, vector=False)
 
     # plot these values as a histogram
-    plt.figure()
-    plt.hist(distances, bins=number_atoms_in_radial_model, density=False, histtype='step', align='mid', stacked=True)
+
+    y, binEdges = np.histogram(distances, bins=number_atoms_in_radial_model)
+    bincenters = 0.5 * (binEdges[1:] + binEdges[:-1])
+    pl.plot(bincenters, y, '-')
     plt.xlabel('r/Å', fontsize=15)
     plt.ylabel('g(r)', fontsize=15)
     plt.xticks(fontsize=15)
     plt.yticks(fontsize=15)
     plt.title('Radial Distribution Function', fontsize=15)
-
-    # plot data as gaussian function
+    pl.show()
     plt.show()
