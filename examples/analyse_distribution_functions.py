@@ -25,5 +25,5 @@ def test_analyse_radial_distribution_function():
 
     radial_distribution_function(slab_2, 10, 0)
 
-
 test_analyse_distribution_function()
+test_analyse_radial_distribution_function()
