@@ -35,10 +35,6 @@ def get_example_slab(adsorbate=False, type="CO2"):
         species = get_example_adsorbate(type)
         add_adsorbate(slab, species, 3.0, position=position)
 
-
-
-
-
     # Make the model a bit more technically complete - include a calculator.
     from ase.calculators.emt import EMT
     slab.set_calculator(EMT())

@@ -13,9 +13,12 @@ def test_analyse_bonds():
     #### Traditional ASE functionality #####
     from data.model_gen import get_example_slab as slab
     slab = slab(adsorbate=True)
+    # Deform the z-coordinate for C so the Au-C bond length is too short, to test deformation
+    slab.positions[-3][2] -= 1.5
     #########
 
-    analyse_all_bonds(slab)
-    # TODO: Add assertion test
+    abnormal_count, abnormal_bond_names = analyse_all_bonds(slab, abnormal=True)
+
+    assert(len(abnormal_count) == 1)
 
 test_analyse_bonds()

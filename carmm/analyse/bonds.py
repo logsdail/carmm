@@ -1,15 +1,17 @@
-def analyse_all_bonds(model, verbose=True, abnormal=False):
+def analyse_all_bonds(model, verbose=True, abnormal=True):
     '''
     Returns a table of bond distance analysis for the supplied model.
     TODO: - Setup method to return information
-          - Setup routine functionality to use analyse_bonds
 
     Parameters:
 
     model: Atoms object
-        XXX
+        Structure for which the analysis is to be conducted
     verbose: Boolean
-    Determines whether the output should be printed to screen
+        Determines whether the output should be printed to screen
+    abnormal: Boolean
+        Collect information about rogue looking bond lengths.
+        (Does enabling this by default add a large time overhead?)
     '''
 
     # set() to ensure unique chemical symbols list
@@ -18,10 +20,9 @@ def analyse_all_bonds(model, verbose=True, abnormal=False):
     from itertools import combinations_with_replacement
     all_bonds = combinations_with_replacement(list_of_symbols, 2)
 
-    if abnormal:
-        # Define lists of variables
-        abnormal_bonds = []
-        list_of_abnormal_bonds = []
+    # Define lists to collect abnormal observations
+    abnormal_bonds = []
+    list_of_abnormal_bonds = []
 
     # Table heading
     if verbose:
@@ -34,18 +35,20 @@ def analyse_all_bonds(model, verbose=True, abnormal=False):
 
         if abnormal and AB_BondsValues is not None:
             sum_of_covalent_radii = covalent_radii[chemical_symbols.index(bonds[0])] + covalent_radii[chemical_symbols.index(bonds[1])]
+            abnormal_cutoff = max(0.4, sum_of_covalent_radii*0.75)
 
-            for i in range(len(AB_BondsValues)):
-                for values in AB_BondsValues[i]:
-                    # TODO: move the 75% of sum_of_covalent_radii before the loops
-                    if values < max(0.4, sum_of_covalent_radii*0.75):
-                        abnormal_bonds += [1]
-                        list_of_abnormal_bonds = list_of_abnormal_bonds + [print_AB]
+            for values in AB_BondsValues:
+                abnormal_values = [ i for i in values if i < abnormal_cutoff ]
+                if len(abnormal_values):
+                    # Why do we add this value of 1? unclear and not tested in regression.
+                    # @Igor: Is this a counter? I can't tell, and the QA test isn't thorough enough to be clear
+                    # If it is a counter, should it be changed to += len(abnormal_values)
+                    abnormal_bonds.append(len(abnormal_values))
+                    list_of_abnormal_bonds.append(print_AB)
 
-    # This is horrible. TODO: Make this a bit more bulletproof for standard bond analysis
-    # i.e. give some meaningful results back to the user.
-    if abnormal:
-        return abnormal_bonds, list_of_abnormal_bonds
+    # This now returns empty arrays if no abnormal bond checks are done,
+    # or if genuinely there are no abnormal bonds.
+    return abnormal_bonds, list_of_abnormal_bonds
 
 def analyse_bonds(model, A, B, verbose=True, multirow=False):
     '''
@@ -62,11 +65,6 @@ def analyse_bonds(model, A, B, verbose=True, multirow=False):
         Whether we are working with analyse_all_bonds, so the output is multirow,
         or just one specific analysis of a bond, in which case the table header is needed.
     '''
-
-    # Read file or Atoms object
-    if isinstance(model, str) is True:
-        from ase.io import read
-        model = read(model)
 
     from ase.geometry.analysis import Analysis
     analysis = Analysis(model)
