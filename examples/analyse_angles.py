@@ -7,6 +7,8 @@ This comes in useful when analysing input/output structures
 '''
 
 def test_analyse_angles():
+import
+
 
     from carmm.analyse.angles import analyse_all_angles
 
@@ -23,3 +25,4 @@ def test_analyse_angles():
     assert(len(angles) == 2 and len(angles[index_au]) == 648)
 
 test_analyse_angles()
+
