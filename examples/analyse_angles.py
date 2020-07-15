@@ -7,7 +7,7 @@ This comes in useful when analysing input/output structures
 '''
 
 def test_analyse_angles():
-import
+
 
 
     from carmm.analyse.angles import analyse_all_angles
