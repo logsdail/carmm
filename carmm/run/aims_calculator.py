@@ -4,8 +4,6 @@ def get_aims_calculator(dimensions, k_grid=None):
     Note: This file should not be changed without consultation,
           as changes could affect many users in the group.
 
-    TODO: Some of these variables should probably be softcoded e.g. k-grid
-
     Parameters:
 
     dimensions: Integer

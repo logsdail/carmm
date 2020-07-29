@@ -1,7 +1,8 @@
 def analyse_all_bonds(model, verbose=True, abnormal=True):
     '''
-    Returns a table of bond distance analysis for the supplied model.
-    TODO: - Setup method to return information
+    Returns all abnormal bond types and list of these
+    TODO: Make this more bullet proof - what happens if abnormal bonds aren't requested.
+    A table of bond distance analysis for the supplied model is also possible
 
     Parameters:
 

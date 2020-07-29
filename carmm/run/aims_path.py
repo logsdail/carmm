@@ -1,12 +1,10 @@
 def set_aims_command(hpc='hawk', basis_set='light'):
     '''
     Choose supercomputer and basis_set to obtain FHI-aims run command.
-    Can be useful to e.g perform a calcaluation with a larger basis set
+    Can be useful to e.g perform a calculation with a larger basis set
     after a geometry optimisation.
-    #
-    # basis_set :
-    Parameters:
 
+    Parameters:
     hpc: String
         Name of the HPC facility where the jobs is being run
         Options: 'hawk', 'isambard', 'archer'  ## needs Thomas
@@ -16,8 +14,6 @@ def set_aims_command(hpc='hawk', basis_set='light'):
     '''
     import os
 
-    # TODO: Be a bit more rigorous on system variables. We could load them here
-    #       and then not reference them in further strings?
     mpirun = "time mpirun -np $SLURM_NTASKS "
     aprun = "time aprun -n $NPROCS "
     executable = "bin/aims.$VERSION.scalapack.mpi.x"
