@@ -8,22 +8,22 @@ allowing you to visualise the data in the ASE GUI.
 This is useful when trying to understand the electronic structure of your system
 '''
 
-def test_analyse_mulliken_charge():
+def test_analyse_mulliken_spin():
 
-    from carmm.analyse.mulliken import extract_mulliken_charge
+    from carmm.analyse.mulliken import extract_mulliken_spin
 
     # This is the filename that would need changing for each FHI-aims input e.g. fhiaims.hawk.output.log.XXXXXXX
-    filename = "data/CO/co_light.log"
+    filename = "data/Fe-CO/fe-co_light.log"
 
     from ase.io import read
     # Read atoms in
     atoms = read(filename)
 
     # Read in the Mulliken data
-    mulliken_charge = extract_mulliken_charge(filename, len(atoms))
+    mulliken_spin = extract_mulliken_spin(filename, len(atoms))
     # If you wanted to compare charges, you could subtract one value for Mulliken_charge from another to give a difference
     # and then set this as a charge on your model e.g. when comparing surfaces with and without adsorbates.
-    atoms.set_initial_charges(mulliken_charge)
+    atoms.set_initial_charges(mulliken_spin)
 
     # This opens the visualiser to see colours
     # To change colours, go to: View -> Colurs -> By Initial Charge (or just press "C")
@@ -34,8 +34,8 @@ def test_analyse_mulliken_charge():
     #from ase.visualize import view
     #view(atoms)
 
-    # Confirm we are reading the Mulliken Charge correctly
-    assert(mulliken_charge == ['0.088700', '-0.088700'])
+    # Assertion test to confirm the code works correctly.
+    assert(mulliken_spin == ['-2.242867', '0.164614', '0.078252'])
 
 # Run the example
-test_analyse_mulliken_charge()
+test_analyse_mulliken_spin()

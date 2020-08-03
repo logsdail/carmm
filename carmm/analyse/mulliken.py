@@ -1,4 +1,3 @@
-# TODO: Duplicate this for spin.
 def extract_mulliken_charge(fn, natoms):
     '''
     Function to extract and return the Mulliken charges from an FHI-aims output.
@@ -16,20 +15,64 @@ def extract_mulliken_charge(fn, natoms):
     with open(fn, 'r') as f:
         output = f.readlines()
 
-    # Focus on just the Mulliken data
-    mulliken_line = 0
-    output_line = len(output) - 1
-    while output_line and not mulliken_line:
-        if "Starting Mulliken Analysis" in output[output_line]:
-            mulliken_line = output_line
-            # 8 lines from text label to start of data (spin-paired)
-            mulliken_line += 8
-        else:
-            output_line -= 1
+    # Focus on just the Mulliken charge data
+    mulliken_line = _get_mulliken_data_line(output, "Summary of the per-atom charge analysis:")
 
+    # Note that the 4th column of data is selected, which is the overall charge
     mulliken_data = [q.split()[3] for q in output[mulliken_line:mulliken_line + natoms]]
 
     return mulliken_data
+
+def extract_mulliken_spin(fn, natoms):
+    '''
+    Function to extract and return the Mulliken spin from an FHI-aims output.
+
+    Parameters:
+
+    fn: string
+        Filename from which the Mulliken data should be extracted
+    natoms: int
+        Number of atoms in the calculation
+
+    '''
+
+    with open(fn, 'r') as f:
+        output = f.readlines()
+
+    # Focus on just the Mulliken spin data
+    mulliken_line = _get_mulliken_data_line(output, "Summary of the per-atom spin analysis:")
+
+    # Return just the spin data, which is the 3rd column of data
+    mulliken_data = [q.split()[2] for q in output[mulliken_line:mulliken_line + natoms]]
+
+    return mulliken_data
+
+def _get_mulliken_data_line(text, data_identifier):
+    '''
+    Function to extract and return the Mulliken data block from an FHI-aims output.
+    Can return charges or spin, but should be accessed through wrapper functions and not directly.
+    This does not refine the data, and more than anything that is the reason to use the wrappers
+
+    Parameters:
+
+    text: List of string
+        Content of the output file
+    data_identifier: string
+        Text that precedes the data desired
+    '''
+
+    # Focus on just the Mulliken data
+    mulliken_line = 0
+    output_line = len(text) - 1
+    while output_line and not mulliken_line:
+        if data_identifier in text[output_line]:
+            mulliken_line = output_line
+            # 8 lines from text label to start of data (spin-paired)
+            mulliken_line += 3
+        else:
+            output_line -= 1
+
+    return mulliken_line
 
 def write_dos_to_csv(fname, x, y):
     '''
