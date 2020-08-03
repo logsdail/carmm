@@ -11,7 +11,7 @@ carmm.run.get_aims_calculator
 def test_run_aims():
     from carmm.run.aims_path import set_aims_command
 
-    for hpc in ['hawk', 'isambard', 'archer']:
+    for hpc in ['hawk', 'isambard', 'archer', 'thomas']:
         set_aims_command(hpc)
 
     from ase.calculators.aims import Aims
