@@ -16,7 +16,7 @@ def set_aims_command(hpc='hawk', basis_set='light'):
 
     mpirun = "time mpirun -np $SLURM_NTASKS "
     aprun = "time aprun -n $NPROCS "
-    gerun = "gerun"
+    gerun = "gerun "
     executable = "bin/aims.$VERSION.scalapack.mpi.x"
     species = "species_defaults/"+basis_set
 
