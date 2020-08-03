@@ -22,15 +22,14 @@ def cutout_sphere(atoms, centre, distance_cutoff=5.0):
     atoms_to_delete = []
     for i in range(len(atoms)):
 
-        #get distances between atom of interest and others - then constrain
-        #all atoms beyond a certain radius
+        # get distances between atom of interest and others - then removes
+        # all atoms beyond a certain radius
 
         #################### Edit atom tag ###############################
         distance_ab = np.linalg.norm((atoms.positions[centre] - atoms.positions[i]))
 
         ################ Edit distance in Angstrom here ###################
         if distance_ab > distance_cutoff:
-        ###################################################################
             atoms_to_delete.append(i)
 
     del atoms[atoms_to_delete]

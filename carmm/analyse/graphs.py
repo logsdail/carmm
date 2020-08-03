@@ -29,9 +29,8 @@ def set_graph_axes_mulliken(axis, x, y, homo, xlabel='$\\epsilon$ (eV)', ylabel=
 
     Parameters:
 
-    plt: Matplotlib plot object
+    plt: Matplotlib plot object or Axes
         This has data predrawn from the x- and y-axis data also provided
-        TODO: Allow this to be an axes object as an alternative
     x: list of Floats
         The x-axis data object (i.e. range of x-axis values)
     y: list of Floats
