@@ -95,7 +95,7 @@ def print_bond_table_header():
 def search_abnormal_bonds(model, verbose=True):
     '''
     Check all bond lengths in the model for abnormally
-    short ones, ie. less than 0.74 Angstrom.
+    short ones.
 
     Parameters:
     model: Atoms object or string. If string it will read a file
@@ -115,7 +115,7 @@ def search_abnormal_bonds(model, verbose=True):
                 + covalent_radii[chemical_symbols.index(bond_chem_symbols[1])]]
 
 
-    # is it possible to make a loop with different possible values instead of 0.75 and takes the average
+    # Check against possible covalent radii values averaged * 0.75
     if len(abnormal_bonds) > 0:
         if verbose:
             print("-"*40)
