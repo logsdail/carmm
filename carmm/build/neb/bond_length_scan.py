@@ -4,7 +4,7 @@ Created on Fri 19/06/2020
 @author: Igor Kowalec, David Willock
 '''
 
-def dissociation(atoms, i1, i2, step_size=0.05, n_steps=20, reverse=False, final_distance=None):
+def dissociation(atoms, i1, i2, step_size=0.05, n_steps=20, final_distance=None):
 
     '''
     This function is a tool for investigating bond dissociation.
@@ -21,12 +21,12 @@ def dissociation(atoms, i1, i2, step_size=0.05, n_steps=20, reverse=False, final
         i2: int
             Index of atom dissociating from molecule
         step_size: float
-            Distance moved during dissociation in Angstrom per iteration
+            Distance moved during dissociation in Angstrom per iteration, not used
+            when final_distance is specified.
+            If negative value - Association is examined instead
         n_steps: int
             Total number of steps
-        reverse: boolean
-            if True allows to examine association instead
-        final_distance: float
+        final_distance: None/float
             User can specify the final distance, the increments will be then based
             on a fraction of n_steps/final_distance instead of step_size
     '''
@@ -55,19 +55,11 @@ def dissociation(atoms, i1, i2, step_size=0.05, n_steps=20, reverse=False, final
         atoms.set_constraint()
 
         # move atoms and fix bond length in fixed increments or fraction of final_distance
-        # For reverse, reduce the distance rather than increase (association)
-        if reverse is False:
-            if final_distance:
-                measured_distance = initial_dist + (
-                    i/n_steps * (final_distance - initial_dist))
-            else:
-                measured_distance = (initial_dist + i * step_size)
-        elif reverse is True:
-            if final_distance:
-                measured_distance = (initial_dist - (
-                    i/n_steps * (initial_dist - final_distance)))
-            else:
-                measured_distance = (initial_dist - i * step_size)
+        measured_distance = (initial_dist + i * step_size)
+
+        if final_distance:
+            measured_distance = initial_dist + (
+                i/n_steps * (final_distance - initial_dist))
 
         atoms.set_distance(i1, i2, measured_distance, fix=0)
 

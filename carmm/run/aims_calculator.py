@@ -4,8 +4,6 @@ def get_aims_calculator(dimensions, k_grid=None):
     Note: This file should not be changed without consultation,
           as changes could affect many users in the group.
 
-    TODO: Some of these variables should probably be softcoded e.g. k-grid
-
     Parameters:
 
     dimensions: Integer
@@ -33,7 +31,7 @@ def get_aims_calculator(dimensions, k_grid=None):
 
 def get_aims_and_sockets_calculator(dimensions, k_grid=None,
                                     # i-Pi settings for sockets
-                                    port=12345, host=None, logfile='socketio.log',
+                                    port=None, host=None, logfile='socketio.log',
                                     # Debug setting
                                     check_socket=True, verbose=False):
     '''
@@ -45,9 +43,10 @@ def get_aims_and_sockets_calculator(dimensions, k_grid=None,
             See get_aims_calculator()
         k_grid: List of integers
             See get_aims_calculator()
-        port: Integer
+        port: None or Integer
             The port for connection between FHI-aims and ASE with i-Pi sockets.
             This is fairly arbitrary as long as it doesn't clash with local settings.
+            If None an integer between 12345 and 60000 will be picked at random.
         host: String
             Name of host computer for ASE. Necessary for calculations where MPI runs on the compute nodes.
             This is now defaulted to None, and then will self-identify the host name if unidentified.
@@ -73,6 +72,13 @@ def get_aims_and_sockets_calculator(dimensions, k_grid=None,
         # In order to manage this communication in all situations, here we will find and use the hostname *even*
         # if on the same computer (it should work irrespective)
         host=socket.gethostname()
+
+    # Random port assignment
+    if port:
+        pass
+    else:
+        import random
+        port = random.randint(12345, 60000)
 
     if check_socket:
         port = _check_socket(host, port, verbose)

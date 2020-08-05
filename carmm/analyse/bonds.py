@@ -1,7 +1,8 @@
 def analyse_all_bonds(model, verbose=True, abnormal=True):
     '''
-    Returns a table of bond distance analysis for the supplied model.
-    TODO: - Setup method to return information
+    Returns all abnormal bond types and list of these
+    TODO: Make this more bullet proof - what happens if abnormal bonds aren't requested.
+    A table of bond distance analysis for the supplied model is also possible
 
     Parameters:
 
@@ -38,11 +39,8 @@ def analyse_all_bonds(model, verbose=True, abnormal=True):
             abnormal_cutoff = max(0.4, sum_of_covalent_radii*0.75)
 
             for values in AB_BondsValues:
-                abnormal_values = [ i for i in values if i < abnormal_cutoff ]
+                abnormal_values = [i for i in values if i < abnormal_cutoff ]
                 if len(abnormal_values):
-                    # Why do we add this value of 1? unclear and not tested in regression.
-                    # @Igor: Is this a counter? I can't tell, and the QA test isn't thorough enough to be clear
-                    # If it is a counter, should it be changed to += len(abnormal_values)
                     abnormal_bonds.append(len(abnormal_values))
                     list_of_abnormal_bonds.append(print_AB)
 
@@ -97,7 +95,7 @@ def print_bond_table_header():
 def search_abnormal_bonds(model, verbose=True):
     '''
     Check all bond lengths in the model for abnormally
-    short ones, ie. less than 0.74 Angstrom.
+    short ones.
 
     Parameters:
     model: Atoms object or string. If string it will read a file
@@ -107,12 +105,22 @@ def search_abnormal_bonds(model, verbose=True):
     # Abnormality check
     abnormal_bonds, list_of_abnormal_bonds = analyse_all_bonds(model, verbose=verbose, abnormal=True)
 
-    # is it possible to make a loop with different possible values instead of 0.75 and takes the average
+    from ase.data import chemical_symbols, covalent_radii
+    import numpy as np
+    if list_of_abnormal_bonds:
+        sums_of_covalent_radii = []
+        for i in list_of_abnormal_bonds:
+            bond_chem_symbols = i.split("-")
+            sums_of_covalent_radii += [covalent_radii[chemical_symbols.index(bond_chem_symbols[0])]
+                + covalent_radii[chemical_symbols.index(bond_chem_symbols[1])]]
+
+
+    # Check against possible covalent radii values averaged * 0.75
     if len(abnormal_bonds) > 0:
         if verbose:
             print("-"*40)
             print("A total of", len(abnormal_bonds),
-            "abnormal bond lengths observed (<" + str(max(0.4, sum_of_covalent_radii*0.75)) + " A).")
+            "abnormal bond lengths observed (<" + str(max(0.4, np.average(sums_of_covalent_radii)*0.75)) + " A")
             print("Identities:", list_of_abnormal_bonds)
             print("-"*40)
         return False
