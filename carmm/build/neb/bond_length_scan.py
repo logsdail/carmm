@@ -4,7 +4,7 @@ Created on Fri 19/06/2020
 @author: Igor Kowalec, David Willock
 '''
 
-def dissociation(atoms, i1, i2, step_size=0.05, n_steps=20, final_distance=None):
+def dissociation(atoms, i1, i2, step_size=0.05, n_steps=20, final_distance=None, group_move=None):
 
     '''
     This function is a tool for investigating bond dissociation.
@@ -29,6 +29,9 @@ def dissociation(atoms, i1, i2, step_size=0.05, n_steps=20, final_distance=None)
         final_distance: None/float
             User can specify the final distance, the increments will be then based
             on a fraction of n_steps/final_distance instead of step_size
+        group_move: list of integers
+            User can specify a list of indices of atoms that need to be moved
+            together with atom with index i2, e.g. OH group etc.
     '''
 
     from ase.constraints import FixBondLength
@@ -54,6 +57,9 @@ def dissociation(atoms, i1, i2, step_size=0.05, n_steps=20, final_distance=None)
         # remove previous constraints and set up new ones
         atoms.set_constraint()
 
+        # initial moving atom position
+        imap = copy.deepcopy(atoms[i2].position)
+
         # move atoms and fix bond length in fixed increments or fraction of final_distance
         measured_distance = (initial_dist + i * step_size)
 
@@ -62,6 +68,11 @@ def dissociation(atoms, i1, i2, step_size=0.05, n_steps=20, final_distance=None)
                 i/n_steps * (final_distance - initial_dist))
 
         atoms.set_distance(i1, i2, measured_distance, fix=0)
+        # move other specified atoms as part of a molecule, e.g. OH group
+        if group_move:
+            for m in group_move:
+                if not m == i2:
+                    atoms[m].position = atoms[m].position + (atoms[i2].position - imap)
 
         # adjust contraints
         if initial_constraint is not None:
