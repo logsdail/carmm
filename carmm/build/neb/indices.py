@@ -87,7 +87,7 @@ def sort_by_symbols(model):
     '''
     Method for arranging the indices in the Atoms object based on their chemical
     symbols, enables interpolation if 'Atomic ordering' flags were raised.
-    
+
     Parameters:
         model - Atoms object
     '''
@@ -95,7 +95,10 @@ def sort_by_symbols(model):
     import copy
     blank = copy.deepcopy(model)
     del blank[range(len(model))]
-    for i in set(model.get_chemical_symbols()).sort():
+    symbols = list(set(model.get_chemical_symbols()))
+    symbols.sort()
+    
+    for i in symbols:
         blank += model[[atom.index for atom in model if atom.symbol == i]]
 
     return blank
