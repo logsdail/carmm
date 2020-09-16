@@ -94,9 +94,9 @@ def dissociation(atoms, i1, i2, step_size=0.05, n_steps=20, final_distance=None,
         atoms.set_distance(i1, i2, measured_distance, fix=0)
 
         # apply bias in z-coordinate towards the surface atoms
-        # TODO: consult minimum distance from surface (can cause trouble for group)
-        z_threshold_min = surf_z + 2.0 # min distance in Angstrom from surf atoms
         if z_bias:
+            # TODO: consult minimum distance from surface (can cause trouble for group)
+            z_threshold_min = surf_z + 2.0 # min distance in Angstrom from surf atoms
             # make sure atoms from a group do not clash into surface atoms
             # move towards the surface or away if necessary
             if group_move:
