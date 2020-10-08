@@ -83,6 +83,27 @@ def switch_all_indices(model, new_indices):
 
     return new_model
 
+def sort_by_symbols(model):
+    '''
+    Method for arranging the indices in the Atoms object based on their chemical
+    symbols, enables interpolation if 'Atomic ordering' flags were raised.
+
+    Parameters:
+        model - Atoms object
+    '''
+
+    import copy
+    blank = copy.deepcopy(model)
+    del blank[range(len(model))]
+    symbols = list(set(model.get_chemical_symbols()))
+    symbols.sort()
+    
+    for i in symbols:
+        blank += model[[atom.index for atom in model if atom.symbol == i]]
+
+    return blank
+
+
 '''
 def switch_indices_old(model, A, B, output_file):
     ## Takes 4 arguments: filename/Atoms object,
