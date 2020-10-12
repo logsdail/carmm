@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 
 '''
-TODO: Description Needed
+This example shows how to load datasets from CSV format whereby the a heatmap is then to be plotted.
 
+This comes in useful when working with complex phase diagrams
 '''
 
 def test_analyse_csv():
