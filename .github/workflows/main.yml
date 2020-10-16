@@ -1,5 +1,4 @@
 # This is a basic workflow to help you get started with Actions
-
 name: ci-tests
 
 # Controls when the action will run. Triggers the workflow on push or pull request
@@ -25,7 +24,9 @@ jobs:
     - name: Set up Python
       uses: actions/setup-python@v1
       with:
-        python-version: '3.x'
+        # Issues with bdist_wheel on v3.9
+        #python-version: '3.x'
+        python-version: '3.7'
     
     # Install ASE so we can run our tests 
     - name: Install dependencies
@@ -39,7 +40,10 @@ jobs:
       run: |
         echo $PWD
         ls -lrt
+        # This will be depreciated
         echo "::set-env name=PYTHONPATH::/home/runner/work/carmm/carmm"
+        # This needs to be working in the near future, but currently fails.
+        # echo "name=PYTHONPATH::/home/runner/work/carmm/carmm" >> $GITHUB_ENV
     
     # Runs a set of commands using the runners shell
     # Updated to run on pytest so we might be able to export data
