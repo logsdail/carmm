@@ -1,5 +1,4 @@
 # This is a basic workflow to help you get started with Actions
-
 name: ci-tests
 
 # Controls when the action will run. Triggers the workflow on push or pull request
@@ -39,7 +38,9 @@ jobs:
       run: |
         echo $PWD
         ls -lrt
-        echo "::set-env name=PYTHONPATH::/home/runner/work/carmm/carmm"
+        # Depreciated
+        # echo "::set-env name=PYTHONPATH::/home/runner/work/carmm/carmm"
+        echo "name=PYTHONPATH::/home/runner/work/carmm/carmm" >> $GITHUB_ENV
     
     # Runs a set of commands using the runners shell
     # Updated to run on pytest so we might be able to export data
