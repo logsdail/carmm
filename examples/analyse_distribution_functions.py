@@ -3,6 +3,7 @@ This is an example of usage of the distribution function scripts"
 
 This is useful for looking at the distributions of atoms from a given atom in a system
 TODO: Add assertion tests
+       - need to add an example for average_distribution_function - will require creating an MD traj
 '''
 
 def test_analyse_distribution_function():
