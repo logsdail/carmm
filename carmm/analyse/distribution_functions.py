@@ -36,8 +36,6 @@ def distance_distribution_function(model, bin_sampling):
     pl.show()
     plt.show()
 
-
-
 def radial_distribution_function(model, radius, position):
     '''Returns a plot of the distribution of the distance between each atom from atom_0.
     plot is currently a frequency vs distance. Current usage is for periodic solids
@@ -86,8 +84,6 @@ def average_distribution_function(trajectory):
 
    TODO: -OB: looks pretty complicated with all the stored variables, can this be done in a loop?
                All the different functions have a plot at the end, create a function that plots and can just be added '''
-
-
 
     from ase.io import read
     from matplotlib import pyplot as plt
