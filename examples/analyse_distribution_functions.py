@@ -13,9 +13,11 @@ def test_analyse_distribution_function():
     from data.model_gen import get_example_slab as slab
     slab = slab(adsorbate=True)
 
-    distance_distribution_function(slab, 0.1, plot=True)
-
-test_analyse_distribution_function()
+    distances = distance_distribution_function(slab, 0.1, plot=True)
+    # Check values are stil lthe same and ordering is correct
+    assert(len(distances) == 210)
+    assert(1e-5 > abs(distances[0] - 1.178657))
+    assert(1e-5 > abs(distances[-1] - 7.132005))
 
 def test_analyse_radial_distribution_function():
     from carmm.analyse.distribution_functions import radial_distribution_function
@@ -24,7 +26,12 @@ def test_analyse_radial_distribution_function():
     from data.model_gen import get_example_slab as slab
     slab = slab(adsorbate=True)
 
-    radial_distribution_function(slab, 10, 0, plot=True)
+    distances = radial_distribution_function(slab, 10, 0, plot=True)
+    # There is an error here. The supercell isn't big enough as we should have more than 22 interactions!
+    # TODO: Make the sphere cutout procedure more robust i.e. check size of cell against radius
+    assert(len(distances) == 22)
+    assert(1e-5 > abs(distances[0] - 0.000000))
+    assert(1e-5 > abs(distances[-1] - 9.747560))
 
 def test_analyse_average_distribution_function():
     from carmm.analyse.distribution_functions import average_distribution_function
@@ -38,6 +45,6 @@ def test_analyse_average_distribution_function():
 
     average_distribution_function(slab_trajectory, 2, plot=True)
 
-#test_analyse_distribution_function()
-#test_analyse_radial_distribution_function()
+test_analyse_distribution_function()
+test_analyse_radial_distribution_function()
 test_analyse_average_distribution_function()

@@ -1,61 +1,75 @@
 def distance_distribution_function(model, bin_sampling, plot=False):
-    '''Returns a plot of the distribution of the distance between all atoms
+    '''
+    Returns a plot of the distribution of the distance between all atoms
     plot is currently a frequency vs distance. Current usage is for periodic solids
-   TODO:
-         - This needs a list of what the inputs/outputs are. The documentation isn't good enough!
-         - Only calculates RDF with respect the first atom - needs to be generalised:
-            - what about for any other atom of interest?
-            - what about averaging over all atoms, as per standard EXAFS?
-              OB: amended distance_distribution to average over all atoms
-         - Need to account for density
 
-        '''
+    Parameters:
 
-    from matplotlib import pyplot as plt
+    model: Atoms objects
+        The model from which the RDF is to be plotted
+    bin_sampling: float
+        Represents the spaces between sampling "sections" for the RDF
+    plot: Boolean
+        Whether to return a plot. TODO: Remove all plotting, as this is a matplotlib activity.
+
+    Returns:
+
+    individual_lengths: List of floats
+        An sorted list of all lengths of bonds between all atoms in the model
+
+   TODO: Need to account for density (i.e. bonds as a function of volume)
+
+    '''
+
     from math import ceil
-    import numpy as np
-    import pylab as pl
 
     # get all distances in the model
     distances = model.get_all_distances(mic=True, vector=False)
 
     individual_lengths = []
+    # This should be condensed to one for loop.
     for i in range(len(distances)):
         for j in range(i+1, len(distances[i])):
             individual_lengths.append(distances[i][j])
 
     # plot these values as a histogram then as a line
     if plot:
-        y, binEdges = np.histogram(individual_lengths, bins=ceil(max(individual_lengths) / bin_sampling))
-        bincenters = 0.5 * (binEdges[1:] + binEdges[:-1])
-        pl.plot(bincenters, y, '-')
-        plt.xlabel('r/Å', fontsize=15)
-        plt.ylabel('g(r)', fontsize=15)
-        plt.xticks(fontsize=15)
-        plt.yticks(fontsize=15)
-        plt.title('Distribution Function', fontsize=15)
-        pl.show()
-        plt.show()
+        plot_distribution_function(individual_lengths,
+                                   bins=ceil(max(individual_lengths) / bin_sampling),
+                                   title='Distribution Function')
 
-    return individual_lengths
+    return sorted(individual_lengths)
 
 def radial_distribution_function(model, radius, position, plot=False):
-    '''Returns a plot of the distribution of the distance between each atom from atom_0.
+    '''
+    Returns a plot of the distribution of the distance between each atom from atom_0.
     plot is currently a frequency vs distance. Current usage is for periodic solids
     This script will create a radius around a given model and calculate the distance of this new model
+
+    Parameters:
+
+    model: Atoms objects
+        The model from which the RDF is to be plotted
+    radius: float
+        The distance around the atom of interest to plot the RDF
+    position: integer
+        The atom index of interest (i.e. centre of RDF)
+    plot: Boolean
+        Whether to return a plot. TODO: Remove all plotting, as this is a matplotlib activity.
+
+    Returns:
+
+    distances: List of floats
+        An sorted list of all lengths of bonds between the central atom and others in the desired radius
+
     TODO:   - This needs a list of inputs/outputs, as otherwise it is really tough to work with.
             - Gaussian over the histogram
             AJL: What's the difference between this and difference_distribution_function?
+                 - I think I get it now - it is specifically wrt an atom if interest. Correct?
     '''
-    from matplotlib import pyplot as plt
-    from carmm.build.cutout import cutout_sphere
-    import numpy as np
-    import pylab as pl
-    #Read file or Atoms object
 
-    if isinstance(model, str) is True:
-        from ase.io import read
-        model = read(model)
+    from carmm.build.cutout import cutout_sphere
+
     # Create a variable which represents the amount of atoms in the system
     positions = model.get_positions()
     number_atoms_in_model = len(positions)
@@ -71,18 +85,11 @@ def radial_distribution_function(model, radius, position, plot=False):
 
     # plot these values as a histogram
     if plot:
-        y, binEdges = np.histogram(distances, bins=number_atoms_in_radial_model)
-        bincenters = 0.5 * (binEdges[1:] + binEdges[:-1])
-        pl.plot(bincenters, y, '-')
-        plt.xlabel('r/Å', fontsize=15)
-        plt.ylabel('g(r)', fontsize=15)
-        plt.xticks(fontsize=15)
-        plt.yticks(fontsize=15)
-        plt.title('Radial Distribution Function', fontsize=15)
-        pl.show()
-        plt.show()
+        plot_distribution_function(distances,
+                                   bins=number_atoms_in_radial_model,
+                                   title='Radial Distribution Function')
 
-    return distances
+    return sorted(distances)
 
 def average_distribution_function(trajectory, samples=10, bin_sampling=0.1, plot=False):
     '''
@@ -120,10 +127,7 @@ def average_distribution_function(trajectory, samples=10, bin_sampling=0.1, plot
         snapshots.append(trajectory[(-i)-1])
         # Remove any constraints, as these hamper analysis
         del snapshots[i].constraints
-        # Caculate distribution function
-        # @OB: distance_distribution_function doesn't return anything, so this setup doesn't work
-        #      Was the code edited for ddf by Corey? If so this needs incorporating
-        #      (Really DDF should return the data anyway, not plot it - the plotter should be in graphs.py)
+        # Calculate distribution function
         snapshots_d.append(distance_distribution_function(snapshots[i], bin_sampling))
         # Sort data. Is this needed?
         snapshots_ds.append(sorted(snapshots_d[i]))
@@ -152,4 +156,19 @@ def average_distribution_function(trajectory, samples=10, bin_sampling=0.1, plot
         plt.show()
 
     # Something should be returned.
+
+def plot_distribution_function(data, bins, title):
+    ''' Generic plotter '''
+    from matplotlib import pyplot as plt
+    from numpy import histogram
+
+    y, binEdges = histogram(data, bins=bins)
+    bincenters = 0.5 * (binEdges[1:] + binEdges[:-1])
+    plt.plot(bincenters, y, '-')
+    plt.xlabel('r/Å', fontsize=15)
+    plt.ylabel('g(r)', fontsize=15)
+    plt.xticks(fontsize=15)
+    plt.yticks(fontsize=15)
+    plt.title(title, fontsize=15)
+    plt.show()
 
