@@ -2,6 +2,7 @@ def distance_distribution_function(model, bin_sampling):
     '''Returns a plot of the distribution of the distance between all atoms
     plot is currently a frequency vs distance. Current usage is for periodic solids
    TODO:
+         - This needs a list of what the inputs/outputs are. The documentation isn't good enough!
          - Only calculates RDF with respect the first atom - needs to be generalised:
             - what about for any other atom of interest?
             - what about averaging over all atoms, as per standard EXAFS?
@@ -40,7 +41,8 @@ def radial_distribution_function(model, radius, position):
     '''Returns a plot of the distribution of the distance between each atom from atom_0.
     plot is currently a frequency vs distance. Current usage is for periodic solids
     This script will create a radius around a given model and calculate the distance of this new model
-    TODO:  - Gaussian over the histogram
+    TODO:   - This needs a list of inputs/outputs, as otherwise it is really tough to work with.
+            - Gaussian over the histogram
             AJL: What's the difference between this and difference_distribution_function?
     '''
     from matplotlib import pyplot as plt
@@ -78,11 +80,19 @@ def radial_distribution_function(model, radius, position):
     pl.show()
     plt.show()
 
-def average_distribution_function(trajectory):
+def average_distribution_function(trajectory, samples=10):
+    '''
+    Plots the average distribution function of the last 10 steps of an MD trajectory
+    
+    Parameters:
+    
+    trajectory: List of Atoms objects
+        The pathway from which the ensemble RDF is to be plotted
+    samples: Integer
+        The number of samples to include in the ensemble, starting from the final image of the trajectory.
 
-   '''plots the average distribution function of the last 10 steps of an MD trajectory
-
-   TODO: -OB: looks pretty complicated with all the stored variables, can this be done in a loop?
+    TODO: -OB: looks pretty complicated with all the stored variables, can this be done in a loop?
+               AL: done? We need a regression test though - and comparison against the standalone script.
                All the different functions have a plot at the end, create a function that plots and can just be added '''
 
     from ase.io import read
@@ -90,92 +100,47 @@ def average_distribution_function(trajectory):
     from math import ceil
     import numpy as np
     import pylab as pl
-    import distance_distribution_function as ddf
+    #import distance_distribution_function as ddf
 
     # Variable Naming:
     # [a-l] - Snapshot
     # [a-l]d - Distance distribution of the snapshot
     # [a-l]ds - Distance distribution array sorted from lowest-highest
+    
+    # Suggested update so we can use loops:
+    # snapshots[0-n] - snapshots
+    # snapshots_d[0-n] - Distance distribution of snapshots
+    # snapshots_ds[0-n] - Distance snapshots sorted from lowest to highest
 
     bin_sampling = 0.1
+    
+    snapshots = []
+    snapshots_d = []
+    snapshots_ds = []
+    
+    # Read in all Atoms objects to be sampled
+    for i in range(samples):
+        snapshots.append(read(trajectory, (-i)-1)))
+        # Remove any constraints, as these hamper analysis
+        del snapshots[i].constraints
+        # Caculate distribution function
+        # @OB: distance_distribution_function doesn't return anything, so this setup doesn't work
+        #      Was the code edited for ddf by Corey? If so this needs incorporating
+        #      (Really DDF should return the data anyway, not plot it - the plotter should be in graphs.py)
+        snapshots_d.append(distance_distribution_function(snapshots[i], bin_sampling))
+        # Sort data. Is this needed?
+        snapshots_ds.append(sorted(snapshots_d[i]))
+        # Create plot data
+        y, binEdges = np.histogram(snapshots_ds[i], bins=ceil(max(snapshots_ds[i]) / bin_sampling), density=True)
+        bincenters = 0.5 * (binEdges[1:] + binEdges[:-1])
+        pl.plot(bincenters, y, '-', color="#808080")
 
-    a = read(trajectory, -1)
-    b = read(trajectory, -2)
-    c = read(trajectory, -3)
-    d = read(trajectory, -4)
-    e = read(trajectory, -5)
-    f = read(trajectory, -6)
-    g = read(trajectory, -7)
-    h = read(trajectory, -8)
-    l = read(trajectory, -9)
-    j = read(trajectory, -10)
-
-    del a.constraints
-    del b.constraints
-    del c.constraints
-    del d.constraints
-    del e.constraints
-    del f.constraints
-    del g.constraints
-    del h.constraints
-    del l.constraints
-    del j.constraints
-
-    ad = ddf(a)
-    bd = ddf(b)
-    cd = ddf(c)
-    dd = ddf(d)
-    ed = ddf(e)
-    fd = ddf(f)
-    gd = ddf(g)
-    hd = ddf(h)
-    ld = ddf(l)
-    jd = ddf(j)
-
-    ads = sorted(ad)
-    bds = sorted(bd)
-    cds = sorted(cd)
-    dds = sorted(dd)
-    eds = sorted(ed)
-    fds = sorted(fd)
-    gds = sorted(gd)
-    hds = sorted(hd)
-    lds = sorted(ld)
-    jds = sorted(jd)
-
-    mean = ads + bds + cds + dds + eds + fds + gds + hds + lds + jds
-    np.true_divide(mean, 10)
-
-    y, binEdges = np.histogram(ads, bins=ceil(max(ads) / bin_sampling), density=True)
-    bincenters = 0.5 * (binEdges[1:] + binEdges[:-1])
-    pl.plot(bincenters, y, '-', color="#808080")
-    y, binEdges = np.histogram(bds, bins=ceil(max(bds) / bin_sampling), density=True)
-    bincenters = 0.5 * (binEdges[1:] + binEdges[:-1])
-    pl.plot(bincenters, y, '-', color="#808080")
-    y, binEdges = np.histogram(cds, bins=ceil(max(cds) / bin_sampling), density=True)
-    bincenters = 0.5 * (binEdges[1:] + binEdges[:-1])
-    pl.plot(bincenters, y, '-', color="#808080")
-    y, binEdges = np.histogram(dds, bins=ceil(max(dds) / bin_sampling), density=True)
-    bincenters = 0.5 * (binEdges[1:] + binEdges[:-1])
-    pl.plot(bincenters, y, '-', color="#808080")
-    y, binEdges = np.histogram(eds, bins=ceil(max(eds) / bin_sampling), density=True)
-    bincenters = 0.5 * (binEdges[1:] + binEdges[:-1])
-    pl.plot(bincenters, y, '-', color="#808080")
-    y, binEdges = np.histogram(fds, bins=ceil(max(fds) / bin_sampling), density=True)
-    bincenters = 0.5 * (binEdges[1:] + binEdges[:-1])
-    pl.plot(bincenters, y, '-', color="#808080")
-    y, binEdges = np.histogram(gds, bins=ceil(max(gds) / bin_sampling), density=True)
-    bincenters = 0.5 * (binEdges[1:] + binEdges[:-1])
-    pl.plot(bincenters, y, '-', color="#808080")
-    y, binEdges = np.histogram(hds, bins=ceil(max(hds) / bin_sampling), density=True)
-    bincenters = 0.5 * (binEdges[1:] + binEdges[:-1])
-    pl.plot(bincenters, y, '-', color="#808080")
-    y, binEdges = np.histogram(lds, bins=ceil(max(lds) / bin_sampling), density=True)
-    bincenters = 0.5 * (binEdges[1:] + binEdges[:-1])
-    pl.plot(bincenters, y, '-', color="#808080")
-    y, binEdges = np.histogram(jds, bins=ceil(max(jds) / bin_sampling), density=True)
-    bincenters = 0.5 * (binEdges[1:] + binEdges[:-1])
-    pl.plot(bincenters, y, '-', color="#808080")
+    # Plot mean
+    #mean = ads + bds + cds + dds + eds + fds + gds + hds + lds + jds
+    #np.true_divide(mean, 10)
+    all_data_one_list = [item for atoms_object in snapshots_ds for item in atoms_object]
+    mean = np.true_divide(all_data_one_list, len(snapshots_ds))
+    
     y, binEdges = np.histogram(mean, bins=ceil(max(mean) / bin_sampling), density=True)
     bincenters = 0.5 * (binEdges[1:] + binEdges[:-1])
     pl.plot(bincenters, y, '-', label='Mean', color="#000000")
@@ -185,6 +150,7 @@ def average_distribution_function(trajectory):
     plt.xticks(fontsize=15)
     plt.yticks(fontsize=15)
     plt.title('Last 10 Snapshots', fontsize=15)
+    # What is the difference between pl and plt? This needs sorting.
     pl.legend()
     pl.show()
     plt.show()
