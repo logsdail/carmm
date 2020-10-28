@@ -1,4 +1,4 @@
-def distance_distribution_function(model, bin_sampling, plot=False):
+def radial_distribution_function(model, bin_sampling=0.1, atoms_to_include=None, plot=False):
     '''
     Returns a plot of the distribution of the distance between all atoms
     plot is currently a frequency vs distance. Current usage is for periodic solids
@@ -9,6 +9,8 @@ def distance_distribution_function(model, bin_sampling, plot=False):
         The model from which the RDF is to be plotted
     bin_sampling: float
         Represents the spaces between sampling "sections" for the RDF
+    atoms_to_include: Integer or List of Integers
+        Atoms that you want included in the RDF
     plot: Boolean
         Whether to return a plot. TODO: Remove all plotting, as this is a matplotlib activity.
 
@@ -26,11 +28,19 @@ def distance_distribution_function(model, bin_sampling, plot=False):
     # get all distances in the model
     distances = model.get_all_distances(mic=True, vector=False)
 
+    # Define atoms_to_include
+    if atoms_to_include is None:
+        atoms_to_include = [ i for i in range(len(distances)) ]
+    elif isinstance(atoms_to_include, int):
+        atoms_to_include = [ atoms_to_include ]
+
     individual_lengths = []
     # This should be condensed to one for loop.
     for i in range(len(distances)):
         for j in range(i+1, len(distances[i])):
-            individual_lengths.append(distances[i][j])
+            # Check if we are on a row/column for an atom we want.
+            if i in atoms_to_include or j in atoms_to_include:
+                individual_lengths.append(distances[i][j])
 
     # plot these values as a histogram then as a line
     if plot:
@@ -40,11 +50,10 @@ def distance_distribution_function(model, bin_sampling, plot=False):
 
     return sorted(individual_lengths)
 
-def radial_distribution_function(model, radius, position, plot=False):
+def extended_radial_distribution_function(model, radius, position, bin_sampling=0.1, plot=False):
     '''
-    Returns a plot of the distribution of the distance between each atom from atom_0.
-    plot is currently a frequency vs distance. Current usage is for periodic solids
-    This script will create a radius around a given model and calculate the distance of this new model
+    Returns a plot of the distribution of the distance between atoms up to given radius
+    Plot is currently a frequency vs distance. Current usage is for periodic solids
 
     Parameters:
 
@@ -54,6 +63,8 @@ def radial_distribution_function(model, radius, position, plot=False):
         The distance around the atom of interest to plot the RDF
     position: integer
         The atom index of interest (i.e. centre of RDF)
+    bin_sampling: float
+        Represents the spaces between sampling "sections" for the RDF
     plot: Boolean
         Whether to return a plot. TODO: Remove all plotting, as this is a matplotlib activity.
 
@@ -62,31 +73,24 @@ def radial_distribution_function(model, radius, position, plot=False):
     distances: List of floats
         An sorted list of all lengths of bonds between the central atom and others in the desired radius
 
-    TODO:   - This needs a list of inputs/outputs, as otherwise it is really tough to work with.
-            - Gaussian over the histogram
-            AJL: What's the difference between this and difference_distribution_function?
-                 - I think I get it now - it is specifically wrt an atom if interest. Correct?
+    TODO:   - Decide what this offers over distance_distribution_function, and make this clear.
+                - It might be that we can just integrate the supercell creating into ddf.
+            - Gaussian over the histogram? This is a plotting aspect
     '''
 
-    from carmm.build.cutout import cutout_sphere
+    from math import ceil
 
-    # Create a variable which represents the amount of atoms in the system
-    positions = model.get_positions()
-    number_atoms_in_model = len(positions)
-    # create a super cell of the model
+    # create a super cell of the model to ensure we get all interactions within radius
+    # TODO: This needs to be more rigorous e.g. check if cell is big enough
     super_cell = model.repeat([2, 2, 2])
 
-    #create a radial model which cuts out atoms around a representative of atom(0) in the middle of the suepr cell
-    radial_model = cutout_sphere(super_cell, number_atoms_in_model, radius)
-    positions_2 = radial_model.get_positions()
-    number_atoms_in_radial_model = len(positions_2)
-    # Create an array with the all the distances from atom the variable 'position'
-    distances = radial_model.get_distances(position, range(number_atoms_in_radial_model), mic=True, vector=False)
+    distances_all = radial_distribution_function(super_cell, bin_sampling, position)
+    distances = [ distance for distance in distances_all if distance < radius ]
 
     # plot these values as a histogram
     if plot:
         plot_distribution_function(distances,
-                                   bins=number_atoms_in_radial_model,
+                                   bins=ceil(max(distances) / bin_sampling),
                                    title='Radial Distribution Function')
 
     return sorted(distances)
@@ -128,7 +132,7 @@ def average_distribution_function(trajectory, samples=10, bin_sampling=0.1, plot
         # Remove any constraints, as these hamper analysis
         del snapshots[i].constraints
         # Calculate distribution function
-        snapshots_d.append(distance_distribution_function(snapshots[i], bin_sampling))
+        snapshots_d.append(radial_distribution_function(snapshots[i],bin_sampling))
         # Sort data. Is this needed?
         snapshots_ds.append(sorted(snapshots_d[i]))
         # Create plot data
@@ -158,7 +162,11 @@ def average_distribution_function(trajectory, samples=10, bin_sampling=0.1, plot
     # Something should be returned.
 
 def plot_distribution_function(data, bins, title):
-    ''' Generic plotter '''
+    '''
+    Generic plotter
+
+    TODO: Graphs need to start at zero by default
+    '''
     from matplotlib import pyplot as plt
     from numpy import histogram
 
