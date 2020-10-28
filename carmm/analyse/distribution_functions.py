@@ -1,4 +1,4 @@
-def distance_distribution_function(model, bin_sampling):
+def distance_distribution_function(model, bin_sampling, plot=False):
     '''Returns a plot of the distribution of the distance between all atoms
     plot is currently a frequency vs distance. Current usage is for periodic solids
    TODO:
@@ -25,19 +25,21 @@ def distance_distribution_function(model, bin_sampling):
             individual_lengths.append(distances[i][j])
 
     # plot these values as a histogram then as a line
+    if plot:
+        y, binEdges = np.histogram(individual_lengths, bins=ceil(max(individual_lengths) / bin_sampling))
+        bincenters = 0.5 * (binEdges[1:] + binEdges[:-1])
+        pl.plot(bincenters, y, '-')
+        plt.xlabel('r/Å', fontsize=15)
+        plt.ylabel('g(r)', fontsize=15)
+        plt.xticks(fontsize=15)
+        plt.yticks(fontsize=15)
+        plt.title('Distribution Function', fontsize=15)
+        pl.show()
+        plt.show()
 
-    y, binEdges = np.histogram(individual_lengths, bins=ceil(max(individual_lengths) / bin_sampling))
-    bincenters = 0.5 * (binEdges[1:] + binEdges[:-1])
-    pl.plot(bincenters, y, '-')
-    plt.xlabel('r/Å', fontsize=15)
-    plt.ylabel('g(r)', fontsize=15)
-    plt.xticks(fontsize=15)
-    plt.yticks(fontsize=15)
-    plt.title('Distribution Function', fontsize=15)
-    pl.show()
-    plt.show()
+    return individual_lengths
 
-def radial_distribution_function(model, radius, position):
+def radial_distribution_function(model, radius, position, plot=False):
     '''Returns a plot of the distribution of the distance between each atom from atom_0.
     plot is currently a frequency vs distance. Current usage is for periodic solids
     This script will create a radius around a given model and calculate the distance of this new model
@@ -68,21 +70,24 @@ def radial_distribution_function(model, radius, position):
     distances = radial_model.get_distances(position, range(number_atoms_in_radial_model), mic=True, vector=False)
 
     # plot these values as a histogram
+    if plot:
+        y, binEdges = np.histogram(distances, bins=number_atoms_in_radial_model)
+        bincenters = 0.5 * (binEdges[1:] + binEdges[:-1])
+        pl.plot(bincenters, y, '-')
+        plt.xlabel('r/Å', fontsize=15)
+        plt.ylabel('g(r)', fontsize=15)
+        plt.xticks(fontsize=15)
+        plt.yticks(fontsize=15)
+        plt.title('Radial Distribution Function', fontsize=15)
+        pl.show()
+        plt.show()
 
-    y, binEdges = np.histogram(distances, bins=number_atoms_in_radial_model)
-    bincenters = 0.5 * (binEdges[1:] + binEdges[:-1])
-    pl.plot(bincenters, y, '-')
-    plt.xlabel('r/Å', fontsize=15)
-    plt.ylabel('g(r)', fontsize=15)
-    plt.xticks(fontsize=15)
-    plt.yticks(fontsize=15)
-    plt.title('Radial Distribution Function', fontsize=15)
-    pl.show()
-    plt.show()
+    return distances
 
-def average_distribution_function(trajectory, samples=10):
+def average_distribution_function(trajectory, samples=10, bin_sampling=0.1, plot=False):
     '''
-    Plots the average distribution function of the last 10 steps of an MD trajectory
+    Plots the average distribution function of the last N steps of an MD trajectory
+    TODO: Is this radial or distance? Should it be an option which to use?
     
     Parameters:
     
@@ -100,19 +105,11 @@ def average_distribution_function(trajectory, samples=10):
     from math import ceil
     import numpy as np
     import pylab as pl
-    #import distance_distribution_function as ddf
-
-    # Variable Naming:
-    # [a-l] - Snapshot
-    # [a-l]d - Distance distribution of the snapshot
-    # [a-l]ds - Distance distribution array sorted from lowest-highest
     
     # Suggested update so we can use loops:
     # snapshots[0-n] - snapshots
     # snapshots_d[0-n] - Distance distribution of snapshots
     # snapshots_ds[0-n] - Distance snapshots sorted from lowest to highest
-
-    bin_sampling = 0.1
     
     snapshots = []
     snapshots_d = []
@@ -120,7 +117,7 @@ def average_distribution_function(trajectory, samples=10):
     
     # Read in all Atoms objects to be sampled
     for i in range(samples):
-        snapshots.append(read(trajectory, (-i)-1)))
+        snapshots.append(trajectory[(-i)-1])
         # Remove any constraints, as these hamper analysis
         del snapshots[i].constraints
         # Caculate distribution function
@@ -133,25 +130,26 @@ def average_distribution_function(trajectory, samples=10):
         # Create plot data
         y, binEdges = np.histogram(snapshots_ds[i], bins=ceil(max(snapshots_ds[i]) / bin_sampling), density=True)
         bincenters = 0.5 * (binEdges[1:] + binEdges[:-1])
-        pl.plot(bincenters, y, '-', color="#808080")
+        #colors=['red','blue'] # Used for testing
+        #pl.plot(bincenters, y, '-', color=colors[i], label=str(i))
+        pl.plot(bincenters, y, '-', color='#808080')
 
-    # Plot mean
-    #mean = ads + bds + cds + dds + eds + fds + gds + hds + lds + jds
-    #np.true_divide(mean, 10)
-    all_data_one_list = [item for atoms_object in snapshots_ds for item in atoms_object]
-    mean = np.true_divide(all_data_one_list, len(snapshots_ds))
-    
+    # Plot mean. This need double checking with something known e.g. H2O
+    mean = [item for atoms_object in snapshots_ds for item in atoms_object]
     y, binEdges = np.histogram(mean, bins=ceil(max(mean) / bin_sampling), density=True)
     bincenters = 0.5 * (binEdges[1:] + binEdges[:-1])
     pl.plot(bincenters, y, '-', label='Mean', color="#000000")
 
-    plt.xlabel('r/Å', fontsize=15)
-    plt.ylabel('g(r)', fontsize=15)
-    plt.xticks(fontsize=15)
-    plt.yticks(fontsize=15)
-    plt.title('Last 10 Snapshots', fontsize=15)
-    # What is the difference between pl and plt? This needs sorting.
-    pl.legend()
-    pl.show()
-    plt.show()
+    if plot:
+        plt.xlabel('r/Å', fontsize=15)
+        plt.ylabel('g(r)', fontsize=15)
+        plt.xticks(fontsize=15)
+        plt.yticks(fontsize=15)
+        plt.title('Last '+str(samples)+' Snapshots', fontsize=15)
+        # What is the difference between pl and plt? This needs sorting.
+        pl.legend()
+        pl.show()
+        plt.show()
+
+    # Something should be returned.
 
