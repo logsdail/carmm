@@ -1,46 +1,4 @@
-def radial_distribution_function(model, atoms_to_include=None):
-    '''
-    Returns a plot of the distribution of the distance between all atoms
-    plot is currently a frequency vs distance. Current usage is for periodic solids
-
-    Parameters:
-
-    model: Atoms objects
-        The model from which the RDF is to be plotted
-    atoms_to_include: Integer or List of Integers
-        Atoms that you want included in the RDF
-
-    Returns:
-
-    individual_lengths: List of floats
-        An sorted list of all lengths of bonds between all atoms in the model
-
-   TODO: Need to account for density (i.e. bonds as a function of volume)
-
-   TODO: What difference does this have no to calculate_distances?
-
-    '''
-
-    # get all distances in the model
-    distances = model.get_all_distances(mic=True, vector=False)
-
-    # Define atoms_to_include
-    if atoms_to_include is None:
-        atoms_to_include = [ i for i in range(len(distances)) ]
-    elif isinstance(atoms_to_include, int):
-        atoms_to_include = [ atoms_to_include ]
-
-    individual_lengths = []
-    # This should be condensed to one for loop.
-    for i in range(len(distances)):
-        for j in range(i+1, len(distances[i])):
-            # Check if we are on a row/column for an atom we want.
-            if i in atoms_to_include or j in atoms_to_include:
-                individual_lengths.append(distances[i][j])
-
-    return sorted(individual_lengths)
-
-def extended_radial_distribution_function(model, radius, position):
+def radial_distribution_function(model, radius, position):
     '''
     Returns a plot of the distribution of the distance between atoms up to given radius
     Plot is currently a frequency vs distance. Current usage is for periodic solids
@@ -64,11 +22,13 @@ def extended_radial_distribution_function(model, radius, position):
             - Gaussian over the histogram? This is a plotting aspect
     '''
 
+    from carmm.analyse.bonds import get_sorted_distances
+
     # create a super cell of the model to ensure we get all interactions within radius
     # TODO: This needs to be more rigorous e.g. check if cell is big enough
     super_cell = model.repeat([2, 2, 2])
 
-    distances_all = radial_distribution_function(super_cell, position)
+    distances_all = get_sorted_distances(super_cell, position)
     distances = [ distance for distance in distances_all if distance < radius ]
 
     return sorted(distances)
@@ -96,11 +56,12 @@ def average_distribution_function(trajectory, samples=10, bin_sampling=0.1, plot
 
     '''
 
-    from ase.io import read
     from matplotlib import pyplot as plt
     plt.cla()
     from math import ceil
     import numpy as np
+    #######
+    from carmm.analyse.bonds import get_sorted_distances
     
     # Suggested update so we can use loops:
     # snapshots[0-n] - snapshots
@@ -117,7 +78,7 @@ def average_distribution_function(trajectory, samples=10, bin_sampling=0.1, plot
         # Remove any constraints, as these hamper analysis
         del snapshots[i].constraints
         # Calculate distribution function
-        snapshots_d.append(radial_distribution_function(snapshots[i]))
+        snapshots_d.append(get_sorted_distances(snapshots[i]))
         # Sort data. Is this needed?
         snapshots_ds.append(sorted(snapshots_d[i]))
         # Create plot data
