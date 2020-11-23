@@ -1,4 +1,4 @@
-def get_aims_calculator(dimensions, k_grid=None, compute_forces=None):
+def get_aims_calculator(dimensions, k_grid=None, compute_forces="true"):
     '''
     Method to return a "default" FHI-aims calculator.
     Note: This file should not be changed without consultation,
@@ -20,21 +20,18 @@ def get_aims_calculator(dimensions, k_grid=None, compute_forces=None):
     fhi_calc =  Aims(xc='pbe',
                      spin='none',
                      relativistic=('atomic_zora','scalar'),
-                     compute_forces="true"
+                     compute_forces=compute_forces
                      )
 
     if dimensions == 2:
         fhi_calc.set(use_dipole_correction='True')
 
     if dimensions >= 2:
-        fhi_calc.set(k_grid=k_grid)
-	
-    if compute_forces == "false":
-    fhi_calc.set(compute_forces=compute_forces) 
+        fhi_calc.set(k_grid=k_grid) 
 
     return fhi_calc
 
-def get_aims_and_sockets_calculator(dimensions, k_grid=None, compute_forces=None,
+def get_aims_and_sockets_calculator(dimensions, k_grid=None, compute_forces="true",
                                     # i-Pi settings for sockets
                                     port=None, host=None, logfile='socketio.log',
                                     # Debug setting
