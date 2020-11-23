@@ -37,7 +37,7 @@ def get_example_slab(adsorbate=False, type="CO2"):
 
     # Make the model a bit more technically complete - include a calculator.
     from ase.calculators.emt import EMT
-    slab.set_calculator(EMT())
+    slab.calc = EMT()
 
     return slab
 
@@ -63,6 +63,6 @@ def get_example_adsorbate(type="CO2"):
 
     # Make the model a bit more technically complete - include a calculator.
     from ase.calculators.emt import EMT
-    atoms.set_calculator(EMT())
+    atoms.calc = EMT()
 
     return atoms
