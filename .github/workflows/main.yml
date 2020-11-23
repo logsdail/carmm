@@ -40,10 +40,14 @@ jobs:
       run: |
         echo $PWD
         ls -lrt
-        # This will be depreciated
-        echo "::set-env name=PYTHONPATH::/home/runner/work/carmm/carmm"
+        # This will be depreciated. It can be over-ridden with:
+        # echo "ACTIONS_ALLOW_UNSECURE_COMMANDS=true" >> $GITHUB_ENV
+        # echo "::set-env name=PYTHONPATH::/home/runner/work/carmm/carmm"
+        # Example new implementation from: https://docs.github.com/en/free-pro-team@latest/actions/reference/workflow-commands-for-github-actions#environment-files
+        env
+        # echo "{name}={value}" >> $GITHUB_ENV
         # This needs to be working in the near future, but currently fails.
-        # echo "name=PYTHONPATH::/home/runner/work/carmm/carmm" >> $GITHUB_ENV
+        echo "PYTHONPATH=/home/runner/work/carmm/carmm:$PYTHONPATH" >> $GITHUB_ENV
     
     # Runs a set of commands using the runners shell
     # Updated to run on pytest so we might be able to export data
