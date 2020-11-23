@@ -34,7 +34,7 @@ def test_dissociation():
     # Generate and optimise slab prior to dissociation
     # @ikowalec: Are you sure this is correct? The models when plotted seem a bit ... crazy ...
     slab = get_example_slab()
-    adatoms = Atoms("2Cu", positions=[(2, 0, 0), (0, 0, 0)])
+    adatoms = Atoms("2Cu", positions=[(0, 0, 0), (2, 0, 0)])
     add_adsorbate(slab, adatoms, height=2, position=(slab[0].x, slab[0].y))
 
     if optimisation:
