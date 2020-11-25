@@ -1,4 +1,4 @@
-def write_to_povray(atoms, fname):
+def write_to_povray(atoms, fname, parameters={}):
     '''
     Saves the incoming atoms object to a povray file
 
@@ -10,4 +10,4 @@ def write_to_povray(atoms, fname):
         Output file name, no file extension necessary.
     '''
     from ase.io import write
-    write(fname+'.pov', atoms, run_povray=True)
+    write(fname+'.pov', atoms, run_povray=True, **parameters)
