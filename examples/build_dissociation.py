@@ -32,26 +32,25 @@ def test_dissociation():
         from ase.optimize import BFGS
 
     # Generate and optimise slab prior to dissociation
-    # @ikowalec: Are you sure this is correct? The models when plotted seem a bit ... crazy ...
-    slab = get_example_slab()
-    adatoms = Atoms("2Cu", positions=[(0, 0, 0), (2, 0, 0)])
-    add_adsorbate(slab, adatoms, height=2, position=(slab[0].x, slab[0].y))
+    slab = get_example_slab(adsorbate=True, type="2Cu")
 
     if optimisation:
         opt = BFGS(slab)
         opt.run(fmax=0.05)
 
     # move adsorbed Cu atoms (indices 18,19) away from each other
-    atoms_list, distance_list = dissociation(slab, 18, 19, step_size=0.2, n_steps=10, z_bias=True, group_move=[19])
+    # if z_bias is True, the distance increment is not exactly step_size value
+    z_bias = True
+    atoms_list, distance_list = dissociation(slab, 18, 19, step_size=0.2, n_steps=10, z_bias=z_bias, group_move=[19])
 
     # Assertion tests - checking no one has broken the code.
     assert (len(distance_list) == len(atoms_list) == 10)
-    if optimisation:
-        assert(distance_list[0] - 3.145244 < 1e-5)
-        assert(distance_list[9] - 6.063336 < 1e-5)
+    if z_bias:
+        assert(distance_list[0] - 3.099548 < 1e-5)
+        assert(distance_list[9] - 4.815466 < 1e-5)
     else:
-        assert(distance_list[0] - 2.685424 < 1e-5)
-        assert(distance_list[9] - 5.539200 < 1e-5)
+        assert(distance_list[0] - 3.084995 < 1e-5)
+        assert(distance_list[9] - 4.884995 < 1e-5)
 
     if optimisation:
         for atoms in atoms_list:
