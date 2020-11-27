@@ -10,8 +10,13 @@ def get_aims_calculator(dimensions, k_grid=None, xc="pbe", compute_forces="true"
         Determines whether we have a "gas"-phase (0) or "periodic" structure (2 or 3)
     k_grid: List of integers
         Gives the k-grid sampling in x-, y- and z- direction. e.g. [3, 3, 3]
+    xc: String
+        XC of choice
     compute_forces: String
-    Determines whether forces are enabled ("true") or not enabled ("false"). 
+        Determines whether forces are enabled ("true") or not enabled ("false"). 
+
+
+TODO: Reorder inputs so most necessary are first i.e. xc, compute_forces, k_grid (I think?)
     '''
 
     from ase.calculators.aims import Aims
@@ -50,6 +55,8 @@ def get_aims_and_sockets_calculator(dimensions, k_grid=None, xc="pbe", compute_f
         dimensions: Integer
             See get_aims_calculator()
         k_grid: List of integers
+            See get_aims_calculator()
+        xc: String
             See get_aims_calculator()
 	compute_forces: String
 	    See get_aims_calculator()
@@ -93,7 +100,7 @@ def get_aims_and_sockets_calculator(dimensions, k_grid=None, xc="pbe", compute_f
     if check_socket:
         port = _check_socket(host, port, verbose)
 
-    fhi_calc = get_aims_calculator(dimensions, k_grid, compute_forces)
+    fhi_calc = get_aims_calculator(dimensions, k_grid, xc, compute_forces)
     # Add in PIMD command to get sockets working
     fhi_calc.set(use_pimd_wrapper = [host, port])
 
