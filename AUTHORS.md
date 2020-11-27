@@ -7,4 +7,6 @@ to the software you find here:
 - Igor Kowalec
 - Owain Beynon
 - Lara Kabalan
+- Kush Agrawal
+- Harry Thomas
 
