@@ -1,4 +1,4 @@
-def get_aims_calculator(dimensions, k_grid=None, compute_forces="true"):
+def get_aims_calculator(dimensions, k_grid=None, xc="pbe", compute_forces="true"):
     '''
     Method to return a "default" FHI-aims calculator.
     Note: This file should not be changed without consultation,
@@ -17,21 +17,27 @@ def get_aims_calculator(dimensions, k_grid=None, compute_forces="true"):
     from ase.calculators.aims import Aims
 
     # Default is suitable for molecular calculations
-    fhi_calc =  Aims(xc='pbe',
+    fhi_calc =  Aims(
                      spin='none',
                      relativistic=('atomic_zora','scalar'),
                      compute_forces=compute_forces
                      )
 
+    # Set the XC for the calculation. For LibXC, override_warning_libxc *needs*
+    # to be set first, otherwise we get a termination.
+    if "libxc" in xc:
+        fhi_calc.set(override_warning_libxc="true")
+    fhi_calc.set(xc=xc)
+
     if dimensions == 2:
-        fhi_calc.set(use_dipole_correction='True')
+        fhi_calc.set(use_dipole_correction='true')
 
     if dimensions >= 2:
         fhi_calc.set(k_grid=k_grid) 
 
     return fhi_calc
 
-def get_aims_and_sockets_calculator(dimensions, k_grid=None, compute_forces="true",
+def get_aims_and_sockets_calculator(dimensions, k_grid=None, xc="pbe", compute_forces="true",
                                     # i-Pi settings for sockets
                                     port=None, host=None, logfile='socketio.log',
                                     # Debug setting
