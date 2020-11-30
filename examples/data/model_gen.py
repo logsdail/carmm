@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-def get_example_slab(adsorbate=False, type="CO2"):
+def get_example_slab(adsorbate=False, type="CO2", surface="111"):
     '''
     Example model generation to show tool functionality
     Parameters:
@@ -10,6 +10,8 @@ def get_example_slab(adsorbate=False, type="CO2"):
     type: str
         Two adsorbate types - "CO2" and "2Cu". CO2 behaviour during optimisation
         is unrealistic in EMT.
+    surface: string
+        The surface facet to return
     '''
     from math import sqrt
     from ase.build import molecule, add_adsorbate, fcc111
@@ -22,8 +24,20 @@ def get_example_slab(adsorbate=False, type="CO2"):
     vacuum=10.0
 
     # Create surface
-    slab = fcc111(element, a=lattice_parameter*sqrt(2),
+    if surface == "111":
+        from ase.build import fcc111
+        slab = fcc111(element, a=lattice_parameter*sqrt(2),
+                      size=(width, width, depth), vacuum=vacuum)
+    elif surface == "100":
+        from ase.build import fcc100
+        slab = fcc100(element, a=lattice_parameter * sqrt(2),
                   size=(width, width, depth), vacuum=vacuum)
+    elif surface == "110":
+        from ase.build import fcc110
+        slab = fcc110(element, a=lattice_parameter*sqrt(2),
+                      size=(width, width, depth), vacuum=vacuum)
+    else:
+        raise NotImplementedError("The surface facet requested (" + surface + ") is not available")
 
     # Put adsorbate on the surface
     if adsorbate:
