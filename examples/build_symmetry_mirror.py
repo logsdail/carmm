@@ -15,7 +15,7 @@ def test_build_symmetry_mirror():
     from data.model_gen import get_example_slab as slab
     from carmm.build.neb.symmetry import mirror, translation, rotate_fcc
 
-    for surface_facet in ['111', '100', '110', "210"]:
+    for surface_facet in ['111', '100', '110']:
         # Toy model of CO2 on top of Au FCC(111)
         model = slab(adsorbate=True, surface=surface_facet)
         #view(model)
