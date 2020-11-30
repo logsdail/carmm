@@ -1,5 +1,5 @@
 '''
-This is an example of usage of the distribution function scripts"
+This is an example of usage of the distribution function scripts
 
 This is useful for looking at the distributions of atoms from a given atom in a system
 '''

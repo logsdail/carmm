@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 
 '''
-TODO: Description Needed
+This example shows how to build an alloy surface, both binary and ternary
 
+This is useful when wanting a randomly distributed set of elements through a model
 '''
 
 def test_build_alloy():
