@@ -1,16 +1,21 @@
 #!/usr/bin/env python3
 
-'''
+"""
 Created on Fri 19/06/2020
 
 @author: Igor Kowalec
 
 Example use of a tool for investigating bond dissociation.
 Bond length of interest is fixed and is increased by step_size in each iteration.
+
 Returns a list of Atoms objects with changed positions and constraints applied,
 which can be optimised by the user - toy model of 2 Cu ad-atoms on Au surface.
 
-'''
+Note: Optimisation is disabled by default in test. Enable when working with this
+personally so you can see how everything would work in a practical application
+
+"""
+
 
 def test_dissociation():
     from carmm.build.neb.bond_length_scan import dissociation
@@ -18,30 +23,43 @@ def test_dissociation():
 
     from ase import Atoms
     from ase.build import add_adsorbate
-    from ase.calculators.emt import EMT
-    from ase.optimize import BFGS
+
+    # Optimisation is disabled to ensure quick testing
+    # If you are running this to see the functionality, enable the optimisation
+    optimisation = False
+    if optimisation:
+        from ase.calculators.emt import EMT
+        from ase.optimize import BFGS
 
     # Generate and optimise slab prior to dissociation
-    slab = get_example_slab()
-    adatoms = Atoms("2Cu", positions=[(0,0,0), (2,0,0)])
-    add_adsorbate(slab, adatoms, height=2, position=(slab[0].x, slab[0].y))
-    opt = BFGS(slab)
-    opt.run(fmax=0.05)
+    slab = get_example_slab(adsorbate=True, type="2Cu")
 
-    # move adsorbed Cu atoms (indices 18,19) away from each other
-    atoms_list, distance_list = dissociation(slab, 18, 19, step_size=0.2, n_steps=10, z_bias=True, group_move=[19])
-
-    # Do we need the optimisation for all species as part of the test?
-    # These are quick and when viewed show a nice energy plot of bond dissociation
-    for atoms in atoms_list:
-        atoms.set_calculator(EMT())
-        opt = BFGS(atoms)
+    if optimisation:
+        opt = BFGS(slab)
         opt.run(fmax=0.05)
 
-    #TODO: Add in an assertion test so that functionality can actually be verified.
+    # move adsorbed Cu atoms (indices 18,19) away from each other
+    # if z_bias is True, the distance increment is not exactly step_size value
+    z_bias = True
+    atoms_list, distance_list = dissociation(slab, 18, 19, step_size=0.2, n_steps=10, z_bias=z_bias, group_move=[19])
 
-    #from ase.visualize import view
-    #view(atoms_list)
-    #print(distance_list)
+    # Assertion tests - checking no one has broken the code.
+    assert (len(distance_list) == len(atoms_list) == 10)
+    if z_bias:
+        assert(distance_list[0] - 3.099548 < 1e-5)
+        assert(distance_list[9] - 4.815466 < 1e-5)
+    else:
+        assert(distance_list[0] - 3.084995 < 1e-5)
+        assert(distance_list[9] - 4.884995 < 1e-5)
+
+    if optimisation:
+        for atoms in atoms_list:
+            atoms.calc = EMT()
+            opt = BFGS(atoms)
+            opt.run(fmax=0.05)
+
+        from ase.visualize import view
+        view(atoms_list)
+
 
 test_dissociation()

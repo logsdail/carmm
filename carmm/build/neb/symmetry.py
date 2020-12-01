@@ -160,7 +160,7 @@ def translation(model, axis=0, surface="111", m_m_dist=None):
     # Retain calculator information and constraint
     if model.get_calculator() is not None:
         prev_calc.atoms = model
-    model.set_calculator(prev_calc)
+    model.calc = prev_calc
     model.set_constraint(constraint)
 
     model = sort_by_xyz(model, surface)
@@ -492,7 +492,7 @@ def mirror(model, center_index, plane="y", surf="111", m_m_dist=None):
 
     if model.get_calculator() is not None:
         prev_calc.atoms = model
-        model.set_calculator(prev_calc)
+        model.calc = prev_calc
 
     return model
 

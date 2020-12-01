@@ -51,7 +51,7 @@ def dissociation(atoms, i1, i2, step_size=0.05, n_steps=20, final_distance=None,
     z_diff = 2.0
     # retrieve z-coordinate for z_bias
     if z_bias:
-        if isinstance(z_bias, (int, float)):
+        if isinstance(z_bias, (int, float)) and not isinstance(z_bias, bool):
             surf_z = z_bias - z_diff
         else:
             # make sure it works if no tags are set for atoms
@@ -59,12 +59,13 @@ def dissociation(atoms, i1, i2, step_size=0.05, n_steps=20, final_distance=None,
             surf_z_list = [atom.z for atom in atoms if atom.tag > 0]
             if surf_z_list == []:
                 # Define a list of atom chemical symbols and their count
+                # Take the z coordinate of the most abundant element in the surface slab
                 chem_symbol_count = [[x, atoms.get_chemical_symbols().count(x)] for x in set(atoms.get_chemical_symbols())]
                 # Sort the list by the count
                 def take_second(n):
                     return n[1]
                 chem_symbol_count.sort(key=take_second)
-                #print(chem_symbol_count)
+
                 surf_z_list = [atom.z for atom in atoms if atom.symbol == chem_symbol_count[-1][0]]
             # The maximum z-coordinate of the surface atoms is retrieved
             surf_z = np.amax(surf_z_list)

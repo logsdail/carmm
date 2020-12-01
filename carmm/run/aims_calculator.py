@@ -1,4 +1,4 @@
-def get_aims_calculator(dimensions, k_grid=None):
+def get_aims_calculator(dimensions, k_grid=None, xc="pbe", compute_forces="true"):
     '''
     Method to return a "default" FHI-aims calculator.
     Note: This file should not be changed without consultation,
@@ -10,26 +10,39 @@ def get_aims_calculator(dimensions, k_grid=None):
         Determines whether we have a "gas"-phase (0) or "periodic" structure (2 or 3)
     k_grid: List of integers
         Gives the k-grid sampling in x-, y- and z- direction. e.g. [3, 3, 3]
+    xc: String
+        XC of choice
+    compute_forces: String
+        Determines whether forces are enabled ("true") or not enabled ("false"). 
+
+
+TODO: Reorder inputs so most necessary are first i.e. xc, compute_forces, k_grid (I think?)
     '''
 
     from ase.calculators.aims import Aims
 
     # Default is suitable for molecular calculations
-    fhi_calc =  Aims(xc='pbe',
+    fhi_calc =  Aims(
                      spin='none',
                      relativistic=('atomic_zora','scalar'),
-                     compute_forces="true"
+                     compute_forces=compute_forces
                      )
 
+    # Set the XC for the calculation. For LibXC, override_warning_libxc *needs*
+    # to be set first, otherwise we get a termination.
+    if "libxc" in xc:
+        fhi_calc.set(override_warning_libxc="true")
+    fhi_calc.set(xc=xc)
+
     if dimensions == 2:
-        fhi_calc.set(use_dipole_correction='True')
+        fhi_calc.set(use_dipole_correction='true')
 
     if dimensions >= 2:
-        fhi_calc.set(k_grid=k_grid)
+        fhi_calc.set(k_grid=k_grid) 
 
     return fhi_calc
 
-def get_aims_and_sockets_calculator(dimensions, k_grid=None,
+def get_aims_and_sockets_calculator(dimensions, k_grid=None, xc="pbe", compute_forces="true",
                                     # i-Pi settings for sockets
                                     port=None, host=None, logfile='socketio.log',
                                     # Debug setting
@@ -43,6 +56,10 @@ def get_aims_and_sockets_calculator(dimensions, k_grid=None,
             See get_aims_calculator()
         k_grid: List of integers
             See get_aims_calculator()
+        xc: String
+            See get_aims_calculator()
+	compute_forces: String
+	    See get_aims_calculator()
         port: None or Integer
             The port for connection between FHI-aims and ASE with i-Pi sockets.
             This is fairly arbitrary as long as it doesn't clash with local settings.
@@ -83,7 +100,7 @@ def get_aims_and_sockets_calculator(dimensions, k_grid=None,
     if check_socket:
         port = _check_socket(host, port, verbose)
 
-    fhi_calc = get_aims_calculator(dimensions, k_grid)
+    fhi_calc = get_aims_calculator(dimensions, k_grid, xc, compute_forces)
     # Add in PIMD command to get sockets working
     fhi_calc.set(use_pimd_wrapper = [host, port])
 

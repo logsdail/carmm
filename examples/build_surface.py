@@ -1,8 +1,11 @@
 #!/usr/bin/env python3
 
 '''
-TODO: Description Needed
+This example shows how to get a range of different surfaces for a material
 
+This is useful when making surfaces for adsorption chemistry
+
+TODO: Link with pymatgen, as that has extensive functionality?
 '''
 
 def test_build_surface():

@@ -21,4 +21,23 @@ def test_analyse_bonds():
 
     assert(len(abnormal_count) == 1)
 
+def test_analyse_get_sorted_distances():
+    from carmm.analyse.bonds import get_sorted_distances
+
+    #Build a model
+    from data.model_gen import get_example_slab as slab
+    slab = slab(adsorbate=True)
+
+    distances = get_sorted_distances(slab)
+    # Check values are stil lthe same and ordering is correct
+    assert(len(distances) == 210)
+    assert(1e-5 > abs(distances[0] - 1.178657))
+    assert(1e-5 > abs(distances[-1] - 7.132005))
+
+    # Test plot
+    from carmm.analyse.distribution_functions import plot_distribution_function
+    plt = plot_distribution_function(distances, title='Radial Distribution Function')
+    #plt.show()
+
 test_analyse_bonds()
+test_analyse_get_sorted_distances()

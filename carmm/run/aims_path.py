@@ -7,7 +7,7 @@ def set_aims_command(hpc='hawk', basis_set='light'):
     Parameters:
     hpc: String
         Name of the HPC facility where the jobs is being run
-        Options: 'hawk', 'isambard', 'archer'  ## needs Thomas
+        Options: 'hawk', 'isambard', 'archer', 'young' 
     basis_set: String
         Name of basis set for FHI-aims
         Options: 'light', 'intermediate', 'tight', 'really_tight' etc.
@@ -29,7 +29,8 @@ def set_aims_command(hpc='hawk', basis_set='light'):
     elif hpc.lower() == 'archer':
         fhi_aims_directory="/home3/e05/e05/ajl340/fhi-aims-src-intel/"
         preamble = aprun
-    elif hpc.lower() == 'thomas':
+    #elif hpc.lower() == 'thomas': # Retired Oct 2020
+    elif hpc.lower() == 'young':
         fhi_aims_directory="/home/mmm0170/Software/fhi-aims/"
         preamble = gerun
     else:

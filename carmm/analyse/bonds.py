@@ -1,6 +1,45 @@
+def get_sorted_distances(model, atoms_to_include=None):
+    '''
+    Returns a sorted list of atomic distances in the model, selecting only those atoms of interest
+    Current usage is for molecules and periodic solids (through mic).
+
+    Parameters:
+
+    model: Atoms objects
+        The model from which the RDF is to be plotted
+    atoms_to_include: Integer or List of Integers
+        Atoms that you want included in the RDF
+
+    Returns:
+
+    individual_lengths: List of floats
+        An sorted list of all lengths of bonds between all atoms in the model
+
+
+    '''
+
+    # get all distances in the model
+    distances = model.get_all_distances(mic=True, vector=False)
+
+    # Define atoms_to_include
+    if atoms_to_include is None:
+        atoms_to_include = [i for i in range(len(distances))]
+    elif isinstance(atoms_to_include, int):
+        atoms_to_include = [atoms_to_include]
+
+    individual_lengths = []
+    # This should be condensed to one for loop.
+    for i in range(len(distances)):
+        for j in range(i+1, len(distances[i])):
+            # Check if we are on a row/column for an atom we want.
+            if i in atoms_to_include or j in atoms_to_include:
+                individual_lengths.append(distances[i][j])
+
+    return sorted(individual_lengths)
+
 def analyse_all_bonds(model, verbose=True, abnormal=True):
     '''
-    Returns all abnormal bond types and list of these
+    Analyse bonds and return all abnormal bond types and list of these
     TODO: Make this more bullet proof - what happens if abnormal bonds aren't requested.
     A table of bond distance analysis for the supplied model is also possible
 
@@ -85,12 +124,6 @@ def analyse_bonds(model, A, B, verbose=True, multirow=False):
             np.amin(AB_BondsValues), np.amax(AB_BondsValues)))
 
     return print_AB, AB_Bonds, AB_BondsValues
-
-def print_bond_table_header():
-    print("-" * 40)
-    print('{:<6.5s}{:<6.5s}{:>4.10s}{:^13.10s}{:>4.10s}'.format(
-        "Bond", "Count", "Average", "Minimum", "Maximum"))
-    print("-" * 40)
 
 def search_abnormal_bonds(model, verbose=True):
     '''
@@ -183,4 +216,11 @@ def get_indices_of_elements(list_of_symbols, symbol):
     symbol:
         Symbol to search for
     '''
+
     return [i for i, x in enumerate(list_of_symbols) if x == symbol.capitalize()]
+
+def print_bond_table_header():
+    print("-" * 40)
+    print('{:<6.5s}{:<6.5s}{:>4.10s}{:^13.10s}{:>4.10s}'.format(
+        "Bond", "Count", "Average", "Minimum", "Maximum"))
+    print("-" * 40)

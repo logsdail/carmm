@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 
 '''
-TODO: Description Needed
+This example shows to to build a model where you "cutout" a spherical model from a slab with adsorbate
 
+This is really useful when wanting to do BSSE calculations (as you can't do them with periodic models)
 '''
 
 def test_build_cutout():
