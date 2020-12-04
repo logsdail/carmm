@@ -145,3 +145,50 @@ def plot_distribution_function(data, bins=None, bin_sampling=0.1, title=None):
     #plt.show()
     return plt
 
+def radius_of_gyration(model):
+    ''' creates a radius of gyration for input file of a molecule.
+        A radius of gyration is a measurement of the distribution of atoms
+        in a molecular structure with respect to it's centre of mass
+        TODO: - needs simplifying (some lines may just be repeating and undoing eachother)
+              -generally needs tidying up
+              - assertion test needed
+     '''
+
+    from ase.io import read
+    import numpy as np
+    from ase import atoms
+
+    #creating variables from calulations using ase atoms class
+    atoms = model
+    mass = atoms.get_masses()
+    positions = atoms.get_positions()
+    center_mass = atoms.get_center_of_mass()
+
+    #turn mass into a list to calculate length and overall mass
+    list_mass = mass.tolist()
+    mass_of_molecule = sum(list_mass)
+    l = len(list_mass)
+
+   # calculate radius of gyration for all atoms and placing them in a list
+    new_list = []
+    for i in positions:
+        a = (i - center_mass)**2
+        distance_mass = a/mass_of_molecule
+        list_1 = distance_mass.tolist()
+        new_list.append(list_1)
+
+
+   # turn lists into arrays to perform vector calculus
+
+    vector1 = np.array(list_mass)
+    vector2 = np.array(new_list)
+    vector3 = np.array_split(vector1, l)
+
+    # multiply the mass of atoms with it's position with respect to entre of mass
+    c = vector3 * vector2
+
+    #sum the coordinates for all atoms
+    coordinates = sum(c)
+    radius_gyration = sum(coordinates)
+    print(f"radius of gyration is {radius_gyration} Å")
+
