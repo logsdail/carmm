@@ -34,5 +34,17 @@ def test_analyse_average_distribution_function():
     assert(len(mean) == 420)
     assert(1e-5 > abs(sum(mean)-1754.778323))
 
+
+def test_radius_of_gyration():
+    from carmm.analyse.distribution_functions import radius_of_gyration
+
+    # build model
+    from ase.build import molecule
+    water = molecule('H2O')
+    radius_of_gyration(water)
+
+
 test_analyse_radial_distribution_function()
 test_analyse_average_distribution_function()
+test_radius_of_gyration()
+
