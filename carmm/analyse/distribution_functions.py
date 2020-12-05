@@ -169,12 +169,11 @@ def radius_of_gyration(model):
     mass_of_molecule = sum(list_mass)
     l = len(list_mass)
 
-   # calculate radius of gyration for all atoms and placing them in a list
+   # calculate disance from centre of mass for all atoms and placing them in a list
     new_list = []
     for i in positions:
         a = (i - center_mass)**2
-        distance_mass = a/mass_of_molecule
-        list_1 = distance_mass.tolist()
+        list_1 = a.tolist()
         new_list.append(list_1)
 
 
@@ -184,11 +183,13 @@ def radius_of_gyration(model):
     vector2 = np.array(new_list)
     vector3 = np.array_split(vector1, l)
 
-    # multiply the mass of atoms with it's position with respect to entre of mass
-    c = vector3 * vector2
+    # multiply the mass of atoms with it's position with respect to centre of mass
+    # and divide by entire maths of molecule
+    c = (vector3 * vector2) / mass_of_molecule
 
     #sum the coordinates for all atoms
     coordinates = sum(c)
-    radius_gyration = sum(coordinates)
-    print(f"radius of gyration is {radius_gyration} Å")
+    radius_gyration = np.sqrt(sum(coordinates))
+    return radius_gyration
+
 
