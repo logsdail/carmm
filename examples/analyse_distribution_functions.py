@@ -41,7 +41,9 @@ def test_radius_of_gyration():
     # build model
     from ase.build import molecule
     water = molecule('H2O')
-    radius_of_gyration(water)
+    rog = radius_of_gyration(water)
+    print(rog)
+
 
 
 test_analyse_radial_distribution_function()
