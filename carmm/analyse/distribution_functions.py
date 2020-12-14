@@ -148,7 +148,10 @@ def plot_distribution_function(data, bins=None, bin_sampling=0.1, title=None):
 def radius_of_gyration(model):
     ''' creates a radius of gyration for input file of a molecule.
         A radius of gyration is a measurement of the distribution of atoms
-        in a molecular structure with respect to it's centre of mass
+        in a molecular structure with respect to it's centre of mass: 
+
+        radius_of_gyration^2 = SUM(mass_atom(atom_position - centre_mass_position)) / mass_molecule
+
         TODO: - needs simplifying (some lines may just be repeating and undoing eachother)
               -generally needs tidying up
               - assertion test needed
