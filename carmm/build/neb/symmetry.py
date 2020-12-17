@@ -194,7 +194,9 @@ def sort_by_xyz(model, surface):
 
     Parameters:
     model: Atoms object
-        periodic surface model, so far FCC100, 111, 110 supported
+        Periodic surface model, so far supported are monometallic
+        FCC "111", "110", "100"
+        HCP "0001"
     surface: string
         Face centered cubic low index surfce - "111", "110" or "110"
     '''
@@ -203,21 +205,12 @@ def sort_by_xyz(model, surface):
     import copy
     model = copy.deepcopy(model)
 
-    if model.get_calculator() is not None:
-        # Retrieve forces for forces array adjustments
-        calc = model.get_calculator()
-        calc_results = calc.results
-        if "forces" in calc_results:
-            f = calc_results["forces"]
-        else:
-            f = []
-
     # Sorting mechanism for Y tags
     def sort_y_tag(xyz, surface):
         import numpy as np
         # TODO: shortest_AB could be extracted from bottom fixed layer for
         #    consistency, but poses problems if layers are not the same
-        if surface == "111":
+        if surface in ["111", "0001"]:
             y_tag = np.int(np.round((2*xyz[1])/(
                         np.sin(np.radians(60))*np.amin(shortest_ABs))))
         if surface == "110":
@@ -259,10 +252,6 @@ def sort_by_xyz(model, surface):
                     index_by_xyz += [index]
 
     model = model[index_by_xyz]
-    # Ensure function works if force information empty and rearrange
-    # TODO: CHECK IF THIS IS NECESSARY
-    if model.get_calculator() is not None:
-        f = f[index_by_xyz]
 
     return model
 
