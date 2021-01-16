@@ -17,6 +17,7 @@ def set_aims_command(hpc='hawk', basis_set='light'):
     mpirun = "time mpirun -np $SLURM_NTASKS "
     aprun = "time aprun -n $NPROCS "
     gerun = "gerun "
+    srun = "srun --distribution=block:block --hint=nomultithread"
     executable = "bin/aims.$VERSION.scalapack.mpi.x"
     species = "species_defaults/"+basis_set
 
@@ -29,6 +30,9 @@ def set_aims_command(hpc='hawk', basis_set='light'):
     elif hpc.lower() == 'archer':
         fhi_aims_directory="/home3/e05/e05/ajl340/fhi-aims-src-intel/"
         preamble = aprun
+    elif hpc.lower() == 'archer2':
+        fhi_aims_directory="/work/e05/e05/ajl340/software/fhi-aims/"
+        preamble = srun
     #elif hpc.lower() == 'thomas': # Retired Oct 2020
     elif hpc.lower() == 'young':
         fhi_aims_directory="/home/mmm0170/Software/fhi-aims/"
