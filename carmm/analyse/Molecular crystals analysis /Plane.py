@@ -12,18 +12,22 @@ neighborList.update(atoms)
 matrix = neighborList.get_connectivity_matrix()
 n_components, component_list = sparse.csgraph.connected_components(matrix)
 
+
+
 molecules = []
 for n in range(n_components):
     atomsIdxs = [i for i in range(len(component_list)) if component_list[i] == n]
     print("The following atoms are part of molecule {}: {}".format(n, atomsIdxs))
     molecules.append(atomsIdxs)
 
+
+print(atoms.symbols.get_chemical_formula())
 print(molecules[0])
 print(type(molecules[0]))
+#print(molecules.symbols.get_chemical_formula('hill', 'empirical'))
 
-
-#idx = 0
-#while idx <= 251:
+# idx = 0
+# while idx <= 251:
 #    atomsIdx = component_list[idx]
 #    print("There are {} molecules in the system".format(n_components))
 #    print("Atom {} is part of molecule {}".format(idx, atomsIdx))
