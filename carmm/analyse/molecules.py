@@ -1,7 +1,7 @@
 def calculate_molecules(atoms, print_output=False):
     '''
     Returns information on the molecules in the system. Needs refinement!
-    TODO: Organise a return statement and an example case
+    
     
     Parameters:
     atoms: Atoms object
