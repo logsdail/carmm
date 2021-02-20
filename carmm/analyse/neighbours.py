@@ -1,9 +1,3 @@
-import numpy as np
-from ase.io import read, write
-
-from ase import Atoms
-
-
 def neighbour_cutout_sphere(atoms, centre, distance_cutoff=5.0):
     '''
     Returns a spherical cutout of a structure
