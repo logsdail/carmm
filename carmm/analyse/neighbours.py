@@ -38,28 +38,41 @@ def neighbour_cutout_sphere(atoms, centre, distance_cutoff=5.0):
 
 def neighbours(atoms, centre, nearest_neighbors):
     ''' Returns a list of indices of atomic neighbors from a central atom
-     TODO: Needs simplifying
-     TODO: made into a function but now it's broken, will need to have a look
+    TODO: Needs simplifying
+    TODO: made into a function but now it's broken, will need to have a look
 
-     Parameters:
-         atoms : Atoms object
-                Input structure to count neighbours
-        centre : Index of atom to start counting from
+    Parameters:
+    atoms : Atoms object
+        Input structure to count neighbours
+    centre : Integer
+        Index of atom to start counting from
+    nearest_neighbors : Integer
+        Size of the neighbour shell, 1st neighbours, 2nd neighbours ....
 
-        nearest_neighbors : Size of the neihgbour shell, 1st neighbours, 2nd neighbours ....
-     '''
-    all_neighbours = [0]
-    #Choose atom index to start counting neighbours from
+    Returns:
+        List of all atoms within specified neighbour distances
+    '''
+
+    # Object storing all neighbour information
+    all_neighbours = [centre]
+    # Object to store neighbours in "current" shell - start with 0th shell
     current_neighbors = [centre]
-    # Creates an emtpy list an appends atom indices whose distances are x amount nearest neighbours away from centre
+
+    # Creates an emtpy list an appends atom indices whose distances are
+    # x amount nearest neighbours away from centre
     for neighbors in range(nearest_neighbors):
         new_neighbors = []
-        for i in current_neighbors:
-            list = neighbour_cutout_sphere(atoms, centre=i, distance_cutoff=2.5)
-            for index in list:
-                if index not in all_neighbours:
-                    atoms.numbers[index] = neighbors
-                    new_neighbors.append(index)
-                    all_neighbours.append(index)
+        for atom in current_neighbors:
+            # TODO: Make the cutoff dynamic!
+            neighbour_list = neighbour_cutout_sphere(atoms, centre=atom, distance_cutoff=3)
+            for neighbour_to_atom in neighbour_list:
+                if neighbour_to_atom not in all_neighbours:
+                    # What is this?
+                    # atoms.numbers[index] = neighbors
+                    new_neighbors.append(neighbour_to_atom)
+                    all_neighbours.append(neighbour_to_atom)
+
+        # Copy the list of new neighbours to be our current "shell"
         current_neighbors = new_neighbors.copy()
 
+    return all_neighbours
