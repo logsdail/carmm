@@ -9,4 +9,5 @@ to the software you find here:
 - Lara Kabalan
 - Kush Agrawal
 - Harry Thomas
+- Jack Warren
 
