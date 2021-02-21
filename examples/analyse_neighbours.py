@@ -1,8 +1,8 @@
 def test_neighbours():
     '''
-    Test neighgbour function
+    Test neighbour function
 
-    TODO: function is a bit broken, running the following gives output 'None'
+    TODO: Check the given neighbours are correct!
     '''
     from carmm.analyse.neighbours import neighbours
     # Build model
