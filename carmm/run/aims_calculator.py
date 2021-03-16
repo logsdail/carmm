@@ -76,7 +76,7 @@ def get_aims_and_sockets_calculator(dimensions, k_grid=None, xc="pbe", compute_f
             For testing of the interface when searching for empty ports.
         codata_warning: Boolean
             Warn the user about Hartree to eV conversion being performed in ASE rather than FHI-aims.
-            ASE uses CODATA 2018 and FHI-aims uses CODATA 2002 which yields energy discrepancies.
+            ASE uses CODATA 2014 and FHI-aims uses CODATA 2002 which yields energy discrepancies.
             The warning message can be turned off if set to False.
 
     Returns:
@@ -116,7 +116,7 @@ def get_aims_and_sockets_calculator(dimensions, k_grid=None, xc="pbe", compute_f
         print("You are using i-Pi based socket connectivity between ASE and FHI-aims.")
         print("The communicated energy in Hartree units will be converted to eV in ASE and not FHI-aims.")
         print("The eV/Hartree unit in FHI-aims is given by CODATA 2002 (Web Version 4.0 2003-12-09), Peter J. Mohr, Barry N. Taylor")
-        print("ASE uses CODATA 2018, thus the energy in eV from ASE and the FHI-aims outputs will differ.")
+        print("ASE uses CODATA 2014, thus the energy in eV from ASE and the FHI-aims outputs will differ.")
         print("Please be consistent in the unit conversion for data analysis!")
         print("You can turn off this message by setting 'codata_warning' keyword to False.")
 
