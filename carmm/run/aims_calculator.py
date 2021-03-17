@@ -1,4 +1,4 @@
-def get_aims_calculator(dimensions, k_grid=None, xc="pbe", compute_forces="true"):
+def get_aims_calculator(dimensions, k_grid=None, xc="pbe", compute_forces="true", **kwargs):
     '''
     Method to return a "default" FHI-aims calculator.
     Note: This file should not be changed without consultation,
@@ -14,9 +14,11 @@ def get_aims_calculator(dimensions, k_grid=None, xc="pbe", compute_forces="true"
         XC of choice
     compute_forces: String
         Determines whether forces are enabled ("true") or not enabled ("false").
-
+    **kwargs:
+        Any other keyword arguments that a user wants to set.
 
 TODO: Reorder inputs so most necessary are first i.e. xc, compute_forces, k_grid (I think?)
+  AL, March 2021: Doesn't matter - if named, the arguments are dynamic (i.e. can be any order)
     '''
 
     from ase.calculators.aims import Aims
@@ -25,7 +27,8 @@ TODO: Reorder inputs so most necessary are first i.e. xc, compute_forces, k_grid
     fhi_calc =  Aims(
                      spin='none',
                      relativistic=('atomic_zora','scalar'),
-                     compute_forces=compute_forces
+                     compute_forces=compute_forces,
+                     **kwargs
                      )
 
     # Set the XC for the calculation. For LibXC, override_warning_libxc *needs*
@@ -42,24 +45,21 @@ TODO: Reorder inputs so most necessary are first i.e. xc, compute_forces, k_grid
 
     return fhi_calc
 
-def get_aims_and_sockets_calculator(dimensions, k_grid=None, xc="pbe", compute_forces="true",
+def get_aims_and_sockets_calculator(dimensions, 
                                     # i-Pi settings for sockets
                                     port=None, host=None, logfile='socketio.log',
                                     # Debug setting
-                                    check_socket=True, verbose=False, codata_warning=True):
+                                    check_socket=True, verbose=False, codata_warning=True,
+                                    # Passthrough of other objects for calculator
+                                    **kwargs):
     '''
     Method to return a sockets calculator (for i-Pi based socket connectivity)
     and also an associated FHI-aims calculator for ASE
 
     Args:
         dimensions: Integer
-            See get_aims_calculator()
-        k_grid: List of integers
-            See get_aims_calculator()
-        xc: String
-            See get_aims_calculator()
-	compute_forces: String
-	    See get_aims_calculator()
+            Dimensions is _not_ used in this routine, but we make it necessary so
+            the passthrough isn't problematic for inexperienced users. See get_aims_calculator()
         port: None or Integer
             The port for connection between FHI-aims and ASE with i-Pi sockets.
             This is fairly arbitrary as long as it doesn't clash with local settings.
@@ -104,7 +104,8 @@ def get_aims_and_sockets_calculator(dimensions, k_grid=None, xc="pbe", compute_f
     if check_socket:
         port = _check_socket(host, port, verbose)
 
-    fhi_calc = get_aims_calculator(dimensions, k_grid, xc, compute_forces)
+    # **kwargs is a passthrough of keyword arguments
+    fhi_calc = get_aims_calculator(dimensions, **kwargs)
     # Add in PIMD command to get sockets working
     fhi_calc.set(use_pimd_wrapper = [host, port])
 
