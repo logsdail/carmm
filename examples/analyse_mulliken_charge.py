@@ -12,7 +12,8 @@ def test_analyse_mulliken_charge():
 
     from carmm.analyse.mulliken import extract_mulliken_charge
 
-    # This is the filename that would need changing for each FHI-aims input e.g. fhiaims.hawk.output.log.XXXXXXX
+    # This is the filename needed is the aims.out file not the fhiaims.hawk.output.log.XXXXXXX
+
     filename = "data/CO/co_light.log"
 
     from ase.io import read
@@ -31,8 +32,8 @@ def test_analyse_mulliken_charge():
     # The classical colour map would be bwr = Blue - White - Red; to get this working you must
     # reverse the min/max aspects of the colour scale, as the default (unusual) colours are -ve = blue, +ve = red.
     ### ENABLE TO VIEW
-    #from ase.visualize import view
-    #view(atoms)
+    from ase.visualize import view
+    view(atoms)
 
     # Confirm we are reading the Mulliken Charge correctly
     assert(mulliken_charge == ['0.088700', '-0.088700'])
