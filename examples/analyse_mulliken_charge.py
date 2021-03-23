@@ -12,7 +12,7 @@ def test_analyse_mulliken_charge():
 
     from carmm.analyse.mulliken import extract_mulliken_charge
 
-    # This is the filename needed is the aims.out file not the fhiaims.hawk.output.log.XXXXXXX
+    # The filename needed is the aims.out file not the fhiaims.hawk.output.log.XXXXXXX as said previously
 
     filename = "data/CO/co_light.log"
 
