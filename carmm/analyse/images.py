@@ -1,13 +1,10 @@
-def write_to_povray(atoms, fname, parameters={}):
+def write_to_povray():
     '''
     Saves the incoming atoms object to a povray file
 
-    Parameters:
-
-    atoms: Atoms object or trajectory of individual atoms
-        Structure to write as Povray
-    fname: String
-        Output file name, no file extension necessary.
+    TODO: As the povray file generation and rendering
+    have been reworked in recent ASE version this function is
+    no longer necessary. A jupyter notebook would be more suitable
+    to explain write_pov().render() syntax.
     '''
-    from ase.io import write
-    write(fname+'.pov', atoms, run_povray=True, **parameters)
+    return None
