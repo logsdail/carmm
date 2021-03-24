@@ -150,10 +150,9 @@ def radius_of_gyration(model):
         A radius of gyration is a measurement of the distribution of atoms
         in a molecular structure with respect to it's centre of mass: 
 
-        radius_of_gyration^2 = SUM(mass_atom(atom_position - centre_mass_position)) / mass_molecule
+        radius_of_gyration^2 = SUM(mass_atom(atom_position - centre_mass_position)) / mass_of_molecule
 
-        TODO: - needs simplifying (some lines may just be repeating and undoing eachother)
-              -generally needs tidying up
+        TODO: - further tidying up
               - assertion test needed
      '''
 
@@ -161,38 +160,24 @@ def radius_of_gyration(model):
     import numpy as np
     from ase import atoms
 
-    #creating variables from calulations using ase atoms class
+    # creating variables from calulations using ase atoms class
     atoms = model
-    mass = atoms.get_masses()
-    positions = atoms.get_positions()
+    mass_array = atoms.get_masses()
+    position_array = atoms.get_positions()
     center_mass = atoms.get_center_of_mass()
 
-    #turn mass into a list to calculate length and overall mass
-    list_mass = mass.tolist()
-    mass_of_molecule = sum(list_mass)
-    l = len(list_mass)
+    # calculates mass of molecule
+    mass_of_molecule = np.sum(mass_array)
 
-   # calculate disance from centre of mass for all atoms and placing them in a list
-    new_list = []
-    for i in positions:
-        a = (i - center_mass)**2
-        list_1 = a.tolist()
-        new_list.append(list_1)
-
-
-   # turn lists into arrays to perform vector calculus
-
-    vector1 = np.array(list_mass)
-    vector2 = np.array(new_list)
-    vector3 = np.array_split(vector1, l)
-
-    # multiply the mass of atoms with it's position with respect to centre of mass
-    # and divide by entire maths of molecule
-    c = (vector3 * vector2) / mass_of_molecule
-
-    #sum the coordinates for all atoms
-    coordinates = sum(c)
-    radius_gyration = np.sqrt(sum(coordinates))
+    # calculate distance from centre of mass for all atoms and multiplies them by the mass of their respective atom
+    lg = len(position_array)
+    m = np.zeros(shape=(lg,3))
+    for i in range(lg):
+        m[i] = mass_array[i] * (position_array[i] - center_mass)**2
+		
+    # calculates the radius of gyration then returns the value
+    rog2 = np.sum(m) / mass_of_molecule
+    radius_gyration = np.sqrt(rog2)
     return radius_gyration
 
 
