@@ -175,6 +175,7 @@ def get_k_grid(model, sampling_density, verbose=False):
         accuracy of the periodic calculation. Value is a fraction between
         0 and 1, unit is /Å.
     """
+    import math
     # define k_grid sampling density /A
     k_grid = (math.ceil((1/sampling_density)*(1/model.get_cell()[0][0])),
           math.ceil((1/sampling_density)*(1/model.get_cell()[1][1])),
