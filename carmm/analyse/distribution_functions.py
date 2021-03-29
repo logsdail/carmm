@@ -1,4 +1,4 @@
-def radial_distribution_function(model, radius, position):
+def radial_distribution_function(model, radius, position, verbose=False):
     '''
     Returns a plot of the distribution of the distance between atoms up to given radius
     Plot is currently a frequency vs distance. Current usage is for periodic solids
@@ -17,16 +17,20 @@ def radial_distribution_function(model, radius, position):
     distances: List of floats
         An sorted list of all lengths of bonds between the central atom and others in the desired radius
 
-    TODO:   - Decide what this offers over distance_distribution_function, and make this clear.
-                - It might be that we can just integrate the supercell creating into ddf.
-            - Gaussian over the histogram? This is a plotting aspect
     '''
 
     from carmm.analyse.bonds import get_sorted_distances
+    from math import ceil
 
-    # create a super cell of the model to ensure we get all interactions within radius
-    # TODO: This needs to be more rigorous e.g. check if cell is big enough
-    super_cell = model.repeat([2, 2, 2])
+    # Create a super cell of the model big enough to get all interactions within radius
+    lattice_vectors = model.get_cell_lengths_and_angles()[:3]
+    super_cell_repeat = [int(ceil((radius/lattice_vectors[0])*2)),
+                         int(ceil((radius/lattice_vectors[1])*2)),
+                         int(ceil((radius/lattice_vectors[2])*2))]
+    if verbose:
+        print("A, B and C vector lengths = ", lattice_vectors)
+        print("Super cell expansion necessary to accommodate radius = ", super_cell_repeat)
+    super_cell = model.repeat(super_cell_repeat)
 
     distances_all = get_sorted_distances(super_cell, position)
     distances = [ distance for distance in distances_all if distance < radius ]
