@@ -45,7 +45,7 @@ TODO: Reorder inputs so most necessary are first i.e. xc, compute_forces, k_grid
 
     return fhi_calc
 
-def get_aims_and_sockets_calculator(dimensions, 
+def get_aims_and_sockets_calculator(dimensions,
                                     # i-Pi settings for sockets
                                     port=None, host=None, logfile='socketio.log',
                                     # Debug setting
