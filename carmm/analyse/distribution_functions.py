@@ -37,10 +37,10 @@ def radial_distribution_function(model, radius, position, verbose=False):
 
     return sorted(distances)
 
-def average_distribution_function(trajectory, samples=10, bin_sampling=0.1, plot=False):
+def average_distribution_function(trajectory, samples=10):
     '''
     Plots the average distribution function of the last N steps of an MD trajectory
-    TODO: Is this radial or distance? Should it be an option which to use?
+    TODO: This is distance based - can we adapt it to also allow radial?
     
     Parameters:
     
@@ -51,67 +51,34 @@ def average_distribution_function(trajectory, samples=10, bin_sampling=0.1, plot
 
     Returns:
 
-    Mean: List of floats
-        The
-
-    TODO: -OB: looks pretty complicated with all the stored variables, can this be done in a loop?
-               All the different functions have a plot at the end, create a function that plots and can just be added
+    all_data: List of floats
+        A list containing _all_ of the distances encountered in the sampled trajectories
+    snapshots: List of list of floats
+        A list containing the list of floats for distances measured in each specific snapshot analysed
 
     '''
 
-    from matplotlib import pyplot as plt
-    from math import ceil
-    import numpy as np
-    #######
     from carmm.analyse.bonds import get_sorted_distances
 
-    # Clear plot axes
-    plt.cla()
-
-    # Suggested update so we can use loops:
-    # snapshots[0-n] - snapshots
-    # snapshots_d[0-n] - Distance distribution of snapshots
-    # snapshots_ds[0-n] - Distance snapshots sorted from lowest to highest
-    
+    # snapshots[0-n] - Distance snapshots sorted from lowest to highest
     snapshots = []
-    snapshots_d = []
-    snapshots_ds = []
     
     # Read in all Atoms objects to be sampled
     for i in range(samples):
-        snapshots.append(trajectory[(-i)-1])
-        # Remove any constraints, as these hamper analysis
-        del snapshots[i].constraints
+        model = trajectory[(-i)-1].copy()
+        # Remove any constraints, as these hamper analysis.
+        # Can't see why this is needed? A more verbose comment would help. TODO
+        del model.constraints
         # Calculate distribution function
-        snapshots_d.append(get_sorted_distances(snapshots[i]))
-        # Sort data. Is this needed?
-        snapshots_ds.append(sorted(snapshots_d[i]))
-        # Create plot data
-        y, binEdges = np.histogram(snapshots_ds[i], bins=ceil(max(snapshots_ds[i]) / bin_sampling), density=True)
-        bincenters = 0.5 * (binEdges[1:] + binEdges[:-1])
-        #colors=['red','blue'] # Used for testing
-        #pl.plot(bincenters, y, '-', color=colors[i], label=str(i))
-        plt.plot(bincenters, y, '-', color='#808080')
+        snapshots.append(get_sorted_distances(model))
 
     # Plot mean. This need double checking with something known e.g. H2O
-    mean = [item for atoms_object in snapshots_ds for item in atoms_object]
-    y, binEdges = np.histogram(mean, bins=ceil(max(mean) / bin_sampling), density=True)
-    bincenters = 0.5 * (binEdges[1:] + binEdges[:-1])
-    plt.plot(bincenters, y, '-', label='Mean', color="#000000")
+    all_data = [item for atoms_object in snapshots for item in atoms_object]
 
-    if plot:
-        plt.xlabel('r/Å', fontsize=15)
-        plt.ylabel('g(r)', fontsize=15)
-        plt.xticks(fontsize=15)
-        plt.yticks(fontsize=15)
-        plt.title('Last '+str(samples)+' Snapshots', fontsize=15)
-        plt.legend()
-        plt.show()
+    # Returning the mean and the snapshot data.
+    return all_data, snapshots
 
-    # Something should be returned.
-    return mean
-
-def plot_distribution_function(data, bins=None, bin_sampling=0.1, title=None):
+def plot_distribution_function(data, bins=None, bin_sampling=0.1, title=None, density=False, **kwargs):
     '''
     Generic plotter
 
@@ -125,9 +92,10 @@ def plot_distribution_function(data, bins=None, bin_sampling=0.1, title=None):
         The separation between bin boundaries
     title: String
         Name to place at the top of the plot
+    **kwargs: Additional arguments
+        These are passed straight through to the plotting function
 
-    TODO: Graphs need to start at zero by default
-          We should edit the aces object, not the plot itself (see graphs.py, specifically mulliken related)
+    TODO: We should edit the axes object, not the plot itself (see graphs.py, specifically mulliken related)
     '''
     from matplotlib import pyplot as plt
     from numpy import histogram
@@ -137,9 +105,12 @@ def plot_distribution_function(data, bins=None, bin_sampling=0.1, title=None):
         from math import ceil
         bins = ceil(max(data) / bin_sampling)
 
-    y, binEdges = histogram(data, bins=bins)
+    y, binEdges = histogram(data, bins=bins, density=density)
     bincenters = 0.5 * (binEdges[1:] + binEdges[:-1])
-    plt.plot(bincenters, y, '-')
+    plt.plot(bincenters, y, '-', **kwargs)
+    plt.xlim(xmin=0)
+
+    # Aesthetic
     plt.xlabel('r/Å', fontsize=15)
     plt.ylabel('g(r)', fontsize=15)
     plt.xticks(fontsize=15)
@@ -147,7 +118,6 @@ def plot_distribution_function(data, bins=None, bin_sampling=0.1, title=None):
     plt.title(title, fontsize=15)
 
     # This should return the axis object, not enable it.
-    #plt.show()
     return plt
 
 def radius_of_gyration(model):
@@ -159,8 +129,6 @@ def radius_of_gyration(model):
 
         TODO: - further tidying up
      '''
-
-    from ase.io import read
     import numpy as np
 
     # creating variables from calulations using ase atoms class
@@ -177,9 +145,10 @@ def radius_of_gyration(model):
     for i in range(lg):
         m[i] = mass_array[i] * (position_array[i] - center_mass)**2
 		
-    # calculates the radius of gyration then returns the value
+    # calculates the radius of gyration
     rog2 = np.sum(m) / mass_of_molecule
     radius_gyration = np.sqrt(rog2)
+
     return radius_gyration
 
 
