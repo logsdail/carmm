@@ -177,9 +177,9 @@ def get_k_grid(model, sampling_density, verbose=False):
     """
     import math
     # define k_grid sampling density /A
-    k_grid = (math.ceil((1/sampling_density)*(1/model.get_cell()[0][0])),
-          math.ceil((1/sampling_density)*(1/model.get_cell()[1][1])),
-          1)
+    k_grid = (math.ceil((1/sampling_density)*(1/model.get_cell()[0][0])), # in x
+          math.ceil((1/sampling_density)*(1/model.get_cell()[1][1])), #in y
+          math.ceil((1/sampling_density)*(1/model.get_cell()[2][2]))) # in z
     if verbose:
         print("Based on lattice xyz dimensions", round(model.get_cell()[0][0], 2),"x", round(model.get_cell()[1][1], 2), "x",  round(model.get_cell()[2][2], 2))
         print("and", str(sampling_density), "sampling density the k-grid chosen for periodic calculation is" , str(k_grid)+".")
