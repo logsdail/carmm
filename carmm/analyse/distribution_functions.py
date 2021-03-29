@@ -51,18 +51,19 @@ def average_distribution_function(trajectory, samples=10, bin_sampling=0.1, plot
         The
 
     TODO: -OB: looks pretty complicated with all the stored variables, can this be done in a loop?
-               AL: done? We need a regression test though - and comparison against the standalone script.
                All the different functions have a plot at the end, create a function that plots and can just be added
 
     '''
 
     from matplotlib import pyplot as plt
-    plt.cla()
     from math import ceil
     import numpy as np
     #######
     from carmm.analyse.bonds import get_sorted_distances
-    
+
+    # Clear plot axes
+    plt.cla()
+
     # Suggested update so we can use loops:
     # snapshots[0-n] - snapshots
     # snapshots_d[0-n] - Distance distribution of snapshots
@@ -153,18 +154,15 @@ def radius_of_gyration(model):
         radius_of_gyration^2 = SUM(mass_atom(atom_position - centre_mass_position)) / mass_of_molecule
 
         TODO: - further tidying up
-              - assertion test needed
      '''
 
     from ase.io import read
     import numpy as np
-    from ase import atoms
 
     # creating variables from calulations using ase atoms class
-    atoms = model
-    mass_array = atoms.get_masses()
-    position_array = atoms.get_positions()
-    center_mass = atoms.get_center_of_mass()
+    mass_array = model.get_masses()
+    position_array = model.get_positions()
+    center_mass = model.get_center_of_mass()
 
     # calculates mass of molecule
     mass_of_molecule = np.sum(mass_array)
