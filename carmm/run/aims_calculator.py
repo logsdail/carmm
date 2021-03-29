@@ -194,7 +194,7 @@ def get_k_grid(model, sampling_density, surface=False, verbose=False):
         k_z = 1
     else:
         k_z = math.ceil((1/sampling_density)*(1/z))
-    print(z, 1/z, (1/sampling_density), (1/sampling_density)*(1/z), math.ceil((1/sampling_density)*(1/z)))
+    
 
     k_grid = (k_x, k_y, k_z)
 
