@@ -176,12 +176,14 @@ def get_k_grid(model, sampling_density, verbose=False):
         0 and 1, unit is /Å.
     """
     import math
+    import numpy as np
     # define k_grid sampling density /A
-    k_grid = (math.ceil((1/sampling_density)*(1/model.get_cell()[0][0])), # in x
-          math.ceil((1/sampling_density)*(1/model.get_cell()[1][1])), #in y
-          math.ceil((1/sampling_density)*(1/model.get_cell()[2][2]))) # in z
+    k_grid = (math.ceil((1/sampling_density)*(1/np.linalg.norm(model.get_cell()[0]))), # in x
+          math.ceil((1/sampling_density)*(1/np.linalg.norm(model.get_cell()[1]))), #in y
+          math.ceil((1/sampling_density)*np.linalg.norm(model.get_cell()[2]))) # in z
     if verbose:
         print("Based on lattice xyz dimensions", round(model.get_cell()[0][0], 2),"x", round(model.get_cell()[1][1], 2), "x",  round(model.get_cell()[2][2], 2))
         print("and", str(sampling_density), "sampling density the k-grid chosen for periodic calculation is" , str(k_grid)+".")
+        print()
 
     return k_grid
