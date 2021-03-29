@@ -156,3 +156,31 @@ def _check_socket(host, port, verbose=False):
     if verbose: print("Port #" + str(port) + " is available.")
 
     return port
+
+
+def get_k_grid(model, sampling_density, verbose=False):
+    """
+    Based converged value of reciprocal space sampling provided,
+    this function analyses the xyz-dimensions of the simulation cell
+    and returns the minimum k-grid as a tuple that can be used
+    as a value for the k_grid keyword in the Aims calculator.
+    This function allows to maintain consistency in input
+    for variable supercell sizes.
+
+    Parameters:
+    model: Atoms object
+        Periodic model that requires k-grid for calculation in FHI-aims.
+    sampling_density: float
+        Converged value of minimum reciprocal space sampling required for
+        accuracy of the periodic calculation. Value is a fraction between
+        0 and 1, unit is /Å.
+    """
+    # define k_grid sampling density /A
+    k_grid = (math.ceil((1/sampling_density)*(1/model.get_cell()[0][0])),
+          math.ceil((1/sampling_density)*(1/model.get_cell()[1][1])),
+          1)
+    if verbose:
+        print("Based on lattice xyz dimensions", round(model.get_cell()[0][0], 2),"x", round(model.get_cell()[1][1], 2), "x",  round(model.get_cell()[2][2], 2))
+        print("and", str(sampling_density), "sampling density the k-grid chosen for periodic calculation is" , str(k_grid)+".")
+
+    return k_grid
