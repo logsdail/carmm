@@ -1,36 +1,35 @@
-def get_lowest_distances(fn, A_mol, B_mol):
-    '''
-    Uses molecules.py to separate fn into molecules then measures the shortest distances between.
-    Indented for Periodic systems
 
-    Parameters:
-     fn : input file e.g. aims.out
 
-    Still very much a work in progress so go easy on it
-    '''
     # Load Modules
-    from ase.io import read
     import numpy as np
-    from ase.visualize import view
     from ase.geometry.analysis import Analysis
-    # Read in input
-    atoms = read(filename)
+
 
     # loads molecules function to detect discrete molecules in atoms object
     analysis = Analysis(atoms)
     from carmm.analyse.molecules import calculate_molecules
     molecules = calculate_molecules(atoms)
 
-    # Gets all the distances in the model
-    distances = atoms.get_all_distances(mic=True, vector=False)
     # Makes the molecules list into a *_mol atoms like object
     A = molecules[0]
     B = molecules[1]
 
     A_mol = atoms[A]
     B_mol = atoms[B]
-    #You can view these objects separated from the rest of your system
-    #view(*_mol)
+    #You can view these objects separated from the rest of your system using view
+
+
+    def get_lowest_distances(A_mol, B_mol,):
+        '''
+        Uses molecules.py to separate fn into molecules then measures the shortest distances between.
+        Indented for Periodic systems
+
+        Parameters:
+         A_mol: Atoms object created by molecules
+         B_mol
+
+        Still very much a work in progress so go easy on it
+                '''
 
     # Loops measuring the shortest distance from every atom in A to B
         measured = []
@@ -45,6 +44,6 @@ def get_lowest_distances(fn, A_mol, B_mol):
         return lowest_distances
 
 
-print(get_lowest_distances(A_mol, B_mol))
+print(get_lowest_distances(A_mol, 1))
 
 view(atoms)
