@@ -16,7 +16,7 @@
 
     A_mol = atoms[A]
     B_mol = atoms[B]
-    #You can view these objects separated from the rest of your system using view
+    #You can view these objects separated from the rest of your system using view(A_mol)
 
 
     def get_lowest_distances(A_mol, B_mol,):
