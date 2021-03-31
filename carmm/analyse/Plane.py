@@ -44,6 +44,6 @@
         return lowest_distances
 
 
-print(get_lowest_distances(A_mol, 1))
+print(get_lowest_distances(A_mol, B_mol))
 
 view(atoms)
