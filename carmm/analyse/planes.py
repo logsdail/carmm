@@ -1,3 +1,6 @@
+import numpy as np
+
+
 def get_interplane_distance(atoms):
     '''
     TODO: Document (@Jack Warren)
@@ -47,6 +50,21 @@ def get_lowest_distances(A_mol, B_mol,):
         measured += [bond_list_atom]
     lowest_distances = [np.amin(i) for i in measured]
 
+
+
     # TODO: Document the return - this is a list of shortest distances from each atom in A
     # TODO: What about information on the atoms that constitute the lowest distance?
     return lowest_distances
+
+def center_of_mass_distance(A_mol, B_mol,):
+    '''
+
+    :param A_mol:
+    :param B_mol:
+    :return:  distance between 2 centers of mass
+    '''
+    #Gets the Center of mass for the molecules and simply measures between
+    CM_A = A_mol.get_center_of_mass()
+    CM_B = B_mol.get_center_of_mass()
+    pos_diff = np.linalg.norm(CM_A - CM_B)
+    return pos_diff
