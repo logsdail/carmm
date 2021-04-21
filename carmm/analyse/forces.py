@@ -10,6 +10,8 @@ def is_converged(atoms, fmax):
     fmax: float
         Convergence criterion in eV/Angstrom, usually 0.01
     '''
+    import numpy as np
+
     converged = False
 
     if atoms.calc:
