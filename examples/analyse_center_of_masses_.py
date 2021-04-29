@@ -18,4 +18,6 @@ def test_analyse_center_of_masses():
     B_mol = atoms[B]
     center_of_mass_distance(A_mol, B_mol)
     print(center_of_mass_distance(A_mol, B_mol))
+    value = center_of_mass_distance(A_mol, B_mol)
+    assert(1e-5 > value - 3.96542)
 test_analyse_center_of_masses()
