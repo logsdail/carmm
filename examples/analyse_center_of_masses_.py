@@ -5,7 +5,6 @@ Short example script to measure between the center of masses of two molecules
 
 
 def test_analyse_center_of_masses():
-    from carmm.analyse.planes import center_of_mass_distance
     from ase.io import read
     from carmm.analyse.molecules import calculate_molecules
     from carmm.analyse.planes import center_of_mass_distance
