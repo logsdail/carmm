@@ -5,13 +5,11 @@ Short example script to measure between the center of masses of two molecules
 
 
 def test_analyse_center_of_masses():
-    from ase.io import read
+
     from carmm.analyse.molecules import calculate_molecules
     from carmm.analyse.planes import center_of_mass_distance
     from data.model_gen import get_example_slab as slab
     ### Traditional ASE functionality #####
-    #output_file = "data/Dimer/aims.out"
-    #atoms = read(output_file)
     slab = slab(adsorbate=True)
     molecules = calculate_molecules(slab)
     A = molecules[0]
