@@ -17,7 +17,7 @@ def test_distance_between_centers_of_mass():
     A_mol = slab[A]
     B_mol = slab[B]
     distance_between_centers_of_mass(A_mol, B_mol)
-    #print(center_of_mass_distance(A_mol, B_mol))
+    #print(distances_between_centers_of_mass(A_mol, B_mol))
     value = distance_between_centers_of_mass(A_mol, B_mol)
     assert(1e-5 > value - 6.32082)
 test_distance_between_centers_of_mass()
