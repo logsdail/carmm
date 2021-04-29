@@ -68,7 +68,7 @@ def center_of_mass_distance(A_mol, B_mol, ):
     CM_B = B_mol.get_center_of_mass()
     pos_diff = np.linalg.norm(CM_A - CM_B)
     value = center_of_mass_distance(A_mol, B_mol)
-    assert value = pos_diff
+    assert value != 0, "oops something is wrong"
     return pos_diff
     print(pos_diff)
 
