@@ -56,7 +56,7 @@ def get_lowest_distances(A_mol, B_mol, ):
     return lowest_distances
 
 
-def center_of_mass_distance(A_mol, B_mol, ):
+def distance_between_centers_of_mass(A_mol, B_mol, ):
     '''
 
     :param A_mol:
