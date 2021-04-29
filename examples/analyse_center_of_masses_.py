@@ -8,16 +8,18 @@ def test_analyse_center_of_masses():
     from ase.io import read
     from carmm.analyse.molecules import calculate_molecules
     from carmm.analyse.planes import center_of_mass_distance
+    from data.model_gen import get_example_slab as slab
     ### Traditional ASE functionality #####
-    output_file = "data/Dimer/aims.out"
-    atoms = read(output_file)
-    molecules = calculate_molecules(atoms)
+    #output_file = "data/Dimer/aims.out"
+    #atoms = read(output_file)
+    slab = slab(adsorbate=True)
+    molecules = calculate_molecules(slab)
     A = molecules[0]
     B = molecules[1]
-    A_mol = atoms[A]
-    B_mol = atoms[B]
+    A_mol = slab[A]
+    B_mol = slab[B]
     center_of_mass_distance(A_mol, B_mol)
-    print(center_of_mass_distance(A_mol, B_mol))
+    #print(center_of_mass_distance(A_mol, B_mol))
     value = center_of_mass_distance(A_mol, B_mol)
-    assert(1e-5 > value - 3.96542)
+    assert(1e-5 > value - 6.32082)
 test_analyse_center_of_masses()
