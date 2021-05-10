@@ -204,9 +204,9 @@ def compare_structures(atoms1, atoms2, label=None):
 
     return atoms2_indices, differences
 
-def comparing_distances_structures(atoms1, atoms2):                                   
+def comparing_bonds_lenghts(atoms1, atoms2):                                   
     '''                                                                               
-description: this function allows to compare the distances between two structures,    
+description: this function allows to compare difference in bonds lengths between two structures,    
 parameters:                                                                           
      atoms1: Atoms object or trajectory of individual atoms                           
      atoms2: a second atom object                                                     
