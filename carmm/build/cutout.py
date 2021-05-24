@@ -35,3 +35,43 @@ def cutout_sphere(atoms, centre, distance_cutoff=5.0):
     del atoms[atoms_to_delete]
 
     return atoms
+
+def transpose(periodic,cluster, start, stop, centre_periodic, centre_cluster, file_name)
+    ''' Returns a ChemShell cluster representation of a periodic model 
+
+
+    Parameters:
+    periodic: Atoms object
+             Input periodic model of interest
+    cluster: Atoms object
+             Input cluster model of interest 
+    start: Integer 
+             Starting index of atoms to copy into cluster
+    stop:  Integer
+              End index of atoms to copy into cluster
+    centre_periodic: Integer
+              Centre of periodic model
+    centre_cluster: Integer 
+              Centre of cluster model
+    name: String 
+              Name of new model to save 
+
+    '''
+
+    from ase.io import write
+
+    # Start by specifying which atoms in periodic cluster you want to move to a cluster
+    to_move = periodic[start:stop]
+    #Define central atom in periodic for projection in cluster
+    ref_old = periodic[centre_periodic].position
+    for i in to_move:
+        i.position -= ref_old
+    #Define central atom in cluster for reference with periodic
+    ref_new = cluster[centre_cluster].position
+    for i in to_move:
+        i.position += ref_new
+
+    cluster = cluster + to_move
+    scaled = str(cluster.get_scaled_positions())
+    write = write(file_name, cluster)
+
