@@ -36,7 +36,7 @@ def cutout_sphere(atoms, centre, distance_cutoff=5.0):
 
     return atoms
 
-def transpose(periodic,cluster, start, stop, centre_periodic, centre_cluster, file_name)
+def transpose(periodic,cluster, start, stop, centre_periodic, centre_cluster, file_name):
     ''' Returns a ChemShell cluster representation of a periodic model 
 
 
