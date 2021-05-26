@@ -39,5 +39,24 @@ def test_analyse_get_sorted_distances():
     plt = plot_distribution_function(distances, title='Radial Distribution Function')
     #plt.show()
 
-test_analyse_bonds()
-test_analyse_get_sorted_distances()
+def test_analyse_comparing_bond_lengths():
+    import numpy as np
+    from ase.build import fcc111, fcc110
+    from carmm.analyse.bonds import comparing_bonds_lengths
+
+    # Build some models
+    atoms1 = fcc111('Pd', (2, 2, 1), vacuum=20.0)
+    atoms2 = fcc110('Pd', (2, 2, 1), vacuum=20.0)
+
+    difference = comparing_bonds_lengths(atoms1, atoms2)
+
+    # Assertion test
+    assert(1e-5 > difference[np.argmax(difference)] - 2.013612)
+
+    #print('difference in distances is :', difference)
+    #print("maximium distance difference is :", difference[np.argmax(difference)])
+    #print("minimum distance difference is :", difference[np.argmin(difference)])
+
+#test_analyse_bonds()
+#test_analyse_get_sorted_distances()
+test_analyse_comparing_bond_lengths()
