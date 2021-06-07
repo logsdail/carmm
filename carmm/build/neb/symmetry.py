@@ -596,3 +596,53 @@ def rotate_fcc(model, center_index, surf, m_m_dist=None):
         model.set_constraint(prev_const)
 
     return model
+
+
+def sort_z(model, diff=1):
+    '''
+    Function assigning tags to atomic layers within periodic surface models
+    for easier identification and compatibility with other functionality in CARMM.
+
+    Parameters:
+    model: Atoms object
+        Periodic surface model
+    diff: float or int
+       Expected z-distance between atomic layers in Angstroms
+    TODO: Incorporate this functionality into other parts of the code that rely
+    on z-tags
+    '''
+    import numpy as np
+    import copy
+
+    # avoid manipulation of the original Atoms object
+    model = copy.deepcopy(model)
+
+    # extract atomic positions and sort them by the z-coordinate
+    # sort the Atoms objects within Atoms based on z-coordinate
+    z_sorted = sorted(model, key=lambda k: k.position[2])
+
+    bin_counter = 0
+
+    atomic_layers = [[]]
+    # try to compare each consecutive number  - check if within +/- diff from each other
+    for i in range(0, len(z_sorted)):
+        if not i == 0:
+            if -diff < z_sorted[i].position[2] - z_sorted[i-1].position[2] < diff:
+                atomic_layers[bin_counter] += [z_sorted[i]]
+            else:
+                bin_counter += 1
+                atomic_layers += [[z_sorted[i]]]
+        else:
+            atomic_layers[bin_counter] += [z_sorted[i]]
+
+
+    # reverse order for setting tags, i.e. top layer (adsorbate) is zero, first layer is 1 etc.
+    # go through slices
+    tag_counter = len(atomic_layers)
+    for i in range(0, len(atomic_layers)):
+        tag_counter -= 1
+        # for each atoms in slice assign tag to the corresponding atom in the original Atoms object
+        for j in atomic_layers[i]:
+            model[j.index].tag = tag_counter
+
+    return model
