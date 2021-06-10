@@ -31,7 +31,7 @@ def set_aims_command(hpc='hawk', basis_set='light'):
         fhi_aims_directory="/home3/e05/e05/ajl340/fhi-aims-src-intel/"
         preamble = aprun
     elif hpc.lower() == 'archer2':
-        fhi_aims_directory="/work/e05/e05/ajl340/software/fhi-aims/"
+        fhi_aims_directory="/work/e05/e05-files-log/shared/software/fhi-aims/"
         preamble = srun
     #elif hpc.lower() == 'thomas': # Retired Oct 2020
     elif hpc.lower() == 'young':
