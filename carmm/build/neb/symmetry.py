@@ -33,9 +33,8 @@ def translation(model, axis=0, surface="111", m_m_dist=None):
     model = copy.deepcopy(model)
 
 
-    # Retrieve constraints, calculator from the model for later
+    # Retrieve constraints from the model for later
     constraint = model._get_constraints()
-    prev_calc = model.get_calculator()
 
     '''Section on variables'''
     indices_to_move = []
@@ -152,18 +151,22 @@ def translation(model, axis=0, surface="111", m_m_dist=None):
     import copy
     zero_x = copy.deepcopy((model[zero_index].position[0]))
     zero_y = copy.deepcopy((model[zero_index].position[1]))
+
     # Reset to zero
     for i in reversed([atom.index for atom in model]):
         model.positions[i][0] = (model.positions[i][0] - zero_x)
         model.positions[i][1] = (model.positions[i][1] - zero_y)
 
-    # Retain calculator information and constraint
-    if model.get_calculator() is not None:
-        prev_calc.atoms = model
-    model.calc = prev_calc
+    model = sort_by_xyz(model, surface)
+
+    # Remove rounding errors and set corner to (0,0,z)
+    for i in reversed([atom.index for atom in model]):
+        model.positions[i][0] = (model.positions[i][0] - model[0].x)
+        model.positions[i][1] = (model.positions[i][1] - model[0].y)
+
+    # Retain previous constraints
     model.set_constraint(constraint)
 
-    model = sort_by_xyz(model, surface)
 
     return model
 
