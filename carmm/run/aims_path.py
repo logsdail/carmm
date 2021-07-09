@@ -22,14 +22,12 @@ def set_aims_command(hpc='hawk', basis_set='light'):
     species = "species_defaults/"+basis_set
 
     if hpc.lower() == 'hawk':
-        fhi_aims_directory="/home/scw1057/software/fhi-aims/"
+        fhi_aims_directory="/apps/local/projects/scw1057/software/fhi-aims/"
         preamble = mpirun
     elif hpc.lower() == 'isambard':
         fhi_aims_directory="/home/ca-alogsdail/fhi-aims-gnu/"
         preamble = aprun
-    elif hpc.lower() == 'archer':
-        fhi_aims_directory="/home3/e05/e05/ajl340/fhi-aims-src-intel/"
-        preamble = aprun
+    #elif hpc.lower() == 'archer': # Retired Jul 2021
     elif hpc.lower() == 'archer2':
         fhi_aims_directory="/work/e05/e05-files-log/shared/software/fhi-aims/"
         preamble = srun
