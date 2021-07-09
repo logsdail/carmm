@@ -13,6 +13,10 @@ def test_run_aims():
     for hpc in ['hawk', 'isambard', 'archer2', 'young']:
         set_aims_command(hpc)
 
+    import ase # Necessary to check the code version, as socket functionality has changed
+    ase_major_version = int(ase.__version__.split(".")[0])
+    ase_minor_version = int(ase.__version__.split(".")[1])
+
     from ase.calculators.aims import Aims
     from carmm.run.aims_calculator import get_aims_and_sockets_calculator
 
@@ -21,6 +25,11 @@ def test_run_aims():
         sockets_calc, fhi_calc = get_aims_and_sockets_calculator(state, verbose=True)
 
         # Assertion test that the correct calculators are being set
-        assert(type(sockets_calc.calc) == Aims)
+        # ASE version 3.21 or earlier
+        if ase_major_version <= 3 and ase_minor_version <= 21:
+            assert (type(sockets_calc.calc) == Aims)
+        else:
+        # ASE Version 3.22 or later
+            assert(type(sockets_calc.launch_client.calc) == Aims)
 
 test_run_aims()
