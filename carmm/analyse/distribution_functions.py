@@ -40,7 +40,9 @@ def radial_distribution_function(model, radius, position, verbose=False):
 def average_distribution_function(trajectory, samples=10):
     '''
     Plots the average distribution function of the last N steps of an MD trajectory
-    TODO: This is distance based - can we adapt it to also allow radial?
+    TODO: -This is distance based - can we adapt it to also allow radial?
+          - Seems like constraints are removed below but this causes error
+          when no constraints are present in the system. Need to make this a condition.
     
     Parameters:
     
