@@ -122,7 +122,7 @@ def cn_surface_layers(model, cutoff=None, verbose=True):
             print("Default bond cutoffs selected:", set([(model[i].symbol, cutoff[i]) for i in range(len(model))]))
 
     # Create a symbols set based on all species present in the model
-    symbols_set = list(set(model.symbols))
+    symbols_set = sorted(list(set(model.symbols)))
 
     for l in set(model.get_tags()):
         index= [i.index for i in model if i.tag == l]
@@ -150,17 +150,23 @@ def cn_surface_layers(model, cutoff=None, verbose=True):
 
         # extract data for all combinations of neighbors and put at the end of the dictionary
         for p in product(symbols_set, repeat=2):
-            print(p)
-            M_M_avg_cn = np.average([dict_CN[x][p[0] + "_neighbors"] for x in dict_CN if\
-                 dict_CN[x]["layer"] == layer and dict_CN[x]['symbol'] == p[1]])
+            M_M_cn = [dict_CN[x][p[0] + "_neighbors"] for x in dict_CN if\
+                 dict_CN[x]["layer"] == layer and dict_CN[x]['symbol'] == p[1]]
+            if not M_M_cn == []:
+                M_M_avg_cn = np.average(M_M_cn)
+            else:
+                M_M_avg_cn = "N/A"
 
-            dict_surf_CN[layer].update({p[0] + "_" + p[1] + "_neighbors_per_layer": M_M_avg_cn})
+            dict_surf_CN[layer].update({p[0] + "_neighboring_w_" + p[1]: M_M_avg_cn})
 
         # Check concentrations of atoms per layer
         for symbol in symbols_set:
             atoms_per_layer = len([x for x in dict_CN if dict_CN[x]["layer"] == layer])
-            symbol_count_per_layer = len([symbol for x in dict_CN if dict_CN[x]["layer"] == layer and dict_CN[x]['symbol'] == symbol])
-            symbol_concentration_per_layer = symbol_count_per_layer / atoms_per_layer
+            if atoms_per_layer > 0:
+                symbol_count_per_layer = len([symbol for x in dict_CN if dict_CN[x]["layer"] == layer and dict_CN[x]['symbol'] == symbol])
+                symbol_concentration_per_layer = symbol_count_per_layer / atoms_per_layer
+            else:
+                symbol_concentration_per_layer = 0
             dict_surf_CN[layer].update({symbol+"_concentration_per_layer":symbol_concentration_per_layer})
 
     # Preparation for verbose
@@ -171,7 +177,7 @@ def cn_surface_layers(model, cutoff=None, verbose=True):
     if verbose:
         print([key for key in cn_layer_dict_keys])
         for i in range(len(dict_surf_CN)):
-            print([cn_layer_list_dict[i][j] for j in cn_layer_list_dict[i]])
+            print([cn_layer_list_dict[i][key] for key in cn_layer_dict_keys])
 
 
     return dict_CN, dict_surf_CN
