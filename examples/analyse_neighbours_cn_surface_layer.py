@@ -23,4 +23,4 @@ def test_analyse_neighbours_cn_surface_layer():
     assert cn_per_layer[0]["Au_neighboring_w_Cu"] == 3.0
     assert cn_per_layer[1]["Au_neighboring_w_Au"] == 9.0
 
-test_analyse_neighbours_cn_surface_layers()
+test_analyse_neighbours_cn_surface_layer()
