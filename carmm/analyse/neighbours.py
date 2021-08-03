@@ -81,8 +81,34 @@ def neighbours(atoms, centre, nearest_neighbors):
 # Authors: Igor Kowalec, Lara Kabalan, Jack Warren
 #
 def cn_surface_layers(model, cutoff=None, verbose=True):
-    '''WORK IN PROGRESS
-    TODO: proper description, writing scv files'''
+    '''
+    This function allows to extract the following data from the
+    supplied Atoms object in the form of a dictionary:
+    Per atom:
+    - number of neighbouring atoms of specific chemical symbol
+
+    Per atomic layer (based on tag):
+    - average coordination number for all M-M combinations of all chemical species,
+        e.g. for CuAu alloy slab an average number of Cu-Cu, Cu-Au, Au-Cu and Au-Au
+            bonds with surrounding atoms i.e. Cu-Cu_neighbors_per_layer etc.
+    - concentration of atoms per layer
+
+
+    Parameters:
+        model: Atoms object
+            Surface slab containing tagged atomic layers
+            e.g. using carmm.build.neb.symmetry.sort_z
+        cutoff: list of floats or None
+             Bond length cutoff distance in Angstrom can be set for each atom individually
+             The list must contain exactly len(model) floats. If None, natural_cutoffs
+             are used by default.
+        verbose: boolean
+            If True, analysed data that is contained in the dictionary will be printed
+            as a table
+            TODO: make table neater
+    Returns:
+        dict_CN, dict_surf_CN
+            TODO: proper description of dictionary structure, writing csv files'''
     from ase.neighborlist import natural_cutoffs, NeighborList
     import numpy as np
     from collections import Counter
