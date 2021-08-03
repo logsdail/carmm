@@ -81,8 +81,34 @@ def neighbours(atoms, centre, nearest_neighbors):
 # Authors: Igor Kowalec, Lara Kabalan, Jack Warren
 #
 def cn_surface_layers(model, cutoff=None, verbose=True):
-    '''WORK IN PROGRESS
-    TODO: proper description, writing scv files'''
+    '''
+    This function allows to extract the following data from the
+    supplied Atoms object in the form of a dictionary:
+    Per atom:
+    - number of neighbouring atoms of specific chemical symbol
+
+    Per atomic layer (based on tag):
+    - average coordination number for all M-M combinations of all chemical species,
+        e.g. for CuAu alloy slab an average number of Cu-Cu, Cu-Au, Au-Cu and Au-Au
+            bonds with surrounding atoms i.e. Cu-Cu_neighbors_per_layer etc.
+    - concentration of atoms per layer
+
+
+    Parameters:
+        model: Atoms object
+            Surface slab containing tagged atomic layers
+            e.g. using carmm.build.neb.symmetry.sort_z
+        cutoff: list of floats or None
+             Bond length cutoff distance in Angstrom can be set for each atom individually
+             The list must contain exactly len(model) floats. If None, natural_cutoffs
+             are used by default.
+        verbose: boolean
+            If True, analysed data that is contained in the dictionary will be printed
+            as a table
+            TODO: make table neater
+    Returns:
+        dict_CN, dict_surf_CN
+            TODO: proper description of dictionary structure, writing csv files'''
     from ase.neighborlist import natural_cutoffs, NeighborList
     import numpy as np
     from collections import Counter
@@ -96,7 +122,7 @@ def cn_surface_layers(model, cutoff=None, verbose=True):
             print("Default bond cutoffs selected:", set([(model[i].symbol, cutoff[i]) for i in range(len(model))]))
 
     # Create a symbols set based on all species present in the model
-    symbols_set = list(set(model.symbols))
+    symbols_set = sorted(list(set(model.symbols)))
 
     for l in set(model.get_tags()):
         index= [i.index for i in model if i.tag == l]
@@ -124,17 +150,23 @@ def cn_surface_layers(model, cutoff=None, verbose=True):
 
         # extract data for all combinations of neighbors and put at the end of the dictionary
         for p in product(symbols_set, repeat=2):
-            print(p)
-            M_M_avg_cn = np.average([dict_CN[x][p[0] + "_neighbors"] for x in dict_CN if\
-                 dict_CN[x]["layer"] == layer and dict_CN[x]['symbol'] == p[1]])
+            M_M_cn = [dict_CN[x][p[0] + "_neighbors"] for x in dict_CN if\
+                 dict_CN[x]["layer"] == layer and dict_CN[x]['symbol'] == p[1]]
+            if not M_M_cn == []:
+                M_M_avg_cn = np.average(M_M_cn)
+            else:
+                M_M_avg_cn = "N/A"
 
-            dict_surf_CN[layer].update({p[0] + "_" + p[1] + "_neighbors_per_layer": M_M_avg_cn})
+            dict_surf_CN[layer].update({p[0] + "_neighboring_w_" + p[1]: M_M_avg_cn})
 
         # Check concentrations of atoms per layer
         for symbol in symbols_set:
             atoms_per_layer = len([x for x in dict_CN if dict_CN[x]["layer"] == layer])
-            symbol_count_per_layer = len([symbol for x in dict_CN if dict_CN[x]["layer"] == layer and dict_CN[x]['symbol'] == symbol])
-            symbol_concentration_per_layer = symbol_count_per_layer / atoms_per_layer
+            if atoms_per_layer > 0:
+                symbol_count_per_layer = len([symbol for x in dict_CN if dict_CN[x]["layer"] == layer and dict_CN[x]['symbol'] == symbol])
+                symbol_concentration_per_layer = symbol_count_per_layer / atoms_per_layer
+            else:
+                symbol_concentration_per_layer = 0
             dict_surf_CN[layer].update({symbol+"_concentration_per_layer":symbol_concentration_per_layer})
 
     # Preparation for verbose
@@ -145,7 +177,7 @@ def cn_surface_layers(model, cutoff=None, verbose=True):
     if verbose:
         print([key for key in cn_layer_dict_keys])
         for i in range(len(dict_surf_CN)):
-            print([cn_layer_list_dict[i][j] for j in cn_layer_list_dict[i]])
+            print([cn_layer_list_dict[i][key] for key in cn_layer_dict_keys])
 
 
     return dict_CN, dict_surf_CN
