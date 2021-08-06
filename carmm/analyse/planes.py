@@ -111,12 +111,13 @@ def establish_planes(Atom1, Atom2, Atom3,):
 #    plt3d.plot_surface(xx,yy,z3, color='green')
     plt.show()
 
-def plane_of_best_fit(Atoms):
+def plane_of_best_fit(model):
     ''' Using the xyz coordinates of a molecule or atoms object to calculate the plane of best fit and plot it for visualizing 
-    :param ; Atoms object, geometry.in or .xyz
+    :model ; Atoms object, geometry.in or .xyz
     xs = all x coordinates 
     ys = all y
     zs = all z
+    Returns - plt of the plane and the atoms
     '''
     import matplotlib.pyplot as plt
     from mpl_toolkits.mplot3d import Axes3D
@@ -124,7 +125,7 @@ def plane_of_best_fit(Atoms):
     from ase.io import read
     from carmm.analyse.molecules import calculate_molecules
     # Read in object and get positional data
-    atoms = read('geometry.in')
+    atoms = read(model)
     coordinates = atoms.get_positions()
     xs = coordinates.positions[:, 0]
     ys = coordinates.positions[:, 1]
@@ -132,7 +133,6 @@ def plane_of_best_fit(Atoms):
     # plot raw data
     plt.figure()
     ax = plt.subplot(111, projection='3d')
-
     ax.scatter(xs, ys, zs, color='blue')
 
     # do fit
@@ -166,4 +166,4 @@ def plane_of_best_fit(Atoms):
     ax.set_ylabel('y')
     ax.set_zlabel('z')
 
-    return plt.show()
+    return plt
