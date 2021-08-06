@@ -1,6 +1,3 @@
-import numpy as np
-
-
 def get_interplane_distance(atoms):
     '''
     TODO: Document (@Jack Warren)
@@ -116,7 +113,7 @@ def establish_planes(Atom1, Atom2, Atom3,):
 
 def plane_of_best_fit(Atoms):
     ''' Using the xyz coordinates of a molecule or atoms object to calculate the plane of best fit and plot it for visualizing 
-    :param ; Atoms Object xyz
+    :param ; Atoms object, geometry.in or .xyz
     xs = all x coordinates 
     ys = all y
     zs = all z
@@ -127,11 +124,11 @@ def plane_of_best_fit(Atoms):
     from ase.io import read
     from carmm.analyse.molecules import calculate_molecules
     # Read in object and get positional data
-    atoms = read('AtomsObject')
-    Atomic = atoms.get_positions()
-    xs = Atomic.positions[:, 0]
-    ys = Atomic.positions[:, 1]
-    zs = Atomic.positions[:, 2]
+    atoms = read('geometry.in')
+    coordinates = atoms.get_positions()
+    xs = coordinates.positions[:, 0]
+    ys = coordinates.positions[:, 1]
+    zs = coordinates.positions[:, 2]
     # plot raw data
     plt.figure()
     ax = plt.subplot(111, projection='3d')
@@ -168,4 +165,5 @@ def plane_of_best_fit(Atoms):
     ax.set_xlabel('x')
     ax.set_ylabel('y')
     ax.set_zlabel('z')
-    plt.show()
+
+    return plt.show()
