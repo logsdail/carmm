@@ -33,9 +33,8 @@ def translation(model, axis=0, surface="111", m_m_dist=None):
     model = copy.deepcopy(model)
 
 
-    # Retrieve constraints, calculator from the model for later
+    # Retrieve constraints from the model for later
     constraint = model._get_constraints()
-    prev_calc = model.get_calculator()
 
     '''Section on variables'''
     indices_to_move = []
@@ -152,18 +151,22 @@ def translation(model, axis=0, surface="111", m_m_dist=None):
     import copy
     zero_x = copy.deepcopy((model[zero_index].position[0]))
     zero_y = copy.deepcopy((model[zero_index].position[1]))
+
     # Reset to zero
     for i in reversed([atom.index for atom in model]):
         model.positions[i][0] = (model.positions[i][0] - zero_x)
         model.positions[i][1] = (model.positions[i][1] - zero_y)
 
-    # Retain calculator information and constraint
-    if model.get_calculator() is not None:
-        prev_calc.atoms = model
-    model.calc = prev_calc
+    model = sort_by_xyz(model, surface)
+
+    # Remove rounding errors and set corner to (0,0,z)
+    for i in reversed([atom.index for atom in model]):
+        model.positions[i][0] = (model.positions[i][0] - model[0].x)
+        model.positions[i][1] = (model.positions[i][1] - model[0].y)
+
+    # Retain previous constraints
     model.set_constraint(constraint)
 
-    model = sort_by_xyz(model, surface)
 
     return model
 
@@ -594,5 +597,55 @@ def rotate_fcc(model, center_index, surf, m_m_dist=None):
     # Reapply constraints ince operation is complete
     if prev_const is not None:
         model.set_constraint(prev_const)
+
+    return model
+
+
+def sort_z(model, diff=1):
+    '''
+    Function assigning tags to atomic layers within periodic surface models
+    for easier identification and compatibility with other functionality in CARMM.
+
+    Parameters:
+    model: Atoms object
+        Periodic surface model
+    diff: float or int
+       Expected z-distance between atomic layers in Angstroms
+    TODO: Incorporate this functionality into other parts of the code that rely
+    on z-tags
+    '''
+    import numpy as np
+    import copy
+
+    # avoid manipulation of the original Atoms object
+    model = copy.deepcopy(model)
+
+    # extract atomic positions and sort them by the z-coordinate
+    # sort the Atoms objects within Atoms based on z-coordinate
+    z_sorted = sorted(model, key=lambda k: k.position[2])
+
+    bin_counter = 0
+
+    atomic_layers = [[]]
+    # try to compare each consecutive number  - check if within +/- diff from each other
+    for i in range(0, len(z_sorted)):
+        if not i == 0:
+            if -diff < z_sorted[i].position[2] - z_sorted[i-1].position[2] < diff:
+                atomic_layers[bin_counter] += [z_sorted[i]]
+            else:
+                bin_counter += 1
+                atomic_layers += [[z_sorted[i]]]
+        else:
+            atomic_layers[bin_counter] += [z_sorted[i]]
+
+
+    # reverse order for setting tags, i.e. top layer (adsorbate) is zero, first layer is 1 etc.
+    # go through slices
+    tag_counter = len(atomic_layers)
+    for i in range(0, len(atomic_layers)):
+        tag_counter -= 1
+        # for each atoms in slice assign tag to the corresponding atom in the original Atoms object
+        for j in atomic_layers[i]:
+            model[j.index].tag = tag_counter
 
     return model
