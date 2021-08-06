@@ -114,7 +114,7 @@ def establish_planes(Atom1, Atom2, Atom3,):
 #    plt3d.plot_surface(xx,yy,z3, color='green')
     plt.show()
 
-def plane_of_best_fit
+def plane_of_best_fit(Atoms):
     ''' Using the xyz coordinates of a molecule or atoms object to calculate the plane of best fit and plot it for visualizing 
     :param ; Atoms Object xyz
     xs = all x coordinates 
