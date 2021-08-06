@@ -113,11 +113,12 @@ def establish_planes(Atom1, Atom2, Atom3,):
 
 def plane_of_best_fit(model):
     ''' Using the xyz coordinates of a molecule or atoms object to calculate the plane of best fit and plot it for visualizing 
-    :model ; Atoms object, geometry.in or .xyz
+    :model ; Atoms object, geometry.in
+    TODO seems to only work for geometry.in files FIX
     xs = all x coordinates 
     ys = all y
     zs = all z
-    Returns - plt of the plane and the atoms
+    Returns - plt of the plane and the atoms as well as the equation of plane and the errors from atoms that vary from the plane
     '''
     import matplotlib.pyplot as plt
     from mpl_toolkits.mplot3d import Axes3D
@@ -126,10 +127,11 @@ def plane_of_best_fit(model):
     from carmm.analyse.molecules import calculate_molecules
     # Read in object and get positional data
     atoms = read(model)
-    coordinates = atoms.get_positions()
-    xs = coordinates.positions[:, 0]
-    ys = coordinates.positions[:, 1]
-    zs = coordinates.positions[:, 2]
+    molecules = calculate_molecules(atoms)
+    A_mol = atoms[molecules[0]]
+    xs = A_mol.positions[:, 0]
+    ys = A_mol.positions[:, 1]
+    zs = A_mol.positions[:, 2]
     # plot raw data
     plt.figure()
     ax = plt.subplot(111, projection='3d')
@@ -149,7 +151,6 @@ def plane_of_best_fit(model):
 
     print("solution: %f x + %f y + %f = z" % (fit[0], fit[1], fit[2]))
     print("errors: \n", errors)
-    print("residual:", residual)
 
     # plot plane
     xlim = ax.get_xlim()
@@ -166,4 +167,4 @@ def plane_of_best_fit(model):
     ax.set_ylabel('y')
     ax.set_zlabel('z')
 
-    return plt
+    return plt, print("solution: %f x + %f y + %f = z" % (fit[0], fit[1], fit[2])), print("errors: \n", errors)
