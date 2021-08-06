@@ -113,3 +113,59 @@ def establish_planes(Atom1, Atom2, Atom3,):
 #    plt3d.plot_surface(xx,yy,z2, color='red')
 #    plt3d.plot_surface(xx,yy,z3, color='green')
     plt.show()
+
+def plane_of_best_fit
+    ''' Using the xyz coordinates of a molecule or atoms object to calculate the plane of best fit and plot it for visualizing 
+    :param ; Atoms Object xyz
+    xs = all x coordinates 
+    ys = all y
+    zs = all z
+    '''
+    import matplotlib.pyplot as plt
+    from mpl_toolkits.mplot3d import Axes3D
+    import numpy as np
+    from ase.io import read
+    from carmm.analyse.molecules import calculate_molecules
+    # Read in object and get positional data
+    atoms = read('AtomsObject')
+    Atomic = atoms.get_positions()
+    xs = Atomic.positions[:, 0]
+    ys = Atomic.positions[:, 1]
+    zs = Atomic.positions[:, 2]
+    # plot raw data
+    plt.figure()
+    ax = plt.subplot(111, projection='3d')
+
+    ax.scatter(xs, ys, zs, color='blue')
+    ax.scatter(xd, yd, zd, color='red')
+    # do fit
+    tmp_A = []
+    tmp_b = []
+    for i in range(len(xs)):
+        tmp_A.append([xs[i], ys[i], 1])
+        tmp_b.append(zs[i])
+    b = np.matrix(tmp_b).T
+    A = np.matrix(tmp_A)
+    # Manual solution
+    fit = (A.T * A).I * A.T * b
+    errors = b - A * fit
+
+    print("solution: %f x + %f y + %f = z" % (fit[0], fit[1], fit[2]))
+    print("errors: \n", errors)
+    print("residual:", residual)
+
+    # plot plane
+    xlim = ax.get_xlim()
+    ylim = ax.get_ylim()
+    X,Y = np.meshgrid(np.arange(xlim[0], xlim[1]),
+                    np.arange(ylim[0], ylim[1]))
+    Z = np.zeros(X.shape)
+    for r in range(X.shape[0]):
+        for c in range(X.shape[1]):
+            Z[r,c] = fit[0] * X[r,c] + fit[1] * Y[r,c] + fit[2]
+
+    ax.plot_wireframe(X,Y,Z, color='k')
+    ax.set_xlabel('x')
+    ax.set_ylabel('y')
+    ax.set_zlabel('z')
+    plt.show()
