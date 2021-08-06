@@ -137,7 +137,7 @@ def plane_of_best_fit(Atoms):
     ax = plt.subplot(111, projection='3d')
 
     ax.scatter(xs, ys, zs, color='blue')
-    ax.scatter(xd, yd, zd, color='red')
+
     # do fit
     tmp_A = []
     tmp_b = []
