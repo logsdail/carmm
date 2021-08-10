@@ -128,4 +128,95 @@ def ternary_alloy(model, second_element, third_element, n_second_element, n_thir
         new_model.set_chemical_symbols(new_labels)
 
     return new_model
-   
+
+
+def change_conc(surface, end_conc0, end_conc1, end_conc2, end_conc3, end_conc4, end_conc5, end_conc6):
+    '''
+      Parameters:
+
+      surface: Atoms object
+      end_conc0: Float
+           Concentration value for Pd atoms with tag 0
+      end_conc1: Float
+           Concentration value for Pd atoms with tag 1
+      end_conc2: Float
+           Concentration value for Pd atoms with tag 2
+      end_conc3: Float
+           Concentration value for Pd atoms with tag 3
+      end_conc4: Float
+           Concentration value for Pd atoms with tag 4
+      end_conc5: Float
+           Concentration value for Pd atoms with tag 5
+      end_conc6: Float
+           Concentration value for Pd atoms with tag 6
+      '''
+    import random
+
+    end_conc = []
+    end_conc.append(end_conc0)
+    end_conc.append(end_conc1)
+    end_conc.append(end_conc2)
+    end_conc.append(end_conc3)
+    end_conc.append(end_conc4)
+    end_conc.append(end_conc5)
+    end_conc.append(end_conc6)
+
+    layer = []
+    layer_zn_index = []
+    layer_pd_index = []
+    layer_no_pd = []
+    layer_no_zn = []
+    no_loops = []
+
+    # Calculating the conc. of Pd in layer
+    for i in range(0, 7):
+        for atom in surface:
+            if atom.tag == i:
+                layer.append(atom)
+                if atom.symbol == "Pd":
+                    layer_no_pd.append(atom)
+                    layer_pd_index.append(atom.index)
+                else:
+                    layer_no_zn.append(atom)
+                    layer_zn_index.append(atom.index)
+
+        initial_conc = len(layer_no_pd) / len(layer)
+        print("The initial concentration of Pd in layer", i, "is:", initial_conc)
+
+        # Changing the conc. to desired conc.
+        conc = len(layer_no_pd) / len(layer)
+
+        if conc < end_conc[i]: # Increases conc.
+            while conc < end_conc[i]:
+                for atom in surface:
+                    conc = len(layer_no_pd)/len(layer)
+                    if conc < end_conc[i] and atom.symbol == "Zn" and atom.index == random.choice(layer_zn_index):
+                        atom.symbol = "Pd"
+                        layer_no_pd.append(atom)
+                        #print("Atom", atom.index, "is now Pd")
+                        conc = len(layer_no_pd) / len(layer)
+                        #print("Concentration:", conc)
+                no_loops.append("1")
+        elif end_conc[i] < conc: # Decreases conc.
+            while end_conc[i] < conc:
+                for atom in surface:
+                    conc = len(layer_no_pd) / len(layer)
+                    if end_conc[i] < conc and atom.symbol == "Pd" and atom.index == random.choice(layer_pd_index):
+                        atom.symbol = "Zn"
+                        del layer_no_pd[0]
+                        #print("Atom", atom.index, "is now Pd")
+                        conc = len(layer_no_pd) / len(layer)
+                        #print("Concentration:", conc)
+                no_loops.append("1")
+
+        # Checking calculation
+        final_conc = len(layer_no_pd) / len(layer)
+        print("The final concentration of Pd in layer", i, "is:", final_conc)
+        print("Number of loops:", len(no_loops))
+        # Clearing variables
+        layer = []
+        layer_zn_index = []
+        layer_pd_index = []
+        layer_no_pd = []
+        layer_no_zn = []
+        no_loops = []
