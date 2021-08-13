@@ -1,3 +1,6 @@
+
+
+
 def get_interplane_distance(atoms):
     '''
     TODO: Document (@Jack Warren)
@@ -60,6 +63,7 @@ def distance_between_centers_of_mass(A_mol, B_mol, ):
     :param B_mol:
     :return:  distance between 2 centers of mass
     '''
+    import numpy as np
     # Gets the Center of mass for the molecules and simply measures between
     CM_A = A_mol.get_center_of_mass()
     CM_B = B_mol.get_center_of_mass()
