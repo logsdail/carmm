@@ -1,6 +1,3 @@
-
-
-
 def get_interplane_distance(atoms):
     '''
     TODO: Document (@Jack Warren)
@@ -26,7 +23,7 @@ def get_interplane_distance(atoms):
     return get_lowest_distances(A_mol, B_mol)
 
 
-def get_lowest_distances(A_mol, B_mol, ):
+def get_lowest_distances(A_mol, B_mol):
     '''
     Uses molecules.py to separate fn into molecules then measures the shortest distances between.
     Indented for Periodic systems
@@ -56,9 +53,9 @@ def get_lowest_distances(A_mol, B_mol, ):
     return lowest_distances
 
 
-def distance_between_centers_of_mass(A_mol, B_mol, ):
+def distance_between_centers_of_mass(A_mol, B_mol):
     '''
-
+    TODO: @Jack Warren 
     :param A_mol:
     :param B_mol:
     :return:  distance between 2 centers of mass
@@ -69,16 +66,18 @@ def distance_between_centers_of_mass(A_mol, B_mol, ):
     CM_B = B_mol.get_center_of_mass()
     pos_diff = np.linalg.norm(CM_A - CM_B)
     return pos_diff
-    print(pos_diff)
 
 
-def establish_planes(Atom1, Atom2, Atom3,):
+def establish_planes(Atom1, Atom2, Atom3):
     '''
     Using 3 points to calculate 3 vectors and establish a plane...
 
+    @Jack Warren: Please complete
     :param Atom1: (x,y,z coordinates of Atom1)
     :param Atom2:
     :param Atom3:
+
+    #TODO: This should just return the plot, not show it. 
     :return: Graphical Representation of planes
     '''
     import numpy as np
@@ -113,24 +112,34 @@ def establish_planes(Atom1, Atom2, Atom3,):
     plt3d.plot_surface(z1,z2,z3, color='blue')
 #    plt3d.plot_surface(xx,yy,z2, color='red')
 #    plt3d.plot_surface(xx,yy,z3, color='green')
-    plt.show()
+#    plt.show()
+   
+    # Adding the appropriate return
+    return plt
 
 def plane_of_best_fit(model):
+    
     ''' Using the xyz coordinates of a molecule or atoms object to calculate the plane of best fit and plot it for visualizing 
-    :model ; Atoms object, geometry.in
-    TODO seems to only work for geometry.in files FIX
+    model: Atoms object
+        - The atoms object that has been *previously* loaded (note the IO is not done here)
+
+    # TODO: @Jack Warren what are these variables?
     xs = all x coordinates 
     ys = all y
     zs = all z
+
+    
     Returns - plt of the plane and the atoms as well as the equation of plane and the errors from atoms that vary from the plane
     '''
+
     import matplotlib.pyplot as plt
     from mpl_toolkits.mplot3d import Axes3D
     import numpy as np
-    from ase.io import read
+    # from ase.io import read
     from carmm.analyse.molecules import calculate_molecules
     # Read in object and get positional data
-    atoms = read(model)
+    # atoms = read(model)
+    atoms = model.copy()
     molecules = calculate_molecules(atoms)
     A_mol = atoms[molecules[0]]
     xs = A_mol.positions[:, 0]
