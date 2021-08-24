@@ -57,6 +57,6 @@ def test_analyse_comparing_bond_lengths():
     #print("maximium distance difference is :", difference[np.argmax(difference)])
     #print("minimum distance difference is :", difference[np.argmin(difference)])
 
-#test_analyse_bonds()
-#test_analyse_get_sorted_distances()
+test_analyse_bonds()
+test_analyse_get_sorted_distances()
 test_analyse_comparing_bond_lengths()
