@@ -198,13 +198,3 @@ def cn_surface_layers(atoms, cutoff=None, verbose=True):
 
     return dict_CN, dict_surf_CN
 
-
-def Zn_layer_conc(atoms):
-    Zn_conc_list = []
-    for layer in set(atoms.get_tags()):
-        slice = Atoms([atom for atom in atoms if atom.tag == layer])
-        Zn_conc = slice.symbols.count("Zn")/len(slice)
-        Zn_conc_list +=[Zn_conc]
-
-    return Zn_conc_list
-
