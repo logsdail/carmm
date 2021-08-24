@@ -204,6 +204,35 @@ def compare_structures(atoms1, atoms2, label=None):
 
     return atoms2_indices, differences
 
+def comparing_bonds_lengths(atoms1, atoms2):                                   
+    '''                                                                               
+description: this function allows to compare difference in bonds lengths between two structures,    
+parameters:                                                                           
+     atoms1: Atoms object or trajectory of individual atoms                           
+     atoms2: a second atom object                                                     
+    '''                                                                               
+                                                                                      
+    import numpy as np                                                                
+                                                                                      
+    from ase.build import molecule                                                    
+    from ase import Atoms                                                             
+                                                                                      
+                                                                                      
+    distances_1 = atoms1.get_all_distances(mic=True, vector=False)                    
+    distances_2 = atoms2.get_all_distances(mic=True, vector=False)                    
+                                                                                      
+    d1=[]                                                                             
+    d2=[]                                                                             
+                                                                                      
+    for i in range(len(distances_1)):                                                 
+        for j in range(i+1, len(distances_1[i])):                                     
+            d1.append(distances_1[i][j])                                              
+            d2.append(distances_2[i][j])                                              
+                                                                                      
+    diff = np.abs(np.sort(d1) - np.sort(d2))                                          
+    return(diff)                                                                      
+                                                                                      
+
 def get_indices_of_elements(list_of_symbols, symbol):
     '''
 

@@ -20,6 +20,7 @@ def neighbour_cutout_sphere(atoms, centre, distance_cutoff=5.0):
     # Now ensures returned object is different to incoming atoms
     atoms = atoms.copy()
     selection = []
+
     for i in range(len(atoms)):
 
         # get distances between atom of interest and others
