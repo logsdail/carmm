@@ -11,9 +11,10 @@ def test_neighbours():
     view(slab)
 
     # Calculate neighbours
-    all_neighbour_atoms, shell_list = neighbours(slab, [13], 1)
+    all_neighbour_atoms, shell_list = neighbours(slab, [13], 1, verbose=True)
 
     # Verify results
     assert(all_neighbour_atoms == [1, 2, 4, 10, 11, 12, 13, 14, 15, 16])
     assert(shell_list == [[13], [1, 2, 4, 10, 11, 12, 14, 15, 16]])
+
 test_neighbours()
