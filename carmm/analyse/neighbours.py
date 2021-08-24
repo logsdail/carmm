@@ -35,52 +35,68 @@ def neighbour_cutout_sphere(atoms, centre, distance_cutoff=5.0):
 
     return selection
 
-
-def neighbours(atoms, centre, nearest_neighbors):
+# Authors: Owain Beynon, Igor Kowalec
+def neighbours(atoms, centre, shell, cutoff=None, verbose=False):
     ''' Returns a list of indices of atomic neighbors from a central atom
-    TODO: Needs simplifying
-    TODO: made into a function but now it's broken, will need to have a look
 
     Parameters:
     atoms : Atoms object
         Input structure to count neighbours
-    centre : Integer
-        Index of atom to start counting from
-    nearest_neighbors : Integer
-        Size of the neighbour shell, 1st neighbours, 2nd neighbours ....
+    centre : list of integers
+        Indices of atom(s) to start counting from
+    shell : Integer
+        Size of the nearest neighbour shell, 1st neighbours, 2nd neighbours ....
+    cutoff: list of floats or None
+             Bond length cutoff distance in Angstrom can be set for each atom individually
+             The list must contain exactly len(atoms) floats. If None, natural_cutoffs
+             are used by default.
+    verbose: boolean
+            If True, information about the cutoffs and selected neighbors is printed
 
     Returns:
         List of all atoms within specified neighbour distances
+        List of lists containing indices of atoms that make 0th, 1st (...) shell
     '''
 
-    # Object storing all neighbour information
-    all_neighbours = [centre]
-    # Object to store neighbours in "current" shell - start with 0th shell
-    current_neighbors = [centre]
+    from ase.neighborlist import natural_cutoffs, NeighborList
 
-    # Creates an emtpy list an appends atom indices whose distances are
+    if not cutoff:
+        # Choose a cutoff to determine max bond distance, otherwise use natural cutoff
+        cutoff = natural_cutoffs(atoms)
+        if verbose:
+            print("Default bond cutoffs selected:", set([(atoms[i].symbol, cutoff[i]) for i in range(len(atoms))]))
+
+    # Set object storing all neighbour information
+    all_neighbours = set(centre)
+    # List of lists storing each neighbour shell requested
+    shell_list = [centre]
+
+    # Creates an empty list an appends atom indices whose distances are
     # x amount nearest neighbours away from centre
-    for neighbors in range(nearest_neighbors):
-        new_neighbors = []
-        for atom in current_neighbors:
-            # TODO: Make the cutoff dynamic!
-            neighbour_list = neighbour_cutout_sphere(atoms, centre=atom, distance_cutoff=3)
-            for neighbour_to_atom in neighbour_list:
-                if neighbour_to_atom not in all_neighbours:
-                    # What is this?
-                    # atoms.numbers[index] = neighbors
-                    new_neighbors.append(neighbour_to_atom)
-                    all_neighbours.append(neighbour_to_atom)
+    for neighbors in range(shell):
+        # keep new neighbor indices in a set to avoid duplicates
+        new_neighbors = set()
+        for index in all_neighbours:
+            # find neighbors based on cutoff and connectivity matrix
+            nl = NeighborList(cutoff, self_interaction=False, bothways=True)
+            nl.update(atoms)
+            indices = nl.get_neighbors(index)[0]
+            for i in indices:
+                new_neighbors.add(i)
 
-        # Copy the list of new neighbours to be our current "shell"
-        current_neighbors = new_neighbors.copy()
+        shell_list += [[i for i in new_neighbors if i not in all_neighbours]]
+        for i in new_neighbors:
+            all_neighbours.add(i)
 
-    return all_neighbours
+
+
+
+    return list(all_neighbours), shell_list
 
 
 # Authors: Igor Kowalec, Lara Kabalan, Jack Warren
 #
-def cn_surface_layers(model, cutoff=None, verbose=True):
+def cn_surface_layers(atoms, cutoff=None, verbose=True):
     '''
     This function allows to extract the following data from the
     supplied Atoms object in the form of a dictionary:
@@ -95,12 +111,12 @@ def cn_surface_layers(model, cutoff=None, verbose=True):
 
 
     Parameters:
-        model: Atoms object
+        atoms: Atoms object
             Surface slab containing tagged atomic layers
             e.g. using carmm.build.neb.symmetry.sort_z
         cutoff: list of floats or None
              Bond length cutoff distance in Angstrom can be set for each atom individually
-             The list must contain exactly len(model) floats. If None, natural_cutoffs
+             The list must contain exactly len(atoms) floats. If None, natural_cutoffs
              are used by default.
         verbose: boolean
             If True, analysed data that is contained in the dictionary will be printed
@@ -117,26 +133,26 @@ def cn_surface_layers(model, cutoff=None, verbose=True):
     dict_CN = {}
     if not cutoff:
         # Choose a cutoff to determine max bond distance
-        cutoff = natural_cutoffs(model)
+        cutoff = natural_cutoffs(atoms)
         if verbose:
-            print("Default bond cutoffs selected:", set([(model[i].symbol, cutoff[i]) for i in range(len(model))]))
+            print("Default bond cutoffs selected:", set([(atoms[i].symbol, cutoff[i]) for i in range(len(atoms))]))
 
-    # Create a symbols set based on all species present in the model
-    symbols_set = sorted(list(set(model.symbols)))
+    # Create a symbols set based on all species present in the atoms
+    symbols_set = sorted(list(set(atoms.symbols)))
 
-    for l in set(model.get_tags()):
-        index= [i.index for i in model if i.tag == l]
+    for l in set(atoms.get_tags()):
+        index= [i.index for i in atoms if i.tag == l]
         for i in index:
             nl = NeighborList(cutoff, self_interaction=False, bothways=True)
-            nl.update(model)
+            nl.update(atoms)
             indices, offsets = nl.get_neighbors(i)
             # avoid duplicate atomic indices
             indices_no_self = np.array(list(set([j for j in indices])))
 
-            cn_numbers = Counter(model[indices_no_self].symbols)
+            cn_numbers = Counter(atoms[indices_no_self].symbols)
 
             # create a dictionary of relevant values for cn calculations
-            dict_CN[i] = {"symbol":model[i].symbol, 'index':i, "layer":l}
+            dict_CN[i] = {"symbol":atoms[i].symbol, 'index':i, "layer":l}
             for k in symbols_set:
                 dict_CN[i].update({k+"_neighbors":cn_numbers[k]})
 
@@ -144,7 +160,7 @@ def cn_surface_layers(model, cutoff=None, verbose=True):
     pr = product(symbols_set, repeat=2)
 
     dict_surf_CN= {}
-    for layer in set(model.get_tags()):
+    for layer in set(atoms.get_tags()):
         dict_surf_CN[layer] = {}
         dict_surf_CN[layer].update({"layer":layer})
 
@@ -181,3 +197,14 @@ def cn_surface_layers(model, cutoff=None, verbose=True):
 
 
     return dict_CN, dict_surf_CN
+
+
+def Zn_layer_conc(atoms):
+    Zn_conc_list = []
+    for layer in set(atoms.get_tags()):
+        slice = Atoms([atom for atom in atoms if atom.tag == layer])
+        Zn_conc = slice.symbols.count("Zn")/len(slice)
+        Zn_conc_list +=[Zn_conc]
+
+    return Zn_conc_list
+
