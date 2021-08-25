@@ -89,17 +89,16 @@ def neighbours(atoms, centre, shell, cutoff=None, verbose=False):
         for i in new_neighbors:
             all_neighbours.add(i)
 
-
-
+        if verbose:
+            for shell in range(len(shell_list)):
+                print("Shell", shell, "contains atoms with indices:", shell_list[shell])
 
     return list(all_neighbours), shell_list
 
 
 # Authors: Igor Kowalec, Lara Kabalan, Jack Warren
 #
-# TODO: Rename as coordination_number_surface_layers, or something without the acronym!
-#
-def cn_surface_layers(atoms, cutoff=None, verbose=True):
+def surface_coordination(atoms, cutoff=None, verbose=True):
     '''
     This function allows to extract the following data from the
     supplied Atoms object in the form of a dictionary:
@@ -200,4 +199,3 @@ def cn_surface_layers(atoms, cutoff=None, verbose=True):
 
 
     return dict_CN, dict_surf_CN
-
