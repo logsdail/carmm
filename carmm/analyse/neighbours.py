@@ -48,11 +48,11 @@ def neighbours(atoms, centre, shell, cutoff=None, verbose=False):
     shell : Integer
         Size of the nearest neighbour shell, 1st neighbours, 2nd neighbours ....
     cutoff: list of floats or None
-             Bond length cutoff distance in Angstrom can be set for each atom individually
-             The list must contain exactly len(atoms) floats. If None, natural_cutoffs
-             are used by default.
+        Bond length cutoff distance in Angstrom can be set for each atom individually
+        The list must contain exactly len(atoms) floats. If None, natural_cutoffs
+        are used by default.
     verbose: boolean
-            If True, information about the cutoffs and selected neighbors is printed
+        If True, information about the cutoffs and selected neighbors is printed
 
     Returns:
         List of all atoms within specified neighbour distances
@@ -96,6 +96,8 @@ def neighbours(atoms, centre, shell, cutoff=None, verbose=False):
 
 
 # Authors: Igor Kowalec, Lara Kabalan, Jack Warren
+#
+# TODO: Rename as coordination_number_surface_layers, or something without the acronym!
 #
 def cn_surface_layers(atoms, cutoff=None, verbose=True):
     '''
