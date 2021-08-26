@@ -15,7 +15,8 @@ def is_converged(atoms, fmax):
     converged = False
 
     if atoms.calc:
-        if np.amax([np.linalg.norm(f) for f in atoms.get_forces()]) <= fmax:
-            converged = True
+        if "forces" in atoms.calc.results:
+            if np.amax([np.linalg.norm(f) for f in atoms.calc.results["forces"]]) <= fmax:
+                converged = True
 
     return converged
