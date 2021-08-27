@@ -179,6 +179,11 @@ def get_k_grid(model, sampling_density, surface=False, verbose=False):
         that have vacuum padding added.
     verbose: bool
         Flag turning print statements on/off
+
+    Returns:
+        float containing 3 integers: (kx, ky, kz)
+        or
+        None if a non-periodic model is presented
     """
     import math
     import numpy as np
@@ -186,6 +191,10 @@ def get_k_grid(model, sampling_density, surface=False, verbose=False):
     x = np.linalg.norm(model.get_cell()[0])
     y = np.linalg.norm(model.get_cell()[1])
     z = np.linalg.norm(model.get_cell()[2])
+
+    for i in [x, y, z]:
+        if i == 0:
+            return None
 
     k_x = math.ceil((1/sampling_density)*(1/x))
     k_y = math.ceil((1/sampling_density)*(1/y))

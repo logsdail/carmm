@@ -6,6 +6,8 @@ Useful when running calculations for variable sizes of supercells (e.g. surfaces
 
 def test_run_k_grid():
     from carmm.run.aims_calculator import get_k_grid
+    from ase.build import molecule
+
 
     #### Traditional ASE functionality #####
     from data.model_gen import get_example_slab as slab
@@ -13,8 +15,9 @@ def test_run_k_grid():
     #########
     sampling_density = 0.02 # example value of sampling density /Angstrom
     k_grid = get_k_grid(slab, sampling_density, surface=True, verbose=True )
-    assert(k_grid[0] == 6)
-    assert(k_grid[1] == 6)
-    assert(k_grid[2] == 1)
+    assert k_grid[0] == 6
+    assert k_grid[1] == 6
+    assert k_grid[2] == 1
+    assert get_k_grid(molecule("CO2"), sampling_density) == None
 
 test_run_k_grid()
