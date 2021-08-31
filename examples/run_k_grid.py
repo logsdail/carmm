@@ -17,7 +17,7 @@ def test_run_k_grid():
     k_grid = get_k_grid(slab, sampling_density, surface=True, verbose=True )
     assert k_grid[0] == 6
     assert k_grid[1] == 6
-    assert k_grid[2] == 1
+    assert k_grid == [6, 6, 1]
     assert get_k_grid(molecule("CO2"), sampling_density) == None
 
 test_run_k_grid()
