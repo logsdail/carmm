@@ -151,7 +151,7 @@ def change_conc(surface, end_conc0, end_conc1, end_conc2, end_conc3, end_conc4, 
            Concentration value for Pd atoms with tag 6
       '''
     import random
-
+    # TODO: make end_conc a list of floats of len(set(atoms.tags))
     end_conc = []
     end_conc.append(end_conc0)
     end_conc.append(end_conc1)
@@ -168,6 +168,12 @@ def change_conc(surface, end_conc0, end_conc1, end_conc2, end_conc3, end_conc4, 
     layer_no_zn = []
     no_loops = []
 
+    # TODO: Specify symbols for substitution
+    # TODO: Make the layer count dynamic based on tags
+    # TODO: Should the tag assignment be done automatically?
+    # TODO: Can work with arrays rather than lists
+    # TODO: Include mic and symmetry unique arrangements
+
     # Calculating the conc. of Pd in layer
     for i in range(0, 7):
         for atom in surface:
@@ -181,6 +187,7 @@ def change_conc(surface, end_conc0, end_conc1, end_conc2, end_conc3, end_conc4, 
                     layer_zn_index.append(atom.index)
 
         initial_conc = len(layer_no_pd) / len(layer)
+
         print("The initial concentration of Pd in layer", i, "is:", initial_conc)
 
         # Changing the conc. to desired conc.
@@ -196,6 +203,7 @@ def change_conc(surface, end_conc0, end_conc1, end_conc2, end_conc3, end_conc4, 
                         #print("Atom", atom.index, "is now Pd")
                         conc = len(layer_no_pd) / len(layer)
                         #print("Concentration:", conc)
+
                 no_loops.append("1")
         elif end_conc[i] < conc: # Decreases conc.
             while end_conc[i] < conc:
@@ -220,3 +228,6 @@ def change_conc(surface, end_conc0, end_conc1, end_conc2, end_conc3, end_conc4, 
         layer_no_pd = []
         layer_no_zn = []
         no_loops = []
+
+    # TODO: Come up with sensible return statement
+    # TODO: come up with an example for testing
