@@ -15,7 +15,7 @@ def vib_analysis(model):
           Example needed in examples folder
     '''
     atot = Atoms.get_chemical_symbols(self=read(model))
-    print(len(atot))
+    # print(len(atot))
 
     traj = Trajectory(model)
 
@@ -25,10 +25,10 @@ def vib_analysis(model):
             for atoms in traj:
                 dist = atoms.get_distances(i, j)
                 distances.append(float(dist))
-            num_list = distances
-            print(num_list)
-            x = range(len(num_list))
-            plt.plot(x, num_list)
+            dist_list = distances
+            print(dist_list)
+            x = range(len(dist_list))
+            plt.plot(x, dist_list)
             plt.xlabel("time step")
             plt.ylabel('displacement')
     plt.show()
