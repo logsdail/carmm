@@ -15,7 +15,7 @@ def set_aims_command(hpc='hawk', basis_set='light', defaults=2010):
     import os
 
     if defaults == 2010:
-        standard = "defaults_2010/":
+        standard = "defaults_2010/"
     elif defaults == 2020:
         standard = "defaults_2020/"
 
