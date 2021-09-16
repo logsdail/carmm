@@ -11,6 +11,10 @@ def set_aims_command(hpc='hawk', basis_set='light', defaults=2010):
     basis_set: String
         Name of basis set for FHI-aims
         Options: 'light', 'intermediate', 'tight', 'really_tight' etc.
+    standard: int
+        Either 2010 or 2020 referring to the default species basis sets
+        that come with FHI-aims, which adhere to the year 2010 or 2020
+        standard. Old 2010 value by default to avoid disruption for users.
     '''
     import os
 
