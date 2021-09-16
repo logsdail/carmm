@@ -1,4 +1,4 @@
-def set_aims_command(hpc='hawk', basis_set='light'):
+def set_aims_command(hpc='hawk', basis_set='light', defaults=2010):
     '''
     Choose supercomputer and basis_set to obtain FHI-aims run command.
     Can be useful to e.g perform a calculation with a larger basis set
@@ -14,12 +14,22 @@ def set_aims_command(hpc='hawk', basis_set='light'):
     '''
     import os
 
+    if defaults == 2010:
+        standard = "defaults_2010/":
+    elif defaults == 2020:
+        standard = "defaults_2020/"
+
     mpirun = "time mpirun -np $SLURM_NTASKS "
     aprun = "time aprun -n $NPROCS "
     gerun = "gerun "
     srun = "srun --cpu-bind=cores --distribution=block:block --hint=nomultithread "
     executable = "bin/aims.$VERSION.scalapack.mpi.x"
-    species = "species_defaults/"+basis_set
+
+    # account for the new layout of species_defaults on ARCHER2
+    if hpc.lower() == "archer2":
+        species = "species_defaults/" + standard + basis_set
+    else:
+        species = "species_defaults/" + basis_set
 
     if hpc.lower() == 'hawk':
         fhi_aims_directory="/apps/local/projects/scw1057/software/fhi-aims/"
