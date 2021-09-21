@@ -1,4 +1,4 @@
-def is_converged(atoms, fmax):
+def is_converged(atoms, fmax=0.01):
     '''
     This function takes an atoms object and a force convergence criterion and
     returns True if stored forces are below fmax convergence criterion or False if
@@ -16,7 +16,23 @@ def is_converged(atoms, fmax):
 
     if atoms.calc:
         if "forces" in atoms.calc.results:
-            if np.amax([np.linalg.norm(f) for f in atoms.calc.results["forces"]]) <= fmax:
+            # TODO: this will probably only work with ase.constraints.FixAtoms,
+            #       FixBondLength does not set force to 0
+            # extraction of constraints
+            constraints = []
+            # remove from nested list
+            for i in [i.index.tolist() for i in atoms._get_constraints()]:
+                for j in i:
+                    constraints.append(j)
+            '''
+            List comprehension for:
+            - Retrieving forces from the calculator
+            - Taking their vector norm
+            - But only for atoms without constraints
+            '''
+            if np.amax([np.linalg.norm(atoms.calc.results["forces"][x]) \
+                    for x in range(len(atoms)) if x not in constraints]) <= fmax:
+
                 converged = True
 
     return converged
