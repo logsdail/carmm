@@ -26,8 +26,8 @@ def set_aims_command(hpc='hawk', basis_set='light', defaults=2010):
     gerun = "gerun "
     srun = "srun --cpu-bind=cores --distribution=block:block --hint=nomultithread "
     executable = "bin/aims.$VERSION.scalapack.mpi.x"
-
-    species = "species_defaults/" + basis_set
+    
+    species = "species_defaults/" + "defaults_" + str(defaults) + "/" + basis_set
 
     if hpc.lower() == 'hawk':
         fhi_aims_directory="/apps/local/projects/scw1057/software/fhi-aims/"
@@ -39,8 +39,6 @@ def set_aims_command(hpc='hawk', basis_set='light', defaults=2010):
     elif hpc.lower() == 'archer2':
         fhi_aims_directory="/work/e05/e05-files-log/shared/software/fhi-aims/"
         preamble = srun
-        standard = "defaults_"+str(defaults)+"/"
-        species = "species_defaults/" + standard + basis_set
     #elif hpc.lower() == 'thomas': # Retired Oct 2020
     elif hpc.lower() == 'young':
         fhi_aims_directory="/home/mmm0170/Software/fhi-aims/"
