@@ -1,4 +1,4 @@
-def my_calc(k_grid, out_fn="aims.out", forces=True, dimensions=2, sockets=True, preopt=False):
+def my_calc(k_grid, out_fn="aims.out", forces=True, dimensions=2, sockets=True, preopt=False, sf=False):
     '''
     Args:
         k_grid: (int, int, int)
@@ -15,6 +15,8 @@ def my_calc(k_grid, out_fn="aims.out", forces=True, dimensions=2, sockets=True, 
         preopt: bool
             Alternative settings choice for methods involving pre-optimisation with a different functional to e.g. find
             metastable geometries easier.
+        sf: bool
+            Request strain calculation for bulk geometries
     Returns:
         sockets_calc, fhi_calc: sockets calculator and FHI-aims calculator for geometry optimisations
         or
@@ -59,6 +61,17 @@ def my_calc(k_grid, out_fn="aims.out", forces=True, dimensions=2, sockets=True, 
     if preopt:
         fhi_calc.set(xc='libxc GGA_X_PBE_SOL+GGA_C_PBE_SOL')
 
+    # add analytical stress keyword for unit cell relaxation
+    if sf:
+        if not dimensions == 3:
+            import sys
+            print("Strain Filter calculation requested, but the system is not periodic in all directions.")
+            print("If this was intentional, edit geometry_optimisation.py file.")
+            print("The calculation will be now terminated.")
+            sys.exit()
+
+        fhi_calc.set(compute_analytical_stress = 'True')
+
     # For a larger basis set only the Total Potential Energy is required which takes less time than Forces
     if not forces:
         fhi_calc.set(compute_forces="false",
@@ -80,7 +93,7 @@ def my_calc(k_grid, out_fn="aims.out", forces=True, dimensions=2, sockets=True, 
         return fhi_calc
 
 
-def aims_optimise(model, hpc, constraints=None, dimensions=2, fmax=0.01, tight=True, preopt=False):
+def aims_optimise(model, hpc, constraints=None, dimensions=2, fmax=0.01, tight=True, preopt=False, sf=False):
     '''
     Function used to streamline the process of geometry optimisation, input and ouput generation for ASE/FHI-aims setup.
     The function needs information about structure geometry (model), name of hpc system to configure FHI-aims
@@ -106,6 +119,8 @@ def aims_optimise(model, hpc, constraints=None, dimensions=2, fmax=0.01, tight=T
     preopt: bool
         If true, an alternative set of settings will be passed to the FHI-aims calculator
         See Also my_calc()
+    sf: bool
+        True requests a strain filter unit cell relaxation
 
     Returns a list containing the model with data calculated using
     light and tight settings: [model_light, model_tight]
@@ -169,10 +184,14 @@ def aims_optimise(model, hpc, constraints=None, dimensions=2, fmax=0.01, tight=T
 
     # perform DFT calculations for each filename
     with my_calc(get_k_grid(model, 0.018, surface=True, verbose=True),
-                 out_fn=out, dimensions=dimensions, preopt=preopt)[0] as calculator:
+                 out_fn=out, dimensions=dimensions, preopt=preopt, sf=sf)[0] as calculator:
         model.calc = calculator
         if constraints:
             model.set_constraint(constraints)
+
+        if sf:
+            from ase.constraints import StrainFilter
+            model = StrainFilter(model)
 
         while not is_converged(model, fmax):
             opt = BFGSLineSearch(model,
