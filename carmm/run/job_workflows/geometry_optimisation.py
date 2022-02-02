@@ -5,7 +5,8 @@ def my_calc(k_grid,
             sockets=True,
             preopt=False,
             sf=False,
-            internal=False):
+            internal=False,
+            fmax=None):
     '''
     Args:
         k_grid: (int, int, int)
@@ -26,6 +27,8 @@ def my_calc(k_grid,
             Request strain calculation for bulk geometries
         internal: bool
             Using internal FHI-aims optimizer (BFGS-based)
+        fmax: float
+            force convergence criterion, only in use with internal FHI-aims optimizer
         # TODO: sf and internal should not be used together, Strain Filter is better than unit cell relaxation in FHI-aims
         # TODO: gas does not work with internal due to write_aims producing frac_atoms
     Returns:
@@ -88,7 +91,8 @@ def my_calc(k_grid,
 
     # use BFGS optimiser internally
     if internal:
-        fhi_calc.set(relax_geometry="bfgs 0.010")
+        fhi_calc.set(relax_geometry="bfgs "+str(fmax))
+        fhi_calc.set(max_atomic_move=0.1) # Default 0.2A, but should bre reduced if convergence issues occur
 
 
     # For a larger basis set only the Total Potential Energy is required which takes less time than Forces
@@ -96,17 +100,7 @@ def my_calc(k_grid,
         fhi_calc.set(compute_forces="false",
                      final_forces_cleaned="false")
 
-
-    #counter = 0
-    # check/make folders
-    #while str(counter) + "_" + out_fn \
-    #        in [fn for fn in os.listdir() if fnmatch.fnmatch(fn, out_fn)]:
-    #    counter += 1
-    #fhi_calc.outfilename = str(counter) + "_" + out_fn
-
-    # in case one would want multiple .out files in one directory, though that makes life difficult for output parsers
-    # e.g. in NOMAD repostiory
-
+    # set a unique .out output name
     fhi_calc.outfilename = out_fn
 
     if sockets and not internal:
@@ -116,14 +110,14 @@ def my_calc(k_grid,
 
 
 def aims_optimise(model,
-                  hpc,
-                  constraints=False,
-                  dimensions=2,
-                  fmax=0.01,
-                  tight=True,
-                  preopt=False,
-                  sf=False,
-                  internal=False):
+                  hpc: str,
+                  constraints: bool = False,
+                  dimensions: int = 2,
+                  fmax: float = 0.01,
+                  tight: bool = True,
+                  preopt: bool = False,
+                  sf: bool = False,
+                  internal: bool = False):
     '''
     Function used to streamline the process of geometry optimisation, input and ouput generation for ASE/FHI-aims setup.
     The function needs information about structure geometry (model), name of hpc system to configure FHI-aims
@@ -252,11 +246,12 @@ def aims_optimise(model,
     else:
         # perform DFT calculations for each filename
         calculator = my_calc(k_grid,
-                 out_fn=out,
-                 dimensions=dimensions,
-                 preopt=preopt,
-                 sf=sf,
-                 internal=internal)
+                             out_fn=out,
+                             dimensions=dimensions,
+                             preopt=preopt,
+                             sf=sf,
+                             internal=internal,
+                             fmax=fmax)
 
         model.calc = calculator
 
