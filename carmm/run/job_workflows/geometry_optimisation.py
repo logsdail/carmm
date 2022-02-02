@@ -63,8 +63,12 @@ def my_calc(k_grid,
                  compute_forces="true",
                  #output=['mulliken'],
                  #use_dipole_correction='True',
-                 #final_forces_cleaned='true',
-                 force_correction="true",
+                 #force_correction="true",
+                 sc_accuracy_etot=1e-6,
+                 sc_accuracy_eev=1e-3,
+                 sc_accuracy_rho=1e-6,
+                 sc_accuracy_forces=1e-4,
+                 final_forces_cleaned='true',
                  )
 
     # Use full PBEsol exchange-correlation to preptimise geometries
@@ -300,7 +304,8 @@ def aims_optimise(model,
 
 
 def get_k_grid(model, sampling_density, dimensions=2, verbose=False):
-    """
+
+    '''
     Based converged value of reciprocal space sampling provided,
     this function analyses the xyz-dimensions of the simulation cell
     and returns the minimum k-grid as a tuple that can be used
@@ -325,7 +330,9 @@ def get_k_grid(model, sampling_density, dimensions=2, verbose=False):
         float containing 3 integers: (kx, ky, kz)
         or
         None if a non-periodic model is presented
-    """
+    '''
+
+
     import math
     import numpy as np
     # define k_grid sampling density /A
@@ -360,18 +367,6 @@ def get_k_grid(model, sampling_density, dimensions=2, verbose=False):
 
 
 def vibrate(model, indices, hpc="hawk", dimensions=2, out=None):
-    """
-
-    Args:
-        model:
-        indices:
-        hpc:
-        dimensions:
-        out:
-
-    Returns:
-
-    """
     """Class for calculating vibrational modes using finite difference.
 
     The vibrational modes are calculated from a finite difference
@@ -433,93 +428,3 @@ def vibrate(model, indices, hpc="hawk", dimensions=2, out=None):
     os.chdir("..")
 
     return vib.get_zero_point_energy()
-
-
-"""
-def aims_nn_optimise(db_name, hpc, dimensions=2):
-    '''
-
-    Args:
-        db_name:
-        hpc:
-        dimensions:
-
-    Returns:
-
-    '''
-    from carmm.run.aims_path import set_aims_command
-    # from carmm.run.aims_calculator import get_k_grid
-    from ase.io import read
-    import os
-    from ase.io.trajectory import Trajectory
-
-    # Connect to a database containing structure for relaxation
-    from ase.db import connect
-    print("Connecting to", db_name)
-    if db_name[-3:] == ".db":
-        filename = db_name[:-3]
-    else:
-        print("Wrong name. Provide a relative path to a .db file in db_name.")
-    db = connect(db_name)
-    # Assume constant unit cell dimensions and base k_grid on 1st structure
-    model = db.get_atoms(id=1)
-    print("Analysing", model.get_chemical_formula())
-
-    # set the environment variables for geometry optimisation
-    set_aims_command(hpc=hpc, basis_set="light")
-    # calc = my_calc(get_k_grid(model, 0.018, surface=True, verbose=True), out_fn=filename+".out", dimensions=dimensions, sockets=True)[0] as calculator:
-    from ase.optimize.nn_optimize import Ensemble_Relaxer
-    from ase.calculators.emt import EMT
-    # NN hyperparameters
-    nn_params = {'layer_nodes': [50, 50], 'activations': ['tanh', 'tanh'], 'lr': 1}
-
-    # confidence coeffients used to control to what extent we trust the NN model
-    alpha = 2.0
-    # feed ASE database db, set ground truth calculator,
-    # specify the folder name to store intermediate models and data
-    with my_calc(get_k_grid(model, 0.018, surface=True, verbose=True), out_fn=filename + ".out", dimensions=dimensions,
-                sockets=True)[0] as calculator:  # change to calculator
-        relaxer = Ensemble_Relaxer(db=db,
-                                   calculator=calculator,
-                                   jobname=filename + "_relaxation",
-                                   ensemble_size=10,
-                                   alpha=alpha,
-                                   nn_params=nn_params)
-
-        # relaxer.run() returns a ase-db containing relaxed configurations
-        print("Commencing")
-        relaxed = relaxer.run(fmax=0.01, steps=50)
-        print("Concluded")
-
-    # If optimisation concluded successfully - calculate final using tight basis set
-    path = "./" + filename + "_relaxation/relaxed_trajs/final.db"
-    if os.path.exists(path):
-        model = read(path)
-
-        # store a copy of the converged model with "light" calculator data
-        model_light = model.copy()
-
-        os.chdir("..")
-
-        # Set environment variables for a larger basis set - converged electornic structure
-        subdirectory_name_tight = filename + "_tight"
-        if not os.path.exists(subdirectory_name_tight):
-            os.mkdir(subdirectory_name_tight)
-        os.chdir(subdirectory_name_tight)
-        set_aims_command(hpc=hpc, basis_set="tight")
-
-        # Recalculate the structure using a larger basis set in a separate folder
-        with my_calc(get_k_grid(model, 0.018, surface=True, verbose=True), out_fn=str(filename) + "_tight.out",
-                     forces=False, dimensions=dimensions)[0] as calculator:
-            model.calc = calculator
-            model.get_potential_energy()
-            traj = Trajectory(filename + "_tight.traj", "w")
-            traj.write(model)
-            traj.close()
-
-        # go back to the parent directory to finish the loop
-        os.chdir("..")
-
-    return [model_light, model]
-
-"""
