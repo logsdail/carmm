@@ -1,4 +1,11 @@
-def my_calc(k_grid, out_fn="aims.out", forces=True, dimensions=2, sockets=True, preopt=False, sf=False):
+def my_calc(k_grid,
+            out_fn="aims.out",
+            forces=True,
+            dimensions=2,
+            sockets=True,
+            preopt=False,
+            sf=False,
+            internal=False):
     '''
     Args:
         k_grid: (int, int, int)
@@ -17,6 +24,10 @@ def my_calc(k_grid, out_fn="aims.out", forces=True, dimensions=2, sockets=True, 
             metastable geometries easier.
         sf: bool
             Request strain calculation for bulk geometries
+        internal: bool
+            Using internal FHI-aims optimizer (BFGS-based)
+        # TODO: sf and internal should not be used together, Strain Filter is better than unit cell relaxation in FHI-aims
+        # TODO: internal and tight not to be used together, method is to relax with light basis set
     Returns:
         sockets_calc, fhi_calc: sockets calculator and FHI-aims calculator for geometry optimisations
         or
@@ -25,7 +36,7 @@ def my_calc(k_grid, out_fn="aims.out", forces=True, dimensions=2, sockets=True, 
     '''
     # New method that gives a default calculator
     import os, fnmatch
-    if sockets:
+    if sockets and not internal:
         from carmm.run.aims_calculator import get_aims_and_sockets_calculator
         # On machines where ASE and FHI-aims are run separately (e.g. ASE on login node, FHI-aims on compute nodes)
         # we need to specifically state what the name of the login node is so the two packages can communicate
@@ -38,8 +49,7 @@ def my_calc(k_grid, out_fn="aims.out", forces=True, dimensions=2, sockets=True, 
         # On machines where ASE and FHI-aims are run separately (e.g. ASE on login node, FHI-aims on compute nodes)
         # we need to specifically state what the name of the login node is so the two packages can communicate
         fhi_calc = get_aims_calculator(dimensions=dimensions,
-                                       k_grid=k_grid,
-                                       codata_warning=False)
+                                       k_grid=k_grid)
 
     # remove previous xc argument to ensure libxc warning override is first
     fhi_calc.parameters.pop("xc")
@@ -72,10 +82,16 @@ def my_calc(k_grid, out_fn="aims.out", forces=True, dimensions=2, sockets=True, 
 
         fhi_calc.set(compute_analytical_stress = 'True')
 
+    # use BFGS optimiser internally
+    if internal:
+        fhi_calc.set(relax_geometry="bfgs 1.e-2")
+
+
     # For a larger basis set only the Total Potential Energy is required which takes less time than Forces
-    if not forces:
+    if not forces and not internal:
         fhi_calc.set(compute_forces="false",
                      final_forces_cleaned="false")
+
 
     counter = 0
     # check/make folders
@@ -85,15 +101,23 @@ def my_calc(k_grid, out_fn="aims.out", forces=True, dimensions=2, sockets=True, 
 
     # in case one would want multiple .out files in one directory, though that makes life difficult for output parsers
     # e.g. in NOMAD repostiory
-    #fhi_calc.outfilename = str(counter) + "_" + out_fn
+    fhi_calc.outfilename = str(counter) + "_" + out_fn
 
-    if sockets:
+    if sockets and not internal:
         return sockets_calc, fhi_calc
     else:
         return fhi_calc
 
 
-def aims_optimise(model, hpc, constraints=None, dimensions=2, fmax=0.01, tight=True, preopt=False, sf=False):
+def aims_optimise(model,
+                  hpc,
+                  constraints=None,
+                  dimensions=2,
+                  fmax=0.01,
+                  tight=True,
+                  preopt=False,
+                  sf=False,
+                  internal=False):
     '''
     Function used to streamline the process of geometry optimisation, input and ouput generation for ASE/FHI-aims setup.
     The function needs information about structure geometry (model), name of hpc system to configure FHI-aims
@@ -136,6 +160,9 @@ def aims_optimise(model, hpc, constraints=None, dimensions=2, fmax=0.01, tight=T
     # Read the geometry
     filename = model.get_chemical_formula()
 
+    # define k_grid
+    k_grid = get_k_grid(model, 0.018, dimensions=dimensions, verbose=True)
+
     # ensure separate folders are in place for each calculation input
     counter = 0
     # Count .traj outputs
@@ -162,8 +189,12 @@ def aims_optimise(model, hpc, constraints=None, dimensions=2, fmax=0.01, tight=T
 
         # read the last optimisation
         if os.path.exists(str(counter - 1) + "_" + filename + "_" + str(opt_restarts-1) + ".traj"):
-            model = read(str(counter - 1) + "_" + filename + "_" + str(opt_restarts-1) + ".traj")
-            print("Restarting from", str(counter - 1) + "_" + filename + "_" + str(opt_restarts-1) + ".traj")
+            if internal:
+                model = read("geometry.in.next_step")
+                print("Restarting from geometry.in.next_step")
+            else:
+                model = read(str(counter - 1) + "_" + filename + "_" + str(opt_restarts-1) + ".traj")
+                print("Restarting from", str(counter - 1) + "_" + filename + "_" + str(opt_restarts-1) + ".traj")
         os.chdir("..")
 
     # TODO: Perform calculations ONLY if structure is not converged
@@ -182,35 +213,68 @@ def aims_optimise(model, hpc, constraints=None, dimensions=2, fmax=0.01, tight=T
     # Restarts will prevent the calculation from getting stuck in deep local minimum when using metaGGA XC mBEEF
     opt_restarts = 0
 
-    # perform DFT calculations for each filename
-    with my_calc(get_k_grid(model, 0.018, surface=True, verbose=True),
-                 out_fn=out, dimensions=dimensions, preopt=preopt, sf=sf)[0] as calculator:
+    if not internal:
+        # perform DFT calculations for each filename
+        with my_calc(k_grid, out_fn=out, dimensions=dimensions, preopt=preopt, sf=sf)[0] as calculator:
+            model.calc = calculator
+            if constraints:
+                model.set_constraint(constraints)
+
+            if sf:
+                from ase.constraints import StrainFilter
+                model = StrainFilter(model)
+
+            while not is_converged(model, fmax):
+                opt = BFGSLineSearch(model,
+                           trajectory=str(counter) + "_" + filename + "_" + str(opt_restarts) + ".traj",
+                           maxstep=0.2,
+                           alpha=50.0
+                            )
+
+                opt.run(fmax=fmax, steps=10)
+                opt_restarts += 1
+
+        os.chdir("..")
+
+    # setup for internal aims optimiser
+    else:
+        # perform DFT calculations for each filename
+        calculator = my_calc(k_grid,
+                 out_fn=out,
+                 dimensions=dimensions,
+                 preopt=preopt,
+                 sf=sf,
+                 internal=internal)
+
         model.calc = calculator
         if constraints:
             model.set_constraint(constraints)
 
         if sf:
-            from ase.constraints import StrainFilter
-            model = StrainFilter(model)
+            print("Can't use sf and internal optimisation atm")
 
-        while not is_converged(model, fmax):
-            opt = BFGSLineSearch(model,
-                       trajectory=str(counter) + "_" + filename + "_" + str(opt_restarts) + ".traj",
-                       maxstep=0.2,
-                       alpha=50.0
-                        )
+        # Just to  trigger energy + force calls
+        opt = BFGSLineSearch(model)
+        opt.run(fmax=fmax, steps=0)
 
-            opt.run(fmax=fmax, steps=10)
-            opt_restarts += 1
+        # Save a trajectory from aims output
+        from ase.io import Trajectory
+        traj = (str(counter) + "_" + filename + "_" + str(opt_restarts) + ".traj", 'w')
+        for i in read(out):
+            traj.write(i)
+        traj.close()
 
-    os.chdir("..")
+        # make sure model returned contains updated geometry
+        model = read(str(counter) + "_" + filename + "_" + str(opt_restarts) + ".traj")
+
+        os.chdir("..")
 
     if tight:
         print("Commencing calculation using 'tight' basis set.")
         # store a copy of the converged model with "light" calculator data
         model_tight = model.copy()
 
-        # Set environment variables for a larger basis set - converged electornic structure
+        # Set environment variables for a larger basis set - converged electronic structure
         subdirectory_name_tight = subdirectory_name + "_tight"
         if not os.path.exists(subdirectory_name_tight):
             os.mkdir(subdirectory_name_tight)
@@ -218,7 +282,7 @@ def aims_optimise(model, hpc, constraints=None, dimensions=2, fmax=0.01, tight=T
         set_aims_command(hpc=hpc, basis_set="tight")
 
         # Recalculate the structure using a larger basis set in a separate folder
-        with my_calc(get_k_grid(model_tight, 0.018, surface=True, verbose=True), out_fn=str(filename) + "_tight.out",
+        with my_calc(k_grid, out_fn=str(filename) + "_tight.out",
                     forces=False, dimensions=dimensions)[0] as calculator:
             model_tight.calc = calculator
             model_tight.get_potential_energy()
@@ -234,7 +298,8 @@ def aims_optimise(model, hpc, constraints=None, dimensions=2, fmax=0.01, tight=T
         return [model]
 
 
-def get_k_grid(model, sampling_density, surface=False, verbose=False):
+
+def get_k_grid(model, sampling_density, dimensions=2, verbose=False):
     """
     Based converged value of reciprocal space sampling provided,
     this function analyses the xyz-dimensions of the simulation cell
@@ -250,8 +315,8 @@ def get_k_grid(model, sampling_density, surface=False, verbose=False):
         Converged value of minimum reciprocal space sampling required for
         accuracy of the periodic calculation. Value is a fraction between
         0 and 1, unit is /Å.
-    surface: bool
-        Flag that sets the k-grid in z-direction to 1 for surface slabs
+    dimensions: int
+        2 sets the k-grid in z-direction to 1 for surface slabs, 3 calculates as normal, k_grid not necessary for others
         that have vacuum padding added.
     verbose: bool
         Flag turning print statements on/off
@@ -275,10 +340,13 @@ def get_k_grid(model, sampling_density, surface=False, verbose=False):
     k_x = math.ceil((1 / sampling_density) * (1 / x))
     k_y = math.ceil((1 / sampling_density) * (1 / y))
     # recognise surface models and set k_z to 1
-    if surface:
+    if dimensions == 2:
         k_z = 1
-    else:
+    elif dimensions == 3:
         k_z = math.ceil((1 / sampling_density) * (1 / z))
+    else:
+        print("Wrong number of periodic dimensions specified.")
+        return (0,0,0)
 
     k_grid = (k_x, k_y, k_z)
 
@@ -354,7 +422,7 @@ def vibrate(model, indices, hpc="hawk", dimensions=2, out=None):
     os.chdir(subdirectory_name)
 
     # calculate vibrations
-    with my_calc(get_k_grid(model_tight, 0.018, surface=True, verbose=True), out_fn=out + ".out", dimensions=dimensions)[0] as calculator:
+    with my_calc(get_k_grid(model, 0.018, dimensions=dimensions, verbose=True), out_fn=out + ".out", dimensions=dimensions)[0] as calculator:
         model.calc = calculator
         vib = Vibrations(model, indices=indices, name=out + "_" + str(counter))
         vib.run()
