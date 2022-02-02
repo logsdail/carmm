@@ -27,7 +27,7 @@ def my_calc(k_grid,
         internal: bool
             Using internal FHI-aims optimizer (BFGS-based)
         # TODO: sf and internal should not be used together, Strain Filter is better than unit cell relaxation in FHI-aims
-        # TODO: internal and tight not to be used together, method is to relax with light basis set
+        # TODO: gas does not work with internal due to write_aims producing frac_atoms
     Returns:
         sockets_calc, fhi_calc: sockets calculator and FHI-aims calculator for geometry optimisations
         or
@@ -88,7 +88,7 @@ def my_calc(k_grid,
 
     # use BFGS optimiser internally
     if internal:
-        fhi_calc.set(relax_geometry="bfgs 1.e-2")
+        fhi_calc.set(relax_geometry="bfgs 0.010")
 
 
     # For a larger basis set only the Total Potential Energy is required which takes less time than Forces
@@ -97,15 +97,17 @@ def my_calc(k_grid,
                      final_forces_cleaned="false")
 
 
-    counter = 0
+    #counter = 0
     # check/make folders
-    while str(counter) + "_" + out_fn \
-            in [fn for fn in os.listdir() if fnmatch.fnmatch(fn, out_fn)]:
-        counter += 1
+    #while str(counter) + "_" + out_fn \
+    #        in [fn for fn in os.listdir() if fnmatch.fnmatch(fn, out_fn)]:
+    #    counter += 1
+    #fhi_calc.outfilename = str(counter) + "_" + out_fn
 
     # in case one would want multiple .out files in one directory, though that makes life difficult for output parsers
     # e.g. in NOMAD repostiory
-    fhi_calc.outfilename = str(counter) + "_" + out_fn
+
+    fhi_calc.outfilename = out_fn
 
     if sockets and not internal:
         return sockets_calc, fhi_calc
@@ -115,7 +117,7 @@ def my_calc(k_grid,
 
 def aims_optimise(model,
                   hpc,
-                  constraints=None,
+                  constraints=False,
                   dimensions=2,
                   fmax=0.01,
                   tight=True,
@@ -156,7 +158,7 @@ def aims_optimise(model,
 
     from carmm.run.aims_path import set_aims_command
     from ase.io import read
-    import os, fnmatch
+    import os, fnmatch, shutil
     from ase.io.trajectory import Trajectory
     from carmm.analyse.forces import is_converged
     from ase.optimize import BFGSLineSearch
@@ -192,13 +194,19 @@ def aims_optimise(model,
             opt_restarts += 1
 
         # read the last optimisation
-        if os.path.exists(str(counter - 1) + "_" + filename + "_" + str(opt_restarts-1) + ".traj"):
-            if internal:
-                model = read("geometry.in.next_step")
-                print("Restarting from geometry.in.next_step")
-            else:
+        if not internal:
+            if os.path.exists(str(counter - 1) + "_" + filename + "_" + str(opt_restarts-1) + ".traj"):
                 model = read(str(counter - 1) + "_" + filename + "_" + str(opt_restarts-1) + ".traj")
                 print("Restarting from", str(counter - 1) + "_" + filename + "_" + str(opt_restarts-1) + ".traj")
+        else:
+            if os.path.exists(str(counter-1) + "_" + filename + "_" + str(opt_restarts-1) + ".traj"):
+                model = read(str(counter-1) + "_" + filename + "_" + str(opt_restarts-1) + ".traj")
+                print("Restarting from", str(counter-1) + "_" + filename + "_" + str(opt_restarts-1) + ".traj")
+            elif os.path.exists("geometry.in.next_step"):
+                shutil.copy("geometry.in.next_step", "next_step.in")
+                model = read("next_step.in")
+                print("Restarting from geometry.in.next_step")
+
         os.chdir("..")
 
     # TODO: Perform calculations ONLY if structure is not converged
@@ -251,6 +259,7 @@ def aims_optimise(model,
                  internal=internal)
 
         model.calc = calculator
+
         if constraints:
             model.set_constraint(constraints)
 
@@ -263,13 +272,17 @@ def aims_optimise(model,
 
         # Save a trajectory from aims output
         from ase.io import Trajectory
-        traj = (str(counter) + "_" + filename + "_" + str(opt_restarts) + ".traj", 'w')
-        for i in read(out):
-            traj.write(i)
-        traj.close()
+        traj = Trajectory(str(counter) + "_" + filename + "_" + str(opt_restarts) + ".traj", 'w')
+        models = read(out+"@:")
 
+        for i in models:
+            traj.write(i)
+
+        traj.close()
         # make sure model returned contains updated geometry
-        model = read(str(counter) + "_" + filename + "_" + str(opt_restarts) + ".traj")
+        #model = read(str(counter) + "_" + filename + "_" + str(opt_restarts) + ".traj")
+
+
 
         os.chdir("..")
 
@@ -340,9 +353,8 @@ def get_k_grid(model, sampling_density, dimensions=2, verbose=False):
     y = np.linalg.norm(model.get_cell()[1])
     z = np.linalg.norm(model.get_cell()[2])
 
-    for i in [x, y, z]:
-        if i == 0:
-            return None
+    if np.all([x, y, z] == 0):
+        return False
 
     k_x = math.ceil((1 / sampling_density) * (1 / x))
     k_y = math.ceil((1 / sampling_density) * (1 / y))
@@ -353,7 +365,7 @@ def get_k_grid(model, sampling_density, dimensions=2, verbose=False):
         k_z = math.ceil((1 / sampling_density) * (1 / z))
     else:
         print("Wrong number of periodic dimensions specified.")
-        return (0,0,0)
+        return False
 
     k_grid = (k_x, k_y, k_z)
 
