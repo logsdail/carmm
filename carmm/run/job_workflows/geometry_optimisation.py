@@ -1,3 +1,6 @@
+# TODO: design a custom class and methods structure
+# TODO: combine with ASE db
+
 def my_calc(k_grid,
             out_fn="aims.out",
             forces=True,
@@ -58,6 +61,7 @@ def my_calc(k_grid,
     fhi_calc.parameters.pop("xc")
     fhi_calc.set(override_warning_libxc='True')
 
+    # TODO: fundamental settings to be provided as input by the user to make sure nothing gets hardcoded
     # FHI-aims settings set up
     fhi_calc.set(xc_pre=['pbe', '10'],
                  xc='libxc MGGA_X_MBEEF+GGA_C_PBE_SOL',
@@ -71,7 +75,8 @@ def my_calc(k_grid,
                  sc_accuracy_eev=1e-3,
                  sc_accuracy_rho=1e-6,
                  sc_accuracy_forces=1e-4,
-                 final_forces_cleaned='true',
+                 # final_forces_cleaned='true',
+                 # occupation_type="gaussian 0.05",
                  )
 
     # Use full PBEsol exchange-correlation to preptimise geometries
@@ -92,7 +97,10 @@ def my_calc(k_grid,
     # use BFGS optimiser internally
     if internal:
         fhi_calc.set(relax_geometry="bfgs "+str(fmax))
-        fhi_calc.set(max_atomic_move=0.1) # Default 0.2A, but should bre reduced if convergence issues occur
+        # fhi_calc.set(max_atomic_move=0.2) # Default 0.2A, but should bre reduced if convergence issues occur
+        # fhi_calc.set(harmonic_length_scale=0.025)
+        # fhi_calc.set(energy_tolerance=5.e-4)
+        fhi_calc.set()
 
 
     # For a larger basis set only the Total Potential Energy is required which takes less time than Forces
@@ -155,7 +163,8 @@ def aims_optimise(model,
     import os, fnmatch, shutil
     from ase.io.trajectory import Trajectory
     from carmm.analyse.forces import is_converged
-    from ase.optimize import BFGSLineSearch
+    from ase.optimize import BFGS
+    #from ase.optimize.sciopt import SciPyFminCG
 
     # Read the geometry
     filename = model.get_chemical_formula()
@@ -204,6 +213,7 @@ def aims_optimise(model,
         os.chdir("..")
 
     # TODO: Perform calculations ONLY if structure is not converged
+    # In some instances this could trigger a calculation due to failed ._check_state on the calculator - undesired
     # if not is_converged(model, 0.01):
     if not os.path.exists(subdirectory_name):
         os.mkdir(subdirectory_name)
@@ -229,16 +239,22 @@ def aims_optimise(model,
             if sf:
                 from ase.constraints import StrainFilter
                 model = StrainFilter(model)
+                opt = BFGS(model,
+                          trajectory=str(counter) + "_" + filename + "_" + str(opt_restarts) + ".traj",
+                          # maxstep=0.2,
+                          alpha=70.0
+                          )
+                opt.run(fmax=fmax, steps=50) # TODO: need to count previous restarts
+            else:
+                while not is_converged(model, fmax):
+                    opt = BFGS(model,
+                               trajectory=str(counter) + "_" + filename + "_" + str(opt_restarts) + ".traj",
+                               maxstep=0.6,
+                               alpha=70.0
+                                )
 
-            while not is_converged(model, fmax):
-                opt = BFGSLineSearch(model,
-                           trajectory=str(counter) + "_" + filename + "_" + str(opt_restarts) + ".traj",
-                           maxstep=0.2,
-                           alpha=50.0
-                            )
-
-                opt.run(fmax=fmax, steps=10)
-                opt_restarts += 1
+                    opt.run(fmax=fmax, steps=50)
+                    opt_restarts += 1
 
         os.chdir("..")
 
@@ -259,10 +275,11 @@ def aims_optimise(model,
             model.set_constraint(constraints)
 
         if sf:
+            # TODO: unit cell relaxtation keyword that works with internal and ASE StrainFilter
             print("Can't use sf and internal optimisation atm")
 
         # Just to  trigger energy + force calls
-        opt = BFGSLineSearch(model)
+        opt = BFGS(model)
         opt.run(fmax=fmax, steps=0)
 
         # Save a trajectory from aims output
@@ -270,10 +287,15 @@ def aims_optimise(model,
         traj = Trajectory(str(counter) + "_" + filename + "_" + str(opt_restarts) + ".traj", 'w')
         models = read(out+"@:")
 
+        #TODO: Alert the user of the problem
+        # Problem with this approach is inconsistency in energies from aims.out vs communicated over sockets to ASE
         for i in models:
             traj.write(i)
 
         traj.close()
+
+        # TODO: check if final geometry returned is not identical to initial
+        # I think only E+F returned, not changes to structure
         # make sure model returned contains updated geometry
         #model = read(str(counter) + "_" + filename + "_" + str(opt_restarts) + ".traj")
 
@@ -374,7 +396,9 @@ def get_k_grid(model, sampling_density, dimensions=2, verbose=False):
 
 
 def vibrate(model, indices, hpc="hawk", dimensions=2, out=None):
-    """Class for calculating vibrational modes using finite difference.
+    """
+    TODO: proper definition of this function
+    Class for calculating vibrational modes using finite difference.
 
     The vibrational modes are calculated from a finite difference
     approximation of the Hessian matrix.
