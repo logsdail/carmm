@@ -1,7 +1,8 @@
 # TODO: design a custom class and methods structure
 # TODO: combine with ASE db
 
-def my_calc(k_grid,
+def my_calc(params,
+            k_grid,
             out_fn="aims.out",
             forces=True,
             dimensions=2,
@@ -61,24 +62,9 @@ def my_calc(k_grid,
     fhi_calc.parameters.pop("xc")
     fhi_calc.set(override_warning_libxc='True')
 
-    # TODO: fundamental settings to be provided as input by the user to make sure nothing gets hardcoded
-    # FHI-aims settings set up
-    fhi_calc.set(xc_pre=['pbe', '10'],
-                 xc='libxc MGGA_X_MBEEF+GGA_C_PBE_SOL',
-                 spin='none',
-                 relativistic=('atomic_zora','scalar'),
-                 compute_forces="true",
-                 #output=['mulliken'],
-                 #use_dipole_correction='True',
-                 #force_correction="true",
-                 sc_accuracy_etot=1e-6,
-                 sc_accuracy_eev=1e-3,
-                 sc_accuracy_rho=1e-6,
-                 sc_accuracy_forces=1e-4,
-                 # final_forces_cleaned='true',
-                 # occupation_type="gaussian 0.05",
-                 )
-
+    # Forces required for optimisation:
+    if forces:
+        fhi_calc.set(compute_forces = "true",)
     # Use full PBEsol exchange-correlation to preptimise geometries
     if preopt:
         fhi_calc.set(xc='libxc GGA_X_PBE_SOL+GGA_C_PBE_SOL')
@@ -102,7 +88,6 @@ def my_calc(k_grid,
         # fhi_calc.set(energy_tolerance=5.e-4)
         fhi_calc.set()
 
-
     # For a larger basis set only the Total Potential Energy is required which takes less time than Forces
     if not forces and not internal:
         fhi_calc.set(compute_forces="false",
@@ -111,13 +96,18 @@ def my_calc(k_grid,
     # set a unique .out output name
     fhi_calc.outfilename = out_fn
 
+    # TODO: fundamental settings to be provided as input by the user to make sure nothing essential gets hardcoded
+    # FHI-aims settings set up
+    fhi_calc.set(**params)
+
     if sockets and not internal:
         return sockets_calc, fhi_calc
     else:
         return fhi_calc
 
 
-def aims_optimise(model,
+def aims_optimise(params,
+                  model,
                   hpc: str,
                   constraints: bool = False,
                   dimensions: int = 2,
@@ -138,6 +128,8 @@ def aims_optimise(model,
     the calculation (gas, surface, bulk) and request a postprocessing calculation with a larger basis set.
 
     PARAMETERS:
+    params: dict
+        Dictionary containing user's calculator FHI-aims parameters
     model: Atoms object
     hpc: string
         Name of the hpc facility, valid choices: "hawk", "archer2", "isambard", "young"
@@ -191,7 +183,7 @@ def aims_optimise(model,
     subdirectory_name_prev = "dir_" + filename + "_" + str(counter - 1)
 
     # check previous calculations for convergence
-    if counter > 0:
+    if restart and counter > 0:
         print("Previous optimisation detected", "in dir_" + filename + "_" + str(counter - 1))
         os.chdir(subdirectory_name_prev)
 
@@ -235,7 +227,7 @@ def aims_optimise(model,
 
     if not internal:
         # perform DFT calculations for each filename
-        with my_calc(k_grid, out_fn=out, dimensions=dimensions, preopt=preopt, sf=sf)[0] as calculator:
+        with my_calc(params, k_grid, out_fn=out, dimensions=dimensions, preopt=preopt, sf=sf)[0] as calculator:
             model.calc = calculator
             if constraints:
                 model.set_constraint(constraints)
@@ -252,7 +244,7 @@ def aims_optimise(model,
                 else:
                     opt = BFGS(model,
                                trajectory=str(counter) + "_" + filename + "_" + str(opt_restarts) + ".traj",
-                               maxstep=0.6,
+                               maxstep=0.2,
                                alpha=70.0
                                 )
 
@@ -264,7 +256,8 @@ def aims_optimise(model,
     # setup for internal aims optimiser
     else:
         # perform DFT calculations for each filename
-        calculator = my_calc(k_grid,
+        calculator = my_calc(params,
+                             k_grid,
                              out_fn=out,
                              dimensions=dimensions,
                              preopt=preopt,
@@ -319,7 +312,7 @@ def aims_optimise(model,
         set_aims_command(hpc=hpc, basis_set="tight")
 
         # Recalculate the structure using a larger basis set in a separate folder
-        with my_calc(k_grid, out_fn=str(filename) + "_tight.out",
+        with my_calc(params, k_grid, out_fn=str(filename) + "_tight.out",
                     forces=False, dimensions=dimensions)[0] as calculator:
             model_tight.calc = calculator
             model_tight.get_potential_energy()
@@ -451,7 +444,7 @@ def vibrate(model, indices, hpc="hawk", dimensions=2, out=None):
     os.chdir(subdirectory_name)
 
     # calculate vibrations
-    with my_calc(get_k_grid(model, 0.018, dimensions=dimensions, verbose=True), out_fn=out + ".out", dimensions=dimensions)[0] as calculator:
+    with my_calc(params, get_k_grid(model, 0.018, dimensions=dimensions, verbose=True), out_fn=out + ".out", dimensions=dimensions)[0] as calculator:
         model.calc = calculator
         vib = Vibrations(model, indices=indices, name=out + "_" + str(counter))
         vib.run()
