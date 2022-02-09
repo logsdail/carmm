@@ -38,8 +38,8 @@ def my_calc(k_grid,
         sockets_calc, fhi_calc: sockets calculator and FHI-aims calculator for geometry optimisations
         or
         fhi_calc - FHI-aims calculator for geometry optimisations
-
     '''
+
     # New method that gives a default calculator
     import os, fnmatch
     if sockets and not internal:
@@ -125,7 +125,9 @@ def aims_optimise(model,
                   tight: bool = True,
                   preopt: bool = False,
                   sf: bool = False,
-                  internal: bool = False):
+                  internal: bool = False,
+                  restart: bool = True):
+
     '''
     Function used to streamline the process of geometry optimisation, input and ouput generation for ASE/FHI-aims setup.
     The function needs information about structure geometry (model), name of hpc system to configure FHI-aims
@@ -153,6 +155,8 @@ def aims_optimise(model,
         See Also my_calc()
     sf: bool
         True requests a strain filter unit cell relaxation
+    restart: bool
+        Request restart from previous geometry if True (True by default)
 
     Returns a list containing the model with data calculated using
     light and tight settings: [model_light, model_tight]
@@ -236,25 +240,24 @@ def aims_optimise(model,
             if constraints:
                 model.set_constraint(constraints)
 
-            if sf:
-                from ase.constraints import StrainFilter
-                model = StrainFilter(model)
-                opt = BFGS(model,
-                          trajectory=str(counter) + "_" + filename + "_" + str(opt_restarts) + ".traj",
-                          # maxstep=0.2,
-                          alpha=70.0
-                          )
-                opt.run(fmax=fmax, steps=50) # TODO: need to count previous restarts
-            else:
-                while not is_converged(model, fmax):
+            while not is_converged(model, fmax):
+                if sf:
+                    from ase.constraints import StrainFilter
+                    unit_cell_relaxer = StrainFilter(model)
+                    opt = BFGS(unit_cell_relaxer,
+                               trajectory=str(counter) + "_" + filename + "_" + str(opt_restarts) + ".traj",
+                               # maxstep=0.2,
+                               alpha=70.0
+                               )
+                else:
                     opt = BFGS(model,
                                trajectory=str(counter) + "_" + filename + "_" + str(opt_restarts) + ".traj",
                                maxstep=0.6,
                                alpha=70.0
                                 )
 
-                    opt.run(fmax=fmax, steps=50)
-                    opt_restarts += 1
+                opt.run(fmax=fmax, steps=50)
+                opt_restarts += 1
 
         os.chdir("..")
 
