@@ -158,8 +158,9 @@ def _check_socket(host, port, verbose=False):
     return port
 
 
-def get_k_grid(model, sampling_density, surface=False, verbose=False):
-    """
+def get_k_grid(model, sampling_density, dimensions, verbose=False):
+
+    '''
     Based converged value of reciprocal space sampling provided,
     this function analyses the xyz-dimensions of the simulation cell
     and returns the minimum k-grid as a tuple that can be used
@@ -174,8 +175,8 @@ def get_k_grid(model, sampling_density, surface=False, verbose=False):
         Converged value of minimum reciprocal space sampling required for
         accuracy of the periodic calculation. Value is a fraction between
         0 and 1, unit is /Å.
-    surface: bool
-        Flag that sets the k-grid in z-direction to 1 for surface slabs
+    dimensions: int
+        2 sets the k-grid in z-direction to 1 for surface slabs, 3 calculates as normal, k_grid not necessary for others
         that have vacuum padding added.
     verbose: bool
         Flag turning print statements on/off
@@ -184,7 +185,9 @@ def get_k_grid(model, sampling_density, surface=False, verbose=False):
         float containing 3 integers: (kx, ky, kz)
         or
         None if a non-periodic model is presented
-    """
+    '''
+
+
     import math
     import numpy as np
     # define k_grid sampling density /A
@@ -192,24 +195,28 @@ def get_k_grid(model, sampling_density, surface=False, verbose=False):
     y = np.linalg.norm(model.get_cell()[1])
     z = np.linalg.norm(model.get_cell()[2])
 
-    for i in [x, y, z]:
-        if i == 0:
-            return None
+    if np.all([x, y, z] == 0):
+        return False
 
-    k_x = math.ceil((1/sampling_density)*(1/x))
-    k_y = math.ceil((1/sampling_density)*(1/y))
-    # recognise surface models and set k_z to 1
-    if surface:
+    if dimensions == 2:
         k_z = 1
+    elif dimensions == 3:
+        k_z = math.ceil((1 / sampling_density) * (1 / z))
     else:
-        k_z = math.ceil((1/sampling_density)*(1/z))
-    
+        print("Wrong number of periodic dimensions specified.")
+        return False
+
+    k_x = math.ceil((1 / sampling_density) * (1 / x))
+    k_y = math.ceil((1 / sampling_density) * (1 / y))
+    # recognise surface models and set k_z to 1
+
 
     k_grid = (k_x, k_y, k_z)
 
     if verbose:
-        print("Based on lattice xyz dimensions", "x", round(x, 3), "y", round(y, 3), "z",  round(z, 3))
-        print("and", str(sampling_density), "sampling density, the k-grid chosen for periodic calculation is" , str(k_grid)+".")
+        print("Based on lattice xyz dimensions", "x", round(x, 3), "y", round(y, 3), "z", round(z, 3))
+        print("and", str(sampling_density), "sampling density, the k-grid chosen for periodic calculation is",
+              str(k_grid) + ".")
         print()
 
     return k_grid

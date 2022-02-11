@@ -4,11 +4,10 @@
 def aims_optimise(params,
                   model,
                   hpc: str,
-                  constraints: bool = False,
+                  constraints = False,
                   dimensions: int = 2,
                   fmax: float = 0.01,
                   tight: bool = True,
-                  preopt: bool = False,
                   sf: bool = False,
                   internal: bool = False,
                   restart: bool = True):
@@ -18,8 +17,8 @@ def aims_optimise(params,
     The function needs information about structure geometry (model), name of hpc system to configure FHI-aims
     environment variables (hpc). Separate directory is created with a naming convention based on chemical
     formula and number of restarts, n (dir_formula_n), ensuring that no outputs are overwritten in ASE/FHI-aims.
-    The geometry optimisation is restarted after each 10 descent steps in BFGSLineSearch algorithm to overcome deep
-    potential energy local minima which result in fmax above convergence criteria. One can choose the type of phase of
+    The geometry optimisation is restarted from a new Hessian each 80 steps in BFGS algorithm to overcome deep
+    potential energy local minima with fmax above convergence criteria. One can choose the type of phase of
     the calculation (gas, surface, bulk) and request a postprocessing calculation with a larger basis set.
 
     PARAMETERS:
@@ -35,11 +34,9 @@ def aims_optimise(params,
         See Also carmm.run.get_aims_calculator
     fmax: float
         force convergence criterion for geometry optimisation, i.e. max forces on any atom in eV/A
+    # TODO: Perhaps rename this to postprocess and let user provide default basis set
     tight: bool
         Set to True if postprocessing energy calculation using a larger basis set is required
-    preopt: bool
-        If true, an alternative set of settings will be passed to the FHI-aims calculator
-        See Also my_calc()
     sf: bool
         True requests a strain filter unit cell relaxation
     restart: bool
@@ -55,7 +52,6 @@ def aims_optimise(params,
     from ase.io.trajectory import Trajectory
     from carmm.analyse.forces import is_converged
     from ase.optimize import BFGS
-    #from ase.optimize.sciopt import SciPyFminCG
 
     # Read the geometry
     filename = model.get_chemical_formula()
@@ -110,16 +106,14 @@ def aims_optimise(params,
     out = str(counter) + "_" + str(filename) + ".out"
 
     # set the environment variables for geometry optimisation
-    set_aims_command(hpc=hpc, basis_set="intermediate", defaults=2020)
+    set_aims_command(hpc=hpc, basis_set="light", defaults=2020)
 
-    # Restart optimisations after 10 descent steps in BFGSLineSearch
-    # Repeat until converged (10 descent steps is usually around 30-50 force evals)
     # Restarts will prevent the calculation from getting stuck in deep local minimum when using metaGGA XC mBEEF
     opt_restarts = 0
 
     if not internal:
         # perform DFT calculations for each filename
-        with my_calc(params, out_fn=out, dimensions=dimensions, preopt=preopt, sf=sf)[0] as calculator:
+        with my_calc(params, out_fn=out, dimensions=dimensions, sf=sf)[0] as calculator:
             model.calc = calculator
             if constraints:
                 model.set_constraint(constraints)
@@ -130,17 +124,15 @@ def aims_optimise(params,
                     unit_cell_relaxer = StrainFilter(model)
                     opt = BFGS(unit_cell_relaxer,
                                trajectory=str(counter) + "_" + filename + "_" + str(opt_restarts) + ".traj",
-                               # maxstep=0.2,
                                alpha=70.0
                                )
                 else:
                     opt = BFGS(model,
                                trajectory=str(counter) + "_" + filename + "_" + str(opt_restarts) + ".traj",
-                               maxstep=0.2,
                                alpha=70.0
                                 )
 
-                opt.run(fmax=fmax, steps=50)
+                opt.run(fmax=fmax, steps=80)
                 opt_restarts += 1
 
         os.chdir("..")
@@ -151,7 +143,6 @@ def aims_optimise(params,
         calculator = my_calc(params,
                              out_fn=out,
                              dimensions=dimensions,
-                             preopt=preopt,
                              sf=sf,
                              internal=internal,
                              fmax=fmax)
@@ -214,9 +205,9 @@ def aims_optimise(params,
         # go back to the parent directory to finish the loop
         os.chdir("..")
 
-        return [model, model_tight]
+        return model, model_tight
     else:
-        return [model]
+        return model
 
 
 def my_calc(params,
@@ -224,7 +215,6 @@ def my_calc(params,
             forces=True,
             dimensions=2,
             sockets=True,
-            preopt=False,
             sf=False,
             internal=False,
             fmax=None):
@@ -239,9 +229,6 @@ def my_calc(params,
         sockets: bool
             Flag whether sockets calculator is requested (True by default, way more efficient!). Also lack of sockets
             calculator will result in overwritten .out file as rest of the functionality was written with sockets.
-        preopt: bool
-            Alternative settings choice for methods involving pre-optimisation with a different functional to e.g. find
-            metastable geometries easier.
         sf: bool
             Request strain calculation for bulk geometries
         internal: bool
@@ -278,9 +265,6 @@ def my_calc(params,
     # Forces required for optimisation:
     if forces:
         fhi_calc.set(compute_forces="true", )
-    # Use full PBEsol exchange-correlation to preptimise geometries
-    if preopt:
-        fhi_calc.set(xc='libxc GGA_X_PBE_SOL+GGA_C_PBE_SOL')
 
     # add analytical stress keyword for unit cell relaxation
     if sf:
@@ -318,98 +302,34 @@ def my_calc(params,
         return fhi_calc
 
 
-def get_k_grid(model, sampling_density, dimensions=2, verbose=False):
-
+def vibrate(params, model, indices, hpc="hawk", dimensions=2, out=None):
     '''
-    Based converged value of reciprocal space sampling provided,
-    this function analyses the xyz-dimensions of the simulation cell
-    and returns the minimum k-grid as a tuple that can be used
-    as a value for the k_grid keyword in the Aims calculator.
-    This function allows to maintain consistency in input
-    for variable supercell sizes.
+    This method uses ase.vibrations module, see more for info.
+    User provides the FHI-aims parameters, the Atoms object and list
+    of indices of atoms to be vibrated. FHI-aims environment variables are set
+    according to hpc used. Calculation folders are generated automatically
+    and a sockets calculator is used for efficiency.
 
-    Parameters:
-    model: Atoms object
-        Periodic model that requires k-grid for calculation in FHI-aims.
-    sampling_density: float
-        Converged value of minimum reciprocal space sampling required for
-        accuracy of the periodic calculation. Value is a fraction between
-        0 and 1, unit is /Å.
-    dimensions: int
-        2 sets the k-grid in z-direction to 1 for surface slabs, 3 calculates as normal, k_grid not necessary for others
-        that have vacuum padding added.
-    verbose: bool
-        Flag turning print statements on/off
+    Work in progress
+
+    Args:
+        params: dict
+            Dictionary containing user's FHI-aims settings
+        model: Atoms object
+        indices: list
+            List of indices of atoms that require vibrations
+        hpc: str
+             Name of the hpc facility, valid choices: "hawk", "archer2", "isambard", "young"
+        dimensions: int
+            0 for gas, 2 for surface and 3 for bulk
+        out: str
+            Folder names where vibration calculations are kept
+
 
     Returns:
-        float containing 3 integers: (kx, ky, kz)
-        or
-        None if a non-periodic model is presented
+        Zero-Point Energy: float
+
     '''
-
-
-    import math
-    import numpy as np
-    # define k_grid sampling density /A
-    x = np.linalg.norm(model.get_cell()[0])
-    y = np.linalg.norm(model.get_cell()[1])
-    z = np.linalg.norm(model.get_cell()[2])
-
-    if np.all([x, y, z] == 0):
-        return False
-
-    k_x = math.ceil((1 / sampling_density) * (1 / x))
-    k_y = math.ceil((1 / sampling_density) * (1 / y))
-    # recognise surface models and set k_z to 1
-    if dimensions == 2:
-        k_z = 1
-    elif dimensions == 3:
-        k_z = math.ceil((1 / sampling_density) * (1 / z))
-    else:
-        print("Wrong number of periodic dimensions specified.")
-        return False
-
-    k_grid = (k_x, k_y, k_z)
-
-    if verbose:
-        print("Based on lattice xyz dimensions", "x", round(x, 3), "y", round(y, 3), "z", round(z, 3))
-        print("and", str(sampling_density), "sampling density, the k-grid chosen for periodic calculation is",
-              str(k_grid) + ".")
-        print()
-
-    return k_grid
-
-
-def vibrate(params, model, indices, hpc="hawk", dimensions=2, out=None):
-    """
-    TODO: proper definition of this function
-    Class for calculating vibrational modes using finite difference.
-
-    The vibrational modes are calculated from a finite difference
-    approximation of the Hessian matrix.
-
-    The *summary()*, *get_energies()* and *get_frequencies()* methods all take
-    an optional *method* keyword.  Use method='Frederiksen' to use the method
-    described in:
-
-      T. Frederiksen, M. Paulsson, M. Brandbyge, A. P. Jauho:
-      "Inelastic transport theory from first-principles: methodology and
-      applications for nanoscale devices", Phys. Rev. B 75, 205413 (2007)
-
-    atoms: Atoms object
-        The atoms to work on.
-    indices: list of int
-        List of indices of atoms to vibrate.  Default behavior is
-        to vibrate all atoms.
-    name: str
-        Name to use for files.
-    delta: float
-        Magnitude of displacements.
-    nfree: int
-        Number of displacements per atom and cartesian coordinate, 2 and 4 are
-        supported. Default is 2 which will displace each atom +delta and
-        -delta for each cartesian coordinate.
-    """
 
     from ase.vibrations import Vibrations
     from carmm.run.aims_path import set_aims_command
@@ -424,6 +344,9 @@ def vibrate(params, model, indices, hpc="hawk", dimensions=2, out=None):
 
     # check/make folders
     counter = 0
+
+    #TODO: check if no aims outputs are overwritten
+
     # while "vib_" + out + "_" + str(counter) \
     #    in [fn for fn in os.listdir() if fnmatch.fnmatch(fn, "vib_*")]:
     #        counter += 1
@@ -438,7 +361,7 @@ def vibrate(params, model, indices, hpc="hawk", dimensions=2, out=None):
         vib = Vibrations(model, indices=indices, name=out + "_" + str(counter))
         vib.run()
 
-    # TODO: save trajectories of vibrations visualised
+    # TODO: save trajectories of vibrations visualised for inspection
     vib.summary()
     # vib.write_mode(-1)  # write last mode to trajectory file
     os.chdir("..")

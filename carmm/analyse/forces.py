@@ -30,6 +30,7 @@ def is_converged(atoms, fmax=0.01):
             - Taking their vector norm
             - But only for atoms without constraints
             '''
+
             if np.amax([np.linalg.norm(atoms.calc.results["forces"][x]) \
                     for x in range(len(atoms)) if x not in constraints]) <= fmax:
 
