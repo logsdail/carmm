@@ -1,111 +1,6 @@
 # TODO: design a custom class and methods structure
 # TODO: combine with ASE db
 
-def my_calc(params,
-            k_grid,
-            out_fn="aims.out",
-            forces=True,
-            dimensions=2,
-            sockets=True,
-            preopt=False,
-            sf=False,
-            internal=False,
-            fmax=None):
-    '''
-    Args:
-        k_grid: (int, int, int)
-            Tuple containing 3 positive integers, refers to reciprocal space sampling density
-        out_fn: str
-            Alternative name of the FHI-aims output file
-        forces: bool
-            Flag indicating if force calculation needed
-        dimensions: int
-            Determines whether we have a "gas"-phase (0) or "periodic" structure (2 or 3)
-        sockets: bool
-            Flag whether sockets calculator is requested (True by default, way more efficient!). Also lack of sockets
-            calculator will result in overwritten .out file as rest of the functionality was written with sockets.
-        preopt: bool
-            Alternative settings choice for methods involving pre-optimisation with a different functional to e.g. find
-            metastable geometries easier.
-        sf: bool
-            Request strain calculation for bulk geometries
-        internal: bool
-            Using internal FHI-aims optimizer (BFGS-based)
-        fmax: float
-            force convergence criterion, only in use with internal FHI-aims optimizer
-        # TODO: sf and internal should not be used together, Strain Filter is better than unit cell relaxation in FHI-aims
-        # TODO: gas does not work with internal due to write_aims producing frac_atoms
-    Returns:
-        sockets_calc, fhi_calc: sockets calculator and FHI-aims calculator for geometry optimisations
-        or
-        fhi_calc - FHI-aims calculator for geometry optimisations
-    '''
-
-    # New method that gives a default calculator
-    import os, fnmatch
-    if sockets and not internal:
-        from carmm.run.aims_calculator import get_aims_and_sockets_calculator
-        # On machines where ASE and FHI-aims are run separately (e.g. ASE on login node, FHI-aims on compute nodes)
-        # we need to specifically state what the name of the login node is so the two packages can communicate
-        sockets_calc, fhi_calc = get_aims_and_sockets_calculator(dimensions=dimensions,
-                                                                 k_grid=k_grid,
-                                                                 verbose=True,
-                                                                 codata_warning=False)
-    else:
-        from carmm.run.aims_calculator import get_aims_calculator
-        # On machines where ASE and FHI-aims are run separately (e.g. ASE on login node, FHI-aims on compute nodes)
-        # we need to specifically state what the name of the login node is so the two packages can communicate
-        fhi_calc = get_aims_calculator(dimensions=dimensions,
-                                       k_grid=k_grid)
-
-    # remove previous xc argument to ensure libxc warning override is first
-    fhi_calc.parameters.pop("xc")
-    fhi_calc.set(override_warning_libxc='True')
-
-    # Forces required for optimisation:
-    if forces:
-        fhi_calc.set(compute_forces = "true",)
-    # Use full PBEsol exchange-correlation to preptimise geometries
-    if preopt:
-        fhi_calc.set(xc='libxc GGA_X_PBE_SOL+GGA_C_PBE_SOL')
-
-    # add analytical stress keyword for unit cell relaxation
-    if sf:
-        if not dimensions == 3:
-            import sys
-            print("Strain Filter calculation requested, but the system is not periodic in all directions.")
-            print("If this was intentional, edit geometry_optimisation.py file.")
-            print("The calculation will be now terminated.")
-            sys.exit()
-
-        fhi_calc.set(compute_analytical_stress = 'True')
-
-    # use BFGS optimiser internally
-    if internal:
-        fhi_calc.set(relax_geometry="bfgs "+str(fmax))
-        # fhi_calc.set(max_atomic_move=0.2) # Default 0.2A, but should bre reduced if convergence issues occur
-        # fhi_calc.set(harmonic_length_scale=0.025)
-        # fhi_calc.set(energy_tolerance=5.e-4)
-        fhi_calc.set()
-
-    # For a larger basis set only the Total Potential Energy is required which takes less time than Forces
-    if not forces and not internal:
-        fhi_calc.set(compute_forces="false",
-                     final_forces_cleaned="false")
-
-    # set a unique .out output name
-    fhi_calc.outfilename = out_fn
-
-    # TODO: fundamental settings to be provided as input by the user to make sure nothing essential gets hardcoded
-    # FHI-aims settings set up
-    fhi_calc.set(**params)
-
-    if sockets and not internal:
-        return sockets_calc, fhi_calc
-    else:
-        return fhi_calc
-
-
 def aims_optimise(params,
                   model,
                   hpc: str,
@@ -165,9 +60,6 @@ def aims_optimise(params,
     # Read the geometry
     filename = model.get_chemical_formula()
 
-    # define k_grid
-    k_grid = get_k_grid(model, 0.018, dimensions=dimensions, verbose=True)
-
     # ensure separate folders are in place for each calculation input
     counter = 0
     # Count .traj outputs
@@ -218,7 +110,7 @@ def aims_optimise(params,
     out = str(counter) + "_" + str(filename) + ".out"
 
     # set the environment variables for geometry optimisation
-    set_aims_command(hpc=hpc, basis_set="light")
+    set_aims_command(hpc=hpc, basis_set="intermediate", defaults=2020)
 
     # Restart optimisations after 10 descent steps in BFGSLineSearch
     # Repeat until converged (10 descent steps is usually around 30-50 force evals)
@@ -227,7 +119,7 @@ def aims_optimise(params,
 
     if not internal:
         # perform DFT calculations for each filename
-        with my_calc(params, k_grid, out_fn=out, dimensions=dimensions, preopt=preopt, sf=sf)[0] as calculator:
+        with my_calc(params, out_fn=out, dimensions=dimensions, preopt=preopt, sf=sf)[0] as calculator:
             model.calc = calculator
             if constraints:
                 model.set_constraint(constraints)
@@ -257,7 +149,6 @@ def aims_optimise(params,
     else:
         # perform DFT calculations for each filename
         calculator = my_calc(params,
-                             k_grid,
                              out_fn=out,
                              dimensions=dimensions,
                              preopt=preopt,
@@ -309,10 +200,10 @@ def aims_optimise(params,
         if not os.path.exists(subdirectory_name_tight):
             os.mkdir(subdirectory_name_tight)
         os.chdir(subdirectory_name_tight)
-        set_aims_command(hpc=hpc, basis_set="tight")
+        set_aims_command(hpc=hpc, basis_set="tight", defaults=2020)
 
         # Recalculate the structure using a larger basis set in a separate folder
-        with my_calc(params, k_grid, out_fn=str(filename) + "_tight.out",
+        with my_calc(params, out_fn=str(filename) + "_tight.out",
                     forces=False, dimensions=dimensions)[0] as calculator:
             model_tight.calc = calculator
             model_tight.get_potential_energy()
@@ -327,6 +218,104 @@ def aims_optimise(params,
     else:
         return [model]
 
+
+def my_calc(params,
+            out_fn="aims.out",
+            forces=True,
+            dimensions=2,
+            sockets=True,
+            preopt=False,
+            sf=False,
+            internal=False,
+            fmax=None):
+    '''
+    Args:
+        out_fn: str
+            Alternative name of the FHI-aims output file
+        forces: bool
+            Flag indicating if force calculation needed
+        dimensions: int
+            Determines whether we have a "gas"-phase (0) or "periodic" structure (2 or 3)
+        sockets: bool
+            Flag whether sockets calculator is requested (True by default, way more efficient!). Also lack of sockets
+            calculator will result in overwritten .out file as rest of the functionality was written with sockets.
+        preopt: bool
+            Alternative settings choice for methods involving pre-optimisation with a different functional to e.g. find
+            metastable geometries easier.
+        sf: bool
+            Request strain calculation for bulk geometries
+        internal: bool
+            Using internal FHI-aims optimizer (BFGS-based)
+        fmax: float
+            force convergence criterion, only in use with internal FHI-aims optimizer
+        # TODO: sf and internal should not be used together, Strain Filter is better than unit cell relaxation in FHI-aims
+        # TODO: gas does not work with internal due to write_aims producing frac_atoms
+    Returns:
+        sockets_calc, fhi_calc: sockets calculator and FHI-aims calculator for geometry optimisations
+        or
+        fhi_calc - FHI-aims calculator for geometry optimisations
+    '''
+
+    # New method that gives a default calculator
+    import os, fnmatch
+    if sockets and not internal:
+        from carmm.run.aims_calculator import get_aims_and_sockets_calculator
+        # On machines where ASE and FHI-aims are run separately (e.g. ASE on login node, FHI-aims on compute nodes)
+        # we need to specifically state what the name of the login node is so the two packages can communicate
+        sockets_calc, fhi_calc = get_aims_and_sockets_calculator(dimensions=dimensions,
+                                                                 verbose=True,
+                                                                 codata_warning=False)
+    else:
+        from carmm.run.aims_calculator import get_aims_calculator
+        # On machines where ASE and FHI-aims are run separately (e.g. ASE on login node, FHI-aims on compute nodes)
+        # we need to specifically state what the name of the login node is so the two packages can communicate
+        fhi_calc = get_aims_calculator(dimensions=dimensions)
+
+    # remove previous xc argument to ensure libxc warning override is first
+    fhi_calc.parameters.pop("xc")
+    fhi_calc.set(override_warning_libxc='True')
+
+    # Forces required for optimisation:
+    if forces:
+        fhi_calc.set(compute_forces="true", )
+    # Use full PBEsol exchange-correlation to preptimise geometries
+    if preopt:
+        fhi_calc.set(xc='libxc GGA_X_PBE_SOL+GGA_C_PBE_SOL')
+
+    # add analytical stress keyword for unit cell relaxation
+    if sf:
+        if not dimensions == 3:
+            import sys
+            print("Strain Filter calculation requested, but the system is not periodic in all directions.")
+            print("If this was intentional, edit geometry_optimisation.py file.")
+            print("The calculation will be now terminated.")
+            sys.exit()
+
+        fhi_calc.set(compute_analytical_stress='True')
+
+    # use BFGS optimiser internally
+    if internal:
+        fhi_calc.set(relax_geometry="bfgs " + str(fmax))
+        # fhi_calc.set(max_atomic_move=0.2) # Default 0.2A, but should bre reduced if convergence issues occur
+        # fhi_calc.set(harmonic_length_scale=0.025)
+        # fhi_calc.set(energy_tolerance=5.e-4)
+
+    # set a unique .out output name
+    fhi_calc.outfilename = out_fn
+
+    # TODO: fundamental settings to be provided as input by the user to make sure nothing essential gets hardcoded
+    # FHI-aims settings set up
+    fhi_calc.set(**params)
+
+    # For a larger basis set only the Total Potential Energy is required which takes less time than Forces
+    if not forces and not internal:
+        fhi_calc.set(compute_forces="false",
+                     final_forces_cleaned="false")
+
+    if sockets and not internal:
+        return sockets_calc, fhi_calc
+    else:
+        return fhi_calc
 
 
 def get_k_grid(model, sampling_density, dimensions=2, verbose=False):
@@ -391,7 +380,7 @@ def get_k_grid(model, sampling_density, dimensions=2, verbose=False):
     return k_grid
 
 
-def vibrate(model, indices, hpc="hawk", dimensions=2, out=None):
+def vibrate(params, model, indices, hpc="hawk", dimensions=2, out=None):
     """
     TODO: proper definition of this function
     Class for calculating vibrational modes using finite difference.
@@ -444,7 +433,7 @@ def vibrate(model, indices, hpc="hawk", dimensions=2, out=None):
     os.chdir(subdirectory_name)
 
     # calculate vibrations
-    with my_calc(params, get_k_grid(model, 0.018, dimensions=dimensions, verbose=True), out_fn=out + ".out", dimensions=dimensions)[0] as calculator:
+    with my_calc(params, out_fn=out + ".out", dimensions=dimensions)[0] as calculator:
         model.calc = calculator
         vib = Vibrations(model, indices=indices, name=out + "_" + str(counter))
         vib.run()
