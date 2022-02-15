@@ -1,6 +1,7 @@
 # TODO: implement ts_search and vibrate as methods
 # TODO: Enable serialization with ASE db
 from carmm.run.aims_path import set_aims_command
+import os
 
 
 
@@ -129,7 +130,6 @@ class React_Aims:
         light and tight settings: [model_light, model_tight]
         '''
         from ase.io import read
-        import os
         from ase.io.trajectory import Trajectory
         from carmm.analyse.forces import is_converged
         from ase.optimize import BFGS
@@ -337,7 +337,7 @@ class React_Aims:
 
 
     def _restart_setup(self, model, filename, internal=False, restart=False):
-        import os, fnmatch, shutil
+        import fnmatch, shutil
         from ase.io import read
 
         # ensure separate folders are in place for each calculation input
@@ -422,7 +422,7 @@ def _calc_generator(params,
     '''
 
     # New method that gives a default calculator
-    import os, fnmatch
+    import  fnmatch
     if sockets and not internal:
         from carmm.run.aims_calculator import get_aims_and_sockets_calculator
         # On machines where ASE and FHI-aims are run separately (e.g. ASE on login node, FHI-aims on compute nodes)
