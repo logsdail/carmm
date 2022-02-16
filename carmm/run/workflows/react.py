@@ -1,77 +1,9 @@
+# Author: Igor Kowalec
 # TODO: implement ts_search and vibrate as methods
 # TODO: Enable serialization with ASE db
 from carmm.run.aims_path import set_aims_command
 import os
-
-
-
-"""
-def vibrate(params, model, indices, hpc="hawk", dimensions=2, out=None):
-    '''
-    This method uses ase.vibrations module, see more for info.
-    User provides the FHI-aims parameters, the Atoms object and list
-    of indices of atoms to be vibrated. FHI-aims environment variables are set
-    according to hpc used. Calculation folders are generated automatically
-    and a sockets calculator is used for efficiency.
-
-    Work in progress
-
-    Args:
-        params: dict
-            Dictionary containing user's FHI-aims settings
-        model: Atoms object
-        indices: list
-            List of indices of atoms that require vibrations
-        hpc: str
-             Name of the hpc facility, valid choices: "hawk", "archer2", "isambard", "young"
-        dimensions: int
-            0 for gas, 2 for surface and 3 for bulk
-        out: str
-            Folder names where vibration calculations are kept
-
-
-    Returns:
-        Zero-Point Energy: float
-
-    '''
-
-    from ase.vibrations import Vibrations
-    import os, fnmatch
-
-    # set the environment variables for geometry optimisation
-    set_aims_command(hpc=hpc, basis_set=basis_set)
-
-    if not out:
-        # develop a naming scheme based on chemical formula
-        out = model.get_chemical_formula()
-
-    # check/make folders
-    counter = 0
-
-    # TODO: check if no aims outputs are overwritten
-
-    # while "vib_" + out + "_" + str(counter) \
-    #    in [fn for fn in os.listdir() if fnmatch.fnmatch(fn, "vib_*")]:
-    #        counter += 1
-    subdirectory_name = "vib_" + out + "_" + str(counter)
-    if not os.path.exists(subdirectory_name):
-        os.mkdir(subdirectory_name)
-    os.chdir(subdirectory_name)
-
-    # calculate vibrations
-    with _calc_generator(params, out_fn=out + ".out", dimensions=dimensions)[0] as calculator:
-        model.calc = calculator
-        vib = Vibrations(model, indices=indices, name=out + "_" + str(counter))
-        vib.run()
-
-    # TODO: save trajectories of vibrations visualised for inspection
-    vib.summary()
-    # vib.write_mode(-1)  # write last mode to trajectory file
-    os.chdir("..")
-
-    return vib.get_zero_point_energy()
-"""
-
+from ase.io import read
 
 
 class React_Aims:
@@ -306,7 +238,8 @@ class React_Aims:
         os.chdir(subdirectory_name)
 
         # Desired number of images including start and end point
-        n = 0.25
+        # Dense sampling aids convergence but does not increase complexity as significantly as for classic NEB
+        n = 0.1
 
         # Create the sockets calculator - using a with statement means the object is closed at the end.
         with _calc_generator(params, out_fn=out, dimensions=dimensions)[0] as calculator:
@@ -323,12 +256,11 @@ class React_Aims:
             neb_catlearn.run(fmax=fmax,
                              unc_convergence=unc,
                              trajectory='ML-NEB.traj',
-                             ml_steps=30,
-                             sequential=True,
+                             ml_steps=100,
+                             sequential=False,
                              steps=100)
 
-        import numpy as np
-        from ase.io import read
+
         neb = read("ML-NEB.traj@:")
 
         self.ts = sorted(neb, key=lambda k: k.get_potential_energy(), reverse=True)[0]
@@ -387,7 +319,8 @@ class React_Aims:
     def serialize(self):
         '''Save the instance to a file'''
         pass
-    
+
+# TODO: turn into method and include in the class
 def _calc_generator(params,
             out_fn="aims.out",
             forces=True,
@@ -475,3 +408,76 @@ def _calc_generator(params,
         return sockets_calc, fhi_calc
     else:
         return fhi_calc
+
+
+
+
+
+"""
+def vibrate(params, model, indices, hpc="hawk", dimensions=2, out=None):
+    '''
+    This method uses ase.vibrations module, see more for info.
+    User provides the FHI-aims parameters, the Atoms object and list
+    of indices of atoms to be vibrated. FHI-aims environment variables are set
+    according to hpc used. Calculation folders are generated automatically
+    and a sockets calculator is used for efficiency.
+
+    Work in progress
+
+    Args:
+        params: dict
+            Dictionary containing user's FHI-aims settings
+        model: Atoms object
+        indices: list
+            List of indices of atoms that require vibrations
+        hpc: str
+             Name of the hpc facility, valid choices: "hawk", "archer2", "isambard", "young"
+        dimensions: int
+            0 for gas, 2 for surface and 3 for bulk
+        out: str
+            Folder names where vibration calculations are kept
+
+
+    Returns:
+        Zero-Point Energy: float
+
+    '''
+
+    from ase.vibrations import Vibrations
+    import os, fnmatch
+
+    # set the environment variables for geometry optimisation
+    set_aims_command(hpc=hpc, basis_set=basis_set)
+
+    if not out:
+        # develop a naming scheme based on chemical formula
+        out = model.get_chemical_formula()
+
+    # check/make folders
+    counter = 0
+
+    # TODO: check if no aims outputs are overwritten
+
+    # while "vib_" + out + "_" + str(counter) \
+    #    in [fn for fn in os.listdir() if fnmatch.fnmatch(fn, "vib_*")]:
+    #        counter += 1
+    subdirectory_name = "vib_" + out + "_" + str(counter)
+    if not os.path.exists(subdirectory_name):
+        os.mkdir(subdirectory_name)
+    os.chdir(subdirectory_name)
+
+    # calculate vibrations
+    with _calc_generator(params, out_fn=out + ".out", dimensions=dimensions)[0] as calculator:
+        model.calc = calculator
+        vib = Vibrations(model, indices=indices, name=out + "_" + str(counter))
+        vib.run()
+
+    # TODO: save trajectories of vibrations visualised for inspection
+    vib.summary()
+    # vib.write_mode(-1)  # write last mode to trajectory file
+    os.chdir("..")
+
+    return vib.get_zero_point_energy()
+"""
+
+
