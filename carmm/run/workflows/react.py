@@ -20,11 +20,12 @@ class React_Aims:
         self.filename = filename
 
         '''Define additional parameters'''
-        self.initial = None
-        self.model_optimised = None
-        self.model_post_processed = None
-        self.final = None
-        self.ts = None
+        self.initial = None # input for optimisation or input for ML-NEB initial image
+        self.model_optimised = None # optimised geometry with calculator attached
+        self.model_post_processed = None # postprocessed geometry with new calculator attached
+        self.final = None # input final image for ML-NEB
+        self.ts = None # TS geometry from ML-NEB
+        self.prev_calcs = None # for ML-NEB restart
 
 
     def aims_optimise(self,
@@ -197,7 +198,7 @@ class React_Aims:
         return self.model_optimised, self.model_post_processed
 
 
-    def search_ts(self, initial, final, fmax, unc, interpolation="idpp"):
+    def search_ts(self, initial, final, fmax, unc, interpolation="idpp", restart=True):
         '''
         TODO:
         Args:
@@ -230,7 +231,7 @@ class React_Aims:
         else:
             filename = initial.get_chemical_formula()
 
-        counter, filename, subdirectory_name = self._restart_setup(self.initial, filename)
+        counter, filename, subdirectory_name = self._restart_setup(self.initial, filename, restart=restart)
         out = str(counter) + "_" + str(filename) + ".out"
 
         if not os.path.exists(subdirectory_name):
@@ -249,8 +250,9 @@ class React_Aims:
                                  ase_calc=calculator,
                                  n_images=n,
                                  interpolation=interpolation,
+                                 prev_calculations=self.prev_calcs,
                                  mic=True,
-                                 restart=True)
+                                 restart=restart)
 
             # Run the NEB optimisation. Adjust fmax to desired convergence criteria, usually 0.01 ev/A
             neb_catlearn.run(fmax=fmax,
@@ -260,9 +262,8 @@ class React_Aims:
                              sequential=False,
                              steps=100)
 
-
+        # Find maximum energy, i.e. transition state to return it
         neb = read("ML-NEB.traj@:")
-
         self.ts = sorted(neb, key=lambda k: k.get_potential_energy(), reverse=True)[0]
 
         return self.ts
@@ -290,6 +291,9 @@ class React_Aims:
         if restart and counter > 0:
             print("Previous optimisation detected", "in dir_" + filename + "_" + str(counter - 1))
             os.chdir(subdirectory_name_prev)
+
+            if os.path.exists("evaluated_structures.traj"):
+                self.prev_calcs = read("evaluated_structures.traj@:")
 
             # check for number of restarted optimisations
             while str(counter - 1) + "_" + filename + "_" + str(opt_restarts) + ".traj" \
@@ -320,6 +324,9 @@ class React_Aims:
     def serialize(self):
         '''Save the instance to a file'''
         pass
+
+    def recover(self):
+        '''Recover a saved instance form a file'''
 
 # TODO: turn into method and include in the class
 def _calc_generator(params,
