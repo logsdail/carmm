@@ -10,19 +10,19 @@ class React_Aims:
     '''Class used to streamline the process of geometry optimisation, input and output generation for
         ASE/FHI-aims setup.'''
 
-    def __init__(self, params: dict, basis_set: str, hpc: str, dimensions: int):
+    def __init__(self, params: dict, basis_set: str, hpc: str, dimensions: int, filename: str = None):
         '''Define basic parameters'''
         self.data = {}
         self.params = params
         self.hpc = hpc
         self.dimensions = dimensions
         self.basis_set = basis_set
+        self.filename = filename
 
         '''Define additional parameters'''
         self.initial = None
         self.model_optimised = None
         self.model_post_processed = None
-        self.filename = None
         self.final = None
         self.ts = None
 
@@ -230,7 +230,7 @@ class React_Aims:
         else:
             filename = initial.get_chemical_formula()
 
-        counter, filename, subdirectory_name = self._restart_setup(self.initial, self.filename)
+        counter, filename, subdirectory_name = self._restart_setup(self.initial, filename)
         out = str(counter) + "_" + str(filename) + ".out"
 
         if not os.path.exists(subdirectory_name):
@@ -269,6 +269,7 @@ class React_Aims:
 
 
     def _restart_setup(self, model, filename, internal=False, restart=False):
+        # TODO: add restart for search_ts
         import fnmatch, shutil
         from ase.io import read
 
