@@ -22,7 +22,7 @@ class React_Aims:
         '''Define additional parameters'''
         self.initial = None # input for optimisation or input for ML-NEB initial image
         self.model_optimised = None # optimised geometry with calculator attached
-        self.model_post_processed = None # postprocessed geometry with new calculator attached
+        self.model_post_processed = None # post processed geometry with new calculator attached
         self.final = None # input final image for ML-NEB
         self.ts = None # TS geometry from ML-NEB
         self.prev_calcs = None # for ML-NEB restart
@@ -164,10 +164,12 @@ class React_Aims:
             os.chdir(parent_dir)
 
 
-        self.model_optimised  = self.initial.copy()
+        self.model_optimised  = self.initial
 
         if post_process:
             print("Commencing calculation using", post_process, "basis set.")
+
+            model_pp = self.model_optimised.copy()
 
             # Set environment variables for a larger basis set - converged electronic structure
             subdirectory_name_tight = subdirectory_name + "_tight"
@@ -179,26 +181,23 @@ class React_Aims:
             # Recalculate the structure using a larger basis set in a separate folder
             with _calc_generator(params, out_fn=str(self.filename) + "_" + post_process + ".out",
                          forces=False, dimensions=dimensions)[0] as calculator:
-                self.initial.calc = calculator
-                self.initial.get_potential_energy()
+                model_pp.calc = calculator
+                model_pp.get_potential_energy()
                 traj = Trajectory(self.filename + "_" + post_process + ".traj", "w")
-                traj.write(self.initial)
+                traj.write(model_pp)
                 traj.close()
 
             # go back to the parent directory to finish the loop
             os.chdir(parent_dir)
 
             # update the instance with a post_processed model
-            self.model_post_processed = self.initial.copy()
-
-            # save the initial geometry also
-            self.initial = initial
+            self.model_post_processed = model_pp
 
 
         return self.model_optimised, self.model_post_processed
 
 
-    def search_ts(self, initial, final, fmax, unc, interpolation="idpp", restart=True):
+    def search_ts(self, initial, final, fmax, unc, interpolation="idpp", restart=True, prev_calcs=None):
         '''
         TODO:
         Args:
@@ -234,6 +233,10 @@ class React_Aims:
         counter, filename, subdirectory_name = self._restart_setup(self.initial, filename, restart=restart)
         out = str(counter) + "_" + str(filename) + ".out"
 
+        # Let the user restart from alternative file or Atoms object
+        if prev_calcs:
+            self.prev_calcs = prev_calcs
+
         if not os.path.exists(subdirectory_name):
             os.mkdir(subdirectory_name)
         os.chdir(subdirectory_name)
@@ -260,7 +263,7 @@ class React_Aims:
                              trajectory='ML-NEB.traj',
                              ml_steps=100,
                              sequential=False,
-                             steps=100)
+                             steps=200)
 
         # Find maximum energy, i.e. transition state to return it
         neb = read("ML-NEB.traj@:")
