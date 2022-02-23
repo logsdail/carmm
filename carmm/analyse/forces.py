@@ -15,9 +15,7 @@ def is_converged(atoms, fmax=0.01):
     converged = False
 
     if atoms.calc:
-        if "forces" in atoms.calc.results:
-            # TODO: this will probably only work with ase.constraints.FixAtoms,
-            #       FixBondLength does not set force to 0
+        if not atoms.calc.calculation_required(atoms, ['forces']):
             # extraction of constraints
             constraints = []
             # remove from nested list
