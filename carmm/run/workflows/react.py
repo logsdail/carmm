@@ -1,9 +1,12 @@
 # Author: Igor Kowalec
 # TODO: implement ts_search and vibrate as methods
-# TODO: Enable serialization with ASE db
+# TODO: Enable serialization with ASE db - save locations of converged files as well as all properties
 from carmm.run.aims_path import set_aims_command
 import os
 from ase.io import read
+from carmm.analyse.forces import is_converged
+
+# TODO: rework the use of filename with the calculator to use calc.directory instead as recommended by ASE authors
 
 
 class React_Aims:
@@ -34,7 +37,8 @@ class React_Aims:
                       post_process: str = None,
                       relax_unit_cell: bool = False,
                       internal: bool = False,
-                      restart: bool = True):
+                      restart: bool = True,
+                      verbose: bool = True):
 
         '''
         TODO: clean up the description
@@ -72,107 +76,112 @@ class React_Aims:
         hpc = self.hpc
         dimensions = self.dimensions
         basis_set = self.basis_set
-        self.initial = initial.copy()
-
+        self.initial = initial
+        i_geo = initial.copy()
+        i_geo.calc = initial.calc
 
         # parent directory
         parent_dir = os.getcwd()
 
         # Read the geometry
-        if self.filename:
-            filename = self.filename
-        else:
+        if not self.filename:
             self.filename = self.initial.get_chemical_formula()
 
-        counter, filename, subdirectory_name = self._restart_setup(self.initial, self.filename, internal, restart)
+        filename = self.filename
+
+        counter, subdirectory_name = self._restart_setup(self.initial, self.filename, internal, restart, verbose=verbose)
         out = str(counter) + "_" + str(filename) + ".out"
 
         # TODO: Perform calculations ONLY if structure is not converged
         # In some instances this could trigger a calculation due to failed ._check_state on the calculator - undesired
-        # if not is_converged(model, 0.01):
-        if not os.path.exists(subdirectory_name):
-            os.mkdir(subdirectory_name)
-        os.chdir(subdirectory_name)
-
-
-        # set the environment variables for geometry optimisation
-        set_aims_command(hpc=hpc, basis_set=basis_set, defaults=2020)
-
-        # Restarts will prevent the calculation from getting stuck in deep local minimum when using metaGGA XC mBEEF
-        opt_restarts = 0
-
-        if not internal:
-            # perform DFT calculations for each filename
-            with _calc_generator(params, out_fn=out, dimensions=dimensions, relax_unit_cell=relax_unit_cell)[0] as calculator:
-                self.initial.calc = calculator
-                while not is_converged(self.initial, fmax):
-                    if relax_unit_cell:
-                        from ase.constraints import StrainFilter
-                        unit_cell_relaxer = StrainFilter(self.initial)
-                        opt = BFGS(unit_cell_relaxer,
-                                   trajectory=str(counter) + "_" + filename + "_" + str(opt_restarts) + ".traj",
-                                   alpha=70.0
-                                   )
-                    else:
-                        opt = BFGS(self.initial,
-                                   trajectory=str(counter) + "_" + filename + "_" + str(opt_restarts) + ".traj",
-                                   alpha=70.0
-                                   )
-
-                    opt.run(fmax=fmax, steps=80)
-                    opt_restarts += 1
-
-            os.chdir(parent_dir)
-
-        # setup for internal aims optimiser
+        if is_converged(initial, fmax):
+            print("The forces are below", fmax, "eV/A. No calculation required.")
         else:
-            # perform DFT calculations for each filename
-            calculator = _calc_generator(params,
-                                 out_fn=out,
-                                 dimensions=dimensions,
-                                 relax_unit_cell=relax_unit_cell,
-                                 internal=internal,
-                                 fmax=fmax)
+            if not os.path.exists(subdirectory_name):
+                os.mkdir(subdirectory_name)
+            os.chdir(subdirectory_name)
 
-            self.initial.calc = calculator
 
-            if relax_unit_cell:
-                # TODO: unit cell relaxtation keyword that works with internal, i.e. relax_unit_cell in FHI-aims
-                print("Can't use relax_unit_cell and internal optimisation atm")
+            # set the environment variables for geometry optimisation
+            set_aims_command(hpc=hpc, basis_set=basis_set, defaults=2020)
 
-            # Just to  trigger energy + force calls
-            opt = BFGS(self.initial)
-            opt.run(fmax=fmax, steps=0)
+            # Restarts will prevent the calculation from getting stuck in deep local minimum when using metaGGA XC mBEEF
+            opt_restarts = 0
 
-            # Save a trajectory from aims output
-            from ase.io import Trajectory
-            traj = Trajectory(str(counter) + "_" + self.filename + "_" + str(opt_restarts) + ".traj", 'w')
-            models = read(out + "@:")
+            if not internal:
+                # perform DFT calculations for each filename
+                with _calc_generator(params, out_fn=out, dimensions=dimensions, relax_unit_cell=relax_unit_cell)[0] as calculator:
+                    self.initial.calc = calculator
+                    while not is_converged(self.initial, fmax):
+                        if relax_unit_cell:
+                            from ase.constraints import StrainFilter
+                            unit_cell_relaxer = StrainFilter(self.initial)
+                            opt = BFGS(unit_cell_relaxer,
+                                       trajectory=str(counter) + "_" + filename + "_" + str(opt_restarts) + ".traj",
+                                       alpha=70.0
+                                       )
+                        else:
+                            opt = BFGS(self.initial,
+                                       trajectory=str(counter) + "_" + filename + "_" + str(opt_restarts) + ".traj",
+                                       alpha=70.0
+                                       )
 
-            # TODO: Alert the user of the problem
-            # Problem with this approach is inconsistency in energies from aims.out vs communicated over sockets to ASE
-            for i in models:
-                traj.write(i)
+                        opt.run(fmax=fmax, steps=80)
+                        opt_restarts += 1
 
-            traj.close()
+                os.chdir(parent_dir)
 
-            # TODO: check if final geometry returned is not identical to initial
-            # I think only E+F returned, not changes to structure
-            # make sure model returned contains updated geometry
-            # model = read(str(counter) + "_" + filename + "_" + str(opt_restarts) + ".traj")
+            # setup for internal aims optimiser
+            else:
+                # perform DFT calculations for each filename
+                calculator = _calc_generator(params,
+                                     out_fn=out,
+                                     dimensions=dimensions,
+                                     relax_unit_cell=relax_unit_cell,
+                                     internal=internal,
+                                     fmax=fmax)
 
-            os.chdir(parent_dir)
+                self.initial.calc = calculator
+
+                if relax_unit_cell and verbose:
+                    # TODO: unit cell relaxtation keyword that works with internal, i.e. relax_unit_cell in FHI-aims
+                    print("Can't use relax_unit_cell and internal optimisation atm")
+
+                # Just to  trigger energy + force calls
+                opt = BFGS(self.initial)
+                opt.run(fmax=fmax, steps=0)
+
+                # Save a trajectory from aims output
+                from ase.io import Trajectory
+                traj = Trajectory(str(counter) + "_" + self.filename + "_" + str(opt_restarts) + ".traj", 'w')
+                models = read(out + "@:")
+
+                # TODO: Alert the user of the problem
+                # Problem with this approach is inconsistency in energies from aims.out vs communicated over sockets to ASE
+                for i in models:
+                    traj.write(i)
+
+                traj.close()
+
+                # TODO: check if final geometry returned is not identical to initial
+                # I think only E+F returned, not changes to structure
+                # make sure model returned contains updated geometry
+                # model = read(str(counter) + "_" + filename + "_" + str(opt_restarts) + ".traj")
+
+                os.chdir(parent_dir)
 
 
         self.model_optimised  = self.initial
+        self.initial = i_geo
 
         if post_process:
-            print("Commencing calculation using", post_process, "basis set.")
+            if verbose:
+                print("Commencing calculation using", post_process, "basis set.")
 
             model_pp = self.model_optimised.copy()
 
             # Set environment variables for a larger basis set - converged electronic structure
-            subdirectory_name_tight = subdirectory_name + "_tight"
+            subdirectory_name_tight = subdirectory_name + "_" + post_process
             if not os.path.exists(subdirectory_name_tight):
                 os.mkdir(subdirectory_name_tight)
             os.chdir(subdirectory_name_tight)
@@ -197,15 +206,19 @@ class React_Aims:
         return self.model_optimised, self.model_post_processed
 
 
-    def search_ts(self, initial, final, fmax, unc, interpolation="idpp", restart=True, prev_calcs=None):
+    def search_ts(self, initial, final, fmax, unc, interpolation="idpp", restart=True, prev_calcs=None, input_check=0.01, verbose=True):
         '''
-        TODO:
+
         Args:
-            initial:
-            final:
-            fmax:
-            unc:
-            interpolation:
+            initial: Atoms object
+            final: Atoms object
+            fmax: float
+            unc: float
+            interpolation: str or list of Atoms objects
+            restart: bool
+            prev_calcs: list of Atoms objects
+            input_check: float or None
+            verbose: bool
 
         Returns:
 
@@ -222,7 +235,7 @@ class React_Aims:
         set_aims_command(hpc=hpc, basis_set=basis_set)
 
         if not interpolation:
-            interpolation = "linear"
+            interpolation = "idpp"
 
         # Read the geometry
         if self.filename:
@@ -230,8 +243,16 @@ class React_Aims:
         else:
             filename = initial.get_chemical_formula()
 
-        counter, filename, subdirectory_name = self._restart_setup(self.initial, filename, restart=restart)
+        counter, subdirectory_name = self._restart_setup(self.initial, filename, restart=restart, verbose=verbose)
         out = str(counter) + "_" + str(filename) + ".out"
+
+        # ensure input is converged
+        if input_check: #TODO naming scheme + check for these files or initial/final.traj
+
+            if not is_converged(initial, input_check):
+                initial = self.aims_optimise(initial, input_check, restart=False, verbose=False)[0]
+            if not is_converged(final, input_check):
+                final = self.aims_optimise(final, input_check, restart=False, verbose=False)[0]
 
         # Let the user restart from alternative file or Atoms object
         if prev_calcs:
@@ -243,7 +264,7 @@ class React_Aims:
 
         # Desired number of images including start and end point
         # Dense sampling aids convergence but does not increase complexity as significantly as for classic NEB
-        n = 0.1
+        n = 10
 
         # Create the sockets calculator - using a with statement means the object is closed at the end.
         with _calc_generator(params, out_fn=out, dimensions=dimensions)[0] as calculator:
@@ -252,7 +273,9 @@ class React_Aims:
                                  end=final,
                                  ase_calc=calculator,
                                  n_images=n,
+                                 k=0.5,
                                  interpolation=interpolation,
+                                 neb_method="aseneb",
                                  prev_calculations=self.prev_calcs,
                                  mic=True,
                                  restart=restart)
@@ -261,19 +284,91 @@ class React_Aims:
             neb_catlearn.run(fmax=fmax,
                              unc_convergence=unc,
                              trajectory='ML-NEB.traj',
-                             ml_steps=100,
+                             ml_steps=25,
                              sequential=False,
                              steps=200)
 
         # Find maximum energy, i.e. transition state to return it
         neb = read("ML-NEB.traj@:")
         self.ts = sorted(neb, key=lambda k: k.get_potential_energy(), reverse=True)[0]
+        os.chdir("..")
 
         return self.ts
 
 
-    def _restart_setup(self, model, filename, internal=False, restart=False):
-        # TODO: add restart for search_ts
+    def vibrate(self, atoms, indices):
+        '''
+
+        This method uses ase.vibrations module, see more for info.
+        User provides the FHI-aims parameters, the Atoms object and list
+        of indices of atoms to be vibrated. Variables related to FHI-aims are governed by the React object.
+        Calculation folders are generated automatically and a sockets calculator is used for efficiency.
+
+        Work in progress
+
+        Args:
+            atoms: Atoms object
+            indices: list
+                List of indices of atoms that require vibrations
+
+        Returns:
+            Zero-Point Energy: float
+        '''
+
+        from ase.vibrations import Vibrations
+
+        '''Retrieve common properties'''
+        basis_set = self.basis_set
+        dimensions = self.dimensions
+        hpc = self.hpc
+        params = self.params
+        parent_dir = os.getcwd()
+
+        # set the environment variables for geometry optimisation
+        set_aims_command(hpc=hpc, basis_set=basis_set)
+
+        # check/make folders
+        counter = 0
+
+        if not self.filename:
+            # develop a naming scheme based on chemical formula
+            self.filename = atoms.get_chemical_formula()
+
+        counter, subdirectory_name = self._restart_setup(atoms,
+                                                         self.filename,
+                                                         restart=False,
+                                                         verbose=False)
+
+        vib_dir = parent_dir + "/vib_" + self.filename +"/vib"
+        print(vib_dir)
+
+        # TODO: avoid creating empty folders if vibration can be read
+        # Generate a unique folder for aims calculation
+        if not os.path.exists(subdirectory_name):
+            os.mkdir(subdirectory_name)
+        os.chdir(subdirectory_name)
+
+        # Name the aims output file
+        out = str(counter) + "_" + str(self.filename) + ".out"
+
+        # calculate vibrations and write the in a separate directory
+        with _calc_generator(params, out_fn=out, dimensions=dimensions)[0] as calculator:
+            atoms.calc = calculator
+            vib = Vibrations(atoms, indices=indices, name=vib_dir)
+            vib.run()
+
+        vib.summary()
+
+        # Generate a unique folder for aims calculation
+        os.chdir(vib_dir)
+        vib.write_mode()
+        os.chdir(parent_dir)
+
+        return vib.get_zero_point_energy()
+
+
+    def _restart_setup(self, model, filename, internal=False, restart=False, verbose=True):
+        # TODO: add restart for search_ts_dyneb
         import fnmatch, shutil
         from ase.io import read
 
@@ -292,11 +387,14 @@ class React_Aims:
 
         # check previous calculations for convergence
         if restart and counter > 0:
-            print("Previous optimisation detected", "in dir_" + filename + "_" + str(counter - 1))
+            if verbose:
+                print("Previous optimisation detected", "in dir_" + filename + "_" + str(counter - 1))
             os.chdir(subdirectory_name_prev)
 
             if os.path.exists("evaluated_structures.traj"):
                 self.prev_calcs = read("evaluated_structures.traj@:")
+            elif verbose:
+                print('The "evaluated_structures.traj" file not found, starting from scratch.')
 
             # check for number of restarted optimisations
             while str(counter - 1) + "_" + filename + "_" + str(opt_restarts) + ".traj" \
@@ -307,19 +405,22 @@ class React_Aims:
             if not internal:
                 if os.path.exists(str(counter - 1) + "_" + filename + "_" + str(opt_restarts - 1) + ".traj"):
                     self.initial = read(str(counter - 1) + "_" + filename + "_" + str(opt_restarts - 1) + ".traj")
-                    print("Restarting from", str(counter - 1) + "_" + filename + "_" + str(opt_restarts - 1) + ".traj")
+                    if verbose:
+                        print("Restarting from", str(counter - 1) + "_" + filename + "_" + str(opt_restarts - 1) + ".traj")
             else:
                 if os.path.exists(str(counter - 1) + "_" + filename + "_" + str(opt_restarts - 1) + ".traj"):
                     self.initial = read(str(counter - 1) + "_" + filename + "_" + str(opt_restarts - 1) + ".traj")
-                    print("Restarting from", str(counter - 1) + "_" + filename + "_" + str(opt_restarts - 1) + ".traj")
+                    if verbose:
+                        print("Restarting from", str(counter - 1) + "_" + filename + "_" + str(opt_restarts - 1) + ".traj")
                 elif os.path.exists("geometry.in.next_step"):
                     shutil.copy("geometry.in.next_step", "next_step.in")
                     self.initial = read("next_step.in")
-                    print("Restarting from geometry.in.next_step")
+                    if verbose:
+                        print("Restarting from geometry.in.next_step")
 
             os.chdir("..")
 
-        return counter, filename, subdirectory_name
+        return counter, subdirectory_name
 
 
 
@@ -421,74 +522,96 @@ def _calc_generator(params,
         return fhi_calc
 
 
-
-
-
 """
-def vibrate(params, model, indices, hpc="hawk", dimensions=2, out=None):
-    '''
-    This method uses ase.vibrations module, see more for info.
-    User provides the FHI-aims parameters, the Atoms object and list
-    of indices of atoms to be vibrated. FHI-aims environment variables are set
-    according to hpc used. Calculation folders are generated automatically
-    and a sockets calculator is used for efficiency.
+    def search_ts_dyneb(self, initial, final, fmax, interpolation="idpp", restart=True, input_check=0.01, verbose=True):
 
-    Work in progress
+        '''
+        TODO: This requires parallelisation over images, otherwise with a shared calculator EVERY structure in the chain
+            is calculated again per iteration. Waste of resources! This might be a bug, since the calculations were
+            supposed to be dynamic. Need to investigate - maybe then the non-ML NEBS can be viable.
+        Args:
+            initial: 
+            final: 
+            fmax: 
+            interpolation: 
+            restart: 
+            input_check: 
+            verbose: 
 
-    Args:
-        params: dict
-            Dictionary containing user's FHI-aims settings
-        model: Atoms object
-        indices: list
-            List of indices of atoms that require vibrations
-        hpc: str
-             Name of the hpc facility, valid choices: "hawk", "archer2", "isambard", "young"
-        dimensions: int
-            0 for gas, 2 for surface and 3 for bulk
-        out: str
-            Folder names where vibration calculations are kept
+        Returns:
 
+        '''
+        from ase.dyneb import DyNEB
+        from ase.optimize import BFGS
+        '''Retrieve common properties'''
+        basis_set = self.basis_set
+        dimensions = self.dimensions
+        hpc = self.hpc
+        params = self.params
 
-    Returns:
-        Zero-Point Energy: float
+        # Set the environment parameters
+        set_aims_command(hpc=hpc, basis_set=basis_set)
 
-    '''
+        if not interpolation:
+            interpolation = "idpp"
 
-    from ase.vibrations import Vibrations
-    import os, fnmatch
+        # Read the geometry
+        if self.filename:
+            filename = self.filename
+        else:
+            filename = initial.get_chemical_formula()
 
-    # set the environment variables for geometry optimisation
-    set_aims_command(hpc=hpc, basis_set=basis_set)
+        # TODO: restart dedicated to dyneb
+        counter, subdirectory_name = self._restart_setup(self.initial, filename, restart=restart,
+                                                                   verbose=verbose)
+        out = str(counter) + "_" + str(filename) + ".out"
 
-    if not out:
-        # develop a naming scheme based on chemical formula
-        out = model.get_chemical_formula()
+        # ensure input is converged
+        if input_check:  # TODO naming scheme + check for these files or initial/final.traj
 
-    # check/make folders
-    counter = 0
+            if not is_converged(initial, input_check):
+                initial = self.aims_optimise(initial, input_check, restart=False, verbose=False)[0]
+            if not is_converged(final, input_check):
+                final = self.aims_optimise(final, input_check, restart=False, verbose=False)[0]
 
-    # TODO: check if no aims outputs are overwritten
+        if not os.path.exists(subdirectory_name):
+            os.mkdir(subdirectory_name)
+        os.chdir(subdirectory_name)
 
-    # while "vib_" + out + "_" + str(counter) \
-    #    in [fn for fn in os.listdir() if fnmatch.fnmatch(fn, "vib_*")]:
-    #        counter += 1
-    subdirectory_name = "vib_" + out + "_" + str(counter)
-    if not os.path.exists(subdirectory_name):
-        os.mkdir(subdirectory_name)
-    os.chdir(subdirectory_name)
+        # Make a band consisting of n images:
+        n = 10 # TODO: do not hardcode
+        images = [initial]
+        images += [initial.copy() for i in range(n-1)]
+        images += [final]
+        neb = DyNEB(images,
+                    k=0.5,
+                    fmax=0.05,
+                    climb=True,
+                    parallel=False,
+                    remove_rotation_and_translation=False,
+                    world=None,
+                    dynamic_relaxation=True,
+                    scale_fmax=0.5,
+                    method='aseneb',
+                    allow_shared_calculator= True,
+                    )
+        # Interpolate linearly the positions of the three middle images:
+        neb.interpolate(method=interpolation, mic=True, apply_constraint=True)
 
-    # calculate vibrations
-    with _calc_generator(params, out_fn=out + ".out", dimensions=dimensions)[0] as calculator:
-        model.calc = calculator
-        vib = Vibrations(model, indices=indices, name=out + "_" + str(counter))
-        vib.run()
+        # Create the sockets calculator - using a with statement means the object is closed at the end.
+        with _calc_generator(params, out_fn=out, dimensions=dimensions)[0] as calculator:
+            # Set calculators:
+            for image in images[1:n]:
+                image.calc = calculator
 
-    # TODO: save trajectories of vibrations visualised for inspection
-    vib.summary()
-    # vib.write_mode(-1)  # write last mode to trajectory file
-    os.chdir("..")
+            optimizer = BFGS(neb,
+                               trajectory=str(counter) + "_NEB_" + filename + ".traj",
+                               )
+            optimizer.run(fmax=0.05)
 
-    return vib.get_zero_point_energy()
+        # Find maximum energy, i.e. transition state to return it
+        neb = read(str(counter) + "_NEB_" + filename + ".traj@-" +str(n) +":")
+        self.ts = sorted(neb, key=lambda k: k.get_potential_energy(), reverse=True)[0]
+        os.chdir("..")
 """
-
 
