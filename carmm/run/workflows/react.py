@@ -13,7 +13,13 @@ class React_Aims:
     '''Class used to streamline the process of geometry optimisation, input and output generation for
         ASE/FHI-aims setup.'''
 
-    def __init__(self, params: dict, basis_set: str, hpc: str, dimensions: int, filename: str = None):
+    def __init__(self,
+                 params: dict,
+                 basis_set: str,
+                 hpc: str, dimensions: int,
+                 filename: str = None,
+                 nodes_per_instance: int = None):
+
         '''Define basic parameters'''
         self.data = {}
         self.params = params
@@ -21,6 +27,7 @@ class React_Aims:
         self.dimensions = dimensions
         self.basis_set = basis_set
         self.filename = filename
+        self.nodes_per_instance = nodes_per_instance # n nodes used enabling parallel calcs
 
         '''Define additional parameters'''
         self.initial = None # input for optimisation or input for ML-NEB initial image
@@ -103,7 +110,7 @@ class React_Aims:
 
 
             # set the environment variables for geometry optimisation
-            set_aims_command(hpc=hpc, basis_set=basis_set, defaults=2020)
+            set_aims_command(hpc=hpc, basis_set=basis_set, defaults=2020, nodes_per_instance=self.nodes_per_instance)
 
             # Restarts will prevent the calculation from getting stuck in deep local minimum when using metaGGA XC mBEEF
             opt_restarts = 0
@@ -185,7 +192,7 @@ class React_Aims:
             if not os.path.exists(subdirectory_name_tight):
                 os.mkdir(subdirectory_name_tight)
             os.chdir(subdirectory_name_tight)
-            set_aims_command(hpc=hpc, basis_set=post_process, defaults=2020)
+            set_aims_command(hpc=hpc, basis_set=post_process, defaults=2020, nodes_per_instance=self.nodes_per_instance)
 
             # Recalculate the structure using a larger basis set in a separate folder
             with _calc_generator(params, out_fn=str(self.filename) + "_" + post_process + ".out",
@@ -220,7 +227,8 @@ class React_Aims:
             input_check: float or None
             verbose: bool
 
-        Returns:
+        Returns: Atoms object
+            Transition state geometry structure
 
         '''
         from catlearn.optimize.mlneb import MLNEB
@@ -232,7 +240,7 @@ class React_Aims:
         params = self.params
 
         # Set the environment parameters
-        set_aims_command(hpc=hpc, basis_set=basis_set)
+        set_aims_command(hpc=hpc, basis_set=basis_set, defaults=2020, nodes_per_instance=self.nodes_per_instance)
 
         if not interpolation:
             interpolation = "idpp"
@@ -296,7 +304,7 @@ class React_Aims:
         return self.ts
 
 
-    def vibrate(self, atoms, indices):
+    def vibrate(self, atoms, indices, read_only=False):
         '''
 
         This method uses ase.vibrations module, see more for info.
@@ -310,6 +318,9 @@ class React_Aims:
             atoms: Atoms object
             indices: list
                 List of indices of atoms that require vibrations
+            read_only: bool
+                Flag for postprocessing - if True, the method only extracts information from existing files,
+                no calculations are performed
 
         Returns:
             Zero-Point Energy: float
@@ -325,7 +336,7 @@ class React_Aims:
         parent_dir = os.getcwd()
 
         # set the environment variables for geometry optimisation
-        set_aims_command(hpc=hpc, basis_set=basis_set)
+        set_aims_command(hpc=hpc, basis_set=basis_set, defaults=2020, nodes_per_instance=self.nodes_per_instance)
 
         # check/make folders
         counter = 0
@@ -342,26 +353,40 @@ class React_Aims:
         vib_dir = parent_dir + "/vib_" + self.filename +"/vib"
         print(vib_dir)
 
-        # TODO: avoid creating empty folders if vibration can be read
-        # Generate a unique folder for aims calculation
-        if not os.path.exists(subdirectory_name):
-            os.mkdir(subdirectory_name)
-        os.chdir(subdirectory_name)
-
-        # Name the aims output file
-        out = str(counter) + "_" + str(self.filename) + ".out"
-
-        # calculate vibrations and write the in a separate directory
-        with _calc_generator(params, out_fn=out, dimensions=dimensions)[0] as calculator:
-            atoms.calc = calculator
+        # Extract vibration data from existing files
+        if read_only:
             vib = Vibrations(atoms, indices=indices, name=vib_dir)
-            vib.run()
+            # If a calculation was terminated prematurely (e.g. time limit) empty .json files remain and the calculation
+            # of the corresponding stretch modes would be skipped on restart. The line below prevents this
+            vib.clean(empty_files=True)
+            vib.read()
+        # Calculate required vibration modes
+        else:
+            # Generate a unique folder for aims calculation
+            if not os.path.exists(subdirectory_name):
+                os.mkdir(subdirectory_name)
+            os.chdir(subdirectory_name)
+
+            # Name the aims output file
+            out = str(counter) + "_" + str(self.filename) + ".out"
+
+            # calculate vibrations and write the in a separate directory
+            with _calc_generator(params, out_fn=out, dimensions=dimensions)[0] as calculator:
+                atoms.calc = calculator
+                vib = Vibrations(atoms, indices=indices, name=vib_dir)
+                # If a calculation was terminated prematurely (e.g. time limit) empty .json files remain and the calculation
+                # of the corresponding stretch modes would be skipped on restart. The line below prevents this
+                vib.clean(empty_files=True)
+
+                vib.run()
 
         vib.summary()
 
+
         # Generate a unique folder for aims calculation
-        os.chdir(vib_dir)
-        vib.write_mode()
+        if not read_only:
+            os.chdir(vib_dir)
+            vib.write_mode()
         os.chdir(parent_dir)
 
         return vib.get_zero_point_energy()
@@ -424,13 +449,14 @@ class React_Aims:
 
 
 
-
+    """
     def serialize(self):
         '''Save the instance to a file'''
         pass
 
     def recover(self):
         '''Recover a saved instance form a file'''
+    """
 
 # TODO: turn into method and include in the class
 def _calc_generator(params,
