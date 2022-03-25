@@ -16,12 +16,8 @@ def is_converged(atoms, fmax=0.01):
 
     if atoms.calc:
         if not atoms.calc.calculation_required(atoms, ['forces']):
-            # extraction of constraints
-            constraints = []
-            # remove from nested list
-            for i in [i.index.tolist() for i in atoms._get_constraints()]:
-                for j in i:
-                    constraints.append(j)
+            f = atoms.get_forces()
+
             '''
             List comprehension for:
             - Retrieving forces from the calculator
@@ -29,9 +25,8 @@ def is_converged(atoms, fmax=0.01):
             - But only for atoms without constraints
             '''
 
-            if np.amax([np.linalg.norm(atoms.calc.results["forces"][x]) \
-                    for x in range(len(atoms)) if x not in constraints]) <= fmax:
-
+            if np.amax([np.linalg.norm(f[x]) \
+                    for x in range(len(atoms))]) <= fmax:
                 converged = True
 
     return converged
