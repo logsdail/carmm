@@ -12,11 +12,6 @@ class unit_cell:
 
         self.dim = 0
 
-        self.ind_list_x, self.ind_list_y, self.ind_list_z = 0, 0, 0
-        self.n_part_box = 0
-        self.part_x, self.part_y, self.part_z = 0, 0, 0
-        self.npoints_partx, self.npoints_party, self.npoints_partz = 0, 0, 0
-
         self.box_means = 0
         self.box_mean_indices = 0
 
@@ -29,6 +24,8 @@ class unit_cell:
             x, y, z: float
                 Length of each cartesian axis.
         '''
+
+        import numpy as np
 
         # Define the number of points and the dimensions of each cartesian axis.
         self.nx, self.ny, self.nz = nx, ny, nz

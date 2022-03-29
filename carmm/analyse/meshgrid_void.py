@@ -1,33 +1,53 @@
-def void_mesh_build_coarse_grid(atoms, void_min, void_max, ucell_obj, mol_xx, coarseness=1):
+def void_mesh_build(void_min, void_max, ucell_obj, mol_xx, mic, coarseness=1):
+    '''
+    Defines the void (unoccupied regions) of a unit cell on a numpy meshgrid. Scans over probe points on the
+    underlying meshgrid by increasing the radius of the grid until the van der Waals' volume of a molecule is
+    encountered. Coarseness factor reduces number of probe points by skipping over points in the grid.
+    Uses 99.99 as a junk value.
+    Args:
+        void_min: float
+            Minimum radius scanned from for probe sphere.
+        void_max: float
+            Maximum radius scanned from for probe sphere.
+        ucell_obj: unit_cell object
+            Contains meshgrid and associated unit cell information.
+        mol_xx: numpy array [nx,ny,nz]
+            Grid to determine whether molecule is present at a point.
+        mic: logical
+            Use miniumum image convention.
+        coarseness: integer
+            Skips over an integer number of points
+    Return:
+        void_xx, void_yy, void_zz: Meshgrid of (x,y,z) occupied by the probe spheres.
+    '''
+
+    import numpy as np
+    from meshgrid_functions import distance_meshgrid2point
+
     # Defines the mesh points occupied by atoms.
-    X0 = np.full(ucell.nx, fill_value=99.99)
-    Y0 = np.full(ucell.ny, fill_value=99.99)
-    Z0 = np.full(ucell.nz, fill_value=99.99)
+    X0 = np.full(ucell_obj.nx, fill_value=99.99)
+    Y0 = np.full(ucell_obj.ny, fill_value=99.99)
+    Z0 = np.full(ucell_obj.nz, fill_value=99.99)
     void_xx, void_yy, void_zz = np.meshgrid(X0, Y0, Z0, indexing='xy')
     void_centres = []
 
     # FIND UNOCCUPIED SITES
-    probe_xx = np.where(mol_xx == 99.99, ucell.xx, 99.99)
+    probe_xx = np.where(mol_xx == 99.99, ucell_obj.xx, 99.99)
 
     mol_xx_mask = (mol_xx != 99.99)
 
-    continue_count = 0
-    not_continue_count = 0
-
-    for i in tqdm(range(0, ucell.nx, coarseness)):
-        for j in range(0, ucell.ny, coarseness):
-            for k in range(0, ucell.nz, coarseness):
+    for i in range(0, ucell_obj.nx, coarseness):
+        for j in range(0, ucell_obj.ny, coarseness):
+            for k in range(0, ucell_obj.nz, coarseness):
 
                 if probe_xx[i, j, k] == 99.99:
-                    continue_count += 1
                     continue
 
-                not_continue_count += 1
                 a_xx, a_yy, a_zz = ucell_obj.xx[i, j, k], ucell_obj.yy[i, j, k], ucell_obj.zz[i, j, k]
 
                 point_accepted = False
                 for pbox_r in np.arange(void_min, void_max, 0.5):
-                    probe_box_distance_matrix = distance_MIC_mesh(a_xx, a_yy, a_zz, ucell)
+                    probe_box_distance_matrix = distance_meshgrid2point(a_xx, a_yy, a_zz, ucell_obj, mic)
 
                     ping = probe_box_distance_matrix < pbox_r
 
