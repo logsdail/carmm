@@ -22,6 +22,7 @@ def void_mesh_build(void_min, void_max, ucell_obj, mol_xx, mic, coarseness=1):
     '''
 
     import numpy as np
+    from carmm.analyse.meshgrid_functions import distance_meshgrid2point
 
     # Defines the mesh points occupied by atoms.
     X0 = np.full(ucell_obj.nx, fill_value=99.99)
