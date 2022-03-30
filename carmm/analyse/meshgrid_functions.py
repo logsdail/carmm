@@ -141,3 +141,42 @@ def atom_mesh_build_mask(ucell, atom, atom_radius, mic):
         mol_zz = np.where(new_distances < atom_radius, ucell.zz, mol_zz)
 
     return mol_xx, mol_yy, mol_zz
+
+
+def calculate_part_box_means(p_x, p_y, p_z, i_listx, i_listy, i_listz):
+
+    import numpy as np
+
+    box_means = []
+    box_mean_indices = []
+    for x in range(p_x):
+        for y in range(p_y):
+            for z in range(p_z):
+                x_mean = np.mean(
+                    xx[i_listx[x][0]:i_listx[x][1], i_listy[y][0]:i_listy[y][1], i_listz[z][0]:i_listz[z][1]])
+                y_mean = np.mean(
+                    yy[i_listx[x][0]:i_listx[x][1], i_listy[y][0]:i_listy[y][1], i_listz[z][0]:i_listz[z][1]])
+                z_mean = np.mean(
+                    zz[i_listx[x][0]:i_listx[x][1], i_listy[y][0]:i_listy[y][1], i_listz[z][0]:i_listz[z][1]])
+                box_mean_indices.append([x, y, z])
+                box_means.append([x_mean, y_mean, z_mean])
+
+    return box_means, box_mean_indices
+
+
+def find_active_boxes(x1, y1, z1, unit_cell, alpha):
+
+    import numpy as np
+
+    active_boxes = []
+    active_boxes_mic = []
+    for ind in range(len(unit_cell.box_means)):
+        point2part_dist, x_mic, y_mic, z_mic = distance_point2point(x1, y1, z1, unit_cell.box_means[ind][0],
+                                                                   unit_cell.box_means[ind][1],
+                                                                   unit_cell.box_means[ind][2], unit_cell.dim, MIC)
+        if point2part_dist < alpha:
+            active_boxes.append([unit_cell.box_mean_indices[ind][0], unit_cell.box_mean_indices[ind][1],
+                                 unit_cell.box_mean_indices[ind][2]])
+            active_boxes_mic.append([x_mic, y_mic, z_mic])
+
+    return active_boxes, active_boxes_mic
