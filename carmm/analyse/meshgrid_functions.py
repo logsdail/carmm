@@ -1,4 +1,4 @@
-def distance_meshgrid2point(a_xx, a_yy, a_zz, unit_cell_object, MIC):
+def distance_meshgrid2point(a_xx, a_yy, a_zz, unit_cell_object, mic):
     '''
     Function finds the distance between a point (defined in cartesian co-ordinates a_xx, a_yy, a_zz)
     relative to all points on a Numpy meshgrid (defined in the unit_cell_object).
@@ -18,7 +18,7 @@ def distance_meshgrid2point(a_xx, a_yy, a_zz, unit_cell_object, MIC):
     mesh_distances = np.sqrt(
         (a_xx - unit_cell_object.xx) ** 2 + (a_yy - unit_cell_object.yy) ** 2 + (a_zz - unit_cell_object.zz) ** 2)
 
-    if (MIC):
+    if (mic):
         for x in np.arange(-1, 2):
             for y in np.arange(-1, 2):
                 for z in np.arange(-1, 2):
@@ -31,7 +31,7 @@ def distance_meshgrid2point(a_xx, a_yy, a_zz, unit_cell_object, MIC):
     return mesh_distances
 
 
-def distance_point2point(x_1, y_1, z_1, x_2, y_2, z_2, MIC, dim):
+def distance_point2point(x_1, y_1, z_1, x_2, y_2, z_2, mic, dim):
     '''
     Function finds the distance between two points (defined in cartesian co-ordinates).
     Args:
@@ -49,7 +49,7 @@ def distance_point2point(x_1, y_1, z_1, x_2, y_2, z_2, MIC, dim):
 
     o_distance = np.sqrt((x_1 - x_2) ** 2 + (y_1 - y_2) ** 2 + (z_1 - z_2) ** 2)
 
-    if (MIC):
+    if (mic):
         for x in np.arange(-1, 2):
             for y in np.arange(-1, 2):
                 for z in np.arange(-1, 2):
@@ -212,7 +212,7 @@ def find_active_boxes(x1, y1, z1, unit_cell, radius, mic):
     for ind in range(len(unit_cell.box_means)):
         point2part_dist, x_mic, y_mic, z_mic = distance_point2point(x1, y1, z1, unit_cell.box_means[ind][0],
                                                                    unit_cell.box_means[ind][1],
-                                                                   unit_cell.box_means[ind][2], unit_cell.dim, mic)
+                                                                   unit_cell.box_means[ind][2], mic, unit_cell.dim)
         if (point2part_dist-radius) < half_diag:
             active_boxes.append([unit_cell.box_mean_indices[ind][0], unit_cell.box_mean_indices[ind][1],
                                  unit_cell.box_mean_indices[ind][2]])
