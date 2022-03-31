@@ -210,6 +210,9 @@ def find_active_boxes(x1, y1, z1, unit_cell, radius, mic):
     half_diag=np.sqrt(unit_cell.part_dx**2+unit_cell.part_dy**2+unit_cell.part_dz**2)/2
 
     for ind in range(len(unit_cell.box_means)):
+        print(unit_cell.box_means[ind][0])
+        print(unit_cell.box_means[ind][1])
+        print(unit_cell.box_means[ind][2])
         point2part_dist, x_mic, y_mic, z_mic = distance_point2point(x1, y1, z1, unit_cell.box_means[ind][0],
                                                                    unit_cell.box_means[ind][1],
                                                                    unit_cell.box_means[ind][2], mic, unit_cell)
