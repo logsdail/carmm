@@ -206,13 +206,14 @@ def find_active_boxes(x1, y1, z1, unit_cell, radius, mic):
 
     active_boxes = []
     active_boxes_mic = []
+    dim=unit_cell.dim
 
     half_diag=np.sqrt(unit_cell.part_dx**2+unit_cell.part_dy**2+unit_cell.part_dz**2)/2
 
     for ind in range(len(unit_cell.box_means)):
         point2part_dist, x_mic, y_mic, z_mic = distance_point2point(x1, y1, z1, unit_cell.box_means[ind][0],
                                                                    unit_cell.box_means[ind][1],
-                                                                   unit_cell.box_means[ind][2], mic, unit_cell.dim)
+                                                                   unit_cell.box_means[ind][2], mic, dim)
         if (point2part_dist-radius) < half_diag:
             active_boxes.append([unit_cell.box_mean_indices[ind][0], unit_cell.box_mean_indices[ind][1],
                                  unit_cell.box_mean_indices[ind][2]])
