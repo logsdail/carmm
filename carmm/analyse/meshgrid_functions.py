@@ -216,7 +216,7 @@ def atom_mesh_build_mask_pbox(ucell, atom, atom_radius, mic):
             bxmin, bymin, bzmin = ucell.ind_list_x[bx][0], ucell.ind_list_y[by][0], ucell.ind_list_z[bz][0]
             bxmax, bymax, bzmax = ucell.ind_list_x[bx][1], ucell.ind_list_y[by][1], ucell.ind_list_z[bz][1]
 
-            ax.scatter(xx[bxmin:bxmax, bymin:bymax, bzmin:bzmax], yy[bxmin:bxmax, bymin:bymax, bzmin:bzmax], zz[bxmin:bxmax, bymin:bymax, bzmin:bzmax])
+            ax.scatter(ucell.xx[bxmin:bxmax, bymin:bymax, bzmin:bzmax], ucell.yy[bxmin:bxmax, bymin:bymax, bzmin:bzmax], ucell.zz[bxmin:bxmax, bymin:bymax, bzmin:bzmax])
 
         ax.set_xlim(0, ucell.dim[0])
         ax.set_ylim(0, ucell.dim[1])
