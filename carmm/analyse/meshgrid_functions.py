@@ -31,7 +31,7 @@ def distance_meshgrid2point(a_xx, a_yy, a_zz, unit_cell_object, mic):
     return mesh_distances
 
 
-def distance_point2point(x_1, y_1, z_1, x_2, y_2, z_2, mic, dim):
+def distance_point2point(x_1, y_1, z_1, x_2, y_2, z_2, mic, unit_cell):
     '''
     Function finds the distance between two points (defined in cartesian co-ordinates).
     Args:
@@ -53,9 +53,9 @@ def distance_point2point(x_1, y_1, z_1, x_2, y_2, z_2, mic, dim):
         for x in np.arange(-1, 2):
             for y in np.arange(-1, 2):
                 for z in np.arange(-1, 2):
-                    new_distance = np.sqrt((x_1 - (x_2 + (dim[0] * x)) ** 2) +
-                                           (y_1 - (y_2 + (dim[1] * y)) ** 2) +
-                                           (z_1 - (z_2 + (dim[2] * z)) ** 2))
+                    new_distance = np.sqrt((x_1 - (x_2 + (unit_cell.dim[0] * x)) ** 2) +
+                                           (y_1 - (y_2 + (unit_cell.dim[1] * y)) ** 2) +
+                                           (z_1 - (z_2 + (unit_cell.dim[2] * z)) ** 2))
                     if o_distance > new_distance:
                         o_distance = new_distance
 
@@ -206,14 +206,13 @@ def find_active_boxes(x1, y1, z1, unit_cell, radius, mic):
 
     active_boxes = []
     active_boxes_mic = []
-    dim=unit_cell.dim
 
     half_diag=np.sqrt(unit_cell.part_dx**2+unit_cell.part_dy**2+unit_cell.part_dz**2)/2
 
     for ind in range(len(unit_cell.box_means)):
         point2part_dist, x_mic, y_mic, z_mic = distance_point2point(x1, y1, z1, unit_cell.box_means[ind][0],
                                                                    unit_cell.box_means[ind][1],
-                                                                   unit_cell.box_means[ind][2], mic, dim)
+                                                                   unit_cell.box_means[ind][2], mic, unit_cell)
         if (point2part_dist-radius) < half_diag:
             active_boxes.append([unit_cell.box_mean_indices[ind][0], unit_cell.box_mean_indices[ind][1],
                                  unit_cell.box_mean_indices[ind][2]])
