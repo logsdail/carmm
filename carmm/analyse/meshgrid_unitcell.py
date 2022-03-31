@@ -4,26 +4,29 @@ class Unit_Cell:
     mesh grid of the underlying unit cell. Primarily used to reduce the number of variables which
     need to be passed to associated meshgrid functions. Currently only defined for orthogonal unit cells.
     '''
+
     def __init__(self):
 
         self.nx, self.ny, self.nz = 0, 0, 0
         self.X, self.Y, self.Z = 0, 0, 0
         self.xx, self.yy, self.zz = 0, 0, 0
 
-        self.ind_list_x,self.ind_list_y,self.ind_list_z=0,0,0
+        self.ind_list_x, self.ind_list_y, self.ind_list_z = 0, 0, 0
         self.n_part_box = 0
-        self.part_x,self.part_y,self.part_z = 0,0,0
-        self.part_nx,self.part_ny,self.part_nz=0,0,0
+        self.part_x, self.part_y, self.part_z = 0, 0, 0
+        self.part_nx, self.part_ny, self.part_nz = 0, 0, 0
+        self.part_dx, self.part_dy, self.part_dz = 0, 0, 0
 
         self.dim = 0
 
         self.box_means = 0
         self.box_mean_indices = 0
-        self.parallel=False
+        self.parallel = False
 
-    def define_unit_cell(self, x, y, z, nx=50, ny=50, nz=50, parallel=False, n_part_box=0):
+    def define_unit_cell(self, x, y, z, nx=50, ny=50, nz=50, parallel=False, part_x=0, part_y=0, part_z=0):
         '''
-        Defines a unit cell of (nx, ny, nz) points of (x, y, z) length.
+        Defines a unit cell of (nx, ny, nz) points of (x, y, z) length. Also defines the partition box indices
+        used for splitting up the simulation cell into smaller units.
         Args:
             n_x, n_y, n_z: int
                 Number of points along each cartesian axis.
@@ -34,9 +37,9 @@ class Unit_Cell:
         import numpy as np
 
         # Define the number of points and the dimensions of each cartesian axis.
-        if (nx<10 or ny<10 or nz<10):
+        if (nx < 10 or ny < 10 or nz < 10):
             raise ValueError('Number of points along one axis too low. Please increase above 9.')
-        if (nx<1 or ny<1 or nz<1):
+        if (nx < 1 or ny < 1 or nz < 1):
             raise ValueError('Number of points along one or more axis negative.')
 
         self.nx, self.ny, self.nz = nx, ny, nz
@@ -50,53 +53,46 @@ class Unit_Cell:
         # Define meshgrid of the unit cell.
         self.xx, self.yy, self.zz = np.meshgrid(self.X, self.Y, self.Z, indexing='xy')
 
-        self.parallel=parallel
+        self.parallel = parallel
 
         if parallel:
             print(f"Parallelisation specified. Looking for mpi4py...")
-            try:
-                import mpi4py
-            except ImportError:
-                print(f"mpi4py library not detected. Reverting to serial mode.")
-            else:
-                print(f"mpi4py detected. Defining partition boxes...")
+            print(f"mpi4py detected. Defining partition boxes...")
 
-                if (n_part_box==0):
-                    self.find_partition_box_npoints()
+        if (part_x == 0 or part_y == 0 or part_z == 0):
+            print(f"Automatically searching for number of partition boxes...")
+            self.find_partition_nboxes()
+            self.define_partition_boxes(self.part_x, self.part_y, self.part_z)
+        else:
+            self.define_partition_boxes(part_x, part_y, part_z)
 
-                    self.n_part_box = n_part_box**3
-                else:
-
-                    self.define_parition_boxes(n_part_box,n_part_box,n_part_box)
-                    self.n_part_box = n_part_box**3
-
-    def find_partition_box_npoints(self):
+    def find_partition_nboxes(self):
 
         import numpy as np
 
-        x_factors = np.array([int(x) for x in np.arange(np.round(np.nx + 1 / 2)) if np.nx % x == 0])
-        y_factors = np.array([int(x) for x in np.arange(np.round(np.ny + 1 / 2)) if np.ny % y == 0])
-        z_factors = np.array([int(x) for x in np.arange(np.round(np.nz + 1 / 2)) if np.nz % z == 0])
+        x_factors = np.array([int(x) for x in np.arange(np.round((np.nx + 1) / 2)) if np.nx % x == 0])
+        y_factors = np.array([int(y) for y in np.arange(np.round((np.ny + 1) / 2)) if np.ny % y == 0])
+        z_factors = np.array([int(z) for z in np.arange(np.round((np.nz + 1) / 2)) if np.nz % z == 0])
 
         # Try and get the number of points per box as close to 10 as possible...
-        if self.nx>20:
-            self.part_nx=self.nx/int(np.maximum(x_factors))
+        if self.nx < 20:
+            self.part_x = int(self.nx / x_factors[np.argmax(x_factors)])
         else:
-            diff=np.absolute(self.nx-10)
-            self.part_nx=diff.argmin()
-        if self.ny>20:
+            self.part_x = int(self.nx / x_factors[np.argmin(np.absolute(x_factors - 10))])
 
-
+        if self.ny < 20:
+            self.part_y = int(self.ny / y_factors[np.argmax(y_factors)])
         else:
+            self.part_y = int(self.ny / y_factors[np.argmin(np.absolute(y_factors - 10))])
 
-
-
-        if self.nz>20:
-
+        if self.nz < 20:
+            self.part_z = int(self.nz / z_factors[np.argmax(z_factors)])
         else:
+            self.part_z = int(self.nz / z_factors[np.argmin(np.absolute(z_factors - 10))])
 
-
-
+        if (self.part_x == self.nx or self.part_y == self.ny or self.part_z == self.nz):
+            print("Warning: One or more of your axis are defined only using one partition box.\n")
+            print("Code efficiency can be improved setting nx/ny/nz which can be divided into even groups of points.")
 
     def define_partition_boxes(self, n_box_x, n_box_y, n_box_z):
 
@@ -104,7 +100,7 @@ class Unit_Cell:
         self.part_x, self.part_y, self.part_z = n_box_x, n_box_y, n_box_z
 
         # Define the length of each partition box axis.
-        self.parts_x, self.parts_y, self.parts_z = self.nx / self.dim[0], self.ny / self.dim[1], self.nz / self.dim[2]
+        self.part_dx, self.part_dy, self.part_dz = self.nx / self.dim[0], self.ny / self.dim[1], self.nz / self.dim[2]
 
         # Define the total number of partition boxes.
         self.n_part_box = self.part_x * self.part_y * self.part_z
@@ -118,9 +114,9 @@ class Unit_Cell:
         self.ind_list_z = self.partition_indices(self.part_z, self.nz, ind_list_z)
 
         # Define the number of points along each axis of the partition boxes.
-        self.npoints_partx = self.ind_list_x[1][0] - self.ind_list_x[0][0]
-        self.npoints_party = self.ind_list_y[1][0] - self.ind_list_y[0][0]
-        self.npoints_partz = self.ind_list_z[1][0] - self.ind_list_z[0][0]
+        self.part_nx = self.ind_list_x[1][0] - self.ind_list_x[0][0]
+        self.part_ny = self.ind_list_y[1][0] - self.ind_list_y[0][0]
+        self.part_nz = self.ind_list_z[1][0] - self.ind_list_z[0][0]
 
         # Calculate the mean positions of all partition boxes.
         self.calculate_part_box_means(self)

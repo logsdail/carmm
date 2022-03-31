@@ -36,6 +36,7 @@ def void_mesh_build(void_min, void_max, ucell_obj, mol_xx, mic, coarseness=1):
 
     mol_xx_mask = (mol_xx != 99.99)
 
+
     for i in range(0, ucell_obj.nx, coarseness):
         for j in range(0, ucell_obj.ny, coarseness):
             for k in range(0, ucell_obj.nz, coarseness):
