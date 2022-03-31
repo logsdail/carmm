@@ -119,7 +119,7 @@ class Unit_Cell:
         self.part_nz = self.ind_list_z[1][0] - self.ind_list_z[0][0]
 
         # Calculate the mean positions of all partition boxes.
-        self.calculate_part_box_means(self)
+        self.calculate_part_box_means()
 
     def calculate_part_box_means(self):
 
