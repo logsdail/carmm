@@ -213,6 +213,7 @@ def find_active_boxes(x1, y1, z1, unit_cell, radius, mic):
         print(unit_cell.box_means[ind][0])
         print(unit_cell.box_means[ind][1])
         print(unit_cell.box_means[ind][2])
+        print(x2,y1,z1,mic,unit_cell.dim)
         point2part_dist, x_mic, y_mic, z_mic = distance_point2point(x1, y1, z1, float(unit_cell.box_means[ind][0]),
                                                                    float(unit_cell.box_means[ind][1]),
                                                                    float(unit_cell.box_means[ind][2]), mic, unit_cell)
