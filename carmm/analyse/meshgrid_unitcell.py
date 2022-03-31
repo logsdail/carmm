@@ -70,9 +70,9 @@ class Unit_Cell:
 
         import numpy as np
 
-        x_factors = np.array([int(x) for x in np.arange(np.round((np.nx + 1) / 2)) if np.nx % x == 0])
-        y_factors = np.array([int(y) for y in np.arange(np.round((np.ny + 1) / 2)) if np.ny % y == 0])
-        z_factors = np.array([int(z) for z in np.arange(np.round((np.nz + 1) / 2)) if np.nz % z == 0])
+        x_factors = np.array([int(x) for x in np.arange(np.round((self.nx + 1) / 2)) if self.nx % x == 0])
+        y_factors = np.array([int(y) for y in np.arange(np.round((self.ny + 1) / 2)) if self.ny % y == 0])
+        z_factors = np.array([int(z) for z in np.arange(np.round((self.nz + 1) / 2)) if self.nz % z == 0])
 
         # Try and get the number of points per box as close to 10 as possible...
         if self.nx < 20:
