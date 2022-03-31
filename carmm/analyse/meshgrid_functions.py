@@ -207,10 +207,9 @@ def atom_mesh_build_mask_pbox(ucell, atom, atom_radius, mic):
                                                                      ucell.zz[bxmin:bxmax, bymin:bymax, bzmin:bzmax],
                                                                      mol_zz[bxmin:bxmax, bymin:bymax, bzmin:bzmax])
 
+        import matplotlib.pyplot as plt
         fig = plt.figure(figsize=(10, 10))
         ax = fig.add_subplot(111, projection='3d')
-
-        import matplotlib.pyplot as plt
         for b in range(len(act_boxes)):
             bx, by, bz = act_boxes[b][0], act_boxes[b][1], act_boxes[b][2]
 
