@@ -142,7 +142,7 @@ class Unit_Cell:
                     self.box_mean_indices.append([x, y, z])
                     self.box_means.append([x_mean, y_mean, z_mean])
 
-    def partition_indices(partition_axis, npoints, ind_list):
+    def partition_indices(self, partition_axis, npoints, ind_list):
 
         # Define the start and end axes of the partition boxes.
         p_per_box = npoints / partition_axis
