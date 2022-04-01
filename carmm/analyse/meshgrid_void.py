@@ -97,7 +97,7 @@ def void_mesh_build_pbox(void_min, void_max, resol, ucell, mol_xx, mic, coarsene
         void_xx, void_yy, void_zz: Meshgrid of (x,y,z) occupied by the probe spheres.
     '''
 
-    from meshgrid_functions import find_active_boxes
+    from carmm.analyse.meshgrid_functions import find_active_boxes
     import numpy as np
 
     # Defines the mesh points occupied by atoms.
