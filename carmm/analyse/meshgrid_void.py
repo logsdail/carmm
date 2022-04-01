@@ -154,7 +154,7 @@ def void_mesh_build_pbox(void_min, void_max, ucell, mol_xx, mic, coarseness=1):
                         #print(f"Probe accepted at: {a_xx,a_yy,a_zz} with radius: {pbox_r-0.5}")
                         void_centres.append([a_xx, a_yy, a_zz])
 
-                        act_boxes, act_boxes_mic = find_active_boxes(a_xx, a_yy, a_zz, ucell, pbox_r, mic)
+                        act_boxes, act_boxes_mic = find_active_boxes(a_xx, a_yy, a_zz, ucell, pbox_r-0.5, mic)
 
                         for b in range(len(act_boxes)):
                             bx, by, bz = act_boxes[b][0], act_boxes[b][1], act_boxes[b][2]
