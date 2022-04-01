@@ -74,7 +74,7 @@ def void_mesh_build(void_min, void_max, resol, ucell_obj, mol_xx, mic, coarsenes
 
     return void_xx, void_yy, void_zz
 
-def void_mesh_build_pbox(void_min, void_max, ucell, mol_xx, mic, coarseness=1):
+def void_mesh_build_pbox(void_min, void_max, resol, ucell, mol_xx, mic, coarseness=1):
     '''
     Defines the void (unoccupied regions) of a unit cell on a numpy meshgrid. Scans over probe points on the
     underlying meshgrid by increasing the radius of the grid until the van der Waals' volume of a molecule is
