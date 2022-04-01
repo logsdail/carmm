@@ -112,7 +112,9 @@ def void_find_simple(void_min, void_max, resol, ucell_obj, atomco, atom_rad, mic
                 distances=[]
                 for atom in atomco:
 
-                    dist,xmic,ymic,zmic=distance_point2point(a_xx,a_yy,a_zz,atom[0],atom[1],atom[2],mic,ucell_obj.dim)
+                    dist,xmic,ymic,zmic=distance_point2point(a_xx,a_yy,a_zz,
+                                                             atom.positions[0],atom.positions[1],atom.positions[2],
+                                                             mic,ucell_obj.dim)
                     distances.append([dist])
                     point_accepted = False
                     point_denied = False
