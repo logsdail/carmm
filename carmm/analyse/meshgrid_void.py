@@ -1,4 +1,4 @@
-def void_mesh_build(void_min, void_max, ucell_obj, mol_xx, mic, coarseness=1):
+def void_mesh_build(void_min, void_max, resol, ucell_obj, mol_xx, mic, coarseness=1):
     '''
     Defines the void (unoccupied regions) of a unit cell on a numpy meshgrid. Scans over probe points on the
     underlying meshgrid by increasing the radius of the grid until the van der Waals' volume of a molecule is
@@ -47,7 +47,7 @@ def void_mesh_build(void_min, void_max, ucell_obj, mol_xx, mic, coarseness=1):
                 a_xx, a_yy, a_zz = ucell_obj.xx[i, j, k], ucell_obj.yy[i, j, k], ucell_obj.zz[i, j, k]
 
                 point_accepted = False
-                for pbox_r in np.arange(void_min, void_max, 0.5):
+                for pbox_r in np.arange(void_min, void_max, resol):
                     probe_box_distance_matrix = distance_meshgrid2point(a_xx, a_yy, a_zz, ucell_obj, mic)
 
                     ping = probe_box_distance_matrix < pbox_r
@@ -65,7 +65,7 @@ def void_mesh_build(void_min, void_max, ucell_obj, mol_xx, mic, coarseness=1):
                         #print(f"Probe accepted at: {a_xx,a_yy,a_zz} with radius: {pbox_r-0.5}")
                         void_centres.append([a_xx, a_yy, a_zz])
 
-                        ping = probe_box_distance_matrix < (pbox_r - 0.5)
+                        ping = probe_box_distance_matrix < (pbox_r - resol)
 
                         void_xx = np.where(ping, ucell_obj.xx, void_xx)
                         void_yy = np.where(ping, ucell_obj.yy, void_yy)
@@ -122,7 +122,7 @@ def void_mesh_build_pbox(void_min, void_max, ucell, mol_xx, mic, coarseness=1):
                 a_xx, a_yy, a_zz = ucell.xx[i, j, k], ucell.yy[i, j, k], ucell.zz[i, j, k]
 
                 point_accepted = False
-                for pbox_r in np.arange(void_min, void_max, 0.5):
+                for pbox_r in np.arange(void_min, void_max, resol):
 
                     act_boxes, act_boxes_mic = find_active_boxes(a_xx, a_yy, a_zz, ucell, pbox_r, mic)
 
@@ -154,7 +154,7 @@ def void_mesh_build_pbox(void_min, void_max, ucell, mol_xx, mic, coarseness=1):
                         #print(f"Probe accepted at: {a_xx,a_yy,a_zz} with radius: {pbox_r-0.5}")
                         void_centres.append([a_xx, a_yy, a_zz])
 
-                        act_boxes, act_boxes_mic = find_active_boxes(a_xx, a_yy, a_zz, ucell, pbox_r-0.5, mic)
+                        act_boxes, act_boxes_mic = find_active_boxes(a_xx, a_yy, a_zz, ucell, pbox_r-resol, mic)
 
                         for b in range(len(act_boxes)):
                             bx, by, bz = act_boxes[b][0], act_boxes[b][1], act_boxes[b][2]
@@ -172,7 +172,7 @@ def void_mesh_build_pbox(void_min, void_max, ucell, mol_xx, mic, coarseness=1):
                                 + (a_zz + (ucell.dim[0] * x_mic) - ucell.zz[bxmin:bxmax, bymin:bymax,
                                                                    bzmin:bzmax]) ** 2)
 
-                            ping = probe_box_distance_matrix < (pbox_r - 0.5)
+                            ping = probe_box_distance_matrix < (pbox_r - resol)
 
                             void_xx = np.where(ping, ucell.xx[bxmin:bxmax, bymin:bymax, bzmin:bzmax], void_xx[bxmin:bxmax, bymin:bymax, bzmin:bzmax])
                             void_yy = np.where(ping, ucell.yy[bxmin:bxmax, bymin:bymax, bzmin:bzmax], void_yy[bxmin:bxmax, bymin:bymax, bzmin:bzmax])
