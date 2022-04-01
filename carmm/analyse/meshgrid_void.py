@@ -103,15 +103,9 @@ def void_find_simple(void_min, void_max, resol, ucell_obj, atomco, atom_rad, mic
     void_centres = []
     void_radii = []
 
-    # FIND UNOCCUPIED SITES
-    probe_xx = np.where(mol_xx == 99.99, ucell_obj.xx, 99.99)
-
     for i in range(0, ucell_obj.nx, coarseness):
         for j in range(0, ucell_obj.ny, coarseness):
             for k in range(0, ucell_obj.nz, coarseness):
-
-                if probe_xx[i, j, k] == 99.99:
-                    continue
 
                 a_xx, a_yy, a_zz = ucell_obj.xx[i, j, k], ucell_obj.yy[i, j, k], ucell_obj.zz[i, j, k]
 
@@ -144,7 +138,7 @@ def void_find_simple(void_min, void_max, resol, ucell_obj, atomco, atom_rad, mic
                         break
 
     void_centres=np.asarray(void_centres)
-    void_radii=np.asarray(void_array)
+    void_radii=np.asarray(void_radii)
 
     return void_centres, void_radii
 
