@@ -22,9 +22,9 @@ def distance_meshgrid2point(a_xx, a_yy, a_zz, unit_cell_object, mic):
         for x in np.arange(-1, 2):
             for y in np.arange(-1, 2):
                 for z in np.arange(-1, 2):
-                    new_distances = np.sqrt((a_xx - unit_cell_object.xx + (unit_cell_object.dim[0] * x)) ** 2
-                                            + (a_yy - (unit_cell_object.yy + (unit_cell_object.dim[1] * y))) ** 2
-                                            + (a_zz - (unit_cell_object.zz + (unit_cell_object.dim[2] * z))) ** 2)
+                    new_distances = np.sqrt((a_xx + (unit_cell_object.dim[0] * x) - unit_cell_object.xx) ** 2
+                                            + (a_yy + (unit_cell_object.dim[1] * y) - unit_cell_object.yy) ** 2
+                                            + (a_zz + (unit_cell_object.dim[2] * z) - unit_cell_object.zz ) ** 2)
 
                     mesh_distances = np.where(new_distances < mesh_distances, new_distances, mesh_distances)
 
@@ -193,9 +193,9 @@ def atom_mesh_build_mask_pbox(ucell, atom, atom_radius, mic):
             bxmax, bymax, bzmax = ucell.ind_list_x[bx][1], ucell.ind_list_y[by][1], ucell.ind_list_z[bz][1]
 
             new_distances = np.sqrt(
-                (a_xx - (ucell.xx[bxmin:bxmax, bymin:bymax, bzmin:bzmax] + (ucell.dim[0] * x_mic))) ** 2
-                + (a_yy - (ucell.yy[bxmin:bxmax, bymin:bymax, bzmin:bzmax] + (ucell.dim[1] * y_mic))) ** 2
-                + (a_zz - (ucell.zz[bxmin:bxmax, bymin:bymax, bzmin:bzmax] + (ucell.dim[2] * z_mic))) ** 2)
+                (a_xx + (ucell.dim[0] * x_mic) - ucell.xx[bxmin:bxmax, bymin:bymax, bzmin:bzmax]) ** 2
+                + (a_yy + (ucell.dim[0] * x_mic) - ucell.yy[bxmin:bxmax, bymin:bymax, bzmin:bzmax]) ** 2
+                + (a_zz + (ucell.dim[0] * x_mic) - ucell.zz[bxmin:bxmax, bymin:bymax, bzmin:bzmax]) ** 2)
 
             mol_xx[bxmin:bxmax, bymin:bymax, bzmin:bzmax] = np.where(new_distances < atom_radius,
                                                                      ucell.xx[bxmin:bxmax, bymin:bymax, bzmin:bzmax],
@@ -206,22 +206,6 @@ def atom_mesh_build_mask_pbox(ucell, atom, atom_radius, mic):
             mol_zz[bxmin:bxmax, bymin:bymax, bzmin:bzmax] = np.where(new_distances < atom_radius,
                                                                      ucell.zz[bxmin:bxmax, bymin:bymax, bzmin:bzmax],
                                                                      mol_zz[bxmin:bxmax, bymin:bymax, bzmin:bzmax])
-
-        import matplotlib.pyplot as plt
-        fig = plt.figure(figsize=(10, 10))
-        ax = fig.add_subplot(111, projection='3d')
-        for b in range(len(act_boxes)):
-            bx, by, bz = act_boxes[b][0], act_boxes[b][1], act_boxes[b][2]
-
-            bxmin, bymin, bzmin = ucell.ind_list_x[bx][0], ucell.ind_list_y[by][0], ucell.ind_list_z[bz][0]
-            bxmax, bymax, bzmax = ucell.ind_list_x[bx][1], ucell.ind_list_y[by][1], ucell.ind_list_z[bz][1]
-
-            ax.scatter(ucell.xx[bxmin:bxmax, bymin:bymax, bzmin:bzmax], ucell.yy[bxmin:bxmax, bymin:bymax, bzmin:bzmax], ucell.zz[bxmin:bxmax, bymin:bymax, bzmin:bzmax])
-
-        ax.set_xlim(0, ucell.dim[0])
-        ax.set_ylim(0, ucell.dim[1])
-        ax.set_zlim(0, ucell.dim[2])
-        plt.show()
 
     return mol_xx, mol_yy, mol_zz
 
@@ -244,3 +228,19 @@ def find_active_boxes(x1, y1, z1, unit_cell, radius, mic):
             active_boxes_mic.append([x_mic, y_mic, z_mic])
 
     return active_boxes, active_boxes_mic
+
+def meshgrid_debug_plot(xx,yy,zz,dim,transp,xmin=0,xmax=-1,ymin=0,ymax=-1,zmin=0,zmax=-1):
+
+    import matplotlib.pyplot as plt
+
+    fig = plt.figure(figsize=(10, 10))
+    ax = fig.add_subplot(111, projection='3d')
+
+    ax.scatter(xx[xmin:xmax,ymin:ymax,zmin:zmax],
+               yy[xmin:xmax,ymin:ymax,zmin:zmax],
+               zz[xmin:xmax,ymin:ymax,zmin:zmax],alpha=transp)
+
+    ax.set_xlim(0, dim[0])
+    ax.set_ylim(0, dim[1])
+    ax.set_zlim(0, dim[2])
+    plt.show()
