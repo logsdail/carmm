@@ -149,7 +149,6 @@ def atom_mesh_build_mask(ucell, atom, atom_radius, mic):
 
     return mol_xx, mol_yy, mol_zz
 
-
 def atom_mesh_build_mask_pbox(ucell, atom, atom_radius, mic):
     '''
     Defines meshgrid of based on a radius set by atomic_radius. Uses 99.99 as a junk value.
@@ -209,6 +208,64 @@ def atom_mesh_build_mask_pbox(ucell, atom, atom_radius, mic):
 
     return mol_xx, mol_yy, mol_zz
 
+def atom_mesh_build_mask_pbox(ucell, atom, atom_radius, mic):
+    '''
+    Defines meshgrid of based on a radius set by atomic_radius. Uses 99.99 as a junk value.
+    FUTURE DEVELOPMENT:
+    - Atom by atom definitions of atom_radius.
+    - Replace junk value with None??
+    Args:
+        ucell: unit_cell object
+            Contains meshgrid and unit cell information
+        atom: Atoms object
+            Contains information (atomic symbols and positions)
+        atom_radius: float
+            Determines whether the minimum image convention should be used.
+        mic: logical
+            Minimum image convention for PBC on/off.
+    Returns:
+        mol_xx, mol_yy, mol_zz: Contains values of (x, y, z) co-ordinates for each point on axis occupied by
+        atom van der Waals volume. Set to junk value otherwise.
+    '''
+
+    import numpy as np
+
+    # Defines the mesh points occupied by atoms. Uses 99.99 as a trash value.
+    X0 = np.full(ucell.nx, fill_value=99.99)
+    Y0 = np.full(ucell.ny, fill_value=99.99)
+    Z0 = np.full(ucell.nz, fill_value=99.99)
+
+    mol_xx, mol_yy, mol_zz = np.meshgrid(X0, Y0, Z0, indexing='xy')
+
+    for atom_co in range(len(atom.positions)):
+
+        a_xx, a_yy, a_zz = atom.positions[atom_co][0], atom.positions[atom_co][1], atom.positions[atom_co][2]
+        act_boxes, act_boxes_mic = find_active_boxes(a_xx, a_yy, a_zz, ucell, atom_radius, mic)
+
+        for b in range(len(act_boxes)):
+            bx, by, bz = act_boxes[b][0], act_boxes[b][1], act_boxes[b][2]
+
+            x_mic, y_mic, z_mic = act_boxes_mic[b][0], act_boxes_mic[b][1], act_boxes_mic[b][2]
+
+            bxmin, bymin, bzmin = ucell.ind_list_x[bx][0], ucell.ind_list_y[by][0], ucell.ind_list_z[bz][0]
+            bxmax, bymax, bzmax = ucell.ind_list_x[bx][1], ucell.ind_list_y[by][1], ucell.ind_list_z[bz][1]
+
+            new_distances = np.sqrt(
+                (a_xx + (ucell.dim[0] * x_mic) - ucell.xx[bxmin:bxmax, bymin:bymax, bzmin:bzmax]) ** 2
+                + (a_yy + (ucell.dim[0] * x_mic) - ucell.yy[bxmin:bxmax, bymin:bymax, bzmin:bzmax]) ** 2
+                + (a_zz + (ucell.dim[0] * x_mic) - ucell.zz[bxmin:bxmax, bymin:bymax, bzmin:bzmax]) ** 2)
+
+            mol_xx[bxmin:bxmax, bymin:bymax, bzmin:bzmax] = np.where(new_distances < atom_radius,
+                                                                     ucell.xx[bxmin:bxmax, bymin:bymax, bzmin:bzmax],
+                                                                     mol_xx[bxmin:bxmax, bymin:bymax, bzmin:bzmax])
+            mol_yy[bxmin:bxmax, bymin:bymax, bzmin:bzmax] = np.where(new_distances < atom_radius,
+                                                                     ucell.yy[bxmin:bxmax, bymin:bymax, bzmin:bzmax],
+                                                                     mol_yy[bxmin:bxmax, bymin:bymax, bzmin:bzmax])
+            mol_zz[bxmin:bxmax, bymin:bymax, bzmin:bzmax] = np.where(new_distances < atom_radius,
+                                                                     ucell.zz[bxmin:bxmax, bymin:bymax, bzmin:bzmax],
+                                                                     mol_zz[bxmin:bxmax, bymin:bymax, bzmin:bzmax])
+
+    return mol_xx, mol_yy, mol_zz
 
 def find_active_boxes(x1, y1, z1, unit_cell, radius, mic):
     import numpy as np
