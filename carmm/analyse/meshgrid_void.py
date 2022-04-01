@@ -169,14 +169,13 @@ def void_mesh_build_pbox(void_min, void_max, resol, ucell, mol_xx, mic, coarsene
                             probe_box_distance_matrix = np.sqrt(
                                 (a_xx + (ucell.dim[0] * x_mic) - ucell.xx[bxmin:bxmax, bymin:bymax, bzmin:bzmax]) ** 2
                                 + (a_yy + (ucell.dim[0] * x_mic) - ucell.yy[bxmin:bxmax, bymin:bymax, bzmin:bzmax]) ** 2
-                                + (a_zz + (ucell.dim[0] * x_mic) - ucell.zz[bxmin:bxmax, bymin:bymax,
-                                                                   bzmin:bzmax]) ** 2)
+                                + (a_zz + (ucell.dim[0] * x_mic) - ucell.zz[bxmin:bxmax, bymin:bymax, bzmin:bzmax]) ** 2)
 
                             ping = probe_box_distance_matrix < (pbox_r - resol)
 
-                            void_xx = np.where(ping, ucell.xx[bxmin:bxmax, bymin:bymax, bzmin:bzmax], void_xx[bxmin:bxmax, bymin:bymax, bzmin:bzmax])
-                            void_yy = np.where(ping, ucell.yy[bxmin:bxmax, bymin:bymax, bzmin:bzmax], void_yy[bxmin:bxmax, bymin:bymax, bzmin:bzmax])
-                            void_zz = np.where(ping, ucell.zz[bxmin:bxmax, bymin:bymax, bzmin:bzmax], void_zz[bxmin:bxmax, bymin:bymax, bzmin:bzmax])
+                            void_xx[bxmin:bxmax, bymin:bymax, bzmin:bzmax] = np.where(ping, ucell.xx[bxmin:bxmax, bymin:bymax, bzmin:bzmax], void_xx[bxmin:bxmax, bymin:bymax, bzmin:bzmax])
+                            void_yy[bxmin:bxmax, bymin:bymax, bzmin:bzmax] = np.where(ping, ucell.yy[bxmin:bxmax, bymin:bymax, bzmin:bzmax], void_yy[bxmin:bxmax, bymin:bymax, bzmin:bzmax])
+                            void_zz[bxmin:bxmax, bymin:bymax, bzmin:bzmax] = np.where(ping, ucell.zz[bxmin:bxmax, bymin:bymax, bzmin:bzmax], void_zz[bxmin:bxmax, bymin:bymax, bzmin:bzmax])
 
                         break
 
