@@ -121,7 +121,10 @@ def void_find_simple(void_min, void_max, resol, ucell_obj, atomco, atom_rad, mic
 
                 distances=np.asarray(distances)
                 for pbox_r in np.arange(void_min, void_max, resol):
-                    if pbox_r<(distances+atom_rad):
+
+                    distance_accepted=np.all(np.where((distances+atom_rad)>pbox_r))
+
+                    if distance_accepted:
                         point_accepted = True
                     else:
                         point_denied = False
