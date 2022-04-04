@@ -127,8 +127,10 @@ def void_analysis(ucell, void_centres, void_radii, void_xx, void_yy, void_zz, mi
 
     print(f"Maximum void radius of {void_radii[largest]} at {void_centres[largest]}")
 
-    counter=np.bincount(void_xx.flatten())
-    unocc_sites=np.size(void_xx)-counter[99.99]
+    unique, counts = numpy.unique(void_xx, return_counts=True)
+    counter=counts[-1]
+
+    unocc_sites=np.size(void_xx)-counter
     vox_volume=ucell.dim[0]/ucell.nx*ucell.dim[1]/ucell.ny*ucell.dim[2]/ucell.nz
 
     void_volume=unocc_sites*vox_volume
