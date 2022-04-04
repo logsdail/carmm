@@ -7,8 +7,10 @@ def distance_meshgrid2point(a_xx, a_yy, a_zz, xx, yy, zz, dim, mic):
             Cartesian co-ordinates of point.
         xx, yy, zz: numpy array
             Meshgrids describing x, y, z co-ordinates.
+        dim: numpy array
+            Dimensions along each unit cell axis.
         mic: logical
-            Determines whether the minimum image convention should be used.
+            Minimum image convention On/Off.
     Returns:
         mesh_distances: Numpy meshgrid of distances from point [a_xx, a_yy, a_zz].
     """
@@ -30,7 +32,7 @@ def distance_meshgrid2point(a_xx, a_yy, a_zz, xx, yy, zz, dim, mic):
 
 
 def distance_point2point(x_1, y_1, z_1, x_2, y_2, z_2, mic, dim):
-    '''
+    """
     Function finds the distance between two points (defined in cartesian co-ordinates).
     Args:
         x_1, y_1, z_1: float
@@ -41,7 +43,7 @@ def distance_point2point(x_1, y_1, z_1, x_2, y_2, z_2, mic, dim):
             Determines whether the minimum image convention should be used.
     Returns:
         o_distance: Distance between points 1 and 2.
-    '''
+    """
 
     import numpy as np
 
