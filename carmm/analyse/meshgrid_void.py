@@ -103,3 +103,37 @@ def void_build_mask(ucell, void_centres, void_radii, mic, min_void=1.0):
         void_zz = np.where(new_distances < void_radii[i], ucell.zz, void_zz)
 
     return void_xx, void_yy, void_zz
+
+def void_analysis(ucell, void_centres, void_radii, void_xx, void_yy, void_zz, mic):
+    """
+    Defines meshgrid of voids given by list of void centres and their radii. Uses 99.99 as a junk value.
+    - Replace junk value with None??
+    Args:
+        ucell: unit_cell object
+            Meshgrid and unit cell information
+        void_centres: numpy array
+            Co-ordinates of the void centres.
+        void_radii: numpy array
+            Radius of the void sphere.
+        mic: logical
+            Minimum image convention for PBC on/off.
+        min_void: float
+            Defines the minimum size of void to plot.
+    Returns:
+        void_xx, void_yy, void_zz: numpy array
+            Contains values of (x, y, z) co-ordinates for each point on axis occupied by
+            atom van der Waals volume. Set to junk value otherwise.
+    """
+
+    import numpy as np
+
+    largest=np.argmax(void_centres)
+
+    print(f"Maximum void radius of {void_radii[largest]} at {void_centres[largest]}")
+
+    unocc_sites=np.size(void_xx)-np.bitcount(void_xx)[99.99]
+    vox_volume=ucell.dim[0]/ucell.nx*ucell.dim[1]/ucell.ny*ucell.dim[2]/ucell.nz
+
+    void_volume=unocc_sites*vox_volume
+
+    print(f"Total volume of void: {void_volume} Ang")
