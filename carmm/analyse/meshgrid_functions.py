@@ -133,7 +133,11 @@ def atom_mesh_build_mask(ucell, atom, mic):
     mol_xx, mol_yy, mol_zz = np.meshgrid(X0, Y0, Z0, indexing='xy')
 
     for atom_co in range(len(atom.positions)):
-        atom_radius = vdw_alvarez[atomic_numbers[atom.symbol]]
+
+        at_symbols = atom.get_chemical_symbols()
+        at_n = atomic_numbers[at_symbols[atom_co]]
+        atom_radius = vdw_radii[at_n]
+
         a_xx, a_yy, a_zz = atom.positions[atom_co][0], atom.positions[atom_co][1], atom.positions[atom_co][2]
 
         new_distances = distance_meshgrid2point(a_xx, a_yy, a_zz, ucell.xx, ucell.yy, ucell.zz, ucell.dim, mic)
