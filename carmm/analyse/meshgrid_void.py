@@ -132,7 +132,10 @@ def void_analysis(ucell, void_centres, void_radii, void_xx, void_yy, void_zz, mi
 
     unocc_sites=np.size(void_xx)-counter
     vox_volume=ucell.dim[0]/ucell.nx*ucell.dim[1]/ucell.ny*ucell.dim[2]/ucell.nz
+    total_volume=ucell.dim[0]*ucell.dim[1]*ucell.dim[2]
 
     void_volume=unocc_sites*vox_volume
 
-    print(f"Total volume of void: {void_volume} Ang")
+    print(f"Total volume of void: {void_volume} Ang**3")
+    print(f"Total volume of unit cell: {total_volume} Ang**3")
+    print(f"Total vdw volume: {total_volume-void_volume} Ang**3")
