@@ -123,7 +123,8 @@ def atom_mesh_build_mask(ucell, atom, mic):
     """
 
     import numpy as np
-    from ase.data import vdw_alvarez, atomic_numbers
+    from ase.data import atomic_numbers
+    from ase.data.vdw_alvarez import vdw_radii
 
     # Defines the mesh points occupied by atoms. Uses 99.99 as a trash value.
     X0 = np.full(ucell.nx, fill_value=99.99)
