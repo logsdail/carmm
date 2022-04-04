@@ -1,4 +1,4 @@
-class unit_cell:
+class UnitCell:
     '''
     Object which stores and defines the unit cell parameters (number of points and dimensions) and the
     mesh grid of the underlying unit cell. Primarily used to reduce the number of variables which
