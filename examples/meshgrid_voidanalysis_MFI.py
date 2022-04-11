@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 
-from carmm.analyse.meshgrid_unitcell import UnitCell
-from carmm.analyse.meshgrid_functions import atom_mesh_build_mask
-from carmm.analyse.meshgrid_void import void_find
-from carmm.analyse.meshgrid_void import void_build_mask
-from carmm.analyse.meshgrid_void import void_analysis
+from carmm.meshgrid.meshgrid_unitcell import UnitCell
+from carmm.meshgrid.meshgrid_functions import atom_mesh_build_mask
+from carmm.meshgrid.meshgrid_void import void_find
+from carmm.meshgrid.meshgrid_void import void_build_mask
+from carmm.meshgrid.meshgrid_void import void_analysis
 import matplotlib.pyplot as plt
 from ase import io
 
@@ -22,7 +22,7 @@ ucell.define_unit_cell(20.22614449,19.82125040,13.36948553)
 # (controlled by minimum image convention (MIC) true/false).
 # Meshgrid arrays print the x, y, z coordinates for all given points into three (nx,ny,nz)
 # arrays (mol_xx, mol_yy and mol_zz respectively).
-atom=io.read('../data/MFI_framework_geom.xyz')
+atom=io.read('data/Zeolite/MFI_framework_geom.xyz')
 mol_xx,mol_yy,mol_zz=atom_mesh_build_mask(ucell,atom,mic=True)
 
 # First find the maximum volume sphere not containing an atom around each grid (probe) point.
@@ -35,7 +35,8 @@ void_centers,void_radii=void_find(ucell, atom, mic=True, coarseness=2)
 void_xx,void_yy,void_zz=void_build_mask(ucell, void_centers, void_radii, mic=True, min_void=1.4)
 
 # Print basic output details such as the total void volume and the maximum void volume, radius and position.
-void_analysis(ucell, void_centers, void_radii, void_xx, void_yy, void_zz, mic=True)
+# Only requires one void meshgrid to determine whether a site is unoccupied/occupied.
+void_analysis(ucell, void_centers, void_radii, void_xx)
 
 # Plots the meshgrid for the molecules and void.
 fig = plt.figure(figsize=(10,10))
