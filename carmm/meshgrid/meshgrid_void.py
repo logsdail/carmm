@@ -1,9 +1,9 @@
-def void_find(ucell_obj, atom, mic=True, coarseness=1):
+def void_find(Ucell, atom, mic=True, coarseness=1):
     """
     Defines the void centres and radii of points across the meshgrid. Coarseness factor reduces number of probe points
     by skipping over points in the grid. Uses 99.99 as a junk value.
     Args:
-        ucell_obj: unit_cell object
+        Ucell: unit_cell object
             Contains meshgrid and associated unit cell information.
         atom: Atoms object
             Supplies coordinates and atomic information.
@@ -13,7 +13,7 @@ def void_find(ucell_obj, atom, mic=True, coarseness=1):
             Skips over an integer number of points
     Return:
         void_centres: numpy array
-            Atomic co-ordiantes of the void centres.
+            Atomic coordiantes of the void centres.
         void_radii: numpy array
             Radius of the void centres
     """
@@ -34,15 +34,15 @@ def void_find(ucell_obj, atom, mic=True, coarseness=1):
 
     atom_radii = np.array([atom_radii]).flatten()
 
-    for i in range(0, ucell_obj.nx, coarseness):
-        for j in range(0, ucell_obj.ny, coarseness):
-            for k in range(0, ucell_obj.nz, coarseness):
+    for i in range(0, Ucell.nx, coarseness):
+        for j in range(0, Ucell.ny, coarseness):
+            for k in range(0, Ucell.nz, coarseness):
 
-                a_xx, a_yy, a_zz = ucell_obj.xx[i, j, k], ucell_obj.yy[i, j, k], ucell_obj.zz[i, j, k]
+                a_xx, a_yy, a_zz = Ucell.xx[i, j, k], Ucell.yy[i, j, k], Ucell.zz[i, j, k]
 
                 distances = np.abs(atom.positions - np.array([a_xx, a_yy, a_zz]))
                 if mic:
-                    distances = np.where(distances > 0.5 * ucell_obj.dim, distances - ucell_obj.dim, distances)
+                    distances = np.where(distances > 0.5 * Ucell.dim, distances - Ucell.dim, distances)
 
                 distances = np.sqrt((distances ** 2).sum(axis=-1)) - atom_radii
 
@@ -58,15 +58,15 @@ def void_find(ucell_obj, atom, mic=True, coarseness=1):
     return void_centres, void_radii
 
 
-def void_build_mask(ucell, void_centres, void_radii, mic, min_void=1.0):
+def void_build_mask(Ucell, void_centres, void_radii, mic, min_void=1.0):
     """
     Defines meshgrid of voids given by list of void centres and their radii. Uses 99.99 as a junk value.
-    - Replace junk value with None??
+    - Future change - replace junk value with None??
     Args:
-        ucell: unit_cell object
+        Ucell: unit_cell object
             Meshgrid and unit cell information
         void_centres: numpy array
-            Co-ordinates of the void centres.
+            Coordinates of the void centres.
         void_radii: numpy array
             Radius of the void sphere.
         mic: logical
@@ -75,19 +75,19 @@ def void_build_mask(ucell, void_centres, void_radii, mic, min_void=1.0):
             Defines the minimum size of void to plot.
     Returns:
         void_xx, void_yy, void_zz: numpy array
-            Contains values of (x, y, z) co-ordinates for each point on axis occupied by
+            Contains values of (x, y, z) coordinates for each point on axis occupied by
             atom van der Waals volume. Set to junk value otherwise.
     """
 
     import numpy as np
-    from carmm.analyse.meshgrid_functions import distance_meshgrid2point
+    from carmm.meshgrid.meshgrid_functions import distance_meshgrid2point
 
     # Defines the mesh points occupied by atoms. Uses 99.99 as a trash value.
-    X0 = np.full(ucell.nx, fill_value=99.99)
-    Y0 = np.full(ucell.ny, fill_value=99.99)
-    Z0 = np.full(ucell.nz, fill_value=99.99)
+    x0 = np.full(Ucell.nx, fill_value=99.99)
+    y0 = np.full(Ucell.ny, fill_value=99.99)
+    z0 = np.full(Ucell.nz, fill_value=99.99)
 
-    void_xx, void_yy, void_zz = np.meshgrid(X0, Y0, Z0, indexing='xy')
+    void_xx, void_yy, void_zz = np.meshgrid(x0, y0, z0, indexing='xy')
 
     for i in range(len(void_centres)):
 
@@ -96,46 +96,45 @@ def void_build_mask(ucell, void_centres, void_radii, mic, min_void=1.0):
 
         a_xx, a_yy, a_zz = void_centres[i][0], void_centres[i][1], void_centres[i][2]
 
-        new_distances = distance_meshgrid2point(a_xx, a_yy, a_zz, ucell.xx, ucell.yy, ucell.zz, ucell.dim, mic)
+        new_distances = distance_meshgrid2point(a_xx, a_yy, a_zz, Ucell.xx, Ucell.yy, Ucell.zz, Ucell.dim, mic)
 
-        void_xx = np.where(new_distances < void_radii[i], ucell.xx, void_xx)
-        void_yy = np.where(new_distances < void_radii[i], ucell.yy, void_yy)
-        void_zz = np.where(new_distances < void_radii[i], ucell.zz, void_zz)
+        void_xx = np.where(new_distances < void_radii[i], Ucell.xx, void_xx)
+        void_yy = np.where(new_distances < void_radii[i], Ucell.yy, void_yy)
+        void_zz = np.where(new_distances < void_radii[i], Ucell.zz, void_zz)
 
     return void_xx, void_yy, void_zz
 
-def void_analysis(ucell, void_centres, void_radii, void_xx, void_yy, void_zz, mic):
+
+def void_analysis(Ucell, void_centres, void_radii, void_xx):
     """
     Defines meshgrid of voids given by list of void centres and their radii. Uses 99.99 as a junk value.
     - Replace junk value with None??
     Args:
-        ucell: unit_cell object
+        Ucell: unit_cell object
             Meshgrid and unit cell information
         void_centres: numpy array
-            Co-ordinates of the void centres.
+            Coordinates of the void centres.
         void_radii: numpy array
             Radius of the void sphere.
-        mic: logical
-            Minimum image convention for PBC on/off.
-        min_void: float
-            Defines the minimum size of void to plot.
+        void_xx: meshgrid numpy array
+            x coordinates of void mesh grid.
     """
 
     import numpy as np
 
-    largest=np.argmax(void_radii)
+    largest = np.argmax(void_radii)
 
     print(f"Maximum void radius of {void_radii[largest]} at {void_centres[largest]}")
 
     unique, counts = np.unique(void_xx, return_counts=True)
-    counter=counts[-1]
+    counter = counts[-1]
 
-    unocc_sites=np.size(void_xx)-counter
-    vox_volume=ucell.dim[0]/ucell.nx*ucell.dim[1]/ucell.ny*ucell.dim[2]/ucell.nz
-    total_volume=ucell.dim[0]*ucell.dim[1]*ucell.dim[2]
+    unocc_sites = np.size(void_xx) - counter
+    vox_volume = Ucell.dim[0] / Ucell.nx * Ucell.dim[1] / Ucell.ny * Ucell.dim[2] / Ucell.nz
+    total_volume = Ucell.dim[0] * Ucell.dim[1] * Ucell.dim[2]
 
-    void_volume=unocc_sites*vox_volume
+    void_volume = unocc_sites * vox_volume
 
     print(f"Total volume of void: {void_volume} Ang**3")
     print(f"Total volume of unit cell: {total_volume} Ang**3")
-    print(f"Total vdw volume: {total_volume-void_volume} Ang**3")
+    print(f"Total vdw volume: {total_volume - void_volume} Ang**3")
