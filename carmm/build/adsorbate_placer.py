@@ -58,7 +58,7 @@ def find_adsorbate_normal(atoms, index):
 
     ads_com = atoms.get_center_of_mass()
 
-    molecule_vector = (atoms[index]-ads_com)/np.linalg.norm(atoms.positions[index]-ads_com)
+    molecule_vector = (atoms.positions[index]-ads_com)/np.linalg.norm(atoms.positions[index]-ads_com)
 
     return molecule_vector
 
