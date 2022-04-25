@@ -1,13 +1,13 @@
 def place_adsorbate(atoms_site, atoms_ads, ads_idx, site_idx, bond_length, rotation=[0,0,0]):
 
     site_normal = find_site_normal(atoms_site, site_idx)
-    adsorbate_normal = find_adsorbate_normal(atoms_mol, ads_idx)
+    adsorbate_normal = find_adsorbate_normal(atoms_ads, ads_idx)
 
     # Returns the zeroed coordinates about atom[ads_idx].
-    atoms_site.positions = rotate_mol2site_vec(atoms_mol, ads_idx, site_normal, adsorbate_normal)
+    atoms_site.positions = rotate_mol2site_vec(atoms_ads, ads_idx, site_normal, adsorbate_normal)
 
     # Rotates molecule about axis
-    atoms_ads = rotate_adsorbate_site_normal(atoms_mol, atoms_site, ads_idx, site_idx, rotation)
+    atoms_ads = rotate_adsorbate_site_normal(atoms_ads, atoms_site, ads_idx, site_idx, rotation)
 
     # Places zeroed coordinates at the bonding position
     atoms_ads.positions = atoms_site.positions + (bond_length * site_normal) + atoms_site[site_idx]
@@ -17,6 +17,8 @@ def place_adsorbate(atoms_site, atoms_ads, ads_idx, site_idx, bond_length, rotat
     return ads_and_site
 
 def rotate_adsorbate_site_normal(atoms_mol, atoms_site, ads_idx, site_idx, rotation=[0,0,0]):
+
+    import numpy as np
 
     # Basic wrapper for rotation about site normal.
     # Rotations performed on a RHS axis, with rotations about site normal x, out of plane z, and orthogonal y.
