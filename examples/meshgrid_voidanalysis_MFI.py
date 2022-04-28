@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 
-from carmm.meshgrid.meshgrid_unitcell import UnitCell
-from carmm.meshgrid.meshgrid_functions import atom_mesh_build_mask
-from carmm.meshgrid.meshgrid_void import void_find
-from carmm.meshgrid.meshgrid_void import void_build_mask
-from carmm.meshgrid.meshgrid_void import void_analysis
+from carmm.analyse.meshgrid.meshgrid_unitcell import UnitCell
+from carmm.analyse.meshgrid.meshgrid_functions import atom_mesh_build_mask
+from carmm.analyse.meshgrid.meshgrid_void import void_find
+from carmm.analyse.meshgrid.meshgrid_void import void_build_mask
+from carmm.analyse.meshgrid.meshgrid_void import void_analysis
 import matplotlib.pyplot as plt
 from ase import io
 

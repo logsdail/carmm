@@ -1,4 +1,4 @@
-def distance_meshgrid2point(a_xx, a_yy, a_zz, xx, yy, zz, dim, mic):
+def distance_meshgrid2point(a_xx, a_yy, a_zz, MeshObject):
     """
     Function finds the distance between a point (defined in cartesian co-ordinates a_xx, a_yy, a_zz)
     relative to all points on a Numpy meshgrid (defined in the unit_cell_object).
@@ -24,22 +24,17 @@ def distance_meshgrid2point(a_xx, a_yy, a_zz, xx, yy, zz, dim, mic):
     """
 
     import numpy as np
+    from ase.geometry import get_distances
 
-    x_dist = np.abs(a_xx - xx)
-    y_dist = np.abs(a_yy - yy)
-    z_dist = np.abs(a_zz - zz)
-
-    if mic:
-        x_dist = np.where(x_dist > 0.5 * dim[0], x_dist - dim[0], x_dist)
-        y_dist = np.where(y_dist > 0.5 * dim[1], y_dist - dim[1], y_dist)
-        z_dist = np.where(z_dist > 0.5 * dim[2], z_dist - dim[2], z_dist)
+    x_dist = get_distances(a_xx, p2=MeshObject.xx, cell=MeshObject.Cell, pbc=MeshObject.pbc)
+    y_dist = get_distances(a_yy, p2=MeshObject.yy, cell=MeshObject.Cell, pbc=MeshObject.pbc)
+    z_dist = get_distances(a_zz, p2=MeshObject.zz, cell=MeshObject.Cell, pbc=MeshObject.pbc)
 
     mesh_distances = np.sqrt(x_dist ** 2 + y_dist ** 2 + z_dist ** 2)
 
     return mesh_distances
 
-
-def distance_point2point(x_1, y_1, z_1, x_2, y_2, z_2, mic, dim):
+def distance_point2point(x_1, y_1, z_1, x_2, y_2, z_2, MeshObject):
     """
     Function finds the distance between two points (defined in cartesian co-ordinates).
     Args:
@@ -63,24 +58,14 @@ def distance_point2point(x_1, y_1, z_1, x_2, y_2, z_2, mic, dim):
         o_distance: Distance between points 1 and 2.
     """
 
-    import numpy as np
+    from ase.geometry import get_distances
 
-    o_distance = np.sqrt((x_1 - x_2) ** 2 + (y_1 - y_2) ** 2 + (z_1 - z_2) ** 2)
-
-    if mic:
-        for x in np.arange(-1, 2):
-            for y in np.arange(-1, 2):
-                for z in np.arange(-1, 2):
-                    new_distance = np.sqrt((x_1 - (x_2 + (dim[0] * x)) ** 2) +
-                                           (y_1 - (y_2 + (dim[1] * y)) ** 2) +
-                                           (z_1 - (z_2 + (dim[2] * z)) ** 2))
-                    if o_distance > new_distance:
-                        o_distance = new_distance
+    o_distance = get_distances([x_1, y_1, z_1], p2=[x_2, y_2, z_2],
+                                cell=MeshObject.Cell, pbc=MeshObject.pbc)
 
     return o_distance
 
-
-def midpoint_points(x_1, y_1, z_1, x_2, y_2, z_2, mic, dim):
+def midpoint_points(x_1, y_1, z_1, x_2, y_2, z_2, MeshObject):
     """
     Function finds the distance between two points (defined in cartesian co-ordinates).
     Args:
@@ -110,35 +95,18 @@ def midpoint_points(x_1, y_1, z_1, x_2, y_2, z_2, mic, dim):
     """
 
     import numpy as np
+    from ase.geometry import find_mic
 
-    o_distance = np.sqrt((x_1 - x_2) ** 2 + (y_1 - y_2) ** 2 + (z_1 - z_2) ** 2)
-    x_mid, y_mid, z_mid = (x_1 + x_2) / 2, (y_1 + y_2) / 2, (z_1 + z_2) / 2
+    vec1 = np.array([x_1, y_1, z_1])
+    vec2 = np.array([x_2, y_2, z_2])
 
-    if mic:
-        for x in np.arange(-1, 2):
-            for y in np.arange(-1, 2):
-                for z in np.arange(-1, 2):
-                    x_sft = dim[0] * x
-                    y_sft = dim[1] * y
-                    z_sft = dim[2] * z
-                    new_distance = np.sqrt(
-                        (x_1 - (x_2 + x_sft)) ** 2 + (y_1 - (y_2 + y_sft)) ** 2 + (z_2 + z_sft) ** 2)
-                    if o_distance > new_distance:
-                        o_distance = new_distance
+    mic_shift = find_mic((vec2 - vec1), cell=MeshObject.Cell.cell)
 
-                        x_mid, y_mid, z_mid = (x_1 + (x_2 + x_sft)) / 2, (y_1 + (y_2 + y_sft)) / 2, (
-                                z_1 + (z_2 + z_sft)) / 2
-                        if not 0 <= x_mid <= dim[0]:
-                            x_mid = x_mid - x_sft
-                        if not 0 <= y_mid <= dim[1]:
-                            y_mid = y_mid - y_sft
-                        if not 0 <= z_mid <= dim[2]:
-                            z_mid = z_mid - z_sft
+    midpoint = vec1+(mic_shift/2)
 
-    return x_mid, y_mid, z_mid
+    return midpoint
 
-
-def atom_mesh_build_mask(Ucell, atom, mic):
+def atom_mesh_build_mask(MeshObject, Atom):
     """
     Defines meshgrid of based on a radius set by atomic_radius. Uses 99.99 as a junk value.
     FUTURE DEVELOPMENT:
@@ -146,10 +114,8 @@ def atom_mesh_build_mask(Ucell, atom, mic):
     Args:
         Ucell: unit_cell object
             Contains meshgrid and unit cell information
-        atom: Atoms object
+        Atom: Atoms object
             Contains information (atomic symbols and positions)
-        mic: logical
-            Minimum image convention for PBC on/off.
     Returns:
         mol_xx: 3D numpy array
             Value of x coordinate on {nx,ny,nz} grid.
@@ -164,24 +130,24 @@ def atom_mesh_build_mask(Ucell, atom, mic):
     from ase.data.vdw_alvarez import vdw_radii
 
     # Defines the mesh points occupied by atoms. Uses 99.99 as a trash value.
-    x0 = np.full(Ucell.nx, fill_value=99.99)
-    y0 = np.full(Ucell.ny, fill_value=99.99)
-    z0 = np.full(Ucell.nz, fill_value=99.99)
+    x0 = np.full(MeshObject.nx, fill_value=99.99)
+    y0 = np.full(MeshObject.ny, fill_value=99.99)
+    z0 = np.full(MeshObject.nz, fill_value=99.99)
 
     mol_xx, mol_yy, mol_zz = np.meshgrid(x0, y0, z0, indexing='xy')
 
-    for atom_co in range(len(atom.positions)):
+    for atom_co in range(len(Atom.positions)):
 
-        at_symbols = atom.get_chemical_symbols()
+        at_symbols = Atom.get_chemical_symbols()
         at_n = atomic_numbers[at_symbols[atom_co]]
         atom_radius = vdw_radii[at_n]
 
-        a_xx, a_yy, a_zz = atom.positions[atom_co][0], atom.positions[atom_co][1], atom.positions[atom_co][2]
+        a_xx, a_yy, a_zz = Atom.positions[atom_co][0], Atom.positions[atom_co][1], Atom.positions[atom_co][2]
 
-        new_distances = distance_meshgrid2point(a_xx, a_yy, a_zz, Ucell.xx, Ucell.yy, Ucell.zz, Ucell.dim, mic)
+        new_distances = distance_meshgrid2point(a_xx, a_yy, a_zz, MeshObject)
 
-        mol_xx = np.where(new_distances < atom_radius, Ucell.xx, mol_xx)
-        mol_yy = np.where(new_distances < atom_radius, Ucell.yy, mol_yy)
-        mol_zz = np.where(new_distances < atom_radius, Ucell.zz, mol_zz)
+        mol_xx = np.where(new_distances < atom_radius, MeshObject.xx, mol_xx)
+        mol_yy = np.where(new_distances < atom_radius, MeshObject.xx, mol_yy)
+        mol_zz = np.where(new_distances < atom_radius, MeshObject.xx, mol_zz)
 
     return mol_xx, mol_yy, mol_zz
