@@ -24,13 +24,14 @@ def distance_meshgrid2point(a_xx, a_yy, a_zz, MeshObject):
     """
 
     import numpy as np
-    from ase.geometry import get_distances
+    from ase.geometry import find_mic
 
-    x_dist = get_distances(a_xx, p2=MeshObject.xx, cell=MeshObject.Cell, pbc=MeshObject.pbc)
-    y_dist = get_distances(a_yy, p2=MeshObject.yy, cell=MeshObject.Cell, pbc=MeshObject.pbc)
-    z_dist = get_distances(a_zz, p2=MeshObject.zz, cell=MeshObject.Cell, pbc=MeshObject.pbc)
+    mesh_positions = np.stack((MeshObject.xx, MeshObject.yy, MeshObject.zz), axis=-1)
+    mesh_positions = np.reshape(mesh_positions, ((MeshObject.nx * MeshObject.ny * MeshObject.nz), 3))
 
-    mesh_distances = np.sqrt(x_dist ** 2 + y_dist ** 2 + z_dist ** 2)
+    distance_matrix = find_mic(np.array([a_xx,a_yy,a_zz]) - mesh_positions, MeshObject.Cell, MeshObject.pbc)
+
+    mesh_distances = np.reshape(distance_matrix, (nx, ny, nz))
 
     return mesh_distances
 
