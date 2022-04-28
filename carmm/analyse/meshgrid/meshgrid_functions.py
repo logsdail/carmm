@@ -31,7 +31,7 @@ def distance_meshgrid2point(a_xx, a_yy, a_zz, MeshObject):
 
     distance_matrix = find_mic(np.array([a_xx,a_yy,a_zz]) - mesh_positions, MeshObject.Cell, MeshObject.pbc)
 
-    mesh_distances = np.reshape(distance_matrix, (nx, ny, nz))
+    mesh_distances = np.reshape(distance_matrix, (MeshObject.nx, MeshObject.ny, MeshObject.nz))
 
     return mesh_distances
 
