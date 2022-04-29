@@ -36,7 +36,7 @@ def void_find(MeshObject, Atom, coarseness=1):
                 distances = get_distances(np.array([a_xx, a_yy, a_zz]), p2=Atom.positions,
                                        cell=MeshObject.Cell, pbc=MeshObject.pbc)
 
-                distances = distances - atom_radii
+                distances = distances[1] - atom_radii
 
                 min_distance = np.amin(distances)
 
