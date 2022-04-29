@@ -34,11 +34,12 @@ def distance_meshgrid2point(a_xx, a_yy, a_zz, MeshObject):
         z_dist = np.where(z_dist > 0.5, z_dist - 1., z_dist)
 
     # Convert mesh distances back to cartesian coordinates.
-    x_dist = np.dot(MeshObject.Cell.array, x_dist)
-    y_dist = np.dot(MeshObject.Cell.array, y_dist)
-    z_dist = np.dot(MeshObject.Cell.array, z_dist)
+    stack_mesh = np.stack((x_dist, y_dist, z_dist), axis=-1)
+    stack_mesh = np.einsum('ji,abcj->iabc', MeshObject.Cell.array, stack_mesh)
 
-    mesh_distances = np.linalg.norm((x_dist,y_dist,z_dist), axis=-1)
+    x_dist_cart, y_dist_cart, z_dist_cart = stack_mesh[0], stack_mesh[1], stack_mesh[2]
+
+    mesh_distances = np.linalg.norm((x_dist_cart,y_dist_cart,z_dist_cart), axis=-1)
 
     return mesh_distances
 
@@ -106,7 +107,7 @@ def midpoint_points(x_1, y_1, z_1, x_2, y_2, z_2, MeshObject):
 
     mic_shift = find_mic((vec2 - vec1), cell=MeshObject.Cell.array)
 
-    midpoint = np.linalg.norm(vec_1+(mic_shift/2))
+    midpoint = np.linalg.norm(vec1+(mic_shift/2))
 
     return midpoint
 
@@ -116,8 +117,8 @@ def atom_mesh_build_mask(MeshObject, Atom):
     FUTURE DEVELOPMENT:
     - Replace junk value with None??
     Args:
-        Ucell: unit_cell object
-            Contains meshgrid and unit cell information
+        MeshObject: MeshgridObject
+            Object storing meshgrid and PBC conditions
         Atom: Atoms object
             Contains information (atomic symbols and positions)
     Returns:

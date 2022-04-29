@@ -29,6 +29,8 @@ class MeshObject:
         self.frac_xx, self.frac_yy, self.frac_zz = np.meshgrid(self.X, self.Y, self.Z, indexing='xy')
 
         # Project from fractional coordinates to cartesian.
-        self.xx = np.dot(self.frac_xx, self.Cell.array)
-        self.yy = np.dot(self.frac_yy, self.Cell.array)
-        self.zz = np.dot(self.frac_zz, self.Cell.array)
+
+        stack_mesh = np.stack((self.frac_xx,self.frac_yy,self.frac_zz),axis=-1)
+        stack_mesh = np.einsum('ji,abcj->iabc', self.Cell.array, stack_mesh)
+
+        self.xx, self.yy, self.zz = stack_mesh[0], stack_mesh[1], stack_mesh[2]
