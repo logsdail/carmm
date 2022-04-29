@@ -121,11 +121,10 @@ def void_analysis(MeshObject, void_centres, void_radii, void_xx):
     unique, counts = np.unique(void_xx, return_counts=True)
     counter = counts[-1]
 
-    xdim, ydim, zdim = MeshObject.array[0][0], MeshObject.array[1][1], MeshObject.array[2][2]
+    volume = MeshObject.Cell.volume
 
     unocc_sites = np.size(void_xx) - counter
-    vox_volume = xdim / MeshObject.nx * ydim / MeshObject.ny * zdim / MeshObject.nz
-    total_volume = xdim * ydim * zdim
+    vox_volume = volume / (MeshObject.nx * MeshObject.ny * MeshObject.nz)
 
     void_volume = unocc_sites * vox_volume
 

@@ -2,7 +2,7 @@ class MeshObject:
     """
     Object which stores and defines the unit cell parameters (number of points and dimensions) and the
     mesh grid of the underlying unit cell. Primarily used to reduce the number of variables which
-    need to be passed to associated meshgrid functions. Currently only defined for orthogonal unit cells.
+    need to be passed to associated meshgrid functions.
     """
 
     def __init__(self, cell_dims, nx=50, ny=50, nz=50, pbc=[0,0,0]):
@@ -21,13 +21,14 @@ class MeshObject:
         self.nx, self.ny, self.nz = nx, ny, nz
         self.pbc = pbc
 
-        xdim, ydim, zdim = self.Cell.array[0][0], self.Cell.array[1][1], self.Cell.array[2][2]
+        self.X = np.linspace(0, 1, self.nx)
+        self.Y = np.linspace(0, 1, self.ny)
+        self.Z = np.linspace(0, 1, self.nz)
 
-        # Define the linespace of points spanned by each cartesian axis.
-        self.X = np.linspace(0, xdim, self.nx)
-        self.Y = np.linspace(0, ydim, self.ny)
-        self.Z = np.linspace(0, zdim, self.nz)
+        # Define meshgrid in fractional coordinates.
+        self.frac_xx, self.frac_yy, self.frac_zz = np.meshgrid(self.X, self.Y, self.Z, indexing='xy')
 
-        # Define meshgrid of the unit cell.
-        self.xx, self.yy, self.zz = np.meshgrid(self.X, self.Y, self.Z, indexing='xy')
-
+        # Project from fractional coordinates to cartesian.
+        self.xx = np.dot(self.frac_xx, self.Cell.array)
+        self.yy = np.dot(self.frac_yy, self.Cell.array)
+        self.zz = np.dot(self.frac_zz, self.Cell.array)

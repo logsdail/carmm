@@ -9,29 +9,36 @@ def distance_meshgrid2point(a_xx, a_yy, a_zz, MeshObject):
             y coordinate of input point.
         a_zz: float
             z coordinate of input point.
-        xx: numpy array
-            Meshgrid of x values on {nx,ny,nz} array.
-        yy: numpy array
-            Meshgrid of y values on {nx,ny,nz} array.
-        zz: numpy array
-            Meshgrid of z values on {nx,ny,nz} array.
-        dim: numpy array
-            Dimensions along each unit cell axis.
-        mic: logical
-            Minimum image convention On/Off.
+        MeshObject: MeshgridObject
+            Object storing meshgrid and PBC conditions
     Returns:
         mesh_distances: Numpy meshgrid of distances from point [a_xx, a_yy, a_zz].
     """
 
     import numpy as np
-    from ase.geometry import find_mic
 
-    mesh_positions = np.stack((MeshObject.xx, MeshObject.yy, MeshObject.zz), axis=-1)
-    mesh_positions = np.reshape(mesh_positions, ((MeshObject.nx * MeshObject.ny * MeshObject.nz), 3))
+    # Convert supplied point to fractional coordinates
+    cart2frac = np.linalg.inv(MeshObject.Cell.array)
 
-    distance_matrix = find_mic(np.array([a_xx,a_yy,a_zz]) - mesh_positions, MeshObject.Cell, MeshObject.pbc)
+    frac_a = np.dot(np.array([a_xx, a_yy, a_zz]),cart2frac)
 
-    mesh_distances = np.reshape(distance_matrix, (MeshObject.nx, MeshObject.ny, MeshObject.nz))
+    x_dist = np.abs(frac_a[0] - MeshObject.frac_xx)
+    y_dist = np.abs(frac_a[1] - MeshObject.frac_yy)
+    z_dist = np.abs(frac_a[2] - MeshObject.frac_zz)
+
+    if MeshObject.pbc[0]:
+        x_dist = np.where(x_dist > 0.5, x_dist - 1., x_dist)
+    if MeshObject.pbc[1]:
+        y_dist = np.where(y_dist > 0.5, y_dist - 1., y_dist)
+    if MeshObject.pbc[2]:
+        z_dist = np.where(z_dist > 0.5, z_dist - 1., z_dist)
+
+    # Convert mesh distances back to cartesian coordinates.
+    x_dist = np.dot(MeshObject.Cell.array, x_dist)
+    y_dist = np.dot(MeshObject.Cell.array, y_dist)
+    z_dist = np.dot(MeshObject.Cell.array, z_dist)
+
+    mesh_distances = np.linalg.norm((x_dist,y_dist,z_dist), axis=-1)
 
     return mesh_distances
 
@@ -51,10 +58,8 @@ def distance_point2point(x_1, y_1, z_1, x_2, y_2, z_2, MeshObject):
             y coordinate of point 2.
         z_2: float2
             z coordinate of point 2.
-        mic: logical
-            Determines whether the minimum image convention should be used.
-        dim: numpy array
-            Dimensions of unit cell in x, y, z.
+        MeshObject: MeshgridObject
+            Object storing meshgrid and PBC conditions
     Returns:
         o_distance: Distance between points 1 and 2.
     """
@@ -82,10 +87,8 @@ def midpoint_points(x_1, y_1, z_1, x_2, y_2, z_2, MeshObject):
             y coordinate of point 2.
         z_2: float2
             z coordinate of point 2.
-        mic: logical
-            Determines whether the minimum image convention should be used.
-        dim: numpy array
-            x, y, z dimensions of the unit cell.
+        MeshObject: MeshgridObject
+            Object storing meshgrid and PBC conditions
     Returns:
         x_mid: float
             x coordinate of midpoint between points 1 and 2.
@@ -101,9 +104,9 @@ def midpoint_points(x_1, y_1, z_1, x_2, y_2, z_2, MeshObject):
     vec1 = np.array([x_1, y_1, z_1])
     vec2 = np.array([x_2, y_2, z_2])
 
-    mic_shift = find_mic((vec2 - vec1), cell=MeshObject.Cell.cell)
+    mic_shift = find_mic((vec2 - vec1), cell=MeshObject.Cell.array)
 
-    midpoint = vec1+(mic_shift/2)
+    midpoint = np.linalg.norm(vec_1+(mic_shift/2))
 
     return midpoint
 
