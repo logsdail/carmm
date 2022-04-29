@@ -37,9 +37,7 @@ def distance_meshgrid2point(a_xx, a_yy, a_zz, MeshObject):
     stack_mesh = np.stack((x_dist, y_dist, z_dist), axis=-1)
     stack_mesh = np.einsum('ji,abcj->iabc', MeshObject.Cell.array, stack_mesh)
 
-    x_dist_cart, y_dist_cart, z_dist_cart = stack_mesh[0], stack_mesh[1], stack_mesh[2]
-
-    mesh_distances = np.linalg.norm((x_dist_cart,y_dist_cart,z_dist_cart), axis=-1)
+    mesh_distances = np.linalg.norm(stack_mesh, axis=0)
 
     return mesh_distances
 
