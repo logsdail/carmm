@@ -150,7 +150,7 @@ def atom_mesh_build_mask(MeshObject, Atom):
         new_distances = distance_meshgrid2point(a_xx, a_yy, a_zz, MeshObject)
 
         mol_xx = np.where(new_distances < atom_radius, MeshObject.xx, mol_xx)
-        mol_yy = np.where(new_distances < atom_radius, MeshObject.xx, mol_yy)
-        mol_zz = np.where(new_distances < atom_radius, MeshObject.xx, mol_zz)
+        mol_yy = np.where(new_distances < atom_radius, MeshObject.yy, mol_yy)
+        mol_zz = np.where(new_distances < atom_radius, MeshObject.zz, mol_zz)
 
     return mol_xx, mol_yy, mol_zz
