@@ -129,5 +129,5 @@ def void_analysis(MeshObject, void_centres, void_radii, void_xx):
     void_volume = unocc_sites * vox_volume
 
     print(f"Total volume of void: {void_volume} Ang**3")
-    print(f"Total volume of unit cell: {total_volume} Ang**3")
-    print(f"Total vdw volume: {total_volume - void_volume} Ang**3")
+    print(f"Total volume of unit cell: {volume} Ang**3")
+    print(f"Total vdw volume: {volume - void_volume} Ang**3")
