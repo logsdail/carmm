@@ -13,10 +13,10 @@ class MeshObject:
         if np.shape(cell_dims)==(6,):
             cellpar = cellpar_to_cell(cell_dims)
             self.Cell = Cell(cellpar)
-        elif np.shape(cell_dims)==(3,3,3):
+        elif np.shape(cell_dims)==(3,3):
             self.Cell = Cell(cell_dims)
         else:
-            raise Exception("Specify cell parameters as a (6,) (x,y,z,alpha,beta,gamma) or (3x3x3) array.")
+            raise Exception("Specify cell parameters as a (6,) (x,y,z,alpha,beta,gamma) or (3x3) array.")
 
         self.nx, self.ny, self.nz = nx, ny, nz
         self.pbc = pbc
