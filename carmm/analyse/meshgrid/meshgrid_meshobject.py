@@ -8,7 +8,7 @@ class Mesh:
     def __init__(self, cell_dims, nx=50, ny=50, nz=50, pbc=[0,0,0]):
 
         import numpy as np
-        from ase.geometry import Cell, cellpar_to_cell
+        from ase.geometry import Cell, cellpar_to_cell, cell_to_cellpar
 
         if np.shape(cell_dims)==(6,):
             cellpar = cellpar_to_cell(cell_dims)
@@ -29,10 +29,15 @@ class Mesh:
         self.frac_xx, self.frac_yy, self.frac_zz = np.meshgrid(self.X, self.Y, self.Z, indexing='xy')
 
         # Project from fractional coordinates to cartesian.
-
         stack_mesh = np.stack((self.frac_xx,self.frac_yy,self.frac_zz),axis=-1)
         stack_mesh = np.einsum('ji,abcj->iabc', self.Cell.array, stack_mesh)
 
         self.xx, self.yy, self.zz = stack_mesh[0], stack_mesh[1], stack_mesh[2]
 
+        # Allows easy conversion from cart -> frac coordinates.
         self.inverse_cell_array = np.linalg.inv(self.Cell.array)
+
+        self.Meshgrid.cellpar = self.Cell.cellpar()
+        self.x_max = np.sin(self.Meshgrid.cellpar[0] * self.Meshgrid.cellpar[3])
+        self.y_max = np.sin(self.Meshgrid.cellpar[1] * self.Meshgrid.cellpar[4])
+        self.z_max = np.sin(self.Meshgrid.cellpar[2] * self.Meshgrid.cellpar[5])
