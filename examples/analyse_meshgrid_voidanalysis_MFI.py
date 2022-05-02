@@ -17,6 +17,7 @@ def test_void_find():
     from carmm.analyse.meshgrid.meshgrid_void import void_find, void_build_mask, void_analysis
     import matplotlib.pyplot as plt
     import numpy as np
+    from ase.io import read
 
     # Initialise the Mesh object, with a default underlying meshgrid of 50x50x50 grid points.
     MFI_Mesh = Mesh(np.array([20.22614449,19.82125040,13.36948553,90,90,90]),pbc=[1,1,1])
@@ -24,7 +25,7 @@ def test_void_find():
     # Read atomic coordinates and create a meshgrid using periodic boundary conditions
     # Meshgrid arrays print the x, y, z coordinates for all given points into three (nx,ny,nz)
     # arrays (xx, yy and zz respectively).
-    atom = io.read('data/Zeolite/MFI_framework_geom.xyz')
+    atom = read('data/Zeolite/MFI_framework_geom.xyz')
     mol_xx, mol_yy, mol_zz = atom_mesh_build_mask(MFI_Mesh, atom)
 
     # First find the maximum volume sphere not containing an atom around each grid (probe) point.
