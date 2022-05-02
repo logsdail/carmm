@@ -38,6 +38,6 @@ class Mesh:
         self.inverse_cell_array = np.linalg.inv(self.Cell.array)
 
         self.cellpar = self.Cell.cellpar()
-        self.x_max = np.sin(self.cellpar[0]) * self.cellpar[3] / 1.88973
-        self.y_max = np.sin(self.cellpar[1]) * self.cellpar[4] / 1.88973
-        self.z_max = np.sin(self.cellpar[2]) * self.cellpar[5] / 1.88973
+        self.x_max = self.cellpar[0] * np.sin(self.cellpar[3]) / 1.88973
+        self.y_max = self.cellpar[1] * np.sin(self.cellpar[4]) / 1.88973
+        self.z_max = self.cellpar[2] * np.sin(self.cellpar[5]) / 1.88973
