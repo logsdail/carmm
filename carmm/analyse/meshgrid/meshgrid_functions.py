@@ -18,9 +18,7 @@ def distance_meshgrid2point(a_xx, a_yy, a_zz, MeshObject):
     import numpy as np
 
     # Convert supplied point to fractional coordinates
-    cart2frac = np.linalg.inv(MeshObject.Cell.array)
-
-    frac_a = np.dot(np.array([a_xx, a_yy, a_zz]),cart2frac)
+    frac_a = np.dot(np.array([a_xx, a_yy, a_zz]),MeshObject.inverse_cell_array)
 
     x_dist = np.abs(frac_a[0] - MeshObject.frac_xx)
     y_dist = np.abs(frac_a[1] - MeshObject.frac_yy)

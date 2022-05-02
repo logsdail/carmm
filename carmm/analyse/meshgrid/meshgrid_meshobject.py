@@ -1,4 +1,4 @@
-class MeshObject:
+class Mesh:
     """
     Object which stores and defines the unit cell parameters (number of points and dimensions) and the
     mesh grid of the underlying unit cell. Primarily used to reduce the number of variables which
@@ -34,3 +34,5 @@ class MeshObject:
         stack_mesh = np.einsum('ji,abcj->iabc', self.Cell.array, stack_mesh)
 
         self.xx, self.yy, self.zz = stack_mesh[0], stack_mesh[1], stack_mesh[2]
+
+        self.inverse_cell_array = np.linalg.inv(self.Cell.array)
