@@ -37,7 +37,7 @@ class Mesh:
         # Allows easy conversion from cart -> frac coordinates.
         self.inverse_cell_array = np.linalg.inv(self.Cell.array)
 
-        self.Meshgrid.cellpar = self.Cell.cellpar()
-        self.x_max = np.sin(self.Meshgrid.cellpar[0] * self.Meshgrid.cellpar[3])
-        self.y_max = np.sin(self.Meshgrid.cellpar[1] * self.Meshgrid.cellpar[4])
-        self.z_max = np.sin(self.Meshgrid.cellpar[2] * self.Meshgrid.cellpar[5])
+        self.cellpar = self.Cell.cellpar()
+        self.x_max = np.sin(self.cellpar[0] * self.cellpar[3])
+        self.y_max = np.sin(self.cellpar[1] * self.cellpar[4])
+        self.z_max = np.sin(self.cellpar[2] * self.cellpar[5])
