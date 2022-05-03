@@ -17,21 +17,6 @@ def distance_meshgrid2point(a_xx, a_yy, a_zz, MeshObject):
 
     import numpy as np
 
-    # Convert supplied point to fractional coordinates.
-#
-#    x_dist = np.abs(a_xx - MeshObject.xx)
-#    y_dist = np.abs(a_yy - MeshObject.yy)
-#    z_dist = np.abs(a_zz - MeshObject.zz)
-#
-#    if MeshObject.pbc[0]:
-#        x_dist = np.where(x_dist > 0.5 * MeshObject.x_max, x_dist - MeshObject.x_max, x_dist)
-#    if MeshObject.pbc[1]:
-#        y_dist = np.where(y_dist > 0.5 * MeshObject.y_max, y_dist - MeshObject.y_max, y_dist)
-#    if MeshObject.pbc[2]:
-#        z_dist = np.where(z_dist > 0.5 * MeshObject.z_max, z_dist - MeshObject.z_max, z_dist)
-#
-#    mesh_distances = np.sqrt(x_dist**2 + y_dist**2 + z_dist**2)
-
     frac_a = np.dot(np.array([a_xx, a_yy, a_zz]),MeshObject.inverse_cell_array)
 
     x_vec_dist = np.abs(frac_a[0] - MeshObject.frac_xx)
