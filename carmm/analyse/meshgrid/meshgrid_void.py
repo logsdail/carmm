@@ -130,4 +130,5 @@ def void_analysis(MeshObject, void_centres, void_radii, void_xx):
 
     print(f"Total volume of void: {void_volume} Ang**3")
     print(f"Total volume of unit cell: {volume} Ang**3")
-    print(f"Total vdw volume: {volume - void_volume} Ang**3")
+
+    return void_volume

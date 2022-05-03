@@ -18,43 +18,38 @@ def distance_meshgrid2point(a_xx, a_yy, a_zz, MeshObject):
     import numpy as np
 
     # Convert supplied point to fractional coordinates.
-
-    x_dist = np.abs(a_xx - MeshObject.xx)
-    y_dist = np.abs(a_yy - MeshObject.yy)
-    z_dist = np.abs(a_zz - MeshObject.zz)
-
-    if MeshObject.pbc[0]:
-        x_dist = np.where(x_dist > 0.5 * MeshObject.x_max, x_dist - MeshObject.x_max, x_dist)
-    if MeshObject.pbc[1]:
-        y_dist = np.where(y_dist > 0.5 * MeshObject.y_max, y_dist - MeshObject.y_max, y_dist)
-    if MeshObject.pbc[2]:
-        z_dist = np.where(z_dist > 0.5 * MeshObject.z_max, z_dist - MeshObject.z_max, z_dist)
-
-    mesh_distances = np.sqrt(x_dist**2 + y_dist**2 + z_dist**2)
-    #    frac_a = np.dot(np.array([a_xx, a_yy, a_zz]),MeshObject.inverse_cell_array)
-
-#    x_vec_dist = np.abs(frac_a[0] - MeshObject.frac_xx)
-#    y_vec_dist = np.abs(frac_a[1] - MeshObject.frac_yy)
-#    z_vec_dist = np.abs(frac_a[2] - MeshObject.frac_zz)
-
+#
 #    x_dist = np.abs(a_xx - MeshObject.xx)
 #    y_dist = np.abs(a_yy - MeshObject.yy)
 #    z_dist = np.abs(a_zz - MeshObject.zz)
-
+#
 #    if MeshObject.pbc[0]:
-#        x_dist = np.where(x_vec_dist > 0.5, x_vec_dist - 1., x_vec_dist)
+#        x_dist = np.where(x_dist > 0.5 * MeshObject.x_max, x_dist - MeshObject.x_max, x_dist)
 #    if MeshObject.pbc[1]:
-#        y_dist = np.where(y_vec_dist > 0.5, y_vec_dist - 1., y_vec_dist)
+#        y_dist = np.where(y_dist > 0.5 * MeshObject.y_max, y_dist - MeshObject.y_max, y_dist)
 #    if MeshObject.pbc[2]:
-#        z_dist = np.where(z_vec_dist > 0.5, z_vec_dist - 1., z_vec_dist)
+#        z_dist = np.where(z_dist > 0.5 * MeshObject.z_max, z_dist - MeshObject.z_max, z_dist)
+#
+#    mesh_distances = np.sqrt(x_dist**2 + y_dist**2 + z_dist**2)
 
+    frac_a = np.dot(np.array([a_xx, a_yy, a_zz]),MeshObject.inverse_cell_array)
 
+    x_vec_dist = np.abs(frac_a[0] - MeshObject.frac_xx)
+    y_vec_dist = np.abs(frac_a[1] - MeshObject.frac_yy)
+    z_vec_dist = np.abs(frac_a[2] - MeshObject.frac_zz)
+
+    if MeshObject.pbc[0]==1:
+        x_vec_dist = np.where(x_vec_dist > 0.5, x_vec_dist - 1., x_vec_dist)
+    if MeshObject.pbc[1]==1:
+        y_vec_dist = np.where(y_vec_dist > 0.5, y_vec_dist - 1., y_vec_dist)
+    if MeshObject.pbc[2]==1:
+        z_vec_dist = np.where(z_vec_dist > 0.5, z_vec_dist - 1., z_vec_dist)
 
     # Convert mesh distances back to cartesian coordinates.
-    #stack_mesh = np.stack((x_dist, y_dist, z_dist), axis=-1)
-    #stack_mesh = np.einsum('ji,abcj->iabc', MeshObject.Cell.array, stack_mesh)
+    stack_mesh = np.stack((x_vec_dist, y_vec_dist, z_vec_dist), axis=-1)
+    stack_mesh = np.einsum('ji,abcj->jabc', MeshObject.Cell.array, stack_mesh)
 
-    #mesh_distances = np.linalg.norm(stack_mesh, axis=0)
+    mesh_distances = np.linalg.norm(stack_mesh, axis=0)
 
     return mesh_distances
 
@@ -166,8 +161,8 @@ def atom_mesh_build_mask(MeshObject, Atom):
 
         new_distances = distance_meshgrid2point(a_xx, a_yy, a_zz, MeshObject)
 
-        mol_xx = np.where(new_distances < atom_radius, MeshObject.xx, mol_xx)
-        mol_yy = np.where(new_distances < atom_radius, MeshObject.yy, mol_yy)
-        mol_zz = np.where(new_distances < atom_radius, MeshObject.zz, mol_zz)
+        mol_xx = np.where(new_distances < 1.7, MeshObject.xx, mol_xx)
+        mol_yy = np.where(new_distances < 1.7, MeshObject.yy, mol_yy)
+        mol_zz = np.where(new_distances < 1.7, MeshObject.zz, mol_zz)
 
     return mol_xx, mol_yy, mol_zz
