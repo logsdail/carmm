@@ -1,14 +1,12 @@
-def void_find(Ucell, atom, mic=True, coarseness=1):
+def void_find(MeshObject, Atom, coarseness=1):
     """
     Defines the void centres and radii of points across the meshgrid. Coarseness factor reduces number of probe points
     by skipping over points in the grid. Uses 99.99 as a junk value.
     Args:
-        Ucell: unit_cell object
+        MeshObject: MeshgridObject object
             Contains meshgrid and associated unit cell information.
-        atom: Atoms object
+        Atom: Atoms object
             Supplies coordinates and atomic information.
-        mic: logical
-            Use minimum image convention.
         coarseness: integer
             Skips over an integer number of points
     Return:
@@ -20,31 +18,25 @@ def void_find(Ucell, atom, mic=True, coarseness=1):
 
     import numpy as np
     from ase.data.vdw_alvarez import vdw_radii
-    from ase.data import atomic_numbers
+    from ase.geometry import get_distances
 
     void_centres = []
     void_radii = []
-    atom_radii = []
 
-    for atom_co in range(len(atom.positions)):
-        at_symbols = atom.get_chemical_symbols()
-        at_n = atomic_numbers[at_symbols[atom_co]]
-        atom_radius = vdw_radii[at_n]
-        atom_radii.append(atom_radius)
+    atom_radii = vdw_radii[Atom.numbers]
 
     atom_radii = np.array([atom_radii]).flatten()
 
-    for i in range(0, Ucell.nx, coarseness):
-        for j in range(0, Ucell.ny, coarseness):
-            for k in range(0, Ucell.nz, coarseness):
+    for i in range(0, MeshObject.nx, coarseness):
+        for j in range(0, MeshObject.ny, coarseness):
+            for k in range(0, MeshObject.nz, coarseness):
 
-                a_xx, a_yy, a_zz = Ucell.xx[i, j, k], Ucell.yy[i, j, k], Ucell.zz[i, j, k]
+                a_xx, a_yy, a_zz = MeshObject.xx[i, j, k], MeshObject.yy[i, j, k], MeshObject.zz[i, j, k]
 
-                distances = np.abs(atom.positions - np.array([a_xx, a_yy, a_zz]))
-                if mic:
-                    distances = np.where(distances > 0.5 * Ucell.dim, distances - Ucell.dim, distances)
+                distances = get_distances(np.array([a_xx, a_yy, a_zz]), p2=Atom.positions,
+                                       cell=MeshObject.Cell, pbc=MeshObject.pbc)
 
-                distances = np.sqrt((distances ** 2).sum(axis=-1)) - atom_radii
+                distances = distances[1] - atom_radii
 
                 min_distance = np.amin(distances)
 
@@ -58,7 +50,7 @@ def void_find(Ucell, atom, mic=True, coarseness=1):
     return void_centres, void_radii
 
 
-def void_build_mask(Ucell, void_centres, void_radii, mic, min_void=1.0):
+def void_build_mask(MeshObject, void_centres, void_radii, min_void=1.0):
     """
     Defines meshgrid of voids given by list of void centres and their radii. Uses 99.99 as a junk value.
     - Future change - replace junk value with None??
@@ -80,12 +72,12 @@ def void_build_mask(Ucell, void_centres, void_radii, mic, min_void=1.0):
     """
 
     import numpy as np
-    from carmm.meshgrid.meshgrid_functions import distance_meshgrid2point
+    from carmm.analyse.meshgrid.meshgrid_functions import distance_meshgrid2point
 
     # Defines the mesh points occupied by atoms. Uses 99.99 as a trash value.
-    x0 = np.full(Ucell.nx, fill_value=99.99)
-    y0 = np.full(Ucell.ny, fill_value=99.99)
-    z0 = np.full(Ucell.nz, fill_value=99.99)
+    x0 = np.full(MeshObject.nx, fill_value=99.99)
+    y0 = np.full(MeshObject.ny, fill_value=99.99)
+    z0 = np.full(MeshObject.nz, fill_value=99.99)
 
     void_xx, void_yy, void_zz = np.meshgrid(x0, y0, z0, indexing='xy')
 
@@ -96,16 +88,16 @@ def void_build_mask(Ucell, void_centres, void_radii, mic, min_void=1.0):
 
         a_xx, a_yy, a_zz = void_centres[i][0], void_centres[i][1], void_centres[i][2]
 
-        new_distances = distance_meshgrid2point(a_xx, a_yy, a_zz, Ucell.xx, Ucell.yy, Ucell.zz, Ucell.dim, mic)
+        new_distances = distance_meshgrid2point(a_xx, a_yy, a_zz, MeshObject)
 
-        void_xx = np.where(new_distances < void_radii[i], Ucell.xx, void_xx)
-        void_yy = np.where(new_distances < void_radii[i], Ucell.yy, void_yy)
-        void_zz = np.where(new_distances < void_radii[i], Ucell.zz, void_zz)
+        void_xx = np.where(new_distances < void_radii[i], MeshObject.xx, void_xx)
+        void_yy = np.where(new_distances < void_radii[i], MeshObject.yy, void_yy)
+        void_zz = np.where(new_distances < void_radii[i], MeshObject.zz, void_zz)
 
     return void_xx, void_yy, void_zz
 
 
-def void_analysis(Ucell, void_centres, void_radii, void_xx):
+def void_analysis(MeshObject, void_centres, void_radii, void_xx):
     """
     Defines meshgrid of voids given by list of void centres and their radii. Uses 99.99 as a junk value.
     - Replace junk value with None??
@@ -129,12 +121,14 @@ def void_analysis(Ucell, void_centres, void_radii, void_xx):
     unique, counts = np.unique(void_xx, return_counts=True)
     counter = counts[-1]
 
+    volume = MeshObject.Cell.volume
+
     unocc_sites = np.size(void_xx) - counter
-    vox_volume = Ucell.dim[0] / Ucell.nx * Ucell.dim[1] / Ucell.ny * Ucell.dim[2] / Ucell.nz
-    total_volume = Ucell.dim[0] * Ucell.dim[1] * Ucell.dim[2]
+    vox_volume = volume / (MeshObject.nx * MeshObject.ny * MeshObject.nz)
 
     void_volume = unocc_sites * vox_volume
 
     print(f"Total volume of void: {void_volume} Ang**3")
-    print(f"Total volume of unit cell: {total_volume} Ang**3")
-    print(f"Total vdw volume: {total_volume - void_volume} Ang**3")
+    print(f"Total volume of unit cell: {volume} Ang**3")
+
+    return void_volume
