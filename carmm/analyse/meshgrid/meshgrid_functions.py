@@ -38,6 +38,7 @@ def distance_meshgrid2point(a_xx, a_yy, a_zz, meshobject):
 
     return mesh_distances
 
+
 def distance_point2point(x_1, y_1, z_1, x_2, y_2, z_2, meshobject):
     """
     Function finds the distance between two points (defined in cartesian co-ordinates).
@@ -66,6 +67,7 @@ def distance_point2point(x_1, y_1, z_1, x_2, y_2, z_2, meshobject):
                                cell=meshobject.Cell, pbc=meshobject.pbc)
 
     return o_distance
+
 
 def midpoint_points(x_1, y_1, z_1, x_2, y_2, z_2, meshobject):
     """
@@ -102,15 +104,16 @@ def midpoint_points(x_1, y_1, z_1, x_2, y_2, z_2, meshobject):
 
     mic_shift = find_mic((vec2 - vec1), cell=meshobject.Cell.array)
 
-    midpoint = np.linalg.norm(vec1+(mic_shift/2))
+    midpoint = np.linalg.norm(vec1 + (mic_shift / 2))
 
     return midpoint
+
 
 def atom_mesh_build_mask(meshobject, atoms):
     """
     Defines meshgrid of based on a radius set by atomic_radius. Uses np.nan as a junk value.
     Args:
-        meshobject: MeshgridObject
+        meshobject: Mesh Object
             Object storing meshgrid and PBC conditions
         atoms: Atoms object
             Contains information (atomic symbols and positions)
@@ -139,7 +142,6 @@ def atom_mesh_build_mask(meshobject, atoms):
     mol_xx, mol_yy, mol_zz = np.meshgrid(x0, y0, z0, indexing='xy')
 
     for atom_co in range(len(atoms.positions)):
-
         at_symbols = atoms.get_chemical_symbols()
         at_n = atomic_numbers[at_symbols[atom_co]]
         atom_radius = vdw_radii[at_n]
@@ -154,16 +156,17 @@ def atom_mesh_build_mask(meshobject, atoms):
 
     return mol_xx, mol_yy, mol_zz
 
+
 def mol_mesh_pbc_check(mesh_pbc, atoms_pbc):
     """
     Checks whether the mesh and mol pbc values match, and prints a warning if not.
     Args:
         mesh_pbc
             Object storing meshgrid and PBC conditions
-        mol_pbc
+        atoms_pbc
             Contains information (atomic symbols and positions)
     """
 
     import numpy as np
 
-    assert np.all(mesh_pbc==atoms_pbc), f"Atoms ({atoms_pbc}) and Mesh ({mesh_pbc}) PBC mismatch."
+    assert np.all(mesh_pbc == atoms_pbc), f"Atoms ({atoms_pbc}) and Mesh ({mesh_pbc}) PBC mismatch."
