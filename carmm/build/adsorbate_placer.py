@@ -191,7 +191,7 @@ def find_adsorbate_rotation_axes(atoms_site, site_idx, neighb_idx):
     # If the site only has one neighbour, the neighbour normal is unobtainable.
     # Next site is used to find an appropriate x and y rotation axis.
     if len(neighbour_atoms) == 1:
-        new_site_idx = neighbour_atoms[1]
+        new_site_idx = neighbour_atoms[0]
         neighbour_atoms, shell_list = neighbours(atoms_site, [new_site_idx], 1)
 
         # Clean up list - removes error producing options.
