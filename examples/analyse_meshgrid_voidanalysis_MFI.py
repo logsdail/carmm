@@ -26,6 +26,7 @@ def test_void_find():
 
     # Read xyz file into Atoms object.
     atoms = read('data/Zeolite/MFI_framework_geom.xyz')
+    atoms.pbc = [1, 1, 1]
 
     # Meshgrid arrays print the x, y, z coordinates for all given points into three (nx,ny,nz)
     # arrays (xx, yy and zz respectively).
@@ -53,8 +54,8 @@ def test_void_find():
     periodic_dist = distance_meshgrid2point(test_x, test_y, test_z, mfi_mesh)
     obc_dist      = distance_meshgrid2point(test_x, test_y, test_z, mfi_mesh_obc)
     
-    assert(np.mean(periodic_dist) < np.mean(obc_dist))
-    assert(np.isclose(periodic_volume, 890.4178197211703, atol=1e-4, rtol=0.0))
+    assert np.mean(periodic_dist) < np.mean(obc_dist)
+    assert np.isclose(periodic_volume, 890.4178197211703, atol=1e-4, rtol=0.0)
 
     # Plots the meshgrid for the molecules and void.
     fig = plt.figure(figsize=(10,10))
