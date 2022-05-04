@@ -164,4 +164,4 @@ def mol_mesh_pbc_check(mesh_pbc, atoms_pbc):
             Contains information (atomic symbols and positions)
     """
 
-    assert mesh_pbc==atoms_pbc, f"Atoms ({atoms_pbc}) and Mesh ({mesh_pbc}) PBC mismatch."
+    assert np.all(mesh_pbc==atoms_pbc), f"Atoms ({atoms_pbc}) and Mesh ({mesh_pbc}) PBC mismatch."
