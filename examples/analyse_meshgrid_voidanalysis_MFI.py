@@ -21,7 +21,7 @@ def test_void_find():
 
     # Initialise the Mesh object, with a default underlying meshgrid of (nx, ny, nz) grid points.
     mfi_mesh = Mesh(np.array([20.22614449, 19.82125040, 13.36948553, 90, 90, 90]),
-                    nx = 20, ny = 20, nz = 20, pbc=[1, 1, 1])
+                    nx = 20, ny = 20, nz = 20, pbc=[True, True, True])
 
 
     # Read xyz file into Atoms object.
@@ -47,7 +47,7 @@ def test_void_find():
 
     # Test the overall PBC distances on the meshgrid are small than OBC.
     mfi_mesh_obc = Mesh(np.array([20.22614449, 19.82125040, 13.36948553, 90, 90, 90]),
-                        nx = 20, ny = 20, nz = 20, pbc=[0, 0, 0])
+                        nx = 20, ny = 20, nz = 20, pbc=[False, False, False])
 
     test_x, test_y, test_z = atoms.positions[0][0], atoms.positions[0][1], atoms.positions[0][2]
     periodic_dist = distance_meshgrid2point(test_x, test_y, test_z, mfi_mesh)

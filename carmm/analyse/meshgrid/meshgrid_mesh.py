@@ -5,7 +5,7 @@ class Mesh:
     need to be passed to associated meshgrid functions.
     """
 
-    def __init__(self, cell_dims, nx=50, ny=50, nz=50, pbc=[0,0,0], pbc_strict_mode=True):
+    def __init__(self, cell_dims, nx=50, ny=50, nz=50, pbc=[True,True,True], pbc_strict_mode=True):
 
         import numpy as np
         from ase.geometry import Cell, cellpar_to_cell
@@ -19,6 +19,8 @@ class Mesh:
             raise Exception("Specify cell parameters as a (6,) (x,y,z,alpha,beta,gamma) or (3x3) array.")
 
         self.nx, self.ny, self.nz = nx, ny, nz
+
+        self.pbc = np.zeros(3, bool)
         self.pbc = pbc
 
         self.X = np.linspace(0, 1, self.nx)

@@ -23,11 +23,11 @@ def distance_meshgrid2point(a_xx, a_yy, a_zz, meshobject):
     y_vec_dist = np.abs(frac_a[1] - meshobject.frac_yy)
     z_vec_dist = np.abs(frac_a[2] - meshobject.frac_zz)
 
-    if meshobject.pbc[0]==1:
+    if meshobject.pbc[0]:
         x_vec_dist = np.where(x_vec_dist > 0.5, x_vec_dist - 1., x_vec_dist)
-    if meshobject.pbc[1]==1:
+    if meshobject.pbc[1]:
         y_vec_dist = np.where(y_vec_dist > 0.5, y_vec_dist - 1., y_vec_dist)
-    if meshobject.pbc[2]==1:
+    if meshobject.pbc[2]:
         z_vec_dist = np.where(z_vec_dist > 0.5, z_vec_dist - 1., z_vec_dist)
 
     # Convert mesh distances back to cartesian coordinates.
