@@ -32,4 +32,7 @@ def test_adsorbate_placer():
     assert (np.isclose(error_pos1, 0, rtol=0, atol=1e-06))
     assert (np.isclose(error_pos2, 0, rtol=0, atol=1e-06))
 
+    from ase.visualize import view
+    view(ads_and_site)
+
 test_adsorbate_placer()
