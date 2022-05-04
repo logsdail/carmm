@@ -29,8 +29,6 @@ def test_adsorbate_placer():
     error_pos1 = np.linalg.norm(comp_pos1 - rotated_ads.positions[0], axis=-1)
     error_pos2 = np.linalg.norm(comp_pos2 - rotated_ads.positions[-1], axis=-1)
 
-    print(f"{error_pos1, error_pos2}")
-
     assert (np.isclose(error_pos1, 0, rtol=0, atol=1e-06))
     assert (np.isclose(error_pos2, 0, rtol=0, atol=1e-06))
 
