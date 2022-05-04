@@ -1,5 +1,5 @@
 def rotate_and_place_adsorbate(atoms_ads, atoms_site, bond_length,
-                               ads_idx, site_idx, neighb_idx=1, rotation=[0, 0, 0]):
+                               ads_idx, site_idx, neighb_idx=0, rotation=[0, 0, 0]):
     """
 
     Place and rotates the adsorbate along a bond length defined by vector -
@@ -179,19 +179,24 @@ def find_adsorbate_rotation_axes(atoms_site, site_idx, neighb_idx):
     import numpy as np
     from carmm.analyse.neighbours import neighbours
 
-    # Catch any obvious input errors.
-    assert neighb_idx > 0, "neighb_idx = 0 specifies the origin atom. Please choose a higher value."
-
     # Rotations performed on a RHS axis, with rotations about site normal z, x out plane wrt.
     # bond vector of another neighbour to the shell site and z, and y perpendicular to x and z.
     site_norm = find_site_normal(atoms_site, site_idx)
     neighbour_atoms, shell_list = neighbours(atoms_site, [site_idx], 1)
 
+    # Clean up list for clarity.
+    neighbour_atoms.remove(site_idx)
+    assert len(neighbour_atoms) > 0, "Adsorption site does not have any neighbours. Cannot define rotation axes."
+
     # If the site only has one neighbour, the neighbour normal is unobtainable.
     # Next site is used to find an appropriate x and y rotation axis.
-    if len(neighbour_atoms) < 2:
+    if len(neighbour_atoms) == 1:
         new_site_idx = neighbour_atoms[1]
         neighbour_atoms, shell_list = neighbours(atoms_site, [new_site_idx], 1)
+
+        # Clean up list - removes error producing options.
+        neighbour_atoms.remove(new_site_idx)
+        neighbour_atoms.remove(site_idx)
 
         vectors = atoms_site.positions[neighbour_atoms] - atoms_site.positions[new_site_idx]
         neighb_vector = vectors[neighb_idx] / np.linalg.norm(vectors[neighb_idx])
