@@ -154,7 +154,7 @@ def atom_mesh_build_mask(meshobject, atoms):
 
     return mol_xx, mol_yy, mol_zz
 
-def mol_mesh_pbc_check(mesh_pbc, mol_pbc):
+def mol_mesh_pbc_check(mesh_pbc, atoms_pbc):
     """
     Checks whether the mesh and mol pbc values match, and prints a warning if not.
     Args:
@@ -164,4 +164,4 @@ def mol_mesh_pbc_check(mesh_pbc, mol_pbc):
             Contains information (atomic symbols and positions)
     """
 
-    assert(mesh_pbc==mol_pbc, f"Atoms ({atoms_pbc}) and Mesh ({mesh_pbc}) PBC mismatch")
+    assert(mesh_pbc==atoms_pbc, f"Atoms ({atoms_pbc}) and Mesh ({mesh_pbc}) PBC mismatch")
