@@ -63,9 +63,9 @@ def test_void_find():
     ax.scatter(mol_xx,mol_yy,mol_zz)
     ax.scatter(void_xx,void_yy,void_zz)
 
-    ax.set_xlim(0, mfi_mesh.x_max)
-    ax.set_ylim(0, mfi_mesh.y_max)
-    ax.set_zlim(0, mfi_mesh.z_max)
+    ax.set_xlim(0, 20.22614449)
+    ax.set_ylim(0, 19.82125040)
+    ax.set_zlim(0, 13.36948553)
     plt.show()
 
 test_void_find()
