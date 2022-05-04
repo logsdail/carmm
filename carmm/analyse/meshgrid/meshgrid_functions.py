@@ -54,7 +54,7 @@ def distance_point2point(x_1, y_1, z_1, x_2, y_2, z_2, meshobject):
             y coordinate of point 2.
         z_2: float2
             z coordinate of point 2.
-        meshobject: MeshgridObject
+        meshobject: Mesh object
             Object storing meshgrid and PBC conditions
     Returns:
         o_distance: Distance between points 1 and 2.
@@ -83,7 +83,7 @@ def midpoint_points(x_1, y_1, z_1, x_2, y_2, z_2, meshobject):
             y coordinate of point 2.
         z_2: float2
             z coordinate of point 2.
-        meshobject: MeshgridObject
+        meshobject: Mesh object
             Object storing meshgrid and PBC conditions
     Returns:
         x_mid: float
@@ -127,6 +127,10 @@ def atom_mesh_build_mask(meshobject, atoms):
     from ase.data import atomic_numbers
     from ase.data.vdw_alvarez import vdw_radii
 
+    # Check atoms PBC and mesh PBC match.
+    if meshobject.strict_mode:
+        mol_mesh_pbc_check(mesh.pbc, atoms.pbc)
+
     # Defines the mesh points occupied by atoms. Uses 99.99 as a trash value.
     x0 = np.full(meshobject.nx, fill_value=np.nan)
     y0 = np.full(meshobject.ny, fill_value=np.nan)
@@ -149,3 +153,15 @@ def atom_mesh_build_mask(meshobject, atoms):
         mol_zz = np.where(new_distances < atom_radius, meshobject.zz, mol_zz)
 
     return mol_xx, mol_yy, mol_zz
+
+def mol_mesh_pbc_check(mesh_pbc, mol_pbc):
+    """
+    Checks whether the mesh and mol pbc values match, and prints a warning if not.
+    Args:
+        mesh_pbc
+            Object storing meshgrid and PBC conditions
+        mol_pbc
+            Contains information (atomic symbols and positions)
+    """
+
+    assert(mesh_pbc==mol_pbc, f"Atoms ({atoms_pbc}) and Mesh ({mesh_pbc}) PBC mismatch")

@@ -12,7 +12,7 @@ to the probe. More sophisticated techniques such as Delauney triangulation requi
 
 def test_void_find():
 
-    from carmm.analyse.meshgrid.meshgrid_meshobject import Mesh
+    from carmm.analyse.meshgrid.meshgrid_mesh import Mesh
     from carmm.analyse.meshgrid.meshgrid_functions import atom_mesh_build_mask, distance_meshgrid2point
     from carmm.analyse.meshgrid.meshgrid_void import void_find, void_build_mask, void_analysis
     import matplotlib.pyplot as plt

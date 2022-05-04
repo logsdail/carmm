@@ -5,10 +5,10 @@ class Mesh:
     need to be passed to associated meshgrid functions.
     """
 
-    def __init__(self, cell_dims, nx=50, ny=50, nz=50, pbc=[0,0,0]):
+    def __init__(self, cell_dims, nx=50, ny=50, nz=50, pbc=[0,0,0], pbc_strict_mode=True):
 
         import numpy as np
-        from ase.geometry import Cell, cellpar_to_cell, cell_to_cellpar
+        from ase.geometry import Cell, cellpar_to_cell
 
         if np.shape(cell_dims)==(6,):
             cellpar = cellpar_to_cell(cell_dims)
@@ -37,4 +37,9 @@ class Mesh:
         # Allows easy conversion from cart -> frac coordinates.
         self.inverse_cell_array = np.linalg.inv(self.Cell.array)
 
+        # Define the Cell parameters as (a,b,c,alpha,beta,gamma) array without calling
+        # Cell.cellpar() method everytime.
         self.cellpar = self.Cell.cellpar()
+
+        # Enforces Mesh and Atoms pbc match - if off, ignores mismatches.
+        self.strict_mode = pbc_strict_mode
