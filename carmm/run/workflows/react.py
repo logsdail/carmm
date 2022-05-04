@@ -3,8 +3,11 @@
 # TODO: Enable serialization with ASE db - save locations of converged files as well as all properties
 from carmm.run.aims_path import set_aims_command
 import os
-from ase.io import read
+from ase import Atoms
 from carmm.analyse.forces import is_converged
+import fnmatch, shutil
+from ase.io import read
+from ase.vibrations import Vibrations
 
 # TODO: rework the use of filename with the calculator to use calc.directory instead as recommended by ASE authors
 
@@ -213,6 +216,77 @@ class React_Aims:
         return self.model_optimised, self.model_post_processed
 
 
+    def get_mulliken_charges(self, initial: Atoms, restart: bool = False, verbose: bool = True):
+
+        '''
+        This function is used to retrieve atomic charges using Mulliken charge
+        decomposition as implemented in FHI-aims. A new trajectory file containing
+        the charges
+
+        Args:
+            initial: Atoms
+                Atoms object containing structural information for the calculation
+            restart: bool
+                If True request restart from previous geometry in file structure following filename convention
+
+
+        Returns:
+            Atoms object with charges appended
+
+        '''
+
+        from ase.io.trajectory import Trajectory
+        from carmm.analyse.mulliken import extract_mulliken_charge
+
+        '''Setup initial parameters'''
+        params = self.params
+        hpc = self.hpc
+        dimensions = self.dimensions
+        basis_set = self.basis_set
+        self.initial = initial
+        i_geo = initial.copy()
+        i_geo.calc = initial.calc
+
+        # parent directory
+        parent_dir = os.getcwd()
+
+        # Read the geometry
+        if not self.filename:
+            self.filename = self.initial.get_chemical_formula()
+
+        filename = self.filename
+
+        counter, subdirectory_name = self._restart_setup(self.initial, self.filename, restart, verbose=verbose)
+        out = str(counter) + "_" + str(filename) + ".out"
+
+        # set the environment variables for geometry optimisation
+        set_aims_command(hpc=hpc, basis_set=basis_set, defaults=2020)
+
+        # request Mulliken charge decomposition
+        params["output"]= ["dipole", "Mulliken_summary"]
+
+
+        if not os.path.exists(subdirectory_name):
+            os.mkdir(subdirectory_name)
+        os.chdir(subdirectory_name)
+
+        with _calc_generator(params, out_fn=out, dimensions=dimensions)[0] as calculator:
+            self.initial.calc = calculator
+            self.initial.get_potential_energy()
+
+        charges = extract_mulliken_charge(out, len(self.initial))
+        # charges = [round(charge, 2) for charge in charges] # rounding not necessary in original file
+        self.initial.set_initial_charges(charges)
+
+        traj = Trajectory(filename+"_charges.traj", 'w')
+        traj.write(self.initial)
+        traj.close()
+
+        os.chdir(parent_dir)
+
+        return self.initial
+
+
     def search_ts(self, initial, final, fmax, unc, interpolation="idpp", restart=True, prev_calcs=None, input_check=0.01, verbose=True):
         '''
 
@@ -287,14 +361,15 @@ class React_Aims:
                                  prev_calculations=self.prev_calcs,
                                  mic=True,
                                  restart=restart)
-
-            # Run the NEB optimisation. Adjust fmax to desired convergence criteria, usually 0.01 ev/A
-            neb_catlearn.run(fmax=fmax,
-                             unc_convergence=unc,
-                             trajectory='ML-NEB.traj',
-                             ml_steps=25,
-                             sequential=False,
-                             steps=200)
+            # TODO: TEST
+            while not os.path.exists('ML-NEB.traj'):
+                # Run the NEB optimisation. Adjust fmax to desired convergence criteria, usually 0.01 ev/A
+                neb_catlearn.run(fmax=fmax,
+                                 unc_convergence=unc,
+                                 trajectory='ML-NEB.traj',
+                                 ml_steps=25,
+                                 sequential=False,
+                                 steps=40)
 
         # Find maximum energy, i.e. transition state to return it
         neb = read("ML-NEB.traj@:")
@@ -326,8 +401,6 @@ class React_Aims:
             Zero-Point Energy: float
         '''
 
-        from ase.vibrations import Vibrations
-
         '''Retrieve common properties'''
         basis_set = self.basis_set
         dimensions = self.dimensions
@@ -335,20 +408,9 @@ class React_Aims:
         params = self.params
         parent_dir = os.getcwd()
 
-        # set the environment variables for geometry optimisation
-        set_aims_command(hpc=hpc, basis_set=basis_set, defaults=2020, nodes_per_instance=self.nodes_per_instance)
-
-        # check/make folders
-        counter = 0
-
         if not self.filename:
             # develop a naming scheme based on chemical formula
             self.filename = atoms.get_chemical_formula()
-
-        counter, subdirectory_name = self._restart_setup(atoms,
-                                                         self.filename,
-                                                         restart=False,
-                                                         verbose=False)
 
         vib_dir = parent_dir + "/vib_" + self.filename +"/vib"
         print(vib_dir)
@@ -362,7 +424,17 @@ class React_Aims:
             vib.read()
         # Calculate required vibration modes
         else:
+            # set the environment variables for geometry optimisation
+            set_aims_command(hpc=hpc, basis_set=basis_set, defaults=2020, nodes_per_instance=self.nodes_per_instance)
+
+            # check/make folders
+            counter = 0
             # Generate a unique folder for aims calculation
+            counter, subdirectory_name = self._restart_setup(atoms,
+                                                             self.filename,
+                                                             restart=False,
+                                                             verbose=False)
+
             if not os.path.exists(subdirectory_name):
                 os.mkdir(subdirectory_name)
             os.chdir(subdirectory_name)
@@ -394,8 +466,6 @@ class React_Aims:
 
     def _restart_setup(self, model, filename, internal=False, restart=False, verbose=True):
         # TODO: add restart for search_ts_dyneb
-        import fnmatch, shutil
-        from ase.io import read
 
         # ensure separate folders are in place for each calculation input
         counter = 0
@@ -493,7 +563,6 @@ def _calc_generator(params,
     '''
 
     # New method that gives a default calculator
-    import  fnmatch
     if sockets and not internal:
         from carmm.run.aims_calculator import get_aims_and_sockets_calculator
         # On machines where ASE and FHI-aims are run separately (e.g. ASE on login node, FHI-aims on compute nodes)
