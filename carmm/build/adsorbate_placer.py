@@ -38,7 +38,6 @@ def rotate_and_place_adsorbate(atoms_ads, atoms_site, bond_length,
     # Find appropriate orthogonal rotation axes.
     x_axis, y_axis, z_axis = find_adsorbate_rotation_axes(atoms_site, site_idx, neighb_idx)
 
-    print(f"Axes: {x_axis, y_axis, z_axis}")
     zeroed_adsorbate.rotate(rotation[0], x_axis, center=zeroed_adsorbate.positions[ads_idx])
     zeroed_adsorbate.rotate(rotation[1], y_axis, center=zeroed_adsorbate.positions[ads_idx])
     zeroed_adsorbate.rotate(rotation[2], z_axis, center=zeroed_adsorbate.positions[ads_idx])
@@ -241,7 +240,7 @@ def rotate_ads2site_vec(atoms, atoms_idx, site_vec, mol_vec):
     import numpy as np
 
     theta = np.arccos(np.dot(mol_vec, site_vec))
-    print(f"site and mol vectors: {site_vec}, {mol_vec}")
+
     axis = np.cross(mol_vec, site_vec)
 
     axis = axis / np.linalg.norm(axis)
