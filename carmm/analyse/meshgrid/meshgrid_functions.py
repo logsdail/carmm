@@ -129,7 +129,7 @@ def atom_mesh_build_mask(meshobject, atoms):
 
     # Check atoms PBC and mesh PBC match.
     if meshobject.strict_mode:
-        mol_mesh_pbc_check(mesh.pbc, atoms.pbc)
+        mol_mesh_pbc_check(meshobject.pbc, atoms.pbc)
 
     # Defines the mesh points occupied by atoms. Uses 99.99 as a trash value.
     x0 = np.full(meshobject.nx, fill_value=np.nan)

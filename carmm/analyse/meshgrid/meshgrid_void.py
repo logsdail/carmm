@@ -21,10 +21,11 @@ def void_find(meshobject, atoms, coarseness=1):
     import numpy as np
     from ase.data.vdw_alvarez import vdw_radii
     from ase.geometry import get_distances
+    from carmm.analyse.meshgrid.meshgrid_functions import mol_mesh_pbc_check
 
     # Check atoms PBC and mesh PBC match.
     if meshobject.strict_mode:
-        mol_mesh_pbc_check(mesh.pbc, atoms.pbc)
+        mol_mesh_pbc_check(meshobject.pbc, atoms.pbc)
 
     void_centres = []
     void_radii = []
