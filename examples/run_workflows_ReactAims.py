@@ -5,6 +5,7 @@ def test_run_workflows_ReactAims():
     import os
 
     # Work in a dedicated folder
+    parent_dir = os.getcwd()
     os.makedirs("data", exist_ok=True)
     os.chdir("data")
 
@@ -39,5 +40,6 @@ def test_run_workflows_ReactAims():
     assert 6.71774 == round(activation_energy, 5)
     
     # Return to parent directory
-    os.chdir("..")
+    os.chdir(parent_dir)
+
 test_run_workflows_ReactAims()
