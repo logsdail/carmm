@@ -6,8 +6,8 @@ def test_run_workflows_ReactAims():
 
     # Work in a dedicated folder
     parent_dir = os.getcwd()
-    os.makedirs("data", exist_ok=True)
-    os.chdir("data")
+    os.makedirs("data/react", exist_ok=True)
+    os.chdir("data/react")
 
     # Determine calculation input settings
     params = {"xc":"pbe"}
