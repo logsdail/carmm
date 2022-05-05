@@ -42,9 +42,9 @@ def rotate_and_place_adsorbate(atoms_ads, atoms_site, bond_length,
     zeroed_adsorbate.rotate(rotation[1], y_axis, center=zeroed_adsorbate.positions[ads_idx])
     zeroed_adsorbate.rotate(rotation[2], z_axis, center=zeroed_adsorbate.positions[ads_idx])
 
-    ads_and_site = atoms_ads + atoms_site
+    ads_and_site = zeroed_adsorbate + atoms_site
 
-    return ads_and_site, atoms_ads
+    return ads_and_site, zeroed_adsorbate
 
 
 def place_adsorbate(atoms_ads, atoms_site, ads_idx, site_idx, bond_length):
