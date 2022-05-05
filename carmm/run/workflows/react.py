@@ -263,6 +263,15 @@ class ReactAims:
         assert type(filename) == str, "Invalid type, filename should be string"
 
         counter, subdirectory_name = self._restart_setup("Charges", self.filename)
+
+        # Check for previously completed calculation
+        print(os.path.join(subdirectory_name[:-1]+str(counter-1), filename+"_charges.traj"))
+        if os.path.exists(os.path.join(subdirectory_name[:-1]+str(counter-1), filename+"_charges.traj")):
+            file_location = os.path.join(subdirectory_name[:-1]+str(counter-1), filename+"_charges.traj")
+            self.initial = read(file_location)
+            print("Previously calculated structure has been found at", file_location)
+            return self.initial
+
         out = str(counter) + "_" + str(filename) + ".out"
 
         # set the environment variables for geometry optimisation
@@ -317,6 +326,7 @@ class ReactAims:
         hpc = self.hpc
         dimensions = sum(self.initial.pbc)
         params = self.params
+        parent_dir = os.getcwd()
 
         # Set the environment parameters
         set_aims_command(hpc=hpc, basis_set=basis_set, defaults=2020, nodes_per_instance=self.nodes_per_instance)
@@ -337,7 +347,7 @@ class ReactAims:
 
             neb = read(previously_converged_ts_search+"@:")
             self.ts = sorted(neb, key=lambda k: k.get_potential_energy(), reverse=True)[0]
-            os.chdir("..")
+            os.chdir(parent_dir)
 
             return self.ts
 
@@ -394,7 +404,7 @@ class ReactAims:
         # Find maximum energy, i.e. transition state to return it
         neb = read("ML-NEB.traj@:")
         self.ts = sorted(neb, key=lambda k: k.get_potential_energy(), reverse=True)[0]
-        os.chdir("..")
+        os.chdir(parent_dir)
 
         return self.ts
 
@@ -500,7 +510,7 @@ class ReactAims:
 
         '''
         # TODO: add restart for search_ts_dyneb
-        _supported_calc_types = ["Opt", "Vib", "TS", "Charge"]
+        _supported_calc_types = ["Opt", "Vib", "TS", "Charges"]
         assert calc_type in _supported_calc_types
         calc_type += "_"
 
