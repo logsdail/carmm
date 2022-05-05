@@ -158,7 +158,7 @@ def _check_socket(host, port, verbose=False):
     return port
 
 
-def get_k_grid(model, sampling_density, dimensions, verbose=False):
+def get_k_grid(model, sampling_density, verbose=False):
 
     '''
     Based converged value of reciprocal space sampling provided,
@@ -190,21 +190,26 @@ def get_k_grid(model, sampling_density, dimensions, verbose=False):
 
     import math
     import numpy as np
+
+    dimensions = sum(model.pbc)
+
     # define k_grid sampling density /A
     x = np.linalg.norm(model.get_cell()[0])
     y = np.linalg.norm(model.get_cell()[1])
     z = np.linalg.norm(model.get_cell()[2])
 
     if np.all([x, y, z] == 0):
-        return False
+        return None
 
     if dimensions == 2:
         k_z = 1
     elif dimensions == 3:
         k_z = math.ceil((1 / sampling_density) * (1 / z))
     else:
-        print("Wrong number of periodic dimensions specified.")
-        return False
+        print("Number of periodic dimensions in", model.get_chemical_formula(),
+                "is", dimensions, "- no k_grid calculated.")
+        print("Valid structures are periodic in 2 (surface) or 3 (bulk) dimensions.")
+        return None
 
     k_x = math.ceil((1 / sampling_density) * (1 / x))
     k_y = math.ceil((1 / sampling_density) * (1 / y))
