@@ -26,8 +26,6 @@ def test_run_workflows_ReactAims():
     # TODO: The ase.vibrations module was changed between 3.21.0 and 3.22.1, the below does not work in old version
     zero_point_energy = reactor.vibrate(atoms, indices =[atom.index for atom in atoms])
 
-    # TODO: get_mulliken_charge
-
     assert is_converged(reactor.model_optimised, 0.01), \
         "The structure saved in React_Aims is not converged"
     assert round(zero_point_energy, 3) == 0.275
@@ -38,7 +36,11 @@ def test_run_workflows_ReactAims():
     activation_energy = transition_state.get_potential_energy()-model_optimised.get_potential_energy()
 
     assert 6.71774 == round(activation_energy, 5)
-    
+
+    # Calculate charges
+    molecule_with_charges = reactor.get_mulliken_charges(model_optimised)
+    assert molecule_with_charges[0].charge == 0.0
+
     # Return to parent directory
     os.chdir(parent_dir)
 
