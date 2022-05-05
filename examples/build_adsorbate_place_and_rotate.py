@@ -21,7 +21,7 @@ def test_adsorbate_placer():
 
     ads_and_site, rotated_ads = rotate_and_place_adsorbate(molecule, zeolite, 1.0,
                                                            2, 0, 0,
-                                                           rotation=[45, 0, -45])
+                                                           rotation=[-45, 0, -45])
 
     comp_pos1 = np.array([2.00311656e+01, 5.31509397e+00, 1.89702619e+00])
     comp_pos2 = np.array([2.04405930e+01, 4.53669268e+00, 2.54385921e+00])

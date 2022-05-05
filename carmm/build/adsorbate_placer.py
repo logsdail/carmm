@@ -198,14 +198,14 @@ def find_adsorbate_rotation_axes(atoms_site, site_idx, neighb_idx):
         neighbour_atoms.remove(site_idx)
 
         # Order list for compatability reasons.
-        neighbour_atoms = neighbour_atoms.sort()
+        neighbour_atoms.sort()
 
         vectors = atoms_site.positions[neighbour_atoms] - atoms_site.positions[new_site_idx]
         neighb_vector = vectors[neighb_idx] / np.linalg.norm(vectors[neighb_idx])
 
     else:
         # Order list for compatability reasons.
-        neighbour_atoms = neighbour_atoms.sort()
+        neighbour_atoms.sort()
 
         vectors = atoms_site.positions[neighbour_atoms] - atoms_site.positions[site_idx]
         neighb_vector = vectors[neighb_idx] / np.linalg.norm(vectors[neighb_idx])
