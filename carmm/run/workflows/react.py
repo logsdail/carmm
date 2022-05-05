@@ -116,8 +116,7 @@ class ReactAims:
             self.model_optimised = self.initial
             self.initial = i_geo
         else:
-            if not os.path.exists(subdirectory_name):
-                os.mkdir(subdirectory_name)
+            os.makedirs(subdirectory_name, exist_ok=True)
             os.chdir(subdirectory_name)
 
 
@@ -202,9 +201,9 @@ class ReactAims:
 
             # Set environment variables for a larger basis set - converged electronic structure
             subdirectory_name_tight = subdirectory_name + "_" + post_process
-            if not os.path.exists(subdirectory_name_tight):
-                os.mkdir(subdirectory_name_tight)
+            os.makedirs(subdirectory_name_tight, exist_ok=True)
             os.chdir(subdirectory_name_tight)
+
             set_aims_command(hpc=hpc, basis_set=post_process, defaults=2020, nodes_per_instance=self.nodes_per_instance)
 
             # Recalculate the structure using a larger basis set in a separate folder
@@ -273,8 +272,7 @@ class ReactAims:
         params["output"]= ["Mulliken_summary"]
 
 
-        if not os.path.exists(subdirectory_name):
-            os.mkdir(subdirectory_name)
+        os.makedirs(subdirectory_name, exist_ok=True)
         os.chdir(subdirectory_name)
 
         with _calc_generator(params, out_fn=out, dimensions=dimensions, forces=False)[0] as calculator:
@@ -333,22 +331,36 @@ class ReactAims:
             filename = initial.get_chemical_formula()
 
         counter, subdirectory_name = self._restart_setup("TS", filename, restart=restart, verbose=verbose)
-        out = str(counter) + "_" + str(filename) + ".out"
+        if os.path.exists(os.path.join(subdirectory_name[:-1] + str(counter-1), "ML-NEB.traj")):
+            previously_converged_ts_search = os.path.join(subdirectory_name[:-1] + str(counter-1), "ML-NEB.traj")
+            print("TS search already converged at", previously_converged_ts_search)
+
+            neb = read(previously_converged_ts_search+"@:")
+            self.ts = sorted(neb, key=lambda k: k.get_potential_energy(), reverse=True)[0]
+            os.chdir("..")
+
+            return self.ts
 
         # ensure input is converged
-        if input_check: #TODO naming scheme + check for these files or initial/final.traj
+        elif input_check:
 
             if not is_converged(initial, input_check):
+                self.filename += "_initial"
                 initial = self.aims_optimise(initial, input_check, restart=False, verbose=False)[0]
             if not is_converged(final, input_check):
+                self.filename = filename + "_final"
                 final = self.aims_optimise(final, input_check, restart=False, verbose=False)[0]
+
+            # Set original name after input check is complete
+            self.filename = filename
+
+        out = str(counter) + "_" + str(filename) + ".out"
 
         # Let the user restart from alternative file or Atoms object
         if prev_calcs:
             self.prev_calcs = prev_calcs
 
-        if not os.path.exists(subdirectory_name):
-            os.mkdir(subdirectory_name)
+        os.makedirs(subdirectory_name, exist_ok=True)
         os.chdir(subdirectory_name)
 
         # Desired number of images including start and end point
@@ -357,26 +369,27 @@ class ReactAims:
 
         # Create the sockets calculator - using a with statement means the object is closed at the end.
         with _calc_generator(params, out_fn=out, dimensions=dimensions)[0] as calculator:
-            # Setup the Catlearn object for MLNEB
-            neb_catlearn = MLNEB(start=initial,
-                                 end=final,
-                                 ase_calc=calculator,
-                                 n_images=n,
-                                 k=0.5,
-                                 interpolation=interpolation,
-                                 neb_method="aseneb",
-                                 prev_calculations=self.prev_calcs,
-                                 mic=True,
-                                 restart=restart)
-            # TODO: TEST
             while not os.path.exists('ML-NEB.traj'):
+                # Setup the Catlearn object for MLNEB
+                neb_catlearn = MLNEB(start=initial,
+                                     end=final,
+                                     ase_calc=calculator,
+                                     n_images=n,
+                                     k=0.5,
+                                     interpolation=interpolation,
+                                     neb_method="aseneb",
+                                     prev_calculations=self.prev_calcs,
+                                     mic=True,
+                                     restart=restart)
+                # TODO: TEST
+
                 # Run the NEB optimisation. Adjust fmax to desired convergence criteria, usually 0.01 ev/A
                 neb_catlearn.run(fmax=fmax,
                                  unc_convergence=unc,
                                  trajectory='ML-NEB.traj',
                                  ml_steps=25,
                                  sequential=False,
-                                 steps=40)
+                                 steps=50)
 
         # Find maximum energy, i.e. transition state to return it
         neb = read("ML-NEB.traj@:")
@@ -449,8 +462,7 @@ class ReactAims:
                                                                  restart=False,
                                                                  verbose=False)
 
-                if not os.path.exists(subdirectory_name):
-                    os.mkdir(subdirectory_name)
+                os.makedirs(subdirectory_name, exist_ok=True)
                 os.chdir(subdirectory_name)
 
                 # Name the aims output file

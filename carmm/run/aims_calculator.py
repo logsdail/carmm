@@ -198,9 +198,6 @@ def get_k_grid(model, sampling_density, verbose=False):
     y = np.linalg.norm(model.get_cell()[1])
     z = np.linalg.norm(model.get_cell()[2])
 
-    if np.all([x, y, z] == 0):
-        return None
-
     if dimensions == 2:
         k_z = 1
     elif dimensions == 3:

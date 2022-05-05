@@ -1,0 +1,25 @@
+Accepting clients on INET port 15824
+Awaiting client
+Accepted connection from ('10.212.2.134', 55602)
+Driver: calculate
+Driver:  status
+Driver:   sendmsg 'STATUS'
+Driver:   recvmsg 'READY'
+Driver:  sendposdata
+Driver:   sendmsg 'POSDATA'
+Driver:   send 72 bytes of <class 'numpy.float64'>
+Driver:   send 72 bytes of <class 'numpy.float64'>
+Driver:   send 4 bytes of <class 'numpy.int32'>
+Driver:   send 48 bytes of <class 'numpy.float64'>
+Driver:  status
+Driver:   sendmsg 'STATUS'
+Driver:   recvmsg 'HAVEDATA'
+Driver:  sendrecv_force
+Driver:   sendmsg 'GETFORCE'
+Driver:   recvmsg 'FORCEREADY'
+Driver:   recv 8 bytes of <class 'numpy.float64'>
+Driver:   recv 4 bytes of <class 'numpy.int32'>
+Driver:   recv 48 bytes of <class 'numpy.float64'>
+Driver:   recv 72 bytes of <class 'numpy.float64'>
+Driver:   recv 4 bytes of <class 'numpy.int32'>
+Close socket server

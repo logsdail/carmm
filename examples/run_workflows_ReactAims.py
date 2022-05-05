@@ -2,6 +2,11 @@ def test_react():
     from carmm.run.workflows.react import ReactAims
     from ase.build import molecule
     from carmm.analyse.forces import is_converged
+    import os
+
+    # Work in a dedicated folder
+    os.makedirs("data", exist_ok=True)
+    os.chdir("data")
 
     # Determine calculation input settings
     params = {"xc":"pbe"}
@@ -9,7 +14,7 @@ def test_react():
     hpc = "hawk"
 
     '''Prepare the Atoms object geometry'''
-    atoms = molecule("H2O")
+    atoms = molecule("H2")
 
     '''Build the React_Aims object using the set of settings'''
     reactor = ReactAims(params, basis_set, hpc)
@@ -20,11 +25,17 @@ def test_react():
     # TODO: The ase.vibrations module was changed between 3.21.0 and 3.22.1, the below does not work in old version
     zero_point_energy = reactor.vibrate(atoms, indices =[atom.index for atom in atoms])
 
-    # TODO: figure out a test for ts_search and get_mulliken_charge
+    # TODO: get_mulliken_charge
 
     assert is_converged(reactor.model_optimised, 0.01), \
         "The structure saved in React_Aims is not converged"
-    assert round(zero_point_energy, 3) == 0.574
-    assert atoms.calc == None
+    assert round(zero_point_energy, 3) == 0.275
+
+    # Create a reaction pathway
+    atoms[1].x += 8
+    transition_state = reactor.search_ts(atoms, model_optimised, 0.05, 0.03, input_check=0.01)
+    activation_energy = transition_state.get_potential_energy()-model_optimised.get_potential_energy()
+
+    assert 6.71774 == round(activation_energy, 5)
 
 test_react()

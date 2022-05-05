@@ -1,0 +1,6 @@
+dict(compute_forces='true',
+     override_warning_libxc='True',
+     relativistic=('atomic_zora', 'scalar'),
+     spin='none',
+     use_pimd_wrapper=['ccs0134', 15824],
+     xc='pbe')
