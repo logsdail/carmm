@@ -38,4 +38,4 @@ def test_react():
 
     assert 6.71774 == round(activation_energy, 5)
 
-test_react()
+test_run_workflows_ReactAims()
