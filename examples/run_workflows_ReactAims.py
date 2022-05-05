@@ -1,4 +1,4 @@
-def test_react():
+def test_run_workflows_ReactAims():
     from carmm.run.workflows.react import ReactAims
     from ase.build import molecule
     from carmm.analyse.forces import is_converged
