@@ -291,7 +291,7 @@ def normal_rotation_matrix(theta, ax):
                                  (ax[1] * ax[1] * onemincosa) + cosa,
                                  (ax[2] * ax[1] * onemincosa) - (sina * ax[0])],
                                 [(ax[0] * ax[2] * onemincosa) - (sina * ax[1]),
-                                 (ax[1] * ax[2] * onemincosa) - (sina * ax[0]),
+                                 (ax[1] * ax[2] * onemincosa) + (sina * ax[0]),
                                  (ax[2] * ax[2] * onemincosa) + cosa]])
 
     return rotation_matrix
