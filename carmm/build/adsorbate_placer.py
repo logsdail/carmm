@@ -77,8 +77,8 @@ def place_adsorbate(atoms_ads, atoms_site, ads_idx, site_idx, bond_length, lps=1
 
     from carmm.analyse.neighbours import neighbours
 
-    assert lp < 3,  "Lone pairs greater than 2 not yet implemented."
-    assert lp != 0, "No valid adsorption site available."
+    assert lps < 3,  "Lone pairs greater than 2 not yet implemented."
+    assert lps != 0, "No valid adsorption site available."
 
     # Otherwise, just find normal based on average of neighbour vectors.
     # If multiple lps to adsorb to - generate list of potential sites.
