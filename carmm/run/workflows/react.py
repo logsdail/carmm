@@ -616,7 +616,8 @@ def _calc_generator(params,
         # we need to specifically state what the name of the login node is so the two packages can communicate
         sockets_calc, fhi_calc = get_aims_and_sockets_calculator(dimensions=dimensions,
                                                                  verbose=True,
-                                                                 codata_warning=False)
+                                                                 codata_warning=False
+                                                                 )
     else:
         from carmm.run.aims_calculator import get_aims_calculator
         # On machines where ASE and FHI-aims are run separately (e.g. ASE on login node, FHI-aims on compute nodes)
@@ -628,8 +629,8 @@ def _calc_generator(params,
     fhi_calc.set(override_warning_libxc='True')
 
     # Forces required for optimisation:
-    if forces:
-        fhi_calc.set(compute_forces="true", )
+    if not forces:
+        fhi_calc.parameters.pop("compute_forces")
 
     # add analytical stress keyword for unit cell relaxation
     if relax_unit_cell:
@@ -652,11 +653,6 @@ def _calc_generator(params,
     # TODO: fundamental settings to be provided as input by the user to make sure nothing essential gets hardcoded
     # FHI-aims settings set up
     fhi_calc.set(**params)
-
-    # For a larger basis set only the Total Potential Energy is required which takes less time than Forces
-    if not forces and not internal:
-        fhi_calc.set(compute_forces="false",
-                     final_forces_cleaned="false")
 
     if sockets and not internal:
         return sockets_calc, fhi_calc
