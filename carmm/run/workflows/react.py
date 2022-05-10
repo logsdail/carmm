@@ -265,7 +265,6 @@ class ReactAims:
         counter, subdirectory_name = self._restart_setup("Charges", self.filename)
 
         # Check for previously completed calculation
-        print(os.path.join(subdirectory_name[:-1]+str(counter-1), filename+"_charges.traj"))
         if os.path.exists(os.path.join(subdirectory_name[:-1]+str(counter-1), filename+"_charges.traj")):
             file_location = os.path.join(subdirectory_name[:-1]+str(counter-1), filename+"_charges.traj")
             self.initial = read(file_location)
