@@ -15,24 +15,18 @@ def is_converged(atoms, fmax=0.01):
     converged = False
 
     if atoms.calc:
-        if "forces" in atoms.calc.results:
-            # TODO: this will probably only work with ase.constraints.FixAtoms,
-            #       FixBondLength does not set force to 0
-            # extraction of constraints
-            constraints = []
-            # remove from nested list
-            for i in [i.index.tolist() for i in atoms._get_constraints()]:
-                for j in i:
-                    constraints.append(j)
+        if not atoms.calc.calculation_required(atoms, ['forces']):
+            f = atoms.get_forces()
+
             '''
             List comprehension for:
             - Retrieving forces from the calculator
             - Taking their vector norm
             - But only for atoms without constraints
             '''
-            if np.amax([np.linalg.norm(atoms.calc.results["forces"][x]) \
-                    for x in range(len(atoms)) if x not in constraints]) <= fmax:
 
+            if np.amax([np.linalg.norm(f[x]) \
+                    for x in range(len(atoms))]) <= fmax:
                 converged = True
 
     return converged
