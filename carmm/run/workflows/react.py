@@ -224,7 +224,7 @@ class ReactAims:
         return self.model_optimised, self.model_post_processed
 
 
-    def get_mulliken_charges(self, initial: Atoms):
+    def get_mulliken_charges(self, initial: Atoms, verbose=True):
 
         '''
         This function is used to retrieve atomic charges using Mulliken charge
@@ -249,8 +249,6 @@ class ReactAims:
         basis_set = self.basis_set
         self.initial = initial
         dimensions = sum(self.initial.pbc)
-        i_geo = initial.copy()
-        i_geo.calc = initial.calc
 
         # parent directory
         parent_dir = os.getcwd()
@@ -268,7 +266,8 @@ class ReactAims:
         if os.path.exists(os.path.join(subdirectory_name[:-1]+str(counter-1), filename+"_charges.traj")):
             file_location = os.path.join(subdirectory_name[:-1]+str(counter-1), filename+"_charges.traj")
             self.initial = read(file_location)
-            print("Previously calculated structure has been found at", file_location)
+            if verbose:
+                print("Previously calculated structure has been found at", file_location)
             return self.initial
 
         out = str(counter) + "_" + str(filename) + ".out"
@@ -323,7 +322,7 @@ class ReactAims:
         '''Retrieve common properties'''
         basis_set = self.basis_set
         hpc = self.hpc
-        dimensions = sum(self.initial.pbc)
+        dimensions = sum(initial.pbc)
         params = self.params
         parent_dir = os.getcwd()
 
