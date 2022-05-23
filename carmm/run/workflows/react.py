@@ -263,6 +263,15 @@ class ReactAims:
         assert type(filename) == str, "Invalid type, filename should be string"
 
         counter, subdirectory_name = self._restart_setup("Charges", self.filename)
+
+        # Check for previously completed calculation
+        print(os.path.join(subdirectory_name[:-1]+str(counter-1), filename+"_charges.traj"))
+        if os.path.exists(os.path.join(subdirectory_name[:-1]+str(counter-1), filename+"_charges.traj")):
+            file_location = os.path.join(subdirectory_name[:-1]+str(counter-1), filename+"_charges.traj")
+            self.initial = read(file_location)
+            print("Previously calculated structure has been found at", file_location)
+            return self.initial
+
         out = str(counter) + "_" + str(filename) + ".out"
 
         # set the environment variables for geometry optimisation
@@ -317,6 +326,7 @@ class ReactAims:
         hpc = self.hpc
         dimensions = sum(self.initial.pbc)
         params = self.params
+        parent_dir = os.getcwd()
 
         # Set the environment parameters
         set_aims_command(hpc=hpc, basis_set=basis_set, defaults=2020, nodes_per_instance=self.nodes_per_instance)
@@ -337,7 +347,7 @@ class ReactAims:
 
             neb = read(previously_converged_ts_search+"@:")
             self.ts = sorted(neb, key=lambda k: k.get_potential_energy(), reverse=True)[0]
-            os.chdir("..")
+            os.chdir(parent_dir)
 
             return self.ts
 
@@ -394,7 +404,7 @@ class ReactAims:
         # Find maximum energy, i.e. transition state to return it
         neb = read("ML-NEB.traj@:")
         self.ts = sorted(neb, key=lambda k: k.get_potential_energy(), reverse=True)[0]
-        os.chdir("..")
+        os.chdir(parent_dir)
 
         return self.ts
 
@@ -500,7 +510,7 @@ class ReactAims:
 
         '''
         # TODO: add restart for search_ts_dyneb
-        _supported_calc_types = ["Opt", "Vib", "TS", "Charge"]
+        _supported_calc_types = ["Opt", "Vib", "TS", "Charges"]
         assert calc_type in _supported_calc_types
         calc_type += "_"
 
@@ -606,7 +616,8 @@ def _calc_generator(params,
         # we need to specifically state what the name of the login node is so the two packages can communicate
         sockets_calc, fhi_calc = get_aims_and_sockets_calculator(dimensions=dimensions,
                                                                  verbose=True,
-                                                                 codata_warning=False)
+                                                                 codata_warning=False
+                                                                 )
     else:
         from carmm.run.aims_calculator import get_aims_calculator
         # On machines where ASE and FHI-aims are run separately (e.g. ASE on login node, FHI-aims on compute nodes)
@@ -618,8 +629,8 @@ def _calc_generator(params,
     fhi_calc.set(override_warning_libxc='True')
 
     # Forces required for optimisation:
-    if forces:
-        fhi_calc.set(compute_forces="true", )
+    if not forces:
+        fhi_calc.parameters.pop("compute_forces")
 
     # add analytical stress keyword for unit cell relaxation
     if relax_unit_cell:
@@ -642,11 +653,6 @@ def _calc_generator(params,
     # TODO: fundamental settings to be provided as input by the user to make sure nothing essential gets hardcoded
     # FHI-aims settings set up
     fhi_calc.set(**params)
-
-    # For a larger basis set only the Total Potential Energy is required which takes less time than Forces
-    if not forces and not internal:
-        fhi_calc.set(compute_forces="false",
-                     final_forces_cleaned="false")
 
     if sockets and not internal:
         return sockets_calc, fhi_calc
