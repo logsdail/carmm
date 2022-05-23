@@ -1,4 +1,4 @@
-def set_aims_command(hpc='hawk', basis_set='light', defaults=2010):
+def set_aims_command(hpc='hawk', basis_set='light', defaults=2010, nodes_per_instance=None):
     '''
     Choose supercomputer and basis_set to obtain FHI-aims run command.
     Can be useful to e.g perform a calculation with a larger basis set
@@ -25,6 +25,9 @@ def set_aims_command(hpc='hawk', basis_set='light', defaults=2010):
     aprun = "time aprun -n $NPROCS "
     gerun = "gerun "
     srun = "srun --cpu-bind=cores --distribution=block:block --hint=nomultithread "
+    if nodes_per_instance:
+        srun += "--nodes=" + str(nodes_per_instance)+" --ntasks=" + str(int(128*nodes_per_instance))+" "
+
     executable = "bin/aims.$VERSION.scalapack.mpi.x"
     
     species = "species_defaults/" + "defaults_" + str(defaults) + "/" + basis_set
