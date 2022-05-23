@@ -88,12 +88,8 @@ def midpoint_points(x_1, y_1, z_1, x_2, y_2, z_2, meshobject):
         meshobject: Mesh object
             Object storing meshgrid and PBC conditions
     Returns:
-        x_mid: float
-            x coordinate of midpoint between points 1 and 2.
-        y_mid: float
-            y coordinate of midpoint between points 1 and 2.
-        z_mid: float
-            z coordinate of midpoint between points 1 and 2.
+        midpoint: numpy array (,3)
+            x, y and z coordinates of the midpoint between points 1 and 2.
     """
 
     import numpy as np
@@ -104,7 +100,7 @@ def midpoint_points(x_1, y_1, z_1, x_2, y_2, z_2, meshobject):
 
     mic_shift = find_mic((vec2 - vec1), cell=meshobject.Cell.array)
 
-    midpoint = np.linalg.norm(vec1 + (mic_shift / 2))
+    midpoint = vec1 + mic_shift/2
 
     return midpoint
 
