@@ -423,9 +423,7 @@ class ReactAims:
             fmax: float
             n: int
                 number of images, the following is recommended: n * npi = total_no_CPUs
-            interpolation: str or list of Atoms objects
-            restart: bool
-            prev_calcs: list of Atoms objects
+            interpolation: str
             input_check: float or None
             verbose: bool
 
