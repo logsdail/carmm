@@ -377,7 +377,12 @@ class ReactAims:
 
         # Create the sockets calculator - using a with statement means the object is closed at the end.
         with _calc_generator(params, out_fn=out, dimensions=dimensions)[0] as calculator:
+            iterations = 0
             while not os.path.exists('ML-NEB.traj'):
+                if iterations > 0:
+                    self.prev_calcs = read("last_predicted_path.traj@:")
+                    interpolation = self.prev_calcs
+
                 # Setup the Catlearn object for MLNEB
                 neb_catlearn = MLNEB(start=initial,
                                      end=final,
@@ -399,9 +404,116 @@ class ReactAims:
                                  sequential=False,
                                  steps=50)
 
+                iterations += 1
+
         # Find maximum energy, i.e. transition state to return it
         neb = read("ML-NEB.traj@:")
         self.ts = sorted(neb, key=lambda k: k.get_potential_energy(), reverse=True)[0]
+        os.chdir(parent_dir)
+
+        return self.ts
+
+
+    def search_ts_taskfarm(self, initial, final, fmax, n, interpolation="idpp", input_check=0.01, verbose=True):
+        '''
+
+        Args:
+            initial: Atoms object
+            final: Atoms object
+            fmax: float
+            n: int
+                number of images, the following is recommended: n * npi = total_no_CPUs
+            interpolation: str or list of Atoms objects
+            restart: bool
+            prev_calcs: list of Atoms objects
+            input_check: float or None
+            verbose: bool
+
+        Returns: Atoms object
+            Transition state geometry structure
+
+        '''
+        from ase.neb import NEB
+        from ase.optimize import BFGS
+
+        '''Retrieve common properties'''
+        basis_set = self.basis_set
+        hpc = self.hpc
+        dimensions = sum(initial.pbc)
+        params = self.params
+        parent_dir = os.getcwd()
+
+        # Set the environment parameters
+        set_aims_command(hpc=hpc, basis_set=basis_set, defaults=2020, nodes_per_instance=self.nodes_per_instance)
+
+
+        # Read the geometry
+        if self.filename:
+            filename = self.filename
+        else:
+            filename = initial.get_chemical_formula()
+
+        counter, subdirectory_name = self._restart_setup("TS", filename, restart=False, verbose=verbose)
+
+        '''
+        if os.path.exists(os.path.join(subdirectory_name[:-1] + str(counter-1), "ML-NEB.traj")):
+            previously_converged_ts_search = os.path.join(subdirectory_name[:-1] + str(counter-1), "ML-NEB.traj")
+            print("TS search already converged at", previously_converged_ts_search)
+
+            neb = read(previously_converged_ts_search+"@:")
+            self.ts = sorted(neb, key=lambda k: k.get_potential_energy(), reverse=True)[0]
+            os.chdir(parent_dir)
+
+            return self.ts
+        '''
+
+        # ensure input is converged
+        if input_check:
+            npi = self.nodes_per_instance
+            self.nodes_per_instance = None
+
+            if not is_converged(initial, input_check):
+                self.filename = filename + "_initial"
+                initial = self.aims_optimise(initial, input_check, restart=False, verbose=False)[0]
+            if not is_converged(final, input_check):
+                self.filename = filename + "_final"
+                final = self.aims_optimise(final, input_check, restart=False, verbose=False)[0]
+
+            # Set original name after input check is complete
+            self.nodes_per_instance = npi
+            self.filename = filename
+
+        out = str(counter) + "_" + str(filename) + ".out"
+
+        '''
+        # Let the user restart from alternative file or Atoms object
+        if prev_calcs:
+            self.prev_calcs = prev_calcs
+        '''
+
+        os.makedirs(subdirectory_name, exist_ok=True)
+        os.chdir(subdirectory_name)
+
+
+        images = [initial]
+        for i in range(n):
+            image = initial.copy()
+            image.calc = _calc_generator(params, out_fn=str(i)+"_"+out, dimensions=dimensions)[0]
+            image.calc.launch_client.calc.directory = "./"+str(i)+"_"+out[:4]
+            images.append(image)
+
+        images.append(final)
+
+        neb = NEB(images, climb=True, parallel=True, allow_shared_calculator=False)
+        neb.interpolate(method=interpolation, mic=True, apply_constraint=True)
+        qn = BFGS(neb, trajectory='neb.traj')
+        qn.run(fmax=fmax)
+
+        for image in images[1:-1]:
+            image.calc.close()
+
+        # Find maximum energy, i.e. transition state to return it
+        self.ts = sorted(images, key=lambda k: k.get_potential_energy(), reverse=True)[0]
         os.chdir(parent_dir)
 
         return self.ts
