@@ -6,10 +6,6 @@ def get_interplane_distances(atoms):
 
     '''
 
-    # from ase.geometry.analysis import Analysis
-    # loads molecules function to detect discrete molecules in atoms object
-    # AJL, Apr 2021: This unused - disabled for now. Remove?
-
 
     from carmm.analyse.molecules import calculate_molecules
     molecules = calculate_molecules(atoms)
