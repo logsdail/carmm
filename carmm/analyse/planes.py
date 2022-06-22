@@ -1,6 +1,6 @@
-def get_interplane_distance(atoms):
+def get_interplane_distances(atoms):
     '''
-    TODO: Document (@Jack Warren)
+    A function that combines the molecules script and get_lowest distances to separate molecules out in a system and measure the distances inbetween.
 
     Returns:
 
@@ -9,7 +9,7 @@ def get_interplane_distance(atoms):
     # from ase.geometry.analysis import Analysis
     # loads molecules function to detect discrete molecules in atoms object
     # AJL, Apr 2021: This unused - disabled for now. Remove?
-    # analysis = Analysis(atoms)
+
 
     from carmm.analyse.molecules import calculate_molecules
     molecules = calculate_molecules(atoms)
@@ -20,19 +20,19 @@ def get_interplane_distance(atoms):
 
     # You can view these objects separated from the rest of your system using view(A_mol)
 
-    return get_lowest_distances(A_mol, B_mol)
+    return get_close_contacts(A_mol, B_mol)
 
 
-def get_lowest_distances(A_mol, B_mol):
+def get_close_contacts(A_mol, B_mol):
     '''
     Uses molecules.py to separate fn into molecules then measures the shortest distances between.
     Indented for Periodic systems
 
     Parameters:
-    A_mol: Atoms object created by molecules
-    B_mol: TODO: Complete
+    A_mol: Atoms object created by molecules the one you want to measure from
+    B_mol: Same as A_mol, however its the molecule you're measuring to
 
-    Returns:
+    Returns: The closest contact for each atom on A_mol to their closest contact on B_mol
 
     Still very much a work in progress so go easy on it
     '''
@@ -46,11 +46,11 @@ def get_lowest_distances(A_mol, B_mol):
             pos_diff = np.linalg.norm(a.position - b.position)
             bond_list_atom += [pos_diff]
         measured += [bond_list_atom]
-    lowest_distances = [np.amin(i) for i in measured]
+    close_contacts = [np.amin(i) for i in measured]
 
     # TODO: Document the return - this is a list of shortest distances from each atom in A
-    # TODO: What about information on the atoms that constitute the lowest distance?
-    return lowest_distances
+
+    return close_contacts
 
 
 def distance_between_centers_of_mass(A_mol, B_mol):
