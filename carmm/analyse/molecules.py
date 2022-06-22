@@ -13,7 +13,8 @@ def calculate_molecules(atoms, print_output=False):
     molecules: List of list of integers
         Indices of atoms involved in each molecule
     '''
-
+    
+    def calculate_molecules(atoms, print_output=False):
     from ase.neighborlist import natural_cutoffs, NeighborList
     from scipy import sparse
 
@@ -23,15 +24,19 @@ def calculate_molecules(atoms, print_output=False):
     matrix = neighborList.get_connectivity_matrix()
     n_molecules, component_list = sparse.csgraph.connected_components(matrix)
 
-    molecules = []
+    molecule_idx= []
+    molecule_sym= []
     for n in range(n_molecules):
         atomsIdxs = [i for i in range(len(component_list)) if component_list[i] == n]
-        molecules.append(atomsIdxs) 
+        atomsCs = [atoms[atomsIdxs[i]].symbol for i in range(len(atomsIdxs))]
+        molecule_idx.append(atomsIdxs)
+        molecule_sym.append(atomsCs)
         if (print_output):
-            print("The following atoms are part of molecule {}: {}".format(n, atomsIdxs))
+            print("Molecule {} has the following atom ids    : {}".format(n, molecule_idx[n]))
+            print("Molecule {} has the following atom symbols: {} \n".format(n, molecule_sym[n]))
 
-    return molecules
-
+    return molecule_idx, molecule_sym
+    
     #print(atoms.symbols.get_chemical_formula())
     #print(molecules[0])
     #print(type(molecules[0]))
