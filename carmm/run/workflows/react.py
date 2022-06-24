@@ -337,6 +337,7 @@ class ReactAims:
             filename = self.filename
         else:
             filename = initial.get_chemical_formula()
+            self.filename = filename
 
         counter, subdirectory_name = self._restart_setup("TS", filename, restart=restart, verbose=verbose)
         if os.path.exists(os.path.join(subdirectory_name[:-1] + str(counter-1), "ML-NEB.traj")):
@@ -388,7 +389,7 @@ class ReactAims:
                                      end=final,
                                      ase_calc=calculator,
                                      n_images=n,
-                                     k=0.5,
+                                     #k=0.05,
                                      interpolation=interpolation,
                                      neb_method="aseneb",
                                      prev_calculations=self.prev_calcs,
@@ -400,9 +401,9 @@ class ReactAims:
                 neb_catlearn.run(fmax=fmax,
                                  unc_convergence=unc,
                                  trajectory='ML-NEB.traj',
-                                 ml_steps=25,
+                                 ml_steps=75,
                                  sequential=False,
-                                 steps=50)
+                                 steps=40)
 
                 iterations += 1
 
@@ -414,7 +415,140 @@ class ReactAims:
         return self.ts
 
 
-    def search_ts_taskfarm(self, initial, final, fmax, n, interpolation="idpp", input_check=0.01, verbose=True):
+    def search_ts_aidneb(self, initial, final, fmax, unc, interpolation="idpp",
+                         restart=True, prev_calcs=None, input_check=0.01, verbose=True):
+        '''
+
+        Args:
+            initial: Atoms object
+            final: Atoms object
+            fmax: float
+            unc: float
+            interpolation: str or list of Atoms objects
+            restart: bool
+            prev_calcs: list of Atoms objects
+            input_check: float or None
+            verbose: bool
+
+        Returns: Atoms object
+            Transition state geometry structure
+
+        '''
+        from gpatom.aidneb import AIDNEB
+
+        '''Retrieve common properties'''
+        basis_set = self.basis_set
+        hpc = self.hpc
+        dimensions = sum(initial.pbc)
+        params = self.params
+        parent_dir = os.getcwd()
+
+        # Set the environment parameters
+        set_aims_command(hpc=hpc, basis_set=basis_set, defaults=2020, nodes_per_instance=self.nodes_per_instance)
+
+        if not interpolation:
+            interpolation = "idpp"
+
+        # Read the geometry
+        if self.filename:
+            filename = self.filename
+        else:
+            filename = initial.get_chemical_formula()
+            self.filename = filename
+
+        counter, subdirectory_name = self._restart_setup("TS", filename, restart=restart, verbose=verbose)
+        if os.path.exists(os.path.join(subdirectory_name[:-1] + str(counter-1), "AIDNEB.traj")):
+            previously_converged_ts_search = os.path.join(subdirectory_name[:-1] + str(counter-1), "AIDNEB.traj")
+            print("TS search already converged at", previously_converged_ts_search)
+
+            neb = read(previously_converged_ts_search+"@:")
+            self.ts = sorted(neb, key=lambda k: k.get_potential_energy(), reverse=True)[0]
+            os.chdir(parent_dir)
+
+            return self.ts
+
+        # ensure input is converged
+        elif input_check:
+
+            if not is_converged(initial, input_check):
+                self.filename += "_initial"
+                initial = self.aims_optimise(initial, input_check, restart=False, verbose=False)[0]
+                self.initial = self.model_optimised
+            if not is_converged(final, input_check):
+                self.filename = filename + "_final"
+                final = self.aims_optimise(final, input_check, restart=False, verbose=False)[0]
+                self.final = self.model_optimised
+
+            # Set original name after input check is complete
+            self.filename = filename
+
+        out = str(counter) + "_" + str(filename) + ".out"
+
+        # Let the user restart from alternative file or Atoms object
+        if prev_calcs:
+            self.prev_calcs = prev_calcs
+
+        os.makedirs(subdirectory_name, exist_ok=True)
+        os.chdir(subdirectory_name)
+
+        # Desired number of images including start and end point
+        # Dense sampling aids convergence but does not increase complexity as significantly as for classic NEB
+        n = 0.25
+
+        # TODO: calculating initial and final structure if possible within the GPAatom code
+
+        '''sockets setup'''
+        with _calc_generator(params, out_fn=out, dimensions=dimensions)[0] as calculator:
+
+            # Setup the GPAtom object for AIDNEB
+            aidneb = AIDNEB(start=initial,
+                            end=final,
+                            interpolation=interpolation,
+                            # "idpp" can in some cases (e.g. H2) result in geometry coordinates returned as NaN, no error exit, but calculator stuck
+                            calculator=calculator,
+                            n_images=n,
+                            max_train_data=50,
+                            trainingset=self.prev_calcs,
+                            use_previous_observations=True,
+                            neb_method='improvedtangent',
+                            mic=True)
+
+            # Run the NEB optimisation. Adjust fmax to desired convergence criteria, usually 0.01 ev/A
+            aidneb.run(fmax=fmax,
+                       unc_convergence=unc,
+                       ml_steps=100)
+
+
+        '''non-sockets setup
+        calculator = _calc_generator(params, out_fn=out, dimensions=dimensions, sockets=False)
+
+        # Setup the GPAtom object for AIDNEB
+        aidneb = AIDNEB(start=initial,
+                        end=final,
+                        interpolation=interpolation, # "idpp" can in some cases (e.g. H2) result in geometry coordinates returned as NaN, no error, but calculator stuck
+                        calculator=calculator,
+                        n_images=n,
+                        trainingset=self.prev_calcs,
+                        use_previous_observations=True,
+                        mic=True) #
+        # TODO: TEST
+
+        # Run the NEB optimisation. Adjust fmax to desired convergence criteria, usually 0.01 ev/A
+        aidneb.run(fmax=fmax,
+                    unc_convergence=unc,
+                    ml_steps=100)
+        '''
+
+        # Find maximum energy, i.e. transition state to return it
+        neb = read("AIDNEB.traj@:")
+        self.ts = sorted(neb, key=lambda k: k.get_potential_energy(), reverse=True)[0]
+        os.chdir(parent_dir)
+
+        return self.ts
+
+
+
+    def search_ts_taskfarm(self, initial, final, fmax, n, method="string", interpolation="idpp", input_check=0.01, verbose=True):
         '''
 
         Args:
@@ -432,7 +566,7 @@ class ReactAims:
 
         '''
         from ase.neb import NEB
-        from ase.optimize import BFGS
+        from ase.optimize import FIRE
 
         '''Retrieve common properties'''
         basis_set = self.basis_set
@@ -453,18 +587,6 @@ class ReactAims:
 
         counter, subdirectory_name = self._restart_setup("TS", filename, restart=False, verbose=verbose)
 
-        '''
-        if os.path.exists(os.path.join(subdirectory_name[:-1] + str(counter-1), "ML-NEB.traj")):
-            previously_converged_ts_search = os.path.join(subdirectory_name[:-1] + str(counter-1), "ML-NEB.traj")
-            print("TS search already converged at", previously_converged_ts_search)
-
-            neb = read(previously_converged_ts_search+"@:")
-            self.ts = sorted(neb, key=lambda k: k.get_potential_energy(), reverse=True)[0]
-            os.chdir(parent_dir)
-
-            return self.ts
-        '''
-
         # ensure input is converged
         if input_check:
             npi = self.nodes_per_instance
@@ -483,29 +605,37 @@ class ReactAims:
 
         out = str(counter) + "_" + str(filename) + ".out"
 
-        '''
-        # Let the user restart from alternative file or Atoms object
-        if prev_calcs:
-            self.prev_calcs = prev_calcs
-        '''
-
         os.makedirs(subdirectory_name, exist_ok=True)
         os.chdir(subdirectory_name)
 
+        if interpolation in ["idpp", "linear"]:
+            images = [initial]
+            for i in range(n):
+                image = initial.copy()
+                image.calc = _calc_generator(params, out_fn=str(i)+"_"+out, dimensions=dimensions)[0]
+                image.calc.launch_client.calc.directory = "./"+str(i)+"_"+out[:-4]
+                images.append(image)
 
-        images = [initial]
-        for i in range(n):
-            image = initial.copy()
-            image.calc = _calc_generator(params, out_fn=str(i)+"_"+out, dimensions=dimensions)[0]
-            image.calc.launch_client.calc.directory = "./"+str(i)+"_"+out[:4]
-            images.append(image)
+            images.append(final)
+        elif isinstance(interpolation, list):
+            assert [isinstance(i, Atoms) for i in interpolation], "Interpolation must be a list of Atoms objects, 'idpp' or 'linear'!"
+            assert len(interpolation)-2 == n, "Number of middle images is fed interpolation must match specified n to ensure correct parallelisation"
 
-        images.append(final)
+            images = interpolation
+            for i in range(1, len(interpolation)-1):
+                # use i-1 for name to retain folder naming as per "idpp"
+                images[i].calc = _calc_generator(params, out_fn=str(i-1)+"_"+out, dimensions=dimensions)[0]
+                images[i].calc.launch_client.calc.directory = "./"+str(i-1)+"_"+out[:-4]
+        else:
+            raise ValueError("Interpolation must be a list of Atoms objects, 'idpp' or 'linear'!")
 
-        neb = NEB(images, climb=True, parallel=True, allow_shared_calculator=False)
-        neb.interpolate(method=interpolation, mic=True, apply_constraint=True)
-        qn = BFGS(neb, trajectory='neb.traj')
-        qn.run(fmax=fmax)
+
+        neb = NEB(images, k=0.05, method=method, climb=True, parallel=True, allow_shared_calculator=False)
+        if interpolation in ["idpp", "linear"]:
+            neb.interpolate(method=interpolation, mic=True, apply_constraint=True)
+
+        qn = FIRE(neb, trajectory='neb.traj')
+        qn.run(fmax=fmax, steps=100)
 
         for image in images[1:-1]:
             image.calc.close()
