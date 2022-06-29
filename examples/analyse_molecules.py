@@ -11,7 +11,16 @@ def test_molecules():
     # Calculate neighbours
     molecules = calculate_molecules(slab)
 
+    # View molecules
+    A_mol = atoms[molecules[0]]
+    B_mol = atoms[molecules[1]]
+    view(A_mol)
+    view(B_mol)
+    view(slab)
     # Verify results
     assert(len(molecules) == 2)
+
+
+
 
 test_molecules()
