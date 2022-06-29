@@ -21,9 +21,8 @@ def test_run_workflows_ReactAims():
     reactor = ReactAims(params, basis_set, hpc)
 
     '''Call relevant calculations'''
+    '''The below has been previously calculated and data is retrieved from saved trajectories'''
     model_optimised, model_postprocessed = reactor.aims_optimise(atoms, fmax=0.01, restart=True)
-
-    # TODO: The ase.vibrations module was changed between 3.21.0 and 3.22.1, the below does not work in old version
     zero_point_energy = reactor.vibrate(atoms, indices =[atom.index for atom in atoms])
 
     assert is_converged(reactor.model_optimised, 0.01), \
@@ -40,6 +39,26 @@ def test_run_workflows_ReactAims():
     # Calculate charges
     molecule_with_charges = reactor.get_mulliken_charges(model_optimised)
     assert molecule_with_charges[0].charge == 0.0
+
+    '''The below uses the "dry_run" flag and uses a LennardJones calculator instead of FHI-aims to test code in CI'''
+    reactor = ReactAims(params, basis_set, hpc, dry_run=True, filename="O2")
+
+    '''Prepare TS search input'''
+    from ase.build import molecule
+    initial = molecule("O2")
+    final = molecule("O2")
+    final[1].x += 8
+
+    # Provide one optimised image and one not converged - check using input_check
+    # Then search for Transition State
+    initial = reactor.aims_optimise(initial, 0.01)[0]
+    transition_state = reactor.search_ts(initial, final, 0.05, 0.03, n=7, input_check=0.01)
+
+    # Optimise a bulk geometry using stress tensor calculations
+    from ase.build import bulk
+    reactor.filename = "Au"
+    Au_bulk = bulk("Au")
+    reactor.aims_optimise(Au_bulk, 0.01, relax_unit_cell=True)
 
     # Return to parent directory
     os.chdir(parent_dir)
