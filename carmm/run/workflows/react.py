@@ -635,9 +635,11 @@ class ReactAims:
                 image = initial.copy()
                 if not self.dry_run:
                     image.calc = _calc_generator(params, out_fn=str(i)+"_"+out, dimensions=dimensions)[0]
+                    image.calc.launch_client.calc.directory = "./" + str(i) + "_" + out[:-4]
                 else:
                     image.calc = LJ()
-                image.calc.launch_client.calc.directory = "./"+str(i)+"_"+out[:-4]
+                    image.calc.directory = "./" + str(i) + "_" + out[:-4]
+
                 images.append(image)
 
             images.append(final)

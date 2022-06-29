@@ -58,10 +58,17 @@ def test_run_workflows_ReactAims():
     # Provide one optimised image and one not converged - check using input_check
     # Then search for Transition State
     initial = reactor.aims_optimise(initial, 0.01)[0]
-    transition_state = reactor.search_ts(initial, final, 0.05, 0.03, n=7, input_check=0.01)
 
-    # Optimise a bulk geometry using stress tensor calculations
+    '''Parallel task-farmed FHI-aims setup. The total number of images is n + 2 (middle images + input)
+    Make sure total number of nodes requested in job submission is equal to nodes_per_instance * n. 
+    E.g. for a band of 9 images and 1 node used per FHI-aims instance request 7 nodes in job submission'''
+
+    reactor.nodes_per_instance = 1
+    transition_state = reactor.search_ts_taskfarm(initial, final, 0.05, n=7, input_check=0.01)
+
+    # Optimise a bulk geometry using stress tensor calculations and ExpCellFilter
     from ase.build import bulk
+    reactor.nodes_per_instance = None
     reactor.filename = "Au"
     Au_bulk = bulk("Au")
     reactor.aims_optimise(Au_bulk, 0.01, relax_unit_cell=True)
