@@ -50,9 +50,11 @@ def test_build_symmetry_mirror():
             assert(false,'Terminal error, unexpected surface')
 
         ### Rotation example ###
-        model = rotate_fcc(model, center_index=index[0], surf=surface_facet)
+        # TODO: Needs a complete example and assertion - doesn't seem to do anything at first step
+        #print(surface_facet, model.positions[1])
+        #model = rotate_fcc(model, center_index=index[0], surf=surface_facet)
         #view(model)
-        # TODO: Add assertion test for rotation
+        #print(surface_facet, model.positions[1])
 
 #Run the example
 test_build_symmetry_mirror()

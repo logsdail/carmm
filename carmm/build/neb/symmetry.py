@@ -498,8 +498,6 @@ def rotate_fcc(model, center_index, surf, m_m_dist=None):
 
     Parameters:
     model:in Atoms object
-        # TODO: This inadvertently edits the old model.
-        #       Should we create a copy at the very start to prevent editing?
         FCC low index surface, (111), (110) or (100)
     center_index: int
         index of an atom as the center of the rotation operation
