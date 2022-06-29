@@ -109,10 +109,12 @@ class ReactAims:
 
         '''Perform calculation only if required'''
         if is_converged(atoms, fmax):
-            print("The forces are below", fmax, "eV/A. No calculation required.")
+            if verbose:
+                print("The forces are below", fmax, "eV/A. No calculation required.")
             self.model_optimised = self.atoms
         elif is_converged(self.initial, fmax):
-            print("The forces are below", fmax, "eV/A. No calculation required.")
+            if verbose:
+                print("The forces are below", fmax, "eV/A. No calculation required.")
             self.model_optimised = self.initial
             self.initial = i_geo
         else:
@@ -415,7 +417,7 @@ class ReactAims:
         return self.ts
 
 
-    def search_ts_aidneb(self, initial, final, fmax, unc, interpolation="idpp",
+    def search_ts_aidneb(self, initial, final, fmax, unc, interpolation="idpp", n=15,
                          restart=True, prev_calcs=None, input_check=0.01, verbose=True):
         '''
 
@@ -425,6 +427,10 @@ class ReactAims:
             fmax: float
             unc: float
             interpolation: str or list of Atoms objects
+            n: int or flot
+                Desired number of images including start and end point. If float the number of images is based on
+                displacement of atoms. Dense sampling aids convergence but does not increase complexity as significantly
+                as for classic NEB.
             restart: bool
             prev_calcs: list of Atoms objects
             input_check: float or None
@@ -456,10 +462,20 @@ class ReactAims:
             filename = initial.get_chemical_formula()
             self.filename = filename
 
+        # Check for previous calculations
         counter, subdirectory_name = self._restart_setup("TS", filename, restart=restart, verbose=verbose)
+
+        # Let the user restart from alternative file or Atoms object
+        if prev_calcs:
+            self.prev_calcs = prev_calcs
+            if verbose:
+                print("User provided a list of structures manually, training set substituted.")
+
+
         if os.path.exists(os.path.join(subdirectory_name[:-1] + str(counter-1), "AIDNEB.traj")):
             previously_converged_ts_search = os.path.join(subdirectory_name[:-1] + str(counter-1), "AIDNEB.traj")
-            print("TS search already converged at", previously_converged_ts_search)
+            if verbose:
+                print("TS search already converged at", previously_converged_ts_search)
 
             neb = read(previously_converged_ts_search+"@:")
             self.ts = sorted(neb, key=lambda k: k.get_potential_energy(), reverse=True)[0]
@@ -472,11 +488,11 @@ class ReactAims:
 
             if not is_converged(initial, input_check):
                 self.filename += "_initial"
-                initial = self.aims_optimise(initial, input_check, restart=False, verbose=False)[0]
+                initial = self.aims_optimise(initial, input_check, restart=False, verbose=verbose)[0]
                 self.initial = self.model_optimised
             if not is_converged(final, input_check):
                 self.filename = filename + "_final"
-                final = self.aims_optimise(final, input_check, restart=False, verbose=False)[0]
+                final = self.aims_optimise(final, input_check, restart=False, verbose=verbose)[0]
                 self.final = self.model_optimised
 
             # Set original name after input check is complete
@@ -484,18 +500,10 @@ class ReactAims:
 
         out = str(counter) + "_" + str(filename) + ".out"
 
-        # Let the user restart from alternative file or Atoms object
-        if prev_calcs:
-            self.prev_calcs = prev_calcs
-
         os.makedirs(subdirectory_name, exist_ok=True)
         os.chdir(subdirectory_name)
 
-        # Desired number of images including start and end point
-        # Dense sampling aids convergence but does not increase complexity as significantly as for classic NEB
-        n = 0.25
-
-        # TODO: calculating initial and final structure if possible within the GPAatom code
+        # TODO: calculating initial and final structure if possible within the GPAtom code
 
         '''sockets setup'''
         with _calc_generator(params, out_fn=out, dimensions=dimensions)[0] as calculator:
@@ -771,10 +779,13 @@ class ReactAims:
                 print("Previous calculation detected in", calc_type + filename + "_" + str(counter - 1))
             os.chdir(subdirectory_name_prev)
 
-            if os.path.exists("evaluated_structures.traj"):
-                self.prev_calcs = read("evaluated_structures.traj@:")
-            elif verbose:
-                print('The "evaluated_structures.traj" file not found, starting from scratch.')
+            if calc_type == "TS_":
+                if os.path.exists("evaluated_structures.traj"):
+                    self.prev_calcs = read("evaluated_structures.traj@:")
+                elif os.path.exists("AID_observations.traj"):
+                    self.prev_calcs = read("AID_observations.traj@:")
+                elif verbose:
+                    print('The "evluated_structures.traj" or "AID_observations" file not found, starting from scratch.')
 
             # check for number of restarted optimisations
             while str(counter - 1) + "_" + filename + "_" + str(opt_restarts) + ".traj" \
@@ -888,7 +899,6 @@ def _calc_generator(params,
     # set a unique .out output name
     fhi_calc.outfilename = out_fn
 
-    # TODO: fundamental settings to be provided as input by the user to make sure nothing essential gets hardcoded
     # FHI-aims settings set up
     fhi_calc.set(**params)
 
@@ -896,98 +906,3 @@ def _calc_generator(params,
         return sockets_calc, fhi_calc
     else:
         return fhi_calc
-
-
-"""
-    def search_ts_dyneb(self, initial, final, fmax, interpolation="idpp", restart=True, input_check=0.01, verbose=True):
-
-        '''
-        TODO: This requires parallelisation over images, otherwise with a shared calculator EVERY structure in the chain
-            is calculated again per iteration. Waste of resources! This might be a bug, since the calculations were
-            supposed to be dynamic. Need to investigate - maybe then the non-ML NEBS can be viable.
-        Args:
-            initial: 
-            final: 
-            fmax: 
-            interpolation: 
-            restart: 
-            input_check: 
-            verbose: 
-
-        Returns:
-
-        '''
-        from ase.dyneb import DyNEB
-        from ase.optimize import BFGS
-        '''Retrieve common properties'''
-        basis_set = self.basis_set
-        dimensions = self.dimensions
-        hpc = self.hpc
-        params = self.params
-
-        # Set the environment parameters
-        set_aims_command(hpc=hpc, basis_set=basis_set)
-
-        if not interpolation:
-            interpolation = "idpp"
-
-        # Read the geometry
-        if self.filename:
-            filename = self.filename
-        else:
-            filename = initial.get_chemical_formula()
-
-        # TODO: restart dedicated to dyneb
-        counter, subdirectory_name = self._restart_setup(self.initial, filename, restart=restart,
-                                                                   verbose=verbose)
-        out = str(counter) + "_" + str(filename) + ".out"
-
-        # ensure input is converged
-        if input_check:  # TODO naming scheme + check for these files or initial/final.traj
-
-            if not is_converged(initial, input_check):
-                initial = self.aims_optimise(initial, input_check, restart=False, verbose=False)[0]
-            if not is_converged(final, input_check):
-                final = self.aims_optimise(final, input_check, restart=False, verbose=False)[0]
-
-        if not os.path.exists(subdirectory_name):
-            os.mkdir(subdirectory_name)
-        os.chdir(subdirectory_name)
-
-        # Make a band consisting of n images:
-        n = 10 # TODO: do not hardcode
-        images = [initial]
-        images += [initial.copy() for i in range(n-1)]
-        images += [final]
-        neb = DyNEB(images,
-                    k=0.5,
-                    fmax=0.05,
-                    climb=True,
-                    parallel=False,
-                    remove_rotation_and_translation=False,
-                    world=None,
-                    dynamic_relaxation=True,
-                    scale_fmax=0.5,
-                    method='aseneb',
-                    allow_shared_calculator= True,
-                    )
-        # Interpolate linearly the positions of the three middle images:
-        neb.interpolate(method=interpolation, mic=True, apply_constraint=True)
-
-        # Create the sockets calculator - using a with statement means the object is closed at the end.
-        with _calc_generator(params, out_fn=out, dimensions=dimensions)[0] as calculator:
-            # Set calculators:
-            for image in images[1:n]:
-                image.calc = calculator
-
-            optimizer = BFGS(neb,
-                               trajectory=str(counter) + "_NEB_" + filename + ".traj",
-                               )
-            optimizer.run(fmax=0.05)
-
-        # Find maximum energy, i.e. transition state to return it
-        neb = read(str(counter) + "_NEB_" + filename + ".traj@-" +str(n) +":")
-        self.ts = sorted(neb, key=lambda k: k.get_potential_energy(), reverse=True)[0]
-        os.chdir("..")
-"""
-
