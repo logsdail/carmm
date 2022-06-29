@@ -12,6 +12,7 @@ def calculate_molecules(atoms, print_output=False):
     Returns:
     molecules: List of list of integers
         Indices of atoms involved in each molecule
+        can view individual molecules vis atoms[molecules[0]] ect
     '''
 
     from ase.neighborlist import natural_cutoffs, NeighborList

@@ -13,8 +13,8 @@ def test_molecules():
     molecules = calculate_molecules(slab)
 
     # View molecules
-    A_mol = atoms[molecules[0]]
-    B_mol = atoms[molecules[1]]
+    A_mol = slab[molecules[0]]
+    B_mol = slab[molecules[1]]
     #view(A_mol)
     #view(B_mol)
     #view(slab)
