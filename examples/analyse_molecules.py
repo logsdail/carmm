@@ -3,6 +3,7 @@ def test_molecules():
     Test function for number of molecules in model
 
     '''
+    from ase.visualize import view
     from carmm.analyse.molecules import calculate_molecules
     # Build model
     from data.model_gen import get_example_slab as slab
@@ -14,9 +15,9 @@ def test_molecules():
     # View molecules
     A_mol = atoms[molecules[0]]
     B_mol = atoms[molecules[1]]
-    view(A_mol)
-    view(B_mol)
-    view(slab)
+    #view(A_mol)
+    #view(B_mol)
+    #view(slab)
     # Verify results
     assert(len(molecules) == 2)
 
