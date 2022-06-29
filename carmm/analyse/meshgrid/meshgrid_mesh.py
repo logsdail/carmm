@@ -46,13 +46,17 @@ class Mesh:
         # Enforces Mesh and Atoms pbc match - if off, ignores mismatches.
         self.strict_mode = pbc_strict_mode
 
-    def read_cube_file(cube_name):
+    def read_cube_file(self, cube_name):
 
+        import numpy as np
         # Reads cube file and imports into a meshgrid object
 
         from ase.io.cube import read_cube
 
-        read_cube(cube_name)
+        cube_inp = read_cube(cube_name)
+
+        c_shape = np.shape(cube_inp['data'])
+        self.nx, self.ny, self.nz = c_shape[0], c_shape[1], c_shape[2]
 
 
 
