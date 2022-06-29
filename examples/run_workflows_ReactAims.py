@@ -1,3 +1,9 @@
+'''
+This example shows how to use the work flow functionality with CARMM to optimise
+reactants/products and find transition states in an automated manner.
+@Igor: Can you update with any further information?
+'''
+
 def test_run_workflows_ReactAims():
     from carmm.run.workflows.react import ReactAims
     from ase.build import molecule
@@ -27,7 +33,7 @@ def test_run_workflows_ReactAims():
     zero_point_energy = reactor.vibrate(atoms, indices =[atom.index for atom in atoms])
 
     assert is_converged(reactor.model_optimised, 0.01), \
-        "The structure saved in React_Aims is not converged"
+    '''The structure saved in React_Aims is not converged'''
     assert round(zero_point_energy, 3) == 0.275
 
     # Create a reaction pathway

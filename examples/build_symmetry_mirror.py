@@ -35,17 +35,26 @@ def test_build_symmetry_mirror():
         #view(model)
 
         ### ASSERTION ###
+        eps = 1e-8
         # Check if Oxygen moves as expected
         if surface_facet == "111":
-            eps = 1e-8
             assert((model[19].position
                 - [4.01974776, 2.0844678, 15.39968345] < [eps, eps, eps]).all())
-        # TODO: Add assertion test for other surface facets (100 and 110)
+        elif surface_facet == "100":
+            assert((model[19].position
+                - [3.50559559, 3.65087324, 15.07818683] < [eps, eps, eps]).all())
+        elif surface_facet == "110":
+            assert((model[19].position
+                - [5.33165608, 3.65087324, 14.4695] < [eps, eps, eps]).all())
+        else:
+            assert(false,'Terminal error, unexpected surface')
 
         ### Rotation example ###
-        model = rotate_fcc(model, center_index=index[0], surf=surface_facet)
+        # TODO: Needs a complete example and assertion - doesn't seem to do anything at first step
+        #print(surface_facet, model.positions[1])
+        #model = rotate_fcc(model, center_index=index[0], surf=surface_facet)
         #view(model)
-        # TODO: Add assertion test for rotation
+        #print(surface_facet, model.positions[1])
 
 #Run the example
 test_build_symmetry_mirror()
