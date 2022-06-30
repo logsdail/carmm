@@ -1,10 +1,9 @@
 # Author: Igor Kowalec
 import fnmatch
 import os
-import shutil
-
-from ase.calculators.lj import LennardJones as LJ
 import numpy as np
+
+from ase.calculators.emt import EMT
 from ase import Atoms
 from ase.io import read
 from ase.vibrations import Vibrations
@@ -143,7 +142,7 @@ class ReactAims:
                 if not self.dry_run:
                     self.initial.calc = calculator
                 else:
-                    self.initial.calc = LJ()
+                    self.initial.calc = EMT()
 
                 while not is_converged(self.initial, fmax):
                     if relax_unit_cell:
@@ -189,7 +188,7 @@ class ReactAims:
                 if not self.dry_run:
                     model_pp.calc = calculator
                 else:
-                    model_pp.calc = LJ()
+                    model_pp.calc = EMT()
                     
                 model_pp.get_potential_energy()
                 traj = Trajectory(self.filename + "_" + post_process + ".traj", "w")
@@ -267,7 +266,7 @@ class ReactAims:
             if not self.dry_run:
                 self.initial.calc = calculator
             else:
-                self.initial.calc = LJ()
+                self.initial.calc = EMT()
 
             self.initial.get_potential_energy()
 
@@ -346,10 +345,10 @@ class ReactAims:
 
             if not is_converged(initial, input_check):
                 self.filename += "_initial"
-                initial = self.aims_optimise(initial, input_check, restart=False, verbose=False)[0]
+                initial = self.aims_optimise(initial, input_check, restart=True, verbose=False)[0]
             if not is_converged(final, input_check):
                 self.filename = filename + "_final"
-                final = self.aims_optimise(final, input_check, restart=False, verbose=False)[0]
+                final = self.aims_optimise(final, input_check, restart=True, verbose=False)[0]
 
             # Set original name after input check is complete
             self.filename = filename
@@ -367,7 +366,7 @@ class ReactAims:
         # Create the sockets calculator - using a with statement means the object is closed at the end.
         with _calc_generator(params, out_fn=out, dimensions=dimensions)[0] as calculator:
             if self.dry_run:
-                calculator = LJ()
+                calculator = EMT()
             iterations = 0
             while not os.path.exists('ML-NEB.traj'):
                 if iterations > 0:
@@ -381,7 +380,7 @@ class ReactAims:
                                      n_images=n,
                                      #k=0.05,
                                      interpolation=interpolation,
-                                     neb_method="aseneb",
+                                     neb_method="improvedtangent",
                                      prev_calculations=self.prev_calcs,
                                      mic=True,
                                      restart=restart)
@@ -497,6 +496,9 @@ class ReactAims:
         '''sockets setup'''
         with _calc_generator(params, out_fn=out, dimensions=dimensions)[0] as calculator:
 
+            if self.dry_run:
+                calculator = EMT()
+
             # Setup the GPAtom object for AIDNEB
             aidneb = AIDNEB(start=initial,
                             end=final,
@@ -593,7 +595,7 @@ class ReactAims:
                     image.calc = _calc_generator(params, out_fn=str(i)+"_"+out, dimensions=dimensions)[0]
                     image.calc.launch_client.calc.directory = "./" + str(i) + "_" + out[:-4]
                 else:
-                    image.calc = LJ()
+                    image.calc = EMT()
                     image.calc.directory = "./" + str(i) + "_" + out[:-4]
 
                 images.append(image)
@@ -609,7 +611,7 @@ class ReactAims:
                 if not self.dry_run:
                     images[i].calc = _calc_generator(params, out_fn=str(i-1)+"_"+out, dimensions=dimensions)[0]
                 else:
-                    images[i].calc = LJ()
+                    images[i].calc = EMT()
                 images[i].calc.launch_client.calc.directory = "./"+str(i-1)+"_"+out[:-4]
         else:
             raise ValueError("Interpolation must be a list of Atoms objects, 'idpp' or 'linear'!")
@@ -620,7 +622,7 @@ class ReactAims:
             neb.interpolate(method=interpolation, mic=True, apply_constraint=True)
 
         qn = FIRE(neb, trajectory='neb.traj')
-        qn.run(fmax=fmax, steps=100)
+        qn.run(fmax=fmax)
 
         for image in images[1:-1]:
             if not self.dry_run:
@@ -707,7 +709,7 @@ class ReactAims:
                     if not self.dry_run:
                         atoms.calc = calculator
                     else:
-                        atoms.calc = LJ()
+                        atoms.calc = EMT()
 
                     vib = Vibrations(atoms, indices=indices, name=vib_dir)
                     vib.run()
