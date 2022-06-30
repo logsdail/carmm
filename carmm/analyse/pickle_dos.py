@@ -8,6 +8,7 @@ def read_dos_from_old_pickle(filename):
         Name of the pickle file we are reading
     '''
     import pickle
+    import sys
 
     ef = 0
     energy = []
@@ -16,8 +17,7 @@ def read_dos_from_old_pickle(filename):
     try:
         ef, energy, dos = pickle.load(open(filename))
     except:
-        print
-        "A problem occurred reading the dos from ", filename
+        print("A problem occurred reading the dos from ", filename)
         sys.exit(1)
 
     return ef, energy, dos
