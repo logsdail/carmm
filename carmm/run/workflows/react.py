@@ -54,7 +54,6 @@ class ReactAims:
                       fmax: float = 0.01,
                       post_process: str = None,
                       relax_unit_cell: bool = False,
-                      internal: bool = False,
                       restart: bool = True,
                       verbose: bool = True):
 
@@ -109,7 +108,7 @@ class ReactAims:
 
         filename = self.filename
 
-        counter, subdirectory_name = self._restart_setup("Opt", self.filename, internal, restart, verbose=verbose)
+        counter, subdirectory_name = self._restart_setup("Opt", self.filename, restart, verbose=verbose)
         out = str(counter) + "_" + str(filename) + ".out"
 
 
@@ -134,82 +133,39 @@ class ReactAims:
             # Restarts will prevent the calculation from getting stuck in deep local minimum when using metaGGA XC mBEEF
             opt_restarts = 0
 
-            if not internal:
-                # perform DFT calculations for each filename
-                with _calc_generator(params, 
-                                     out_fn=out, 
-                                     dimensions=dimensions, 
-                                     relax_unit_cell=relax_unit_cell)[0] as calculator:
-                    
-                    if not self.dry_run:
-                        self.initial.calc = calculator
-                    else:
-                        self.initial.calc = LJ()
-                    
-                    while not is_converged(self.initial, fmax):
-                        if relax_unit_cell:
-                            from ase.constraints import StrainFilter
-                            unit_cell_relaxer = StrainFilter(self.initial)
 
-                            
-                            opt = BFGS(unit_cell_relaxer,
-                                       trajectory=str(counter) + "_" + filename + "_" + str(opt_restarts) + ".traj",
-                                       alpha=70.0
-                                       )
-                        else:
-                            opt = BFGS(self.initial,
-                                       trajectory=str(counter) + "_" + filename + "_" + str(opt_restarts) + ".traj",
-                                       alpha=70.0
-                                       )
+            # perform DFT calculations for each filename
+            with _calc_generator(params,
+                                 out_fn=out,
+                                 dimensions=dimensions,
+                                 relax_unit_cell=relax_unit_cell)[0] as calculator:
 
-                        opt.run(fmax=fmax, steps=80)
-                        opt_restarts += 1
-
-                self.model_optimised = read(str(counter) + "_" + filename + "_" + str(opt_restarts-1) + ".traj")
-                os.chdir(parent_dir)
-
-            # setup for internal aims optimiser
-            else:
-                # perform DFT calculations for each filename
-                calculator = _calc_generator(params,
-                                     out_fn=out,
-                                     dimensions=dimensions,
-                                     relax_unit_cell=relax_unit_cell,
-                                     internal=internal,
-                                     fmax=fmax)
-                
                 if not self.dry_run:
                     self.initial.calc = calculator
                 else:
                     self.initial.calc = LJ()
 
-                if relax_unit_cell and verbose:
-                    # TODO: unit cell relaxation keyword that works with internal, i.e. relax_unit_cell in FHI-aims
-                    print("Can't use relax_unit_cell and internal optimisation atm")
+                while not is_converged(self.initial, fmax):
+                    if relax_unit_cell:
+                        from ase.constraints import StrainFilter
+                        unit_cell_relaxer = StrainFilter(self.initial)
 
-                # Just to  trigger energy + force calls
-                opt = BFGS(self.initial)
-                opt.run(fmax=fmax, steps=0)
 
-                # Save a trajectory from aims output
-                from ase.io import Trajectory
-                traj = Trajectory(str(counter) + "_" + self.filename + "_" + str(opt_restarts) + ".traj", 'w')
-                models = read(out + "@:")
+                        opt = BFGS(unit_cell_relaxer,
+                                   trajectory=str(counter) + "_" + filename + "_" + str(opt_restarts) + ".traj",
+                                   alpha=70.0
+                                   )
+                    else:
+                        opt = BFGS(self.initial,
+                                   trajectory=str(counter) + "_" + filename + "_" + str(opt_restarts) + ".traj",
+                                   alpha=70.0
+                                   )
 
-                # TODO: Alert the user of the problem
-                # Problem with this approach is inconsistency in energies from aims.out vs communicated over sockets to ASE
-                for i in models:
-                    traj.write(i)
+                    opt.run(fmax=fmax, steps=80)
+                    opt_restarts += 1
 
-                traj.close()
-                self.model_optimised = read(str(counter) + "_" + self.filename + "_" + str(opt_restarts) + ".traj")
-
-                # TODO: check if final geometry returned is not identical to initial
-                # I think only E+F returned, not changes to structure
-                # make sure model returned contains updated geometry
-                # model = read(str(counter) + "_" + filename + "_" + str(opt_restarts) + ".traj")
-
-                os.chdir(parent_dir)
+            self.model_optimised = read(str(counter) + "_" + filename + "_" + str(opt_restarts-1) + ".traj")
+            os.chdir(parent_dir)
 
 
         self.initial = i_geo
@@ -768,13 +724,12 @@ class ReactAims:
         return vib.get_zero_point_energy()
 
 
-    def _restart_setup(self, calc_type, filename, internal=False, restart=False, verbose=True):
+    def _restart_setup(self, calc_type, filename, restart=False, verbose=True):
         '''
 
         Args:
             calc_type:
             filename:
-            internal:
             restart:
             verbose:
 
@@ -819,21 +774,11 @@ class ReactAims:
                 opt_restarts += 1
 
             # read the last optimisation
-            if not internal:
-                if os.path.exists(str(counter - 1) + "_" + filename + "_" + str(opt_restarts - 1) + ".traj"):
-                    self.initial = read(str(counter - 1) + "_" + filename + "_" + str(opt_restarts - 1) + ".traj")
-                    if verbose:
-                        print("Restarting from", str(counter - 1) + "_" + filename + "_" + str(opt_restarts - 1) + ".traj")
-            else:
-                if os.path.exists(str(counter - 1) + "_" + filename + "_" + str(opt_restarts - 1) + ".traj"):
-                    self.initial = read(str(counter - 1) + "_" + filename + "_" + str(opt_restarts - 1) + ".traj")
-                    if verbose:
-                        print("Restarting from", str(counter - 1) + "_" + filename + "_" + str(opt_restarts - 1) + ".traj")
-                elif os.path.exists("geometry.in.next_step"):
-                    shutil.copy("geometry.in.next_step", "next_step.in")
-                    self.initial = read("next_step.in")
-                    if verbose:
-                        print("Restarting from geometry.in.next_step")
+
+            if os.path.exists(str(counter - 1) + "_" + filename + "_" + str(opt_restarts - 1) + ".traj"):
+                self.initial = read(str(counter - 1) + "_" + filename + "_" + str(opt_restarts - 1) + ".traj")
+                if verbose:
+                    print("Restarting from", str(counter - 1) + "_" + filename + "_" + str(opt_restarts - 1) + ".traj")
 
             os.chdir("..")
 
@@ -856,9 +801,7 @@ def _calc_generator(params,
             forces=True,
             dimensions=2,
             sockets=True,
-            relax_unit_cell=False,
-            internal=False,
-            fmax=None):
+            relax_unit_cell=False):
     '''
     Args:
         out_fn: str
@@ -872,12 +815,7 @@ def _calc_generator(params,
             calculator will result in overwritten .out file as rest of the functionality was written with sockets.
         relax_unit_cell: bool
             Request strain calculation for bulk geometries
-        internal: bool
-            Using internal FHI-aims optimizer (BFGS-based)
-        fmax: float
-            force convergence criterion, only in use with internal FHI-aims optimizer
-        # TODO: relax_unit_cell and internal should not be used together, Strain Filter is better than unit cell relaxation in FHI-aims
-        # TODO: gas does not work with internal due to write_aims producing frac_atoms
+
     Returns:
         sockets_calc, fhi_calc: sockets calculator and FHI-aims calculator for geometry optimisations
         or
@@ -885,7 +823,7 @@ def _calc_generator(params,
     '''
 
     # New method that gives a default calculator
-    if sockets and not internal:
+    if sockets:
         from carmm.run.aims_calculator import get_aims_and_sockets_calculator
         # On machines where ASE and FHI-aims are run separately (e.g. ASE on login node, FHI-aims on compute nodes)
         # we need to specifically state what the name of the login node is so the two packages can communicate
@@ -918,9 +856,6 @@ def _calc_generator(params,
 
         fhi_calc.set(compute_analytical_stress='True')
 
-    # use BFGS optimiser internally
-    if internal:
-        fhi_calc.set(relax_geometry="bfgs " + str(fmax))
 
     # set a unique .out output name
     fhi_calc.outfilename = out_fn
@@ -928,7 +863,4 @@ def _calc_generator(params,
     # FHI-aims settings set up
     fhi_calc.set(**params)
 
-    if sockets and not internal:
-        return sockets_calc, fhi_calc
-    else:
-        return fhi_calc
+    return sockets_calc, fhi_calc
