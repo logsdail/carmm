@@ -51,21 +51,6 @@ jobs:
         #
         # Example new implementation from: https://docs.github.com/en/free-pro-team@latest/actions/reference/workflow-commands-for-github-actions#environment-files
         echo "PYTHONPATH=/home/runner/work/carmm/carmm:$PYTHONPATH" >> $GITHUB_ENV
-
-    # Run linters for checking code style
-    - name: Run linters
-      steps:
-        - name: Check out Git repository
-          uses: actions/checkout@v2
-
-        - name: Install Python dependencies
-          run: pip install black flake8
-
-        - name: Run linters
-          uses: wearerequired/lint-action@v2
-          with:
-            black: true
-            flake8: true
     
     # Runs a set of commands using the runners shell
     # Updated to run on pytest so we might be able to export data
