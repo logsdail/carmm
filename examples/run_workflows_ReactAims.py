@@ -67,7 +67,7 @@ def test_run_workflows_ReactAims():
     add_adsorbate(initial, 'H', 1.7, position=initial[0].position[:2])
 
 
-    # Fix second and third layers:
+    '''Fix second and third layers:'''
     mask = [atom.tag > 0 for atom in initial]
     initial.set_constraint(FixAtoms(mask=mask))
 
