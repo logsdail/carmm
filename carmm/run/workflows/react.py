@@ -384,16 +384,19 @@ class ReactAims:
                                      prev_calculations=self.prev_calcs,
                                      mic=True,
                                      restart=restart)
+                if not self.dry_run:
+                    # Run the NEB optimisation. Adjust fmax to desired convergence criteria, usually 0.01 ev/A
+                    neb_catlearn.run(fmax=fmax,
+                                     unc_convergence=unc,
+                                     trajectory='ML-NEB.traj',
+                                     ml_steps=75,
+                                     sequential=False,
+                                     steps=40)
 
-                # Run the NEB optimisation. Adjust fmax to desired convergence criteria, usually 0.01 ev/A
-                neb_catlearn.run(fmax=fmax,
-                                 unc_convergence=unc,
-                                 trajectory='ML-NEB.traj',
-                                 ml_steps=75,
-                                 sequential=False,
-                                 steps=40)
-
-                iterations += 1
+                    iterations += 1
+                else:
+                    os.chdir(parent_dir)
+                    return None
 
         # Find maximum energy, i.e. transition state to return it
         neb = read("ML-NEB.traj@:")
@@ -513,9 +516,13 @@ class ReactAims:
                             mic=True)
 
             # Run the NEB optimisation. Adjust fmax to desired convergence criteria, usually 0.01 ev/A
-            aidneb.run(fmax=fmax,
-                       unc_convergence=unc,
-                       ml_steps=100)
+            if not self.dry_run:
+                aidneb.run(fmax=fmax,
+                           unc_convergence=unc,
+                           ml_steps=100)
+            else:
+                os.chdir(parent_dir)
+                return None
 
 
         # Find maximum energy, i.e. transition state to return it
@@ -527,7 +534,8 @@ class ReactAims:
 
 
 
-    def search_ts_taskfarm(self, initial, final, fmax, n, method="string", interpolation="idpp", input_check=0.01, verbose=True):
+    def search_ts_taskfarm(self, initial, final, fmax, n, method="string", interpolation="idpp", input_check=0.01,
+                           max_steps=100, verbose=True):
         '''
 
         Args:
@@ -622,7 +630,7 @@ class ReactAims:
             neb.interpolate(method=interpolation, mic=True, apply_constraint=True)
 
         qn = FIRE(neb, trajectory='neb.traj')
-        qn.run(fmax=fmax)
+        qn.run(fmax=fmax, steps=max_steps)
 
         for image in images[1:-1]:
             if not self.dry_run:
