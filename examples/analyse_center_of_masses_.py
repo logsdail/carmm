@@ -12,10 +12,8 @@ def test_distance_between_centers_of_mass():
     ### Traditional ASE functionality #####
     slab = slab(adsorbate=True)
     molecules = calculate_molecules(slab)
-    A = molecules[0]
-    B = molecules[1]
-    A_mol = slab[A]
-    B_mol = slab[B]
+    A_mol = slab[molecules[0]]
+    B_mol = slab[molecules[1]]
     distance_between_centers_of_mass(A_mol, B_mol)
     #print(distances_between_centers_of_mass(A_mol, B_mol))
     value = distance_between_centers_of_mass(A_mol, B_mol)
