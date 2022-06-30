@@ -4,11 +4,9 @@ on:
   # Trigger the workflow on push or pull request,
   # but only for Igor's branch
   push:
-    branches:
-      - ReactAims_documentation
+    branches: [ ReactAims_documentation ]
   pull_request:
-    branches:
-      - ReactAims_documentation
+    branches: [ ReactAims_documentation ]
 
 jobs:
   run-linters:
