@@ -99,7 +99,6 @@ def test_run_workflows_ReactAims():
     '''Return to parent directory'''
     os.chdir(parent_dir)
 
-import time
-st=time.time()
+
 test_run_workflows_ReactAims()
-print("----%.2f----"%(time.time()-st))
+
