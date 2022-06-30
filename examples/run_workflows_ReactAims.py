@@ -27,7 +27,8 @@ def test_run_workflows_ReactAims():
     model_optimised, model_postprocessed = reactor.aims_optimise(atoms, fmax=0.01, restart=True)
     zero_point_energy = reactor.vibrate(atoms, indices =[atom.index for atom in atoms])
 
-    assert is_converged(reactor.model_optimised, 0.01), "The structure saved in React_Aims is not converged"
+    assert is_converged(reactor.model_optimised, 0.01), \
+        "The structure saved in React_Aims is not converged"
     assert round(zero_point_energy, 3) == 0.275
 
     '''Create a reaction pathway'''
