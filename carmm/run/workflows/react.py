@@ -527,7 +527,8 @@ class ReactAims:
 
 
 
-    def search_ts_taskfarm(self, initial, final, fmax, n, method="string", interpolation="idpp", input_check=0.01, verbose=True):
+    def search_ts_taskfarm(self, initial, final, fmax, n, method="string", interpolation="idpp", input_check=0.01,
+                           max_steps=100, verbose=True):
         '''
 
         Args:
@@ -622,7 +623,7 @@ class ReactAims:
             neb.interpolate(method=interpolation, mic=True, apply_constraint=True)
 
         qn = FIRE(neb, trajectory='neb.traj')
-        qn.run(fmax=fmax)
+        qn.run(fmax=fmax, max_steps=max_steps)
 
         for image in images[1:-1]:
             if not self.dry_run:

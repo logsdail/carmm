@@ -33,8 +33,7 @@ jobs:
       run: |
         python -m pip install --upgrade ase
         python -m pip install --upgrade catlearn
-        # The below breaks the CI-test, must be resolved
-        # python -m pip install --upgrade ase-gpatom
+        python -m pip install --upgrade ase-gpatom
         python -m pip install --upgrade pytest
         python -m pip install --upgrade pytest-cov
     
