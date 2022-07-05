@@ -276,7 +276,6 @@ class ReactAims:
         '''Request Mulliken charge decomposition'''
         params["output"]= ["Mulliken_summary"]
 
-
         os.makedirs(subdirectory_name, exist_ok=True)
         os.chdir(subdirectory_name)
 
@@ -513,7 +512,7 @@ class ReactAims:
             if verbose:
                 print("User provided a list of structures manually, training set substituted.")
 
-
+        '''
         if os.path.exists(os.path.join(subdirectory_name[:-1] + str(counter-1), "AIDNEB.traj")):
             previously_converged_ts_search = os.path.join(subdirectory_name[:-1] + str(counter-1), "AIDNEB.traj")
             if verbose:
@@ -524,6 +523,7 @@ class ReactAims:
             os.chdir(parent_dir)
 
             return self.ts
+        '''
 
 
         elif input_check:
