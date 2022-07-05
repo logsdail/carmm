@@ -512,19 +512,6 @@ class ReactAims:
             if verbose:
                 print("User provided a list of structures manually, training set substituted.")
 
-        '''
-        if os.path.exists(os.path.join(subdirectory_name[:-1] + str(counter-1), "AIDNEB.traj")):
-            previously_converged_ts_search = os.path.join(subdirectory_name[:-1] + str(counter-1), "AIDNEB.traj")
-            if verbose:
-                print("TS search already converged at", previously_converged_ts_search)
-
-            neb = read(previously_converged_ts_search+"@:")
-            self.ts = sorted(neb, key=lambda k: k.get_potential_energy(), reverse=True)[0]
-            os.chdir(parent_dir)
-
-            return self.ts
-        '''
-
 
         elif input_check:
             if not is_converged(initial, input_check):
