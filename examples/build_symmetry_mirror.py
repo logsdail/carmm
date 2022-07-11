@@ -17,7 +17,7 @@ def test_build_symmetry_mirror():
     for surface_facet in ['100', '110']:
         # Toy model of CO2 on top of Au FCC(111)
         model = slab(adsorbate=True, surface=surface_facet)
-        view(model)
+        #view(model)
 
         # Retrieve index of the C atom
         index = [atom.index for atom in model if atom.symbol == "C"]
@@ -25,7 +25,7 @@ def test_build_symmetry_mirror():
         # Mirror model in the x plane with respect to C atom
         # C atom remains in place, the rest of unit cell is shifted accordingly
         model = mirror(model, center_index=index[0], plane='y', surf=surface_facet)
-        view(model)
+        #view(model)
 
         # Translate one row of atoms at a time in x and y
         # Move adsorbate to the middle of the unit cell
