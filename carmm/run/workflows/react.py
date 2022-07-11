@@ -276,7 +276,6 @@ class ReactAims:
         '''Request Mulliken charge decomposition'''
         params["output"]= ["Mulliken_summary"]
 
-
         os.makedirs(subdirectory_name, exist_ok=True)
         os.chdir(subdirectory_name)
 
@@ -512,18 +511,6 @@ class ReactAims:
             self.prev_calcs = prev_calcs
             if verbose:
                 print("User provided a list of structures manually, training set substituted.")
-
-
-        if os.path.exists(os.path.join(subdirectory_name[:-1] + str(counter-1), "AIDNEB.traj")):
-            previously_converged_ts_search = os.path.join(subdirectory_name[:-1] + str(counter-1), "AIDNEB.traj")
-            if verbose:
-                print("TS search already converged at", previously_converged_ts_search)
-
-            neb = read(previously_converged_ts_search+"@:")
-            self.ts = sorted(neb, key=lambda k: k.get_potential_energy(), reverse=True)[0]
-            os.chdir(parent_dir)
-
-            return self.ts
 
 
         elif input_check:
