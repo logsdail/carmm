@@ -1,13 +1,13 @@
 def set_aims_command(hpc='hawk', basis_set='light', defaults=2010, nodes_per_instance=None):
-    '''
+    """
     Choose supercomputer and basis_set to obtain FHI-aims run command.
-    Can be useful to e.g perform a calculation with a larger basis set
+    Can be useful to e.g. perform a calculation with a larger basis set
     after a geometry optimisation.
 
     Parameters:
     hpc: String
-        Name of the HPC facility where the jobs is being run
-        Options: 'hawk', 'isambard', 'archer', 'young'
+        Name of the HPC facility where the jobs are being run
+        Options: 'hawk', 'isambard', 'archer2', 'young'
     basis_set: String
         Name of basis set for FHI-aims
         Options: 'light', 'intermediate', 'tight', 'really_tight' etc.
@@ -16,7 +16,7 @@ def set_aims_command(hpc='hawk', basis_set='light', defaults=2010, nodes_per_ins
         that come with new FHI-aims release, which adhere to the year 2010
          or 2020 standard. Old 2010 value by default to avoid disruption
          for users.
-    '''
+    """
     import os
 
     preamble_types = {
@@ -27,7 +27,7 @@ def set_aims_command(hpc='hawk', basis_set='light', defaults=2010, nodes_per_ins
     }
 
     hpc = hpc.lower()
-    assert hpc in preamble_types, "Inappropriate HPC facility: " + hpc + "is not recognised"
+    assert hpc in preamble_types, "Inappropriate HPC facility: " + hpc + "is not recognised."
 
     fhi_aims_directories = {
         "hawk": "/apps/local/projects/scw1057/software/fhi-aims/",
@@ -44,6 +44,8 @@ def set_aims_command(hpc='hawk', basis_set='light', defaults=2010, nodes_per_ins
     fhi_aims_directory = fhi_aims_directories[hpc]
 
     if nodes_per_instance:
+        assert hpc in ["archer2", "hawk"], "Only ARCHER2 and Hawk supported for task-farming at the moment."
+
         task_farmed_commands = {
             "archer2": "--nodes=" + str(nodes_per_instance) + " --ntasks=" + str(int(128 * nodes_per_instance)) + " ",
             "hawk": "--nodes=" + str(nodes_per_instance) + " --ntasks=" + str(int(40 * nodes_per_instance)) + " ",
