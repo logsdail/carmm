@@ -114,7 +114,7 @@ class ReactAims:
         i_geo = atoms.copy()
         i_geo.calc = atoms.calc
 
-        """parent directory"""
+        """Parent directory"""
         parent_dir = os.getcwd()
 
         """Read the geometry"""
@@ -267,7 +267,7 @@ class ReactAims:
         set_aims_command(hpc=hpc, basis_set=basis_set, defaults=2020)
 
         """Request Mulliken charge decomposition"""
-        params["output"]= ["Mulliken_summary"]
+        params["output"] = ["Mulliken_summary"]
 
         os.makedirs(subdirectory_name, exist_ok=True)
         os.chdir(subdirectory_name)
@@ -294,7 +294,6 @@ class ReactAims:
         os.chdir(parent_dir)
 
         return self.initial
-
 
     def search_ts(self, initial, final,
                   fmax, unc, interpolation="idpp",
@@ -370,7 +369,6 @@ class ReactAims:
 
             return self.ts
 
-
         elif input_check:
             """Ensure input is converged"""
             if not is_converged(initial, input_check):
@@ -391,7 +389,6 @@ class ReactAims:
 
         os.makedirs(subdirectory_name, exist_ok=True)
         os.chdir(subdirectory_name)
-
 
         """Create the sockets calculator - using a with statement means the object is closed at the end."""
         with _calc_generator(params, out_fn=out, dimensions=dimensions)[0] as calculator:
@@ -433,7 +430,6 @@ class ReactAims:
         os.chdir(parent_dir)
 
         return self.ts
-
 
     def search_ts_aidneb(self, initial, final, fmax, unc, interpolation="idpp", n=15,
                          restart=True, prev_calcs=None, input_check=0.01, verbose=True):
@@ -505,7 +501,6 @@ class ReactAims:
             if verbose:
                 print("User provided a list of structures manually, training set substituted.")
 
-
         elif input_check:
             if not is_converged(initial, input_check):
                 self.filename += "_initial"
@@ -528,17 +523,17 @@ class ReactAims:
 
         # TODO: calculating initial and final structure if possible within the GPAtom code
 
-        """sockets setup"""
+        """Sockets setup"""
         with _calc_generator(params, out_fn=out, dimensions=dimensions)[0] as calculator:
 
             if self.dry_run:
                 calculator = EMT()
 
-            """Setup the GPAtom object for AIDNEB"""
+            """Setup the input for AIDNEB"""
             aidneb = AIDNEB(start=initial,
                             end=final,
                             interpolation=interpolation,
-                            # "idpp" can in some cases (e.g. H2) result in geometry coordinates returned as NaN, no error exit, but calculator stuck
+                            # "idpp" can in some cases (e.g. H2) result in geometry coordinates returned as NaN
                             calculator=calculator,
                             n_images=n+2,
                             max_train_data=50,
@@ -556,15 +551,12 @@ class ReactAims:
                 os.chdir(parent_dir)
                 return None
 
-
         """Find maximum energy, i.e. transition state to return it"""
         neb = read("AIDNEB.traj@:")
         self.ts = sorted(neb, key=lambda k: k.get_potential_energy(), reverse=True)[0]
         os.chdir(parent_dir)
 
         return self.ts
-
-
 
     def search_ts_taskfarm(self, initial, final, fmax, n, method="string", interpolation="idpp", input_check=0.01,
                            max_steps=100, verbose=True):
@@ -608,7 +600,6 @@ class ReactAims:
 
         """Set the environment parameters"""
         set_aims_command(hpc=hpc, basis_set=basis_set, defaults=2020, nodes_per_instance=self.nodes_per_instance)
-
 
         """Read the geometry"""
         if self.filename:
@@ -654,8 +645,10 @@ class ReactAims:
 
             images.append(final)
         elif isinstance(interpolation, list):
-            assert [isinstance(i, Atoms) for i in interpolation], "Interpolation must be a list of Atoms objects, 'idpp' or 'linear'!"
-            assert len(interpolation)-2 == n, "Number of middle images is fed interpolation must match specified n to ensure correct parallelisation"
+            assert [isinstance(i, Atoms) for i in interpolation], \
+                "Interpolation must be a list of Atoms objects, 'idpp' or 'linear'!"
+            assert len(interpolation)-2 == n, \
+                "Number of middle images is fed interpolation must match specified n to ensure correct parallelisation"
 
             images = interpolation
             for i in range(1, len(interpolation)-1):
@@ -667,7 +660,6 @@ class ReactAims:
                 images[i].calc.launch_client.calc.directory = "./"+str(i-1)+"_"+out[:-4]
         else:
             raise ValueError("Interpolation must be a list of Atoms objects, 'idpp' or 'linear'!")
-
 
         neb = NEB(images, k=0.05, method=method, climb=True, parallel=True, allow_shared_calculator=False)
         if interpolation in ["idpp", "linear"]:
@@ -685,7 +677,6 @@ class ReactAims:
         os.chdir(parent_dir)
 
         return self.ts
-
 
     def vibrate(self, atoms: Atoms, indices: list, read_only=False):
         """
@@ -720,7 +711,7 @@ class ReactAims:
             """develop a naming scheme based on chemical formula"""
             self.filename = atoms.get_chemical_formula()
 
-        vib_dir = parent_dir + "/VibData_" + self.filename +"/Vibs"
+        vib_dir = parent_dir + "/VibData_" + self.filename + "/Vibs"
         print(vib_dir)
 
         vib = Vibrations(atoms, indices=indices, name=vib_dir)
@@ -733,18 +724,18 @@ class ReactAims:
         if read_only:
             vib.read()
 
-
         else:
             """Calculate required vibration modes"""
-            required_cache = [os.path.join(vib_dir,"cache."+str(x)+y+".json") for x in indices for y in [
-                "x+" ,"x-", "y+", "y-", "y-", "z+", "z-"]]
+            required_cache = [os.path.join(vib_dir, "cache." + str(x) + y + ".json") for x in indices for y in [
+                "x+", "x-", "y+", "y-", "y-", "z+", "z-"]]
             check_required_modes_files = np.array([os.path.exists(file) for file in required_cache])
 
-            if np.all(check_required_modes_files == True):
+            if np.all(check_required_modes_files):
                 vib.read()
             else:
                 """Set the environment variables for geometry optimisation"""
-                set_aims_command(hpc=hpc, basis_set=basis_set, defaults=2020, nodes_per_instance=self.nodes_per_instance)
+                set_aims_command(hpc=hpc, basis_set=basis_set,
+                                 defaults=2020, nodes_per_instance=self.nodes_per_instance)
 
                 """Generate a unique folder for aims calculation"""
                 counter, subdirectory_name = self._restart_setup("Vib",
@@ -770,7 +761,6 @@ class ReactAims:
 
             vib.summary()
 
-
         """Generate a unique folder for aims calculation"""
         if not read_only:
             os.chdir(vib_dir)
@@ -778,7 +768,6 @@ class ReactAims:
         os.chdir(parent_dir)
 
         return vib.get_zero_point_energy()
-
 
     def _restart_setup(self, calc_type, filename, restart=False, verbose=True):
         """This is an internal function for generation of an FHi-aims working folders and ensuring that DFT outputs are
@@ -836,7 +825,7 @@ class ReactAims:
                         self.prev_calcs = read("AID_observations.traj@:")
                         restart_found = True
                     elif verbose:
-                        print('The "evaluated_structures.traj" or "AID_observations" file not found, starting from scratch.')
+                        print('Previous trajectory not found, starting from scratch.')
 
                 elif calc_type == "Opt_":
                     """Check for number of restarted optimisations"""
@@ -865,23 +854,22 @@ class ReactAims:
 
         return folder_counter, subdirectory_name
 
-
-
-    """
+    '''
     def serialize(self):
         """Save the instance to a file"""
         pass
 
     def recover(self):
         """Recover a saved instance form a file"""
-    """
+    '''
+
 
 # TODO: turn into method and include in the class
 def _calc_generator(params,
-            out_fn="aims.out",
-            forces=True,
-            dimensions=2,
-            relax_unit_cell=False):
+                    out_fn="aims.out",
+                    forces=True,
+                    dimensions=2,
+                    relax_unit_cell=False):
     """
     This is an internal function for generation of an FHi-aims sockets calculator ensuring that keywords
     required for supported calculation types are added.
