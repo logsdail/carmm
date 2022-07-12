@@ -20,6 +20,8 @@ def set_aims_command(hpc='hawk', basis_set='light', defaults=2010, nodes_per_ins
     import os
 
     hpc = hpc.lower()
+    executable = "bin/aims.$VERSION.scalapack.mpi.x"
+    species = "species_defaults/" + "defaults_" + str(defaults) + "/" + basis_set
 
     preamble = {
         "hawk": "time mpirun -np $SLURM_NTASKS ",
@@ -37,21 +39,17 @@ def set_aims_command(hpc='hawk', basis_set='light', defaults=2010, nodes_per_ins
         "young": "/home/mmm0170/Software/fhi-aims/",
     }
 
-    task_farmed_commands = {
+    """Set the relevant environment variables based on HPC"""
+    os.environ["AIMS_SPECIES_DIR"] = fhi_aims_directory[hpc] + species
+    if nodes_per_instance:
+        task_farmed_commands = {
             "archer2": "--nodes=" + str(nodes_per_instance) + " --ntasks=" + str(int(128 * nodes_per_instance)) + " ",
             "hawk": "--nodes=" + str(nodes_per_instance) + " --ntasks=" + str(int(40 * nodes_per_instance)) + " ",
             # TODO: add and test isambard and young task-farmed commands
             "isambard": "",
             "young": "",
-    }
+        }
 
-    executable = "bin/aims.$VERSION.scalapack.mpi.x"
-
-    species = "species_defaults/" + "defaults_" + str(defaults) + "/" + basis_set
-
-    """Set the relevant environment variables based on HPC"""
-    os.environ["AIMS_SPECIES_DIR"] = fhi_aims_directory[hpc] + species
-    if nodes_per_instance:
         assert hpc in ["archer2", "hawk"], "Only ARCHER2 and Hawk supported for task-farming at the moment."
         os.environ["ASE_AIMS_COMMAND"] = preamble[hpc] + task_farmed_commands[hpc] + fhi_aims_directory[hpc] + executable
     else:
