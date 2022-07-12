@@ -133,7 +133,7 @@ class ReactAims:
         if is_converged(atoms, fmax):
             if verbose:
                 print("The forces are below", fmax, "eV/A. No calculation required.")
-            self.model_optimised = self.atoms
+            self.model_optimised = self.initial
         elif is_converged(self.initial, fmax):
             if verbose:
                 print("The forces are below", fmax, "eV/A. No calculation required.")
@@ -814,8 +814,6 @@ class ReactAims:
 
         '''Ensure separate folders are in place for each calculation input'''
         counter = 0
-        '''Count .traj outputs'''
-        opt_restarts = 0
 
         '''Check/make folders'''
         while calc_type + filename + "_" + str(counter) \
@@ -825,35 +823,50 @@ class ReactAims:
         subdirectory_name = calc_type + filename + "_" + str(counter)
         subdirectory_name_prev = calc_type + filename + "_" + str(counter - 1)
 
+        folder_counter = counter
+
         '''Check previous calculations for convergence'''
         if restart and counter > 0:
-            if verbose:
-                print("Previous calculation detected in", calc_type + filename + "_" + str(counter - 1))
-            os.chdir(subdirectory_name_prev)
-
-            if calc_type == "TS_":
-                if os.path.exists("evaluated_structures.traj"):
-                    self.prev_calcs = read("evaluated_structures.traj@:")
-                elif os.path.exists("AID_observations.traj"):
-                    self.prev_calcs = read("AID_observations.traj@:")
-                elif verbose:
-                    print('The "evaluated_structures.traj" or "AID_observations" file not found, starting from scratch.')
-
-            '''Check for number of restarted optimisations'''
-            while str(counter - 1) + "_" + filename + "_" + str(opt_restarts) + ".traj" \
-                    in [fn for fn in os.listdir() if fnmatch.fnmatch(fn, "*.traj")]:
-                opt_restarts += 1
-
-            '''Read the last optimisation'''
-
-            if os.path.exists(str(counter - 1) + "_" + filename + "_" + str(opt_restarts - 1) + ".traj"):
-                self.initial = read(str(counter - 1) + "_" + filename + "_" + str(opt_restarts - 1) + ".traj")
+            restart_found = 0
+            while not restart_found and counter > 0:
                 if verbose:
-                    print("Restarting from", str(counter - 1) + "_" + filename + "_" + str(opt_restarts - 1) + ".traj")
+                    print("Previous calculation detected in", calc_type + filename + "_" + str(counter - 1))
+                os.chdir(subdirectory_name_prev)
 
-            os.chdir("..")
+                if calc_type == "TS_":
+                    if os.path.exists("evaluated_structures.traj"):
+                        self.prev_calcs = read("evaluated_structures.traj@:")
+                    elif os.path.exists("AID_observations.traj"):
+                        self.prev_calcs = read("AID_observations.traj@:")
+                    elif verbose:
+                        print('The "evaluated_structures.traj" or "AID_observations" file not found, starting from scratch.')
 
-        return counter, subdirectory_name
+
+                '''Check for number of restarted optimisations'''
+                opt_restarts = 0
+                while os.path.exists(str(counter - 1) + "_" + filename + "_" + str(opt_restarts) + ".traj"):
+                    opt_restarts += 1
+
+                '''Read the last optimisation'''
+                traj_name = str(counter - 1) + "_" + filename + "_" + str(opt_restarts - 1) + ".traj"
+                while os.path.exists(traj_name):
+                    if os.path.getsize(traj_name):
+                        self.initial = read(traj_name)
+                        restart_found = True
+                        if verbose:
+                            print("Restarting from", traj_name)
+                        break
+
+                    elif verbose:
+                        print(traj_name + ".traj file empty!")
+
+                    traj_name = str(counter - 1) + "_" + filename + "_" + str(opt_restarts - 1) + ".traj"
+                    opt_restarts -= 1
+
+                counter -= 1
+                os.chdir("..")
+
+        return folder_counter, subdirectory_name
 
 
 
