@@ -53,6 +53,6 @@ def set_aims_command(hpc='hawk', basis_set='light', defaults=2010, nodes_per_ins
     os.environ["AIMS_SPECIES_DIR"] = fhi_aims_directory[hpc] + species
     if nodes_per_instance:
         assert hpc in ["archer2", "hawk"], "Only ARCHER2 and Hawk supported for task-farming at the moment."
-        os.environ["ASE_AIMS_COMMAND"] = preamble[hpc] + task_farmed_commands[hpc] + fhi_aims_directory + executable
+        os.environ["ASE_AIMS_COMMAND"] = preamble[hpc] + task_farmed_commands[hpc] + fhi_aims_directory[hpc] + executable
     else:
-        os.environ["ASE_AIMS_COMMAND"] = preamble[hpc] + fhi_aims_directory + executable
+        os.environ["ASE_AIMS_COMMAND"] = preamble[hpc] + fhi_aims_directory[hpc] + executable
