@@ -36,7 +36,7 @@ class ReactAims:
                 Name of the supercomputing facility for setting up environment variables, e.g. "hawk", "archer2"
                 See Also run/aims_path
             filename: str
-                Naming convention to follow for subsequent calculations and restarts. 
+                Naming convention to follow for subsequent calculations and restarts.
                 If None the chemical formula is used.
             nodes_per_instance: int
                 For parallelised calculation use the above to control the number of nodes for launching each instance
@@ -62,7 +62,7 @@ class ReactAims:
         self.final = None                   # input final image for NEB
         self.ts = None                      # TS geometry from NEB
         self.prev_calcs = None              # for NEB restart
-        
+
         """ Set the test flag"""
         self.dry_run = dry_run
 
@@ -912,7 +912,7 @@ def _calc_generator(params,
 
         fhi_calc.set(compute_analytical_stress='True')
 
-    """set a unique .out output name"""
+    """Set a unique .out output name"""
     fhi_calc.outfilename = out_fn
 
     """FHI-aims settings set up"""
