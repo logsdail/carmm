@@ -827,7 +827,7 @@ class ReactAims:
 
         '''Check previous calculations for convergence'''
         if restart and counter > 0:
-            restart_found = 0
+            restart_found = False
             while not restart_found and counter > 0:
                 if verbose:
                     print("Previous calculation detected in", calc_type + filename + "_" + str(counter - 1))
@@ -836,32 +836,34 @@ class ReactAims:
                 if calc_type == "TS_":
                     if os.path.exists("evaluated_structures.traj"):
                         self.prev_calcs = read("evaluated_structures.traj@:")
+                        restart_found = True
                     elif os.path.exists("AID_observations.traj"):
                         self.prev_calcs = read("AID_observations.traj@:")
+                        restart_found = True
                     elif verbose:
                         print('The "evaluated_structures.traj" or "AID_observations" file not found, starting from scratch.')
 
+                elif calc_type == "Opt_":
+                    '''Check for number of restarted optimisations'''
+                    opt_restarts = 0
+                    while os.path.exists(str(counter - 1) + "_" + filename + "_" + str(opt_restarts) + ".traj"):
+                        opt_restarts += 1
 
-                '''Check for number of restarted optimisations'''
-                opt_restarts = 0
-                while os.path.exists(str(counter - 1) + "_" + filename + "_" + str(opt_restarts) + ".traj"):
-                    opt_restarts += 1
-
-                '''Read the last optimisation'''
-                traj_name = str(counter - 1) + "_" + filename + "_" + str(opt_restarts - 1) + ".traj"
-                while os.path.exists(traj_name):
-                    if os.path.getsize(traj_name):
-                        self.initial = read(traj_name)
-                        restart_found = True
-                        if verbose:
-                            print("Restarting from", traj_name)
-                        break
-
-                    elif verbose:
-                        print(traj_name + ".traj file empty!")
-
+                    '''Read the last optimisation'''
                     traj_name = str(counter - 1) + "_" + filename + "_" + str(opt_restarts - 1) + ".traj"
-                    opt_restarts -= 1
+                    while os.path.exists(traj_name):
+                        if os.path.getsize(traj_name):
+                            self.initial = read(traj_name)
+                            restart_found = True
+                            if verbose:
+                                print("Restarting from", traj_name)
+                            break
+
+                        elif verbose:
+                            print(traj_name + ".traj file empty!")
+
+                        traj_name = str(counter - 1) + "_" + filename + "_" + str(opt_restarts - 1) + ".traj"
+                        opt_restarts -= 1
 
                 counter -= 1
                 os.chdir("..")
