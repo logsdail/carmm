@@ -7,7 +7,7 @@ def set_aims_command(hpc='hawk', basis_set='light', defaults=2010, nodes_per_ins
     Parameters:
     hpc: String
         Name of the HPC facility where the jobs is being run
-        Options: 'hawk', 'isambard', 'archer', 'young' 
+        Options: 'hawk', 'isambard', 'archer', 'young'
     basis_set: String
         Name of basis set for FHI-aims
         Options: 'light', 'intermediate', 'tight', 'really_tight' etc.
@@ -18,7 +18,6 @@ def set_aims_command(hpc='hawk', basis_set='light', defaults=2010, nodes_per_ins
          for users.
     '''
     import os
-
 
     preamble_types = {
         "hawk": "time mpirun -np $SLURM_NTASKS ",
@@ -38,7 +37,7 @@ def set_aims_command(hpc='hawk', basis_set='light', defaults=2010, nodes_per_ins
     }
 
     executable = "bin/aims.$VERSION.scalapack.mpi.x"
-    
+
     species = "species_defaults/" + "defaults_" + str(defaults) + "/" + basis_set
 
     preamble = preamble_types[hpc]
@@ -49,12 +48,11 @@ def set_aims_command(hpc='hawk', basis_set='light', defaults=2010, nodes_per_ins
             "archer2": "--nodes=" + str(nodes_per_instance) + " --ntasks=" + str(int(128 * nodes_per_instance)) + " ",
             "hawk": "--nodes=" + str(nodes_per_instance) + " --ntasks=" + str(int(40 * nodes_per_instance)) + " ",
             # TODO: add and test isambard and young task-farmed commands
-            "isambard":"",
-            "young":"",
+            "isambard": "",
+            "young": "",
         }
 
         preamble += task_farmed_commands[hpc]
 
-    os.environ["ASE_AIMS_COMMAND"]= preamble + fhi_aims_directory + executable
+    os.environ["ASE_AIMS_COMMAND"] = preamble + fhi_aims_directory + executable
     os.environ["AIMS_SPECIES_DIR"] = fhi_aims_directory + species
-
