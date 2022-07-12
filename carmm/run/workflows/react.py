@@ -16,8 +16,8 @@ from carmm.run.aims_path import set_aims_command
 
 
 class ReactAims:
-    '''Class used to streamline the process of geometry optimisation, input and output generation for
-        ASE/FHI-aims setup.'''
+    """Class used to streamline the process of geometry optimisation, input and output generation for
+        ASE/FHI-aims setup."""
 
     def __init__(self,
                  params: dict,
@@ -26,7 +26,7 @@ class ReactAims:
                  filename: str = None,
                  nodes_per_instance: int = None,
                  dry_run: bool = False):
-        '''
+        """
         Args:
             params: dict
                 Dictionary containing keywords and parameters for running the FHI-aims calculator
@@ -36,7 +36,8 @@ class ReactAims:
                 Name of the supercomputing facility for setting up environment variables, e.g. "hawk", "archer2"
                 See Also run/aims_path
             filename: str
-                Naming convention to follow for subsequent calculations and restarts. If None the chemical formula is used
+                Naming convention to follow for subsequent calculations and restarts.
+                If None the chemical formula is used.
             nodes_per_instance: int
                 For parallelised calculation use the above to control the number of nodes for launching each instance
                 of FHI-aims.
@@ -44,9 +45,9 @@ class ReactAims:
                 A dry run flag for CI-test
 
         Returns ReactAims object
-        '''
+        """
 
-        '''Define basic parameters'''
+        """Define basic parameters"""
         self.data = {}
         self.params = params
         self.hpc = hpc
@@ -54,17 +55,16 @@ class ReactAims:
         self.filename = filename
         self.nodes_per_instance = nodes_per_instance
 
-        '''Define additional parameters'''
-        self.initial = None # input for optimisation or input for NEB initial image
-        self.model_optimised = None # optimised geometry with calculator attached
-        self.model_post_processed = None # post processed geometry with new calculator attached
-        self.final = None # input final image for NEB
-        self.ts = None # TS geometry from NEB
-        self.prev_calcs = None # for NEB restart
-        
-        ''' Set the test flag'''
-        self.dry_run = dry_run
+        """Define additional parameters"""
+        self.initial = None                 # input for optimisation or input for NEB initial image
+        self.model_optimised = None         # optimised geometry with calculator attached
+        self.model_post_processed = None    # post processed geometry with new calculator attached
+        self.final = None                   # input final image for NEB
+        self.ts = None                      # TS geometry from NEB
+        self.prev_calcs = None              # for NEB restart
 
+        """ Set the test flag"""
+        self.dry_run = dry_run
 
     def aims_optimise(self,
                       atoms: Atoms,
@@ -74,7 +74,7 @@ class ReactAims:
                       restart: bool = True,
                       verbose: bool = True):
 
-        '''
+        """
         The function needs information about structure geometry (model), name of hpc system
         to configure FHI-aims environment variables (hpc). Separate directory is created with a naming convention
         based on chemical formula and number of restarts, n (opt_formula_n), ensuring that no outputs are overwritten
@@ -99,13 +99,13 @@ class ReactAims:
 
         Returns a list containing the model with data calculated using
         light and tight settings: [model_light, model_tight]
-        '''
+        """
         from ase.io import read
         from ase.io.trajectory import Trajectory
         from carmm.analyse.forces import is_converged
         from ase.optimize import BFGS
 
-        '''Setup initial parameters'''
+        """Setup initial parameters"""
         params = self.params
         hpc = self.hpc
         basis_set = self.basis_set
@@ -114,12 +114,10 @@ class ReactAims:
         i_geo = atoms.copy()
         i_geo.calc = atoms.calc
 
-
-
-        '''parent directory'''
+        """Parent directory"""
         parent_dir = os.getcwd()
 
-        '''Read the geometry'''
+        """Read the geometry"""
         if not self.filename:
             self.filename = self.initial.get_chemical_formula()
 
@@ -128,8 +126,7 @@ class ReactAims:
         counter, subdirectory_name = self._restart_setup("Opt", self.filename, restart, verbose=verbose)
         out = str(counter) + "_" + str(filename) + ".out"
 
-
-        '''Perform calculation only if required'''
+        """Perform calculation only if required"""
         if is_converged(atoms, fmax):
             if verbose:
                 print("The forces are below", fmax, "eV/A. No calculation required.")
@@ -143,14 +140,13 @@ class ReactAims:
             os.makedirs(subdirectory_name, exist_ok=True)
             os.chdir(subdirectory_name)
 
-
-            '''Set the environment variables for geometry optimisation'''
+            """Set the environment variables for geometry optimisation"""
             set_aims_command(hpc=hpc, basis_set=basis_set, defaults=2020, nodes_per_instance=self.nodes_per_instance)
 
-            '''Occasional optimizer restarts will prevent the calculation from getting stuck in deep local minimum'''
+            """Occasional optimizer restarts will prevent the calculation from getting stuck in deep local minimum"""
             opt_restarts = 0
 
-            '''Perform DFT calculations for each filename'''
+            """Perform DFT calculations for each filename"""
             with _calc_generator(params,
                                  out_fn=out,
                                  dimensions=dimensions,
@@ -165,7 +161,6 @@ class ReactAims:
                     if relax_unit_cell:
                         from ase.constraints import StrainFilter
                         unit_cell_relaxer = StrainFilter(self.initial)
-
 
                         opt = BFGS(unit_cell_relaxer,
                                    trajectory=str(counter) + "_" + filename + "_" + str(opt_restarts) + ".traj",
@@ -183,7 +178,6 @@ class ReactAims:
             self.model_optimised = read(str(counter) + "_" + filename + "_" + str(opt_restarts-1) + ".traj")
             os.chdir(parent_dir)
 
-
         self.initial = i_geo
 
         if post_process:
@@ -192,16 +186,16 @@ class ReactAims:
 
             model_pp = self.model_optimised.copy()
 
-            '''Set environment variables for a larger basis set - converged electronic structure'''
+            """Set environment variables for a larger basis set - converged electronic structure"""
             subdirectory_name_tight = subdirectory_name + "_" + post_process
             os.makedirs(subdirectory_name_tight, exist_ok=True)
             os.chdir(subdirectory_name_tight)
 
             set_aims_command(hpc=hpc, basis_set=post_process, defaults=2020, nodes_per_instance=self.nodes_per_instance)
 
-            '''Recalculate the structure using a larger basis set in a separate folder'''
+            """Recalculate the structure using a larger basis set in a separate folder"""
             with _calc_generator(params, out_fn=str(self.filename) + "_" + post_process + ".out",
-                         forces=False, dimensions=dimensions)[0] as calculator:
+                                 forces=False, dimensions=dimensions)[0] as calculator:
                 if not self.dry_run:
                     model_pp.calc = calculator
                 else:
@@ -212,18 +206,17 @@ class ReactAims:
                 traj.write(model_pp)
                 traj.close()
 
-            '''Go back to the parent directory to finish the loop'''
+            """Go back to the parent directory to finish the loop"""
             os.chdir(parent_dir)
 
-            '''update the instance with a post_processed model'''
+            """update the instance with a post_processed model"""
             self.model_post_processed = model_pp
 
         return self.model_optimised, self.model_post_processed
 
-
     def get_mulliken_charges(self, initial: Atoms, verbose=True):
 
-        '''
+        """
         This function is used to retrieve atomic charges using Mulliken charge
         decomposition as implemented in FHI-aims. A new trajectory file containing
         the charges
@@ -236,22 +229,22 @@ class ReactAims:
 
         Returns:
             Atoms object with charges appended
-        '''
+        """
 
         from ase.io.trajectory import Trajectory
         from carmm.analyse.mulliken import extract_mulliken_charge
 
-        '''Setup initial parameters'''
+        """Setup initial parameters"""
         params = self.params
         hpc = self.hpc
         basis_set = self.basis_set
         self.initial = initial
         dimensions = sum(self.initial.pbc)
 
-        '''Parent directory'''
+        """Parent directory"""
         parent_dir = os.getcwd()
 
-        '''Read the geometry'''
+        """Read the geometry"""
         if not self.filename:
             self.filename = self.initial.get_chemical_formula()
 
@@ -260,7 +253,7 @@ class ReactAims:
 
         counter, subdirectory_name = self._restart_setup("Charges", self.filename)
 
-        '''Check for previously completed calculation'''
+        """Check for previously completed calculation"""
         if os.path.exists(os.path.join(subdirectory_name[:-1]+str(counter-1), filename+"_charges.traj")):
             file_location = os.path.join(subdirectory_name[:-1]+str(counter-1), filename+"_charges.traj")
             self.initial = read(file_location)
@@ -270,11 +263,11 @@ class ReactAims:
 
         out = str(counter) + "_" + str(filename) + ".out"
 
-        '''Set the environment variables for geometry optimisation'''
+        """Set the environment variables for geometry optimisation"""
         set_aims_command(hpc=hpc, basis_set=basis_set, defaults=2020)
 
-        '''Request Mulliken charge decomposition'''
-        params["output"]= ["Mulliken_summary"]
+        """Request Mulliken charge decomposition"""
+        params["output"] = ["Mulliken_summary"]
 
         os.makedirs(subdirectory_name, exist_ok=True)
         os.chdir(subdirectory_name)
@@ -302,12 +295,11 @@ class ReactAims:
 
         return self.initial
 
-
     def search_ts(self, initial, final,
                   fmax, unc, interpolation="idpp",
                   n=0.25, restart=True, prev_calcs=None,
                   input_check=0.01, verbose=True):
-        '''
+        """
         This function allows calculation of the transition state using the CatLearn software package in an
         ASE/sockets/FHI-aims setup. The resulting converged band will be located in the MLNEB.traj file.
 
@@ -334,7 +326,7 @@ class ReactAims:
                 Use previous calculations contained in folders if True, start from scratch if False
             prev_calcs: list of Atoms objects
                 Manually provide the training set
-           input_check: float or None
+            input_check: float or None
                 If float the calculators of the input structures will be checked if the structures are below
                 the requested fmax and an optimisation will be performed if not.
             verbose: bool
@@ -342,24 +334,24 @@ class ReactAims:
 
         Returns: Atoms object
             Transition state geometry structure
-        '''
+        """
 
         from catlearn.optimize.mlneb import MLNEB
 
-        '''Retrieve common properties'''
+        """Retrieve common properties"""
         basis_set = self.basis_set
         hpc = self.hpc
         dimensions = sum(initial.pbc)
         params = self.params
         parent_dir = os.getcwd()
 
-        '''Set the environment parameters'''
+        """Set the environment parameters"""
         set_aims_command(hpc=hpc, basis_set=basis_set, defaults=2020, nodes_per_instance=self.nodes_per_instance)
 
         if not interpolation:
             interpolation = "idpp"
 
-        '''Read the geometry'''
+        """Read the geometry"""
         if self.filename:
             filename = self.filename
         else:
@@ -377,9 +369,8 @@ class ReactAims:
 
             return self.ts
 
-
         elif input_check:
-            '''Ensure input is converged'''
+            """Ensure input is converged"""
             if not is_converged(initial, input_check):
                 self.filename += "_initial"
                 initial = self.aims_optimise(initial, input_check, restart=True, verbose=False)[0]
@@ -387,20 +378,19 @@ class ReactAims:
                 self.filename = filename + "_final"
                 final = self.aims_optimise(final, input_check, restart=True, verbose=False)[0]
 
-            '''Set original name after input check is complete'''
+            """Set original name after input check is complete"""
             self.filename = filename
 
         out = str(counter) + "_" + str(filename) + ".out"
 
-        '''Let the user restart from alternative file or Atoms object'''
+        """Let the user restart from alternative file or Atoms object"""
         if prev_calcs:
             self.prev_calcs = prev_calcs
 
         os.makedirs(subdirectory_name, exist_ok=True)
         os.chdir(subdirectory_name)
 
-
-        '''Create the sockets calculator - using a with statement means the object is closed at the end.'''
+        """Create the sockets calculator - using a with statement means the object is closed at the end."""
         with _calc_generator(params, out_fn=out, dimensions=dimensions)[0] as calculator:
             if self.dry_run:
                 calculator = EMT()
@@ -410,7 +400,7 @@ class ReactAims:
                     self.prev_calcs = read("last_predicted_path.traj@:")
                     interpolation = self.prev_calcs
 
-                '''Setup the Catlearn object for MLNEB'''
+                """Setup the Catlearn object for MLNEB"""
                 neb_catlearn = MLNEB(start=initial,
                                      end=final,
                                      ase_calc=calculator,
@@ -421,7 +411,7 @@ class ReactAims:
                                      mic=True,
                                      restart=restart)
                 if not self.dry_run:
-                    '''Run the NEB optimisation. Adjust fmax to desired convergence criteria, usually 0.05 eV/A'''
+                    """Run the NEB optimisation. Adjust fmax to desired convergence criteria, usually 0.05 eV/A"""
                     neb_catlearn.run(fmax=fmax,
                                      unc_convergence=unc,
                                      trajectory='ML-NEB.traj',
@@ -434,17 +424,16 @@ class ReactAims:
                     os.chdir(parent_dir)
                     return None
 
-        '''Find maximum energy, i.e. transition state to return it'''
+        """Find maximum energy, i.e. transition state to return it"""
         neb = read("ML-NEB.traj@:")
         self.ts = sorted(neb, key=lambda k: k.get_potential_energy(), reverse=True)[0]
         os.chdir(parent_dir)
 
         return self.ts
 
-
     def search_ts_aidneb(self, initial, final, fmax, unc, interpolation="idpp", n=15,
                          restart=True, prev_calcs=None, input_check=0.01, verbose=True):
-        '''
+        """
         This function allows calculation of the transition state using the GPAtom software package in an
         ASE/sockets/FHI-aims setup. The resulting converged band will be located in the AIDNEB.traj file.
 
@@ -471,7 +460,7 @@ class ReactAims:
                 Use previous calculations contained in folders if True, start from scratch if False
             prev_calcs: list of Atoms objects
                 Manually provide the training set
-           input_check: float or None
+            input_check: float or None
                 If float the calculators of the input structures will be checked if the structures are below
                 the requested fmax and an optimisation will be performed if not.
             verbose: bool
@@ -480,52 +469,51 @@ class ReactAims:
         Returns: Atoms object
             Transition state geometry structure
 
-        '''
+        """
         from gpatom.aidneb import AIDNEB
 
-        '''Retrieve common properties'''
+        """Retrieve common properties"""
         basis_set = self.basis_set
         hpc = self.hpc
         dimensions = sum(initial.pbc)
         params = self.params
         parent_dir = os.getcwd()
 
-        '''Set the environment parameters'''
+        """Set the environment parameters"""
         set_aims_command(hpc=hpc, basis_set=basis_set, defaults=2020, nodes_per_instance=self.nodes_per_instance)
 
         if not interpolation:
             interpolation = "idpp"
 
-        '''Read the geometry'''
+        """Read the geometry"""
         if self.filename:
             filename = self.filename
         else:
             filename = initial.get_chemical_formula()
             self.filename = filename
 
-        '''Check for previous calculations'''
+        """Check for previous calculations"""
         counter, subdirectory_name = self._restart_setup("TS", filename, restart=restart, verbose=verbose)
 
-        '''Let the user restart from alternative file or Atoms object'''
+        """Let the user restart from alternative file or Atoms object"""
         if prev_calcs:
             self.prev_calcs = prev_calcs
             if verbose:
                 print("User provided a list of structures manually, training set substituted.")
-
 
         elif input_check:
             if not is_converged(initial, input_check):
                 self.filename += "_initial"
                 initial = self.aims_optimise(initial, input_check, restart=False, verbose=verbose)[0]
                 self.initial = self.model_optimised
-                '''Set original name after input check is complete'''
+                """Set original name after input check is complete"""
                 self.filename = filename
 
             if not is_converged(final, input_check):
                 self.filename = filename + "_final"
                 final = self.aims_optimise(final, input_check, restart=False, verbose=verbose)[0]
                 self.final = self.model_optimised
-                '''Set original name after input check is complete'''
+                """Set original name after input check is complete"""
                 self.filename = filename
 
         out = str(counter) + "_" + str(filename) + ".out"
@@ -535,17 +523,17 @@ class ReactAims:
 
         # TODO: calculating initial and final structure if possible within the GPAtom code
 
-        '''sockets setup'''
+        """Sockets setup"""
         with _calc_generator(params, out_fn=out, dimensions=dimensions)[0] as calculator:
 
             if self.dry_run:
                 calculator = EMT()
 
-            '''Setup the GPAtom object for AIDNEB'''
+            """Setup the input for AIDNEB"""
             aidneb = AIDNEB(start=initial,
                             end=final,
                             interpolation=interpolation,
-                            # "idpp" can in some cases (e.g. H2) result in geometry coordinates returned as NaN, no error exit, but calculator stuck
+                            # "idpp" can in some cases (e.g. H2) result in geometry coordinates returned as NaN
                             calculator=calculator,
                             n_images=n+2,
                             max_train_data=50,
@@ -554,7 +542,7 @@ class ReactAims:
                             neb_method='improvedtangent',
                             mic=True)
 
-            '''Run the NEB optimisation. Adjust fmax to desired convergence criteria, usually 0.01 ev/A'''
+            """Run the NEB optimisation. Adjust fmax to desired convergence criteria, usually 0.01 ev/A"""
             if not self.dry_run:
                 aidneb.run(fmax=fmax,
                            unc_convergence=unc,
@@ -563,19 +551,16 @@ class ReactAims:
                 os.chdir(parent_dir)
                 return None
 
-
-        '''Find maximum energy, i.e. transition state to return it'''
+        """Find maximum energy, i.e. transition state to return it"""
         neb = read("AIDNEB.traj@:")
         self.ts = sorted(neb, key=lambda k: k.get_potential_energy(), reverse=True)[0]
         os.chdir(parent_dir)
 
         return self.ts
 
-
-
     def search_ts_taskfarm(self, initial, final, fmax, n, method="string", interpolation="idpp", input_check=0.01,
                            max_steps=100, verbose=True):
-        '''
+        """
 
         Args:
             initial: Atoms object
@@ -586,6 +571,8 @@ class ReactAims:
                 Convergence criterion of forces in eV/A
             n: int
                 number of middle images, the following is recommended: n * npi = total_no_CPUs
+            method: str
+                NEB method for the CI-NEB as implemented in ASE, 'string' by default
             interpolation: str or []
                 The "idpp" or "linear" interpolation types are supported in ASE. alternatively user can provide a custom
                 interpolation as a list of Atoms objects.
@@ -600,22 +587,21 @@ class ReactAims:
         Returns: Atoms object
             Transition state geometry structure
 
-        '''
+        """
         from ase.neb import NEB
         from ase.optimize import FIRE
 
-        '''Retrieve common properties'''
+        """Retrieve common properties"""
         basis_set = self.basis_set
         hpc = self.hpc
         dimensions = sum(initial.pbc)
         params = self.params
         parent_dir = os.getcwd()
 
-        '''Set the environment parameters'''
+        """Set the environment parameters"""
         set_aims_command(hpc=hpc, basis_set=basis_set, defaults=2020, nodes_per_instance=self.nodes_per_instance)
 
-
-        '''Read the geometry'''
+        """Read the geometry"""
         if self.filename:
             filename = self.filename
         else:
@@ -623,7 +609,7 @@ class ReactAims:
 
         counter, subdirectory_name = self._restart_setup("TS", filename, restart=False, verbose=verbose)
 
-        '''Ensure input is converged'''
+        """Ensure input is converged"""
         if input_check:
             npi = self.nodes_per_instance
             self.nodes_per_instance = None
@@ -635,7 +621,7 @@ class ReactAims:
                 self.filename = filename + "_final"
                 final = self.aims_optimise(final, input_check, restart=False, verbose=False)[0]
 
-            '''Set original name after input check is complete'''
+            """Set original name after input check is complete"""
             self.nodes_per_instance = npi
             self.filename = filename
 
@@ -659,8 +645,10 @@ class ReactAims:
 
             images.append(final)
         elif isinstance(interpolation, list):
-            assert [isinstance(i, Atoms) for i in interpolation], "Interpolation must be a list of Atoms objects, 'idpp' or 'linear'!"
-            assert len(interpolation)-2 == n, "Number of middle images is fed interpolation must match specified n to ensure correct parallelisation"
+            assert [isinstance(i, Atoms) for i in interpolation], \
+                "Interpolation must be a list of Atoms objects, 'idpp' or 'linear'!"
+            assert len(interpolation)-2 == n, \
+                "Number of middle images is fed interpolation must match specified n to ensure correct parallelisation"
 
             images = interpolation
             for i in range(1, len(interpolation)-1):
@@ -673,7 +661,6 @@ class ReactAims:
         else:
             raise ValueError("Interpolation must be a list of Atoms objects, 'idpp' or 'linear'!")
 
-
         neb = NEB(images, k=0.05, method=method, climb=True, parallel=True, allow_shared_calculator=False)
         if interpolation in ["idpp", "linear"]:
             neb.interpolate(method=interpolation, mic=True, apply_constraint=True)
@@ -685,15 +672,14 @@ class ReactAims:
             if not self.dry_run:
                 image.calc.close()
 
-        '''Find maximum energy, i.e. transition state to return it'''
+        """Find maximum energy, i.e. transition state to return it"""
         self.ts = sorted(images, key=lambda k: k.get_potential_energy(), reverse=True)[0]
         os.chdir(parent_dir)
 
         return self.ts
 
-
     def vibrate(self, atoms: Atoms, indices: list, read_only=False):
-        '''
+        """
 
         This method uses ase.vibrations module, see more for info.
         User provides the FHI-aims parameters, the Atoms object and list
@@ -712,9 +698,9 @@ class ReactAims:
 
         Returns:
             Zero-Point Energy: float
-        '''
+        """
 
-        '''Retrieve common properties'''
+        """Retrieve common properties"""
         basis_set = self.basis_set
         hpc = self.hpc
         params = self.params
@@ -722,36 +708,36 @@ class ReactAims:
         dimensions = sum(atoms.pbc)
 
         if not self.filename:
-            '''develop a naming scheme based on chemical formula'''
+            """develop a naming scheme based on chemical formula"""
             self.filename = atoms.get_chemical_formula()
 
-        vib_dir = parent_dir + "/VibData_" + self.filename +"/Vibs"
+        vib_dir = parent_dir + "/VibData_" + self.filename + "/Vibs"
         print(vib_dir)
 
         vib = Vibrations(atoms, indices=indices, name=vib_dir)
 
-        '''If a calculation was terminated prematurely (e.g. time limit) empty .json files remain and the calculation
-        of the corresponding stretch modes would be skipped on restart. The line below prevents this'''
+        """If a calculation was terminated prematurely (e.g. time limit) empty .json files remain and the calculation
+        of the corresponding stretch modes would be skipped on restart. The line below prevents this"""
         vib.clean(empty_files=True)
 
-        '''Extract vibration data from existing files'''
+        """Extract vibration data from existing files"""
         if read_only:
             vib.read()
 
-
         else:
-            '''Calculate required vibration modes'''
-            required_cache = [os.path.join(vib_dir,"cache."+str(x)+y+".json") for x in indices for y in [
-                "x+" ,"x-", "y+", "y-", "y-", "z+", "z-"]]
+            """Calculate required vibration modes"""
+            required_cache = [os.path.join(vib_dir, "cache." + str(x) + y + ".json") for x in indices for y in [
+                "x+", "x-", "y+", "y-", "y-", "z+", "z-"]]
             check_required_modes_files = np.array([os.path.exists(file) for file in required_cache])
 
-            if np.all(check_required_modes_files == True):
+            if np.all(check_required_modes_files):
                 vib.read()
             else:
-                '''Set the environment variables for geometry optimisation'''
-                set_aims_command(hpc=hpc, basis_set=basis_set, defaults=2020, nodes_per_instance=self.nodes_per_instance)
+                """Set the environment variables for geometry optimisation"""
+                set_aims_command(hpc=hpc, basis_set=basis_set,
+                                 defaults=2020, nodes_per_instance=self.nodes_per_instance)
 
-                '''Generate a unique folder for aims calculation'''
+                """Generate a unique folder for aims calculation"""
                 counter, subdirectory_name = self._restart_setup("Vib",
                                                                  filename=self.filename,
                                                                  restart=False,
@@ -760,10 +746,10 @@ class ReactAims:
                 os.makedirs(subdirectory_name, exist_ok=True)
                 os.chdir(subdirectory_name)
 
-                '''Name the aims output file'''
+                """Name the aims output file"""
                 out = str(counter) + "_" + str(self.filename) + ".out"
 
-                '''Calculate vibrations and write the in a separate directory'''
+                """Calculate vibrations and write the in a separate directory"""
                 with _calc_generator(params, out_fn=out, dimensions=dimensions)[0] as calculator:
                     if not self.dry_run:
                         atoms.calc = calculator
@@ -775,8 +761,7 @@ class ReactAims:
 
             vib.summary()
 
-
-        '''Generate a unique folder for aims calculation'''
+        """Generate a unique folder for aims calculation"""
         if not read_only:
             os.chdir(vib_dir)
             vib.write_mode()
@@ -784,9 +769,8 @@ class ReactAims:
 
         return vib.get_zero_point_energy()
 
-
     def _restart_setup(self, calc_type, filename, restart=False, verbose=True):
-        '''This is an internal function for generation of an FHi-aims working folders and ensuring that DFT outputs are
+        """This is an internal function for generation of an FHi-aims working folders and ensuring that DFT outputs are
         not overwritten.
 
         Args:
@@ -807,15 +791,15 @@ class ReactAims:
                 Name of the current update calculation run
 
 
-        '''
+        """
         _supported_calc_types = ["Opt", "Vib", "TS", "Charges"]
         assert calc_type in _supported_calc_types
         calc_type += "_"
 
-        '''Ensure separate folders are in place for each calculation input'''
+        """Ensure separate folders are in place for each calculation input"""
         counter = 0
 
-        '''Check/make folders'''
+        """Check/make folders"""
         while calc_type + filename + "_" + str(counter) \
                 in [fn for fn in os.listdir() if fnmatch.fnmatch(fn, calc_type + "*")]:
             counter += 1
@@ -825,7 +809,7 @@ class ReactAims:
 
         folder_counter = counter
 
-        '''Check previous calculations for convergence'''
+        """Check previous calculations for convergence"""
         if restart and counter > 0:
             restart_found = False
             while not restart_found and counter > 0:
@@ -841,15 +825,15 @@ class ReactAims:
                         self.prev_calcs = read("AID_observations.traj@:")
                         restart_found = True
                     elif verbose:
-                        print('The "evaluated_structures.traj" or "AID_observations" file not found, starting from scratch.')
+                        print('Previous trajectory not found, starting from scratch.')
 
                 elif calc_type == "Opt_":
-                    '''Check for number of restarted optimisations'''
+                    """Check for number of restarted optimisations"""
                     opt_restarts = 0
                     while os.path.exists(str(counter - 1) + "_" + filename + "_" + str(opt_restarts) + ".traj"):
                         opt_restarts += 1
 
-                    '''Read the last optimisation'''
+                    """Read the last optimisation"""
                     traj_name = str(counter - 1) + "_" + filename + "_" + str(opt_restarts - 1) + ".traj"
                     while os.path.exists(traj_name):
                         if os.path.getsize(traj_name):
@@ -870,25 +854,23 @@ class ReactAims:
 
         return folder_counter, subdirectory_name
 
-
-
-    """
+    '''
     def serialize(self):
-        '''Save the instance to a file'''
+        """Save the instance to a file"""
         pass
 
     def recover(self):
-        '''Recover a saved instance form a file'''
-    """
+        """Recover a saved instance form a file"""
+    '''
+
 
 # TODO: turn into method and include in the class
 def _calc_generator(params,
-            out_fn="aims.out",
-            forces=True,
-            dimensions=2,
-            sockets=True,
-            relax_unit_cell=False):
-    '''
+                    out_fn="aims.out",
+                    forces=True,
+                    dimensions=2,
+                    relax_unit_cell=False):
+    """
     This is an internal function for generation of an FHi-aims sockets calculator ensuring that keywords
     required for supported calculation types are added.
 
@@ -899,48 +881,41 @@ def _calc_generator(params,
             Flag indicating if force calculation needed
         dimensions: int
             Determines whether we have a "gas"-phase (0) or "periodic" structure (2 or 3)
-        sockets: bool
-            Flag whether sockets calculator is requested (True by default, way more efficient!). Also lack of sockets
-            calculator will result in overwritten .out file as rest of the functionality was written with sockets.
         relax_unit_cell: bool
             Request strain calculation for bulk geometries
 
     Returns:
         sockets_calc, fhi_calc: sockets calculator and FHI-aims calculator for geometry optimisations
-    '''
+    """
 
-    '''New method that gives a default calculator'''
-    if sockets:
-        from carmm.run.aims_calculator import get_aims_and_sockets_calculator
-        '''On machines where ASE and FHI-aims are run separately (e.g. ASE on login node, FHI-aims on compute nodes)
-        we need to specifically state what the name of the login node is so the two packages can communicate'''
-        sockets_calc, fhi_calc = get_aims_and_sockets_calculator(dimensions=dimensions,
-                                                                 verbose=True,
-                                                                 codata_warning=False
-                                                                 )
-    else:
-        from carmm.run.aims_calculator import get_aims_calculator
-        fhi_calc = get_aims_calculator(dimensions=dimensions)
+    """New method that gives a default calculator"""
 
-    '''Remove previous xc argument to ensure libxc warning override is first'''
+    from carmm.run.aims_calculator import get_aims_and_sockets_calculator
+    """On machines where ASE and FHI-aims are run separately (e.g. ASE on login node, FHI-aims on compute nodes)
+    we need to specifically state what the name of the login node is so the two packages can communicate"""
+    sockets_calc, fhi_calc = get_aims_and_sockets_calculator(dimensions=dimensions,
+                                                             verbose=True,
+                                                             codata_warning=False
+                                                             )
+
+    """Remove previous xc argument to ensure libxc warning override is first"""
     fhi_calc.parameters.pop("xc")
     fhi_calc.set(override_warning_libxc='True')
 
-    '''Forces required for optimisation'''
+    """Forces required for optimisation"""
     if not forces:
         fhi_calc.parameters.pop("compute_forces")
 
-    '''Add analytical stress keyword for unit cell relaxation'''
+    """Add analytical stress keyword for unit cell relaxation"""
     if relax_unit_cell:
         assert dimensions == 3, "Strain Filter calculation requested, but the system is not periodic in all directions."
 
         fhi_calc.set(compute_analytical_stress='True')
 
-
-    '''set a unique .out output name'''
+    """Set a unique .out output name"""
     fhi_calc.outfilename = out_fn
 
-    '''FHI-aims settings set up'''
+    """FHI-aims settings set up"""
     fhi_calc.set(**params)
 
     return sockets_calc, fhi_calc
