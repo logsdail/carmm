@@ -20,34 +20,40 @@ def set_aims_command(hpc='hawk', basis_set='light', defaults=2010, nodes_per_ins
     import os
 
 
+    preamble_types = {
+        "hawk": "time mpirun -np $SLURM_NTASKS ",
+        "isambard": "time aprun -n $NPROCS ",
+        "archer2": "srun --cpu-bind=cores --distribution=block:block --hint=nomultithread ",
+        "young": "gerun "
+    }
 
-    mpirun = "time mpirun -np $SLURM_NTASKS "
-    aprun = "time aprun -n $NPROCS "
-    gerun = "gerun "
-    srun = "srun --cpu-bind=cores --distribution=block:block --hint=nomultithread "
-    if nodes_per_instance:
-        srun += "--nodes=" + str(nodes_per_instance)+" --ntasks=" + str(int(128*nodes_per_instance))+" "
+    hpc = hpc.lower()
+    assert hpc in preamble_types, "Inappropriate HPC facility: " + hpc + "is not recognised"
+
+    fhi_aims_directories = {
+        "hawk": "/apps/local/projects/scw1057/software/fhi-aims/",
+        "isambard": "/home/ca-alogsdail/fhi-aims-gnu/",
+        "archer2": "/work/e05/e05-files-log/shared/software/fhi-aims/",
+        "young": "/home/mmm0170/Software/fhi-aims/",
+    }
 
     executable = "bin/aims.$VERSION.scalapack.mpi.x"
     
     species = "species_defaults/" + "defaults_" + str(defaults) + "/" + basis_set
 
-    if hpc.lower() == 'hawk':
-        fhi_aims_directory="/apps/local/projects/scw1057/software/fhi-aims/"
-        preamble = mpirun
-    elif hpc.lower() == 'isambard':
-        fhi_aims_directory="/home/ca-alogsdail/fhi-aims-gnu/"
-        preamble = aprun
-    #elif hpc.lower() == 'archer': # Retired Jul 2021
-    elif hpc.lower() == 'archer2':
-        fhi_aims_directory="/work/e05/e05-files-log/shared/software/fhi-aims/"
-        preamble = srun
-    #elif hpc.lower() == 'thomas': # Retired Oct 2020
-    elif hpc.lower() == 'young':
-        fhi_aims_directory="/home/mmm0170/Software/fhi-aims/"
-        preamble = gerun
-    else:
-        raise Exception("Inappropriate HPC facility: " + hpc + "is not recognised")
+    preamble = preamble_types[hpc]
+    fhi_aims_directory = fhi_aims_directories[hpc]
+
+    if nodes_per_instance:
+        task_farmed_commands = {
+            "archer2": "--nodes=" + str(nodes_per_instance) + " --ntasks=" + str(int(128 * nodes_per_instance)) + " ",
+            "hawk": "--nodes=" + str(nodes_per_instance) + " --ntasks=" + str(int(40 * nodes_per_instance)) + " ",
+            # TODO: add and test isambard and young task-farmed commands
+            "isambard":"",
+            "young":"",
+        }
+
+        preamble += task_farmed_commands[hpc]
 
     os.environ["ASE_AIMS_COMMAND"]= preamble + fhi_aims_directory + executable
     os.environ["AIMS_SPECIES_DIR"] = fhi_aims_directory + species
