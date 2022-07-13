@@ -10,6 +10,7 @@ class Mesh:
         import numpy as np
         from ase.geometry import Cell, cellpar_to_cell
 
+
         if np.shape(cell_dims)==(6,):
             cellpar = cellpar_to_cell(cell_dims)
             self.Cell = Cell(cellpar)
@@ -48,8 +49,12 @@ class Mesh:
 
     def read_cube_file(self, cube_name):
 
-        import numpy as np
         # Reads cube file and imports into a meshgrid object
+        #
+        # If cube file is structured Nx, Ny, Nz, and meshgrid xx, yy, zz.
+        # To place data onto grid,
+        #
+        import numpy as np
 
         from ase.io.cube import read_cube
 
@@ -58,6 +63,7 @@ class Mesh:
         c_shape = np.shape(cube_inp['data'])
         self.nx, self.ny, self.nz = c_shape[0], c_shape[1], c_shape[2]
 
+        self.data = cube_inp.data
+        atoms = cube_inp.atoms
 
-
-
+        return atoms
