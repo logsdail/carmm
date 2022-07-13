@@ -5,7 +5,7 @@ name: ci-tests
 # events but only for the master branch
 on:
   push:
-    branches: [ master, ReactAims_documentation ]
+    branches: [ master, ReactAims_documentation, harry_branch, cube_file_read, jack_molecules, ob ]
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
