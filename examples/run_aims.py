@@ -4,7 +4,7 @@
 This modules tests aims calculator on different machines - Hawk, Isambard and archer.
 The dimensions from 0 to 3 test the different aims setting as described in
 carmm.run.get_aims_calculator
-TODO: rework the assertion to actually test the aims_path output
+TODO: rework the assertion to actually test the aims_path output - include expected string values
 '''
 
 def test_run_aims():
