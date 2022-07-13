@@ -10,8 +10,17 @@ TODO: rework the assertion to actually test the aims_path output - include expec
 def test_run_aims():
     from carmm.run.aims_path import set_aims_command
 
+    expected_paths = {
+        'hawk': 'time mpirun -np $SLURM_NTASKS /apps/local/projects/scw1057/software/fhi-aims/bin/aims.$VERSION.scalapack.mpi.x',
+        'isambard': 'time aprun -n $NPROCS /home/ca-alogsdail/fhi-aims-gnu/bin/aims.$VERSION.scalapack.mpi.x',
+        'archer2': 'srun --cpu-bind=cores --distribution=block:block --hint=nomultithread /work/e05/e05-files-log/shared/software/fhi-aims/bin/aims.$VERSION.scalapack.mpi.x',
+        'young': 'gerun /home/mmm0170/Software/fhi-aims/bin/aims.$VERSION.scalapack.mpi.x',
+    }
+
+    import os
     for hpc in ['hawk', 'isambard', 'archer2', 'young']:
         set_aims_command(hpc)
+        assert os.environ['ASE_AIMS_COMMAND'] == expected_paths[hpc]
 
     import ase # Necessary to check the code version, as socket functionality has changed
     ase_major_version = int(ase.__version__.split(".")[0])
