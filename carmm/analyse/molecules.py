@@ -41,10 +41,10 @@ def calculate_formula(atoms, mult=1):
 
     Parameters:
     atoms: Atoms object
-        Input structure from which to calculate molecular information
+        Input structure from which to calculate molecular information.
 
     Returns:
-    molecule_formula: List of strings
+    molecule_formula: List of strings.
 
     TO DO:
     Molecules such as CO2 are returned as C1O2. Preferable to make consistent with
