@@ -64,6 +64,7 @@ class Mesh:
         self.nx, self.ny, self.nz = c_shape[0], c_shape[1], c_shape[2]
 
         self.data = cube_inp['data']
+        print(self.data)
 #        atoms = cube_inp['atoms']
 
 #        return atoms
