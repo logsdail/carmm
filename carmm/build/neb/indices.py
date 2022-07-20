@@ -23,12 +23,14 @@ def switch_indices(model, A, B):
 
     # Retrieve calculator information
     # TODO: Move this after the creation of the atoms object, so we reduce if statements.
+    # I'm not sure we need any of this here _unless_ we need to copy across the forces?
     if model.get_calculator() is not None:
         # If it exists, forces array needs to be adjusted.
         prev_calc = model.get_calculator()
-        prev_calc_results = prev_calc.results
-        if "forces" in prev_calc_results:
-            f = prev_calc_results["forces"]
+        # Removed redundant variable
+        #prev_calc_results = prev_calc.results
+        if "forces" in prev_calc.results:
+            f = prev_calc.results["forces"]
         else:
             f = []
     else:
