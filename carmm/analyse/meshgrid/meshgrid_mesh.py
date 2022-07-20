@@ -55,10 +55,10 @@ class Mesh:
         # To place data onto grid,
         #
         import numpy as np
-
         from ase.io.cube import read_cube
 
-        cube_inp = read_cube(cube_name)
+        cube_file = open(cube_name)
+        cube_inp = read_cube(cube_file)
 
         c_shape = np.shape(cube_inp['data'])
         self.nx, self.ny, self.nz = c_shape[0], c_shape[1], c_shape[2]
