@@ -253,3 +253,80 @@ def print_bond_table_header():
     print('{:<6.5s}{:<6.5s}{:>4.10s}{:^13.10s}{:>4.10s}'.format(
         "Bond", "Count", "Average", "Minimum", "Maximum"))
     print("-" * 40)
+
+def analyse_chelation(atoms, metal, ligand_atom, mult=1):
+    '''
+    Returns information on the ligands surrounding a metal atom and their chelation type. Currently only works with one metal atom.
+    TODO: rework so script can account for multiple separate atoms.
+
+    Parameters:
+    atoms: Atoms object
+        Input structure from which to calculate molecular information
+    Mult: float value
+        Multiplier for the bond cutoffs. Set to 1 as default but can be adjusted depending on application
+    metal: String
+        Metal atom to characterise the coordination environment around
+    ligand_atom: String
+        Element symbol of the atom coordinating with the metal atom
+        TODO: expand this functionality as a list of element symbols.
+    '''
+
+    ## Import modules
+    from carmm.analyse.bonds import analyse_bonds, analyse_all_bonds
+    from ase.neighborlist import NeighborList, get_connectivity_matrix, natural_cutoffs
+    from scipy import sparse
+    import collections
+    from collections import OrderedDict
+
+    ## identifies atoms coordinated to the metal cation
+    ligand_coord = analyse_bonds(atoms, metal, ligand_atom, verbose=False)
+
+    ## Defines cutoffs, connectivity matrix for first image.
+    cutOff = natural_cutoffs(atoms, mult=mult)
+    neighborList = NeighborList(cutOff, skin=0, self_interaction=True, bothways=True)
+    neighborList.update(atoms)
+    # defines matrix and removes entries from the metal, so the complex is not considered as one molecule.
+    matrix = neighborList.get_connectivity_matrix(sparse=False)
+    metal_idx = [i for i in range(len(atoms)) if atoms.get_chemical_symbols()[i] == metal] # gets index corresponding to metal atom
+    for i in range(len(matrix[0])):
+        matrix[metal_idx[0]][i] = 0
+        matrix[i][metal_idx[0]] = 0
+    n_components, component_list = sparse.csgraph.connected_components(matrix)
+
+    ## gets atoms indexes coordinating to the metal (coord_inx) and the lengths of these bonds (coord_len) as lists
+    coord_idx = [ligand_coord[1][0][i][1] for i in range(len(ligand_coord[1][0]))]
+    coord_len = ligand_coord[2][0]
+
+    ## gets the molecule numbers corresponding to the atom indices
+    molidx = {}
+    molIdxs = {}
+    for idx in coord_idx:
+        molidx[str(idx)] = component_list[idx]
+
+    ## counters the molecules coordinating to the metal atom so we get a dictionary containing the molecules and their chelation type
+    counter = collections.Counter([*molidx.values()])
+    # converts dictionary into separate lists containing the molecules and ligand chelation types
+    molecules = [*counter.keys()]
+    chelation_type = [*counter.values()]
+
+    ## for the molecules coordinating to the metal atom, determines their chemical formula.
+    molecule_formulas = []
+    for idx in molecules:
+        index = molecules.index(idx)
+        # for said molecule number, obtains all atom indices in said molecule as a list.
+        molIdxs[str(idx)] = [i for i in range(len(component_list)) if component_list[i] == molecules[index]]
+        # converts the atom indices list to their respective chemical symbols.
+        idx_symbols = [atoms.get_chemical_symbols()[i] for i in [*molIdxs.values()][index]]
+        # counts the chemical symbols present and returns the molecular formula in Hill notation.
+        symbolcount = collections.Counter(idx_symbols)
+        ordered = OrderedDict(sorted(symbolcount.items())) # orders keys in c dictionary so they are in alphabetical order
+
+        chemical_formula = ''
+        for k, v in ordered.items():
+            entry = str(k) + str(v)
+            chemical_formula += entry
+        molecule_formulas.append(chemical_formula)
+
+    # old_counter = [[*molidx.values()].count(i) for i in [*molidx.values()]]
+    bond_info = {'molecules': molecules, 'formula': molecule_formulas, 'chelation': chelation_type}
+    return bond_info
