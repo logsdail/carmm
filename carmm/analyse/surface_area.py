@@ -7,7 +7,7 @@ def surface_area(atom):
     atom: Atoms object
     testing
     '''
-    from ase import read
+    
     import math
 
     atom_cell = atom.get_cell_lengths_and_angles()
