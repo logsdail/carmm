@@ -5,7 +5,11 @@ name: ci-tests
 # events but only for the master branch
 on:
   push:
+    # Only running on master in case there are direct merges
     branches: [ master ]
+    #branches: [ master, ReactAims_documentation, harry_branch, cube_file_read, jack_molecules, ob ]
+  pull_request:
+    # Run on all pull requests when updated.
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
@@ -33,6 +37,7 @@ jobs:
       run: |
         python -m pip install --upgrade ase
         python -m pip install --upgrade catlearn
+        python -m pip install --upgrade ase-gpatom
         python -m pip install --upgrade pytest
         python -m pip install --upgrade pytest-cov
     
@@ -50,7 +55,16 @@ jobs:
         #
         # Example new implementation from: https://docs.github.com/en/free-pro-team@latest/actions/reference/workflow-commands-for-github-actions#environment-files
         echo "PYTHONPATH=/home/runner/work/carmm/carmm:$PYTHONPATH" >> $GITHUB_ENV
-    
+
+#    # Look for codebreaking syntax errors and highlight style errors
+#    - name: Lint with flake8
+#      run: |
+#        pip install flake8
+#        # stop the build if there are Python syntax errors or undefined names
+#        flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+#        # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
+#        flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+
     # Runs a set of commands using the runners shell
     # Updated to run on pytest so we might be able to export data
     - name: Run the examples
