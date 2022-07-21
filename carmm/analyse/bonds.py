@@ -256,7 +256,7 @@ def print_bond_table_header():
 
 def analyse_chelation(atoms, metal, ligand_atom, mult=1):
     '''
-    Returns information on the ligands surrounding a metal atom and their chelation type. Currently only works with one metal atom.
+    Returns information on the ligands surrounding a metal cation and their chelation type. Currently only works with one metal atom.
     TODO: rework so script can account for multiple separate atoms.
 
     Parameters:
@@ -307,7 +307,10 @@ def analyse_chelation(atoms, metal, ligand_atom, mult=1):
     counter = collections.Counter([*molidx.values()])
     # converts dictionary into separate lists containing the molecules and ligand chelation types
     molecules = [*counter.keys()]
-    chelation_type = [*counter.values()]
+    chelation_num = [*counter.values()]
+    # convert chelation type to keywords (ie: 1 to u1-, 2 to u2-)
+    chelation_type = ["µ" + str(chelation_num[i]) for i in chelation_num]
+
 
     ## for the molecules coordinating to the metal atom, determines their chemical formula.
     molecule_formulas = []
@@ -327,6 +330,14 @@ def analyse_chelation(atoms, metal, ligand_atom, mult=1):
             chemical_formula += entry
         molecule_formulas.append(chemical_formula)
 
-    # old_counter = [[*molidx.values()].count(i) for i in [*molidx.values()]]
-    bond_info = {'molecules': molecules, 'formula': molecule_formulas, 'chelation': chelation_type}
+    ## determines the molecular formula of the complex
+    ligand_type = ["(" + str(chelation_type[i]) + "-" + molecule_formulas[i] + ")" for i in range(len(molecule_formulas))]
+    ligand_count = collections.Counter(ligand_type)
+    complex = metal
+    for k, v in ligand_count.items():
+        entry = str(k) + str(v)
+        complex += entry
+
+    ## Puts all relevant variables into a dictionary
+    bond_info = {'complex': complex, 'molecules': molecules, 'formula': molecule_formulas, 'chelation': chelation_type}
     return bond_info
