@@ -800,6 +800,8 @@ class ReactAims:
         counter = 0
 
         """Check/make folders"""
+        parent_dir = os.getcwd()
+
         while calc_type + filename + "_" + str(counter) \
                 in [fn for fn in os.listdir() if fnmatch.fnmatch(fn, calc_type + "*")]:
             counter += 1
@@ -821,9 +823,11 @@ class ReactAims:
                     if os.path.exists("evaluated_structures.traj"):
                         self.prev_calcs = read("evaluated_structures.traj@:")
                         restart_found = True
+                        break
                     elif os.path.exists("AID_observations.traj"):
                         self.prev_calcs = read("AID_observations.traj@:")
                         restart_found = True
+                        break
                     elif verbose:
                         print('Previous trajectory not found, starting from scratch.')
 
@@ -851,6 +855,8 @@ class ReactAims:
 
                 counter -= 1
                 os.chdir("..")
+
+        os.chdir(parent_dir)
 
         return folder_counter, subdirectory_name
 
