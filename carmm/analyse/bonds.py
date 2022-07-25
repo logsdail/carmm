@@ -308,8 +308,8 @@ def analyse_chelation(atoms, metal, ligand_atom, mult=1):
     # converts dictionary into separate lists containing the molecules and ligand chelation types
     molecules = [*counter.keys()]
     chelation_num = [*counter.values()]
-    # convert chelation type to keywords (ie: 1 to u1-, 2 to u2-)
-    chelation_type = ["µ" + str(chelation_num[i]) for i in chelation_num]
+    # convert chelation type to keywords (ie: 1 to κ1-, 2 to κ2-)
+    chelation_type = ["κ" + str(chelation_num[i]) for i in chelation_num]
 
 
     ## for the molecules coordinating to the metal atom, determines their chemical formula.

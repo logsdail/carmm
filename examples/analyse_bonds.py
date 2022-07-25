@@ -57,6 +57,28 @@ def test_analyse_comparing_bond_lengths():
     #print("maximium distance difference is :", difference[np.argmax(difference)])
     #print("minimum distance difference is :", difference[np.argmin(difference)])
 
+def test_analyse_chelation():
+    ## Initialises modules
+    from carmm.analyse.bonds import analyse_chelation
+    from ase import Atoms
+    import numpy as np
+    ## Builds a test hexahydrate complex to investigate coordination type.
+    p = np.array(
+        [[0, 0, 0],
+        [0, 0,  2.0], [0,  0.7,  2.7], [0, -0.7,  2.7],
+        [0, 0, -2.0], [0,  0.7, -2.7], [0, -0.7, -2.7],
+        [0,  2.0, 0], [0,  2.7,  0.7], [0,  2.7, -0.7],
+        [0, -2.0, 0], [0, -2.7, -0.7], [0, -2.7,  0.7],
+        [ 2.0, 0, 0], [ 2.7, -0.7, 0], [ 2.7,  0.7, 0],
+        [-2.0, 0, 0], [-2.7,  0.7, 0], [-2.7, -0.7, 0]])
+    atoms = Atoms('Mn(OH2)6', positions=p)
+    ## calculates chelation types
+    ligands = analyse_chelation(atoms=atoms, metal='Mn', ligand_atom='O', mult=1.5)
+    ## assertion check to verify results
+    assert(ligands.get("complex") == "Mn(κ1-H2O1)6")
+    return ligands
+
 test_analyse_bonds()
 test_analyse_get_sorted_distances()
 test_analyse_comparing_bond_lengths()
+test_analyse_chelation()
