@@ -7,7 +7,7 @@ def set_aims_command(hpc='hawk', basis_set='light', defaults=2010, nodes_per_ins
     Parameters:
     hpc: String
         Name of the HPC facility where the jobs are being run
-        Options: 'hawk', 'isambard', 'archer2', 'young'
+        Options: 'hawk', 'hawk-amd', 'isambard', 'archer2', 'young'
     basis_set: String
         Name of basis set for FHI-aims
         Options: 'light', 'intermediate', 'tight', 'really_tight' etc.
@@ -25,6 +25,7 @@ def set_aims_command(hpc='hawk', basis_set='light', defaults=2010, nodes_per_ins
 
     preamble = {
         "hawk": "time mpirun -np $SLURM_NTASKS ",
+        "hawk-amd": "time mpirun -np $SLURM_NTASKS ",
         "isambard": "time aprun -n $NPROCS ",
         "archer2": "srun --cpu-bind=cores --distribution=block:block --hint=nomultithread ",
         "young": "gerun "
@@ -34,6 +35,7 @@ def set_aims_command(hpc='hawk', basis_set='light', defaults=2010, nodes_per_ins
 
     fhi_aims_directory = {
         "hawk": "/apps/local/projects/scw1057/software/fhi-aims/",
+        "hawk-amd": "/apps/local/projects/scw1057/software/fhi-aims/",
         "isambard": "/home/ca-alogsdail/fhi-aims-gnu/",
         "archer2": "/work/e05/e05-files-log/shared/software/fhi-aims/",
         "young": "/home/mmm0170/Software/fhi-aims/",
@@ -45,12 +47,13 @@ def set_aims_command(hpc='hawk', basis_set='light', defaults=2010, nodes_per_ins
         task_farmed_commands = {
             "archer2": "--nodes=" + str(nodes_per_instance) + " --ntasks=" + str(int(128 * nodes_per_instance)) + " ",
             "hawk": "--nodes=" + str(nodes_per_instance) + " --ntasks=" + str(int(40 * nodes_per_instance)) + " ",
+            "hawk-amd": "--nodes=" + str(nodes_per_instance) + " --ntasks=" + str(int(128 * nodes_per_instance)) + " ",
             # TODO: add and test isambard and young task-farmed commands
             "isambard": "",
             "young": "",
         }
 
-        assert hpc in ["archer2", "hawk"], "Only ARCHER2 and Hawk supported for task-farming at the moment."
+        assert hpc in ["archer2", "hawk", "hawk-amd"], "Only ARCHER2 and Hawk supported for task-farming at the moment."
         os.environ["ASE_AIMS_COMMAND"] = preamble[hpc] + task_farmed_commands[hpc] + fhi_aims_directory[hpc] + executable
     else:
         os.environ["ASE_AIMS_COMMAND"] = preamble[hpc] + fhi_aims_directory[hpc] + executable
