@@ -47,7 +47,7 @@ def set_aims_command(hpc='hawk', basis_set='light', defaults=2010, nodes_per_ins
         task_farmed_commands = {
             "archer2": "--nodes=" + str(nodes_per_instance) + " --ntasks=" + str(int(128 * nodes_per_instance)) + " ",
             "hawk": "--nodes=" + str(nodes_per_instance) + " --ntasks=" + str(int(40 * nodes_per_instance)) + " ",
-            "hawk-amd": "--nodes=" + str(nodes_per_instance) + " --ntasks=" + str(int(128 * nodes_per_instance)) + " ",
+            "hawk-amd": "--nodes=" + str(nodes_per_instance) + " --ntasks=" + str(int(64 * nodes_per_instance)) + " ",
             # TODO: add and test isambard and young task-farmed commands
             "isambard": "",
             "young": "",
