@@ -293,7 +293,7 @@ def analyse_chelation(atoms, metal, ligand_atom, mult=1):
         matrix[i][metal_idx[0]] = 0
     n_components, component_list = sparse.csgraph.connected_components(matrix)
 
-    ## gets atoms indexes coordinating to the metal (coord_inx) and the lengths of these bonds (coord_len) as lists
+    ## gets atoms indexes coordinating to the metal (coord_idx) and the lengths of these bonds (coord_len) as lists
     coord_idx = [ligand_coord[1][0][i][1] for i in range(len(ligand_coord[1][0]))]
     coord_len = ligand_coord[2][0]
 
