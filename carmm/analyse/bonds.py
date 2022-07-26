@@ -276,7 +276,7 @@ def analyse_chelation(atoms, metal, ligand_atom, mult=1):
     from ase.neighborlist import NeighborList, get_connectivity_matrix, natural_cutoffs
     from scipy import sparse
     import collections
-    from collections import OrderedDict
+    from collections import OrderedDict, Counter
 
     ## identifies atoms coordinated to the metal cation
     ligand_coord = analyse_bonds(atoms, metal, ligand_atom, verbose=False)
