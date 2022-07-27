@@ -75,7 +75,7 @@ def test_analyse_chelation():
     ## calculates chelation types
     ligands = analyse_chelation(atoms=atoms, metal='Mn', ligand_atom='O', mult=1.5)
     ## assertion check to verify results
-    assert(ligands.get("complex") == "Mn(κ1-H2O1)6")
+    assert(ligands.get("complex") == "Mn(κ1-H2O)6")
     return ligands
 
 test_analyse_bonds()
