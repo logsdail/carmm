@@ -277,7 +277,9 @@ def analyse_chelation(atoms, metal, ligand_atom, mult=1):
     from scipy import sparse
     import collections
     from collections import OrderedDict, Counter
-
+    from ase import Atoms
+    from ase.formula import Formula
+    
     ## identifies atoms coordinated to the metal cation
     ligand_coord = analyse_bonds(atoms, metal, ligand_atom, verbose=False)
 
@@ -320,14 +322,11 @@ def analyse_chelation(atoms, metal, ligand_atom, mult=1):
         molIdxs[str(idx)] = [i for i in range(len(component_list)) if component_list[i] == molecules[index]]
         # converts the atom indices list to their respective chemical symbols.
         idx_symbols = [atoms.get_chemical_symbols()[i] for i in [*molIdxs.values()][index]]
-        # counts the chemical symbols present and returns the molecular formula in Hill notation.
-        symbolcount = collections.Counter(idx_symbols)
-        ordered = OrderedDict(sorted(symbolcount.items())) # orders keys in c dictionary so they are in alphabetical order
-
-        chemical_formula = ''
-        for k, v in ordered.items():
-            entry = str(k) + str(v)
-            chemical_formula += entry
+        # converts string of chemical symbols into an atoms object
+        atom = Atoms(idx_symbols)
+        # uses the ASE formula functionality to convert formula into Hill notation
+        chemical_formula = Formula(str(atom.symbols)).format('hill')
+        # appends formula to a list containing all coordinating molecules
         molecule_formulas.append(chemical_formula)
 
     ## determines the molecular formula of the complex
