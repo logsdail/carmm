@@ -15,10 +15,11 @@ def test_run_aims():
         'isambard': 'time aprun -n $NPROCS /home/ca-alogsdail/fhi-aims-gnu/bin/aims.$VERSION.scalapack.mpi.x',
         'archer2': 'srun --cpu-bind=cores --distribution=block:block --hint=nomultithread /work/e05/e05-files-log/shared/software/fhi-aims/bin/aims.$VERSION.scalapack.mpi.x',
         'young': 'gerun /home/mmm0170/Software/fhi-aims/bin/aims.$VERSION.scalapack.mpi.x',
+        'aws': 'time srun --mpi=pmi2 --hint=nomultithread --distribution=block:block apptainer exec /shared/logsdail_group/sing/mkl_aims_2.sif bash /shared/logsdail_group/sing/sing_fhiaims_script.sh $@'
     }
 
     import os
-    for hpc in ['hawk', 'isambard', 'archer2', 'young']:
+    for hpc in ['hawk', 'isambard', 'archer2', 'young', 'aws']:
         set_aims_command(hpc)
         assert os.environ['ASE_AIMS_COMMAND'] == expected_paths[hpc]
 
