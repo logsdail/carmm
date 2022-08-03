@@ -296,12 +296,15 @@ def analyse_chelation(atoms, metal, ligand_atoms, mult=1):
     ## identifies ligand atom indices which are coordinating to the metal cation (ligand_coord)
     ## Note: coord[1][0] is in list format (ie: [(0,1),(0,2),(0,3),(0,4),(0,5),(0,6)])
     ligand_coord = []
+    ligand_len   = []
     # runs over all specified chemical elements
     for sym in range(len(ligand_atoms)):
         coord = analyse_bonds(atoms, metal, ligand_atoms[sym], verbose=False)
         ligand_coord += coord[1][0]
+        ligand_len   += coord[2][0]
     # extracts the ligand donor atom indices from ligand_coord
     coord_idx = [ligand_coord[atom][1] for atom in range(len(ligand_coord))]
+    coord_len = ligand_len
 
     ## gets the molecule numbers corresponding to the atom indices
     molidx = {}
@@ -320,10 +323,19 @@ def analyse_chelation(atoms, metal, ligand_atoms, mult=1):
 
     ## for the molecules coordinating to the metal atom, determines their chemical formula.
     molecule_formulas = []
+    molecule_lengths  = []
     for mol_num in molecules:
         index = molecules.index(mol_num)
         # for said molecule number, obtains all atom indices in said molecule as a list.
         molIdxs[str(mol_num)] = [idx for idx in range(len(component_list)) if component_list[idx] == molecules[index]]
+        # gets which atom indices appears in the list of coordinating atoms
+        ca = set([*molIdxs.values()][index]) & set(coord_idx)
+        # gets the indices corresponding to these atoms for coord_len
+        ca_idx = [coord_idx.index(i) for i in ca]
+        # obtains the bond lengths for the coordinating ligand and appends to list
+        bond_lengths = [coord_len[i] for i in ca_idx]
+        # get average of bond lengths and append to a new list
+        molecule_lengths.append(sum(bond_lengths)/len(bond_lengths))
         # converts the atom indices list to their respective chemical symbols.
         idx_symbols = [atoms.get_chemical_symbols()[idx] for idx in [*molIdxs.values()][index]]
         # converts string of chemical symbols into an atoms object
@@ -342,5 +354,5 @@ def analyse_chelation(atoms, metal, ligand_atoms, mult=1):
         complex += entry
 
     ## Puts all relevant variables into a dictionary
-    bond_info = {'complex': complex, 'molecules': molecules, 'formula': molecule_formulas, 'chelation': chelation_type}
+    bond_info = {'complex': complex, 'molecules': molecules, 'formula': molecule_formulas, 'chelation': chelation_type, 'bond lengths': molecule_lengths}
     return bond_info
