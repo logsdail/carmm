@@ -254,10 +254,10 @@ def print_bond_table_header():
         "Bond", "Count", "Average", "Minimum", "Maximum"))
     print("-" * 40)
 
-def analyse_chelation(atoms, metal, ligand_atom, mult=1):
+def analyse_chelation(atoms, metal, ligand_atoms, mult=1):
     '''
-    Returns information on the ligands surrounding a metal cation and their chelation type. Currently only works with one metal atom.
-    TODO: rework so script can account for multiple separate atoms.
+    Returns information on the ligands in a mononuclear complex and their chelation type.
+    TODO: rework so script can account for multiple separate metal atoms (ie: polynuclear complexes)
 
     Parameters:
     atoms: Atoms object
@@ -265,9 +265,9 @@ def analyse_chelation(atoms, metal, ligand_atom, mult=1):
     Mult: float value
         Multiplier for the bond cutoffs. Set to 1 as default but can be adjusted depending on application
     metal: String
-        Metal atom to characterise the coordination environment around
-    ligand_atom: String
-        Element symbol of the atom coordinating with the metal atom
+        Metal cation to characterise the coordination environment around
+    ligand_atom: list
+        Element symbol of the atom coordinating with the metal cation
         TODO: expand this functionality as a list of element symbols.
     '''
 
@@ -279,11 +279,8 @@ def analyse_chelation(atoms, metal, ligand_atom, mult=1):
     from collections import Counter
     from ase import Atoms
     from ase.formula import Formula
-    
-    ## identifies atoms coordinated to the metal cation
-    ligand_coord = analyse_bonds(atoms, metal, ligand_atom, verbose=False)
 
-    ## Defines cutoffs, connectivity matrix for first image.
+    ## Defines cutoffs, connectivity matrix for ligands in the system
     cutOff = natural_cutoffs(atoms, mult=mult)
     neighborList = NeighborList(cutOff, skin=0, self_interaction=True, bothways=True)
     neighborList.update(atoms)
@@ -295,9 +292,16 @@ def analyse_chelation(atoms, metal, ligand_atom, mult=1):
         connect_matrix[idx][metal_idx[0]] = 0
     n_components, component_list = sparse.csgraph.connected_components(connect_matrix)
 
-    ## gets atoms indexes coordinating to the metal (coord_idx).
-    # Note - ligand_coord[1][0] is a list of the coordinating ligand atoms to the metal center (ie: [(0,1),(0,2),(0,3),(0,4),(0,5),(0,6)])
-    coord_idx = [ligand_coord[1][0][atom][1] for atom in range(len(ligand_coord[1][0]))]
+
+    ## identifies ligand atom indices which are coordinating to the metal cation (ligand_coord)
+    ## Note: coord[1][0] is in list format (ie: [(0,1),(0,2),(0,3),(0,4),(0,5),(0,6)])
+    ligand_coord = []
+    # runs over all specified chemical elements
+    for sym in range(len(ligand_atoms)):
+        coord = analyse_bonds(atoms, metal, ligand_atoms[sym], verbose=False)
+        ligand_coord += coord[1][0]
+    # extracts the ligand donor atom indices from ligand_coord
+    coord_idx = [ligand_coord[atom][1] for atom in range(len(ligand_coord))]
 
     ## gets the molecule numbers corresponding to the atom indices
     molidx = {}
