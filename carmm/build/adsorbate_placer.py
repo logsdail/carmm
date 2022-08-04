@@ -44,7 +44,7 @@ def rotate_and_place_adsorbate(atoms_ads, atoms_site, bond_length,
     zeroed_adsorbate.rotate(rotation[1], y_axis, center=zeroed_adsorbate.positions[ads_idx])
     zeroed_adsorbate.rotate(rotation[2], z_axis, center=zeroed_adsorbate.positions[ads_idx])
 
-    ads_and_site = zeroed_adsorbate + atoms_site
+    ads_and_site = atoms_site + zeroed_adsorbate
 
     return ads_and_site, zeroed_adsorbate
 
@@ -76,6 +76,7 @@ def place_adsorbate(atoms_ads, atoms_site, ads_idx, site_idx, bond_length, lps=1
     """
 
     from carmm.analyse.neighbours import neighbours
+    import numpy as np
 
     assert lps < 3,  "Lone pairs greater than 2 not yet implemented."
     assert lps != 0, "No valid adsorption site available."
@@ -85,24 +86,25 @@ def place_adsorbate(atoms_ads, atoms_site, ads_idx, site_idx, bond_length, lps=1
     site_normal = find_site_normal(atoms_site, site_idx)
 
     # Code and logic is sloppy and will be improved.
-    if lps>2:
+    if lps>1:
 
         neighb_list, shell_list = neighbours(atoms_site, [site_idx], 1)
 
         assert 1 < len(shell_list[1]) < 5, "Site either has too few or too many neighbours VSEPR."
-        assert len(shell_list[1]) > 2, "Not implemented LPs above 2."
+#        assert len(shell_list[1]) > 2, "Not implemented LPs above 2."
 
         if len(shell_list[1])==2:
             neighb1 = find_generic_normal(atoms_site, site_idx, shell_list[1][0])
             neighb2 = find_generic_normal(atoms_site, site_idx, shell_list[1][1])
 
             y_rot = np.cross(neighb1, neighb2)
-            z_rot = np.cross(site_normal, y_rot)
+            z_rot = np.cross(y_rot, site_normal)
+            print(z_rot)
 
             if lp_idx==0:
-                theta = 54.75
+               theta = np.pi/180 * -52
             elif lp_idx==1:
-                theta = -54.75
+                theta = np.pi/180 * 52
 
             rot_matrix = normal_rotation_matrix(theta, z_rot)
 
@@ -327,7 +329,7 @@ def normal_rotation_matrix(theta, ax):
 
     Args:
         theta: float
-            Angle of rotation in degree.
+            Angle of rotation in radians.
         ax: numpy array, size = (3)
             Direction of the rotation axis, centered on [0, 0, 0]
 
