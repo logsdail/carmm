@@ -122,7 +122,7 @@ def place_adsorbate(atoms_ads, atoms_site, ads_idx, site_idx, bond_length, lps=1
     # Places zeroed coordinates at the bonding position
     atoms_ads.positions = atoms_ads.positions + (bond_length * site_normal) + atoms_site.positions[site_idx]
 
-    ads_and_site = atoms_ads + atoms_site
+    ads_and_site = atoms_site + atoms_ads
 
     return ads_and_site, atoms_ads
 
@@ -152,7 +152,20 @@ def find_site_normal(atoms, index):
     vectors = atoms.positions[neighbour_atoms] - atoms.positions[index]
 
     site_normal = np.sum(vectors, axis=0)
-    site_normal = -site_normal / np.linalg.norm(site_normal)
+
+    try:
+        site_normal = -site_normal / np.linalg.norm(site_normal)
+    except:
+        # Vectors average to zero more than likely! Try just using one of the neighbours and rotate 90 degrees.
+        print("Whoops! No vector")
+        vectors = atoms.positions[neighbour_atoms[1]] - atoms.positions[index]
+        print(vectors)
+
+        theta = np.pi/180 * 90
+        rot_matrix = normal_rotation_matrix(theta, z_rot)
+
+        site_normal = -vectors / np.linalg.norm(vectors)
+        site_normal = np.dot(rot_matrix, site_normal.T).T
 
     return site_normal
 
