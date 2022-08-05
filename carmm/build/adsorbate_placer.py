@@ -153,19 +153,7 @@ def find_site_normal(atoms, index):
 
     site_normal = np.sum(vectors, axis=0)
 
-    try:
-        site_normal = -site_normal / np.linalg.norm(site_normal)
-    except:
-        # Vectors average to zero more than likely! Try just using one of the neighbours and rotate 90 degrees.
-        print("Whoops! No vector")
-        vectors = atoms.positions[neighbour_atoms[1]] - atoms.positions[index]
-        print(vectors)
-
-        theta = np.pi/180 * 90
-        rot_matrix = normal_rotation_matrix(theta, z_rot)
-
-        site_normal = -vectors / np.linalg.norm(vectors)
-        site_normal = np.dot(rot_matrix, site_normal.T).T
+    site_normal = -site_normal / np.linalg.norm(site_normal)
 
     return site_normal
 
