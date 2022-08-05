@@ -80,7 +80,7 @@ def place_adsorbate(atoms_ads, atoms_site, ads_idx, site_idx, bond_length, lps=1
 
     assert lps < 3,  "Lone pairs greater than 2 not yet implemented."
     assert lps != 0, "No valid adsorption site available."
-    assert len(atoms_ads), "Adsorbate site should have at least one other atom attached."
+    assert len(atoms_ads) != 0, "Adsorbate site should have at least one other atom attached."
 
     # Otherwise, just find normal based on average of neighbour vectors.
     # If multiple lps to adsorb to - generate list of potential sites.
