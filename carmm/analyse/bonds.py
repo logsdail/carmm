@@ -318,7 +318,7 @@ def analyse_chelation(atoms, metal, ligand_atoms, mult=1):
     molecules = [*counter.keys()]
     chelation_num = [*counter.values()]
     # convert chelation number to the IUPAC denticity notation (ie: 1 to κ1- (monodentate ligand), 2 to κ2- (bidentate ligand))
-    chelation_type = ["κ" + str(chelation_num[i]) for i in chelation_num]
+    chelation_type = ["κ" + str(i) for i in chelation_num]
 
 
     ## for the molecules coordinating to the metal atom, determines their chemical formula.
