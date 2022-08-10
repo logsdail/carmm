@@ -38,19 +38,19 @@ def set_aims_command(hpc='hawk', basis_set='light', defaults=2010, nodes_per_ins
         "isambard": "/home/ca-alogsdail/fhi-aims-gnu/",
         "archer2": "/work/e05/e05-files-log/shared/software/fhi-aims/",
         "young": "/home/mmm0170/Software/fhi-aims/",
-        "aws": "",
+        "aws": "/shared/logsdail_group/sing/",
     }
 
     executable_d = {"compiled": "bin/aims.$VERSION.scalapack.mpi.x",
-                    "apptainer": "apptainer exec /shared/logsdail_group/sing/mkl_aims_2.sif bash " + \
-                                 "/shared/logsdail_group/sing/sing_fhiaims_script.sh $@"
+                    "apptainer": "apptainer exec " + fhi_aims_directory["aws"] + "mkl_aims_2.sif bash " + \
+                                 fhi_aims_directory["aws"] + "sing_fhiaims_script.sh $@"
                     }
 
     '''Handle compiled and containerized FHIaims versions'''
     if hpc == "aws":
         executable = executable_d["apptainer"]
     else:
-        executable = executable_d["compiled"]
+        executable = fhi_aims_directory[hpc] + executable_d["compiled"]
 
     """Set the relevant environment variables based on HPC"""
     os.environ["AIMS_SPECIES_DIR"] = fhi_aims_directory[hpc] + species
@@ -65,6 +65,6 @@ def set_aims_command(hpc='hawk', basis_set='light', defaults=2010, nodes_per_ins
         }
 
         assert hpc in ["archer2", "hawk", "aws"], "Only ARCHER2, Hawk and AWS supported for task-farming at the moment."
-        os.environ["ASE_AIMS_COMMAND"] = preamble[hpc] + task_farmed_commands[hpc] + fhi_aims_directory[hpc] + executable
+        os.environ["ASE_AIMS_COMMAND"] = preamble[hpc] + task_farmed_commands[hpc] + executable
     else:
-        os.environ["ASE_AIMS_COMMAND"] = preamble[hpc] + fhi_aims_directory[hpc] + executable
+        os.environ["ASE_AIMS_COMMAND"] = preamble[hpc] + executable

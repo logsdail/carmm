@@ -9,6 +9,7 @@ TODO: rework the assertion to actually test the aims_path output - include expec
 
 def test_run_aims():
     from carmm.run.aims_path import set_aims_command
+    import os
 
     expected_paths = {
         'hawk': 'time mpirun -np $SLURM_NTASKS /apps/local/projects/scw1057/software/fhi-aims/bin/aims.$VERSION.scalapack.mpi.x',
@@ -18,10 +19,21 @@ def test_run_aims():
         'aws': 'time srun --mpi=pmi2 --hint=nomultithread --distribution=block:block apptainer exec /shared/logsdail_group/sing/mkl_aims_2.sif bash /shared/logsdail_group/sing/sing_fhiaims_script.sh $@'
     }
 
-    import os
+    expected_paths_taskfarm = {
+        'hawk': "time mpirun -np $SLURM_NTASKS --nodes=1 --ntasks=40 /apps/local/projects/scw1057/software/fhi-aims/bin/aims.$VERSION.scalapack.mpi.x",
+        'isambard': "",
+        'archer2': "srun --cpu-bind=cores --distribution=block:block --hint=nomultithread --nodes=1 --ntasks=128 /work/e05/e05-files-log/shared/software/fhi-aims/bin/aims.$VERSION.scalapack.mpi.x",
+        'young': "",
+        'aws': "time srun --mpi=pmi2 --hint=nomultithread --distribution=block:block --nodes=1 --ntasks=72 apptainer exec /shared/logsdail_group/sing/mkl_aims_2.sif bash /shared/logsdail_group/sing/sing_fhiaims_script.sh $@"
+    }
+
     for hpc in ['hawk', 'isambard', 'archer2', 'young', 'aws']:
         set_aims_command(hpc)
         assert os.environ['ASE_AIMS_COMMAND'] == expected_paths[hpc]
+
+        if hpc in ["hawk", "archer2", "aws"]:
+            set_aims_command(hpc, nodes_per_instance=1)
+            assert os.environ['ASE_AIMS_COMMAND'] == expected_paths_taskfarm[hpc]
 
     import ase # Necessary to check the code version, as socket functionality has changed
     ase_major_version = int(ase.__version__.split(".")[0])
