@@ -268,7 +268,6 @@ def analyse_chelation(atoms, metal, ligand_atoms, mult=1):
         Metal cation to characterise the coordination environment around
     ligand_atom: list
         Element symbol of the atom coordinating with the metal cation
-        TODO: expand this functionality as a list of element symbols.
     '''
 
     ## Import modules
@@ -291,7 +290,6 @@ def analyse_chelation(atoms, metal, ligand_atoms, mult=1):
         connect_matrix[metal_idx[0]][idx] = 0
         connect_matrix[idx][metal_idx[0]] = 0
     n_components, component_list = sparse.csgraph.connected_components(connect_matrix)
-
 
     ## identifies ligand atom indices which are coordinating to the metal cation (ligand_coord)
     ## Note: coord[1][0] is in list format (ie: [(0,1),(0,2),(0,3),(0,4),(0,5),(0,6)])
@@ -320,7 +318,6 @@ def analyse_chelation(atoms, metal, ligand_atoms, mult=1):
     # convert chelation number to the IUPAC denticity notation (ie: 1 to κ1- (monodentate ligand), 2 to κ2- (bidentate ligand))
     chelation_type = ["κ" + str(i) for i in chelation_num]
 
-
     ## for the molecules coordinating to the metal atom, determines their chemical formula.
     molecule_formulas = []
     molecule_lengths  = []
@@ -346,8 +343,12 @@ def analyse_chelation(atoms, metal, ligand_atoms, mult=1):
         molecule_formulas.append(chemical_formula)
 
     ## determines the molecular formula of the complex
-    ligand_type = ["(" + str(chelation_type[i]) + "-" + molecule_formulas[i] + ")" for i in range(len(molecule_formulas))]
-    ligand_count = collections.Counter(ligand_type)
+    # determines ligand formula and binding mode, then sorts ligand formulas.
+    ligand_type = list(zip(chelation_type, molecule_formulas))
+    ligand_type.sort(key=lambda x: x[1])
+    ligand_info = ["(" + str(ligand_type[i][0]) + "-" + str(ligand_type[i][1]) + ")" for i in range(len(molecule_formulas))]
+    ligand_count = collections.Counter(ligand_info)
+    # constructs molecular formula
     complex = metal
     for k, v in ligand_count.items():
         entry = str(k) + str(v)
