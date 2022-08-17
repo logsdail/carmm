@@ -23,6 +23,3 @@ def color_bar(width, height, bottom, vmin, vmax, orientation, label, cmapcolour)
 
     return fig
 
-
-fig = color_bar(1, 2, 0.5, -0.015, 0.015, 'horizontal', 'au', 'cool')
-plt.show()
