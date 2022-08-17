@@ -6,9 +6,8 @@ def surface_area(atom):
 
     atom: Atoms object
     testing
-    
-    TODO: Test for different cell symmetry?
     '''
+    
     import math
 
     atom_cell = atom.get_cell_lengths_and_angles()

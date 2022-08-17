@@ -27,17 +27,23 @@ def vib_analysis(model):
             return dist_list
 
 
-def plot_vibrations(dist_list):
-
+class plot_vibration_data:
     ''' Returns a graph showing displacement of bonds/atoms in a vibration trajectory from ASE.
-    Parameters:
-        dist_list: List of distances as returned via vib_analysis()
-    TODO: plot with information on which element/ atom is being displaced instead of relying on knowledge of .traj 
-        '''
-    x = range(len(dist_list))
-    plt.plot(x, dist_list)
-    plt.xlabel("step")
-    plt.ylabel('displacement')
-    plt.show()
+    #     Parameters:
+    #         x_axis: length of data returned from vib_analysis()
+              y_xis: data returned by vib_analysis()
+             title: title for plot
+
+             TODO: would be nice to able to plot atomic/elemental information on plot i.e which atoms are being displaced
+    '''
 
 
+    def __init__(self,x_axis, y_axis, title):
+        self.x_axis = x_axis
+        self.y_axis = y_axis
+        self.title = title
+
+    def plot_vib(self):
+        plt.plot(self.x_axis, self.y_axis)
+        plt.title(self.title)
+        plt.show()

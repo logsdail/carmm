@@ -253,3 +253,90 @@ def print_bond_table_header():
     print('{:<6.5s}{:<6.5s}{:>4.10s}{:^13.10s}{:>4.10s}'.format(
         "Bond", "Count", "Average", "Minimum", "Maximum"))
     print("-" * 40)
+
+def analyse_chelation(atoms, metal, ligand_atom, mult=1):
+    '''
+    Returns information on the ligands surrounding a metal cation and their chelation type. Currently only works with one metal atom.
+    TODO: rework so script can account for multiple separate atoms.
+
+    Parameters:
+    atoms: Atoms object
+        Input structure from which to calculate molecular information
+    Mult: float value
+        Multiplier for the bond cutoffs. Set to 1 as default but can be adjusted depending on application
+    metal: String
+        Metal atom to characterise the coordination environment around
+    ligand_atom: String
+        Element symbol of the atom coordinating with the metal atom
+        TODO: expand this functionality as a list of element symbols.
+    '''
+
+    ## Import modules
+    from carmm.analyse.bonds import analyse_bonds, analyse_all_bonds
+    from ase.neighborlist import NeighborList, get_connectivity_matrix, natural_cutoffs
+    from scipy import sparse
+    import collections
+    from collections import Counter
+    from ase import Atoms
+    from ase.formula import Formula
+    
+    ## identifies atoms coordinated to the metal cation
+    ligand_coord = analyse_bonds(atoms, metal, ligand_atom, verbose=False)
+
+    ## Defines cutoffs, connectivity matrix for first image.
+    cutOff = natural_cutoffs(atoms, mult=mult)
+    neighborList = NeighborList(cutOff, skin=0, self_interaction=True, bothways=True)
+    neighborList.update(atoms)
+    # defines matrix and removes entries from the metal, so the complex is not considered as one molecule.
+    connect_matrix = neighborList.get_connectivity_matrix(sparse=False)
+    metal_idx = [idx for idx in range(len(atoms)) if atoms.get_chemical_symbols()[idx] == metal] # gets index corresponding to metal atom
+    for idx in range(len(connect_matrix[0])):
+        connect_matrix[metal_idx[0]][idx] = 0
+        connect_matrix[idx][metal_idx[0]] = 0
+    n_components, component_list = sparse.csgraph.connected_components(connect_matrix)
+
+    ## gets atoms indexes coordinating to the metal (coord_idx).
+    # Note - ligand_coord[1][0] is a list of the coordinating ligand atoms to the metal center (ie: [(0,1),(0,2),(0,3),(0,4),(0,5),(0,6)])
+    coord_idx = [ligand_coord[1][0][atom][1] for atom in range(len(ligand_coord[1][0]))]
+
+    ## gets the molecule numbers corresponding to the atom indices
+    molidx = {}
+    molIdxs = {}
+    for idx in coord_idx:
+        molidx[str(idx)] = component_list[idx]
+
+    ## counters the molecules coordinating to the metal atom so we get a dictionary containing the molecules and their chelation type
+    counter = collections.Counter([*molidx.values()])
+    # converts dictionary into separate lists containing the molecules and ligand chelation types
+    molecules = [*counter.keys()]
+    chelation_num = [*counter.values()]
+    # convert chelation number to the IUPAC denticity notation (ie: 1 to κ1- (monodentate ligand), 2 to κ2- (bidentate ligand))
+    chelation_type = ["κ" + str(chelation_num[i]) for i in chelation_num]
+
+
+    ## for the molecules coordinating to the metal atom, determines their chemical formula.
+    molecule_formulas = []
+    for mol_num in molecules:
+        index = molecules.index(mol_num)
+        # for said molecule number, obtains all atom indices in said molecule as a list.
+        molIdxs[str(mol_num)] = [idx for idx in range(len(component_list)) if component_list[idx] == molecules[index]]
+        # converts the atom indices list to their respective chemical symbols.
+        idx_symbols = [atoms.get_chemical_symbols()[idx] for idx in [*molIdxs.values()][index]]
+        # converts string of chemical symbols into an atoms object
+        atom = Atoms(idx_symbols)
+        # uses the ASE formula functionality to convert formula into Hill notation
+        chemical_formula = Formula(str(atom.symbols)).format('hill')
+        # appends formula to a list containing all coordinating molecules
+        molecule_formulas.append(chemical_formula)
+
+    ## determines the molecular formula of the complex
+    ligand_type = ["(" + str(chelation_type[i]) + "-" + molecule_formulas[i] + ")" for i in range(len(molecule_formulas))]
+    ligand_count = collections.Counter(ligand_type)
+    complex = metal
+    for k, v in ligand_count.items():
+        entry = str(k) + str(v)
+        complex += entry
+
+    ## Puts all relevant variables into a dictionary
+    bond_info = {'complex': complex, 'molecules': molecules, 'formula': molecule_formulas, 'chelation': chelation_type}
+    return bond_info

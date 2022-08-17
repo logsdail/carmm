@@ -82,7 +82,7 @@ def ternary_alloy(model, second_element, third_element, n_second_element, n_thir
     #Using Random Number Generator
     #random.seed(1)
 
-   # Randomly throw in the firts new element
+   # Randomly throw in the first new element
     while n_second_element > count:
         i = int(math.floor(random.random() * len(new_model)))
         if labels[i] != second_element.capitalize():
