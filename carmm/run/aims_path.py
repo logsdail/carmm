@@ -66,6 +66,8 @@ def set_aims_command(hpc='hawk', basis_set='light', defaults=2010, nodes_per_ins
             "young": "",
             "aws": "--nodes=" + str(nodes_per_instance) + " --ntasks=" + str(int(72 * nodes_per_instance)) +" ",
         }
+        if hpc == "aws":
+            assert nodes_per_instance == 1, "FHI-aims does not run on more than one node on AWS at present."
 
         assert hpc in ["archer2", "hawk", "hawk-amd", "aws"], "Only ARCHER2, Hawk and AWS supported for task-farming at the moment."
         os.environ["ASE_AIMS_COMMAND"] = preamble[hpc] + task_farmed_commands[hpc] + executable
