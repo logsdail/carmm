@@ -806,18 +806,19 @@ class ReactAims:
                 in [fn for fn in os.listdir() if fnmatch.fnmatch(fn, calc_type + "*")]:
             counter += 1
 
+        folder_counter = counter
         subdirectory_name = calc_type + filename + "_" + str(counter)
         subdirectory_name_prev = calc_type + filename + "_" + str(counter - 1)
-
-        folder_counter = counter
 
         """Check previous calculations for convergence"""
         if restart and counter > 0:
             restart_found = False
             while not restart_found and counter > 0:
+
+
                 if verbose:
                     print("Previous calculation detected in", calc_type + filename + "_" + str(counter - 1))
-                os.chdir(subdirectory_name_prev)
+                os.chdir(calc_type + filename + "_" + str(counter - 1))
 
                 if calc_type == "TS_":
                     if os.path.exists("evaluated_structures.traj"):

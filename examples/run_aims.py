@@ -13,6 +13,7 @@ def test_run_aims():
 
     expected_paths = {
         'hawk': 'time mpirun -np $SLURM_NTASKS /apps/local/projects/scw1057/software/fhi-aims/bin/aims.$VERSION.scalapack.mpi.x',
+        'hawk-amd': 'time mpirun -np $SLURM_NTASKS /apps/local/projects/scw1057/software/fhi-aims/bin/aims.$VERSION.scalapack.mpi.x',
         'isambard': 'time aprun -n $NPROCS /home/ca-alogsdail/fhi-aims-gnu/bin/aims.$VERSION.scalapack.mpi.x',
         'archer2': 'srun --cpu-bind=cores --distribution=block:block --hint=nomultithread /work/e05/e05-files-log/shared/software/fhi-aims/bin/aims.$VERSION.scalapack.mpi.x',
         'young': 'gerun /home/mmm0170/Software/fhi-aims/bin/aims.$VERSION.scalapack.mpi.x',
@@ -21,17 +22,18 @@ def test_run_aims():
 
     expected_paths_taskfarm = {
         'hawk': "time mpirun -np $SLURM_NTASKS --nodes=1 --ntasks=40 /apps/local/projects/scw1057/software/fhi-aims/bin/aims.$VERSION.scalapack.mpi.x",
-        'isambard': "",
-        'archer2': "srun --cpu-bind=cores --distribution=block:block --hint=nomultithread --nodes=1 --ntasks=128 /work/e05/e05-files-log/shared/software/fhi-aims/bin/aims.$VERSION.scalapack.mpi.x",
-        'young': "",
-        'aws': "time srun --mpi=pmi2 --hint=nomultithread --distribution=block:block --nodes=1 --ntasks=72 apptainer exec /shared/logsdail_group/sing/mkl_aims_2.sif bash /shared/logsdail_group/sing/sing_fhiaims_script.sh $@"
+        'hawk-amd': 'time mpirun -np $SLURM_NTASKS --nodes=1 --ntasks=64 /apps/local/projects/scw1057/software/fhi-aims/bin/aims.$VERSION.scalapack.mpi.x',
+        'isambard': '',
+        'archer2': 'srun --cpu-bind=cores --distribution=block:block --hint=nomultithread --nodes=1 --ntasks=128 /work/e05/e05-files-log/shared/software/fhi-aims/bin/aims.$VERSION.scalapack.mpi.x',
+        'young': '',
+        'aws': 'time srun --mpi=pmi2 --hint=nomultithread --distribution=block:block --nodes=1 --ntasks=72 apptainer exec /shared/logsdail_group/sing/mkl_aims_2.sif bash /shared/logsdail_group/sing/sing_fhiaims_script.sh $@'
     }
 
-    for hpc in ['hawk', 'isambard', 'archer2', 'young', 'aws']:
+    for hpc in ['hawk', 'hawk-amd', 'isambard', 'archer2', 'young', 'aws']:
         set_aims_command(hpc)
         assert os.environ['ASE_AIMS_COMMAND'] == expected_paths[hpc]
 
-        if hpc in ["hawk", "archer2", "aws"]:
+        if hpc in ["hawk", 'hawk-amd', 'archer2', 'aws']:
             set_aims_command(hpc, nodes_per_instance=1)
             assert os.environ['ASE_AIMS_COMMAND'] == expected_paths_taskfarm[hpc]
 
