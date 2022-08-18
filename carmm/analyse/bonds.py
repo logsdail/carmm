@@ -254,10 +254,10 @@ def print_bond_table_header():
         "Bond", "Count", "Average", "Minimum", "Maximum"))
     print("-" * 40)
 
-def analyse_chelation(atoms, metal, ligand_atom, mult=1):
+def analyse_chelation(atoms, metal, ligand_atoms, mult=1):
     '''
-    Returns information on the ligands surrounding a metal cation and their chelation type. Currently only works with one metal atom.
-    TODO: rework so script can account for multiple separate atoms.
+    Returns information on the ligands in a mononuclear complex and their chelation type.
+    TODO: rework so script can account for multiple separate metal atoms (ie: polynuclear complexes)
 
     Parameters:
     atoms: Atoms object
@@ -265,10 +265,9 @@ def analyse_chelation(atoms, metal, ligand_atom, mult=1):
     Mult: float value
         Multiplier for the bond cutoffs. Set to 1 as default but can be adjusted depending on application
     metal: String
-        Metal atom to characterise the coordination environment around
-    ligand_atom: String
-        Element symbol of the atom coordinating with the metal atom
-        TODO: expand this functionality as a list of element symbols.
+        Metal cation to characterise the coordination environment around
+    ligand_atom: list
+        Element symbol of the atom coordinating with the metal cation
     '''
 
     ## Import modules
@@ -279,11 +278,8 @@ def analyse_chelation(atoms, metal, ligand_atom, mult=1):
     from collections import Counter
     from ase import Atoms
     from ase.formula import Formula
-    
-    ## identifies atoms coordinated to the metal cation
-    ligand_coord = analyse_bonds(atoms, metal, ligand_atom, verbose=False)
 
-    ## Defines cutoffs, connectivity matrix for first image.
+    ## Defines cutoffs, connectivity matrix for ligands in the system
     cutOff = natural_cutoffs(atoms, mult=mult)
     neighborList = NeighborList(cutOff, skin=0, self_interaction=True, bothways=True)
     neighborList.update(atoms)
@@ -295,9 +291,18 @@ def analyse_chelation(atoms, metal, ligand_atom, mult=1):
         connect_matrix[idx][metal_idx[0]] = 0
     n_components, component_list = sparse.csgraph.connected_components(connect_matrix)
 
-    ## gets atoms indexes coordinating to the metal (coord_idx).
-    # Note - ligand_coord[1][0] is a list of the coordinating ligand atoms to the metal center (ie: [(0,1),(0,2),(0,3),(0,4),(0,5),(0,6)])
-    coord_idx = [ligand_coord[1][0][atom][1] for atom in range(len(ligand_coord[1][0]))]
+    ## identifies ligand atom indices which are coordinating to the metal cation (ligand_coord)
+    ## Note: coord[1][0] is in list format (ie: [(0,1),(0,2),(0,3),(0,4),(0,5),(0,6)])
+    ligand_coord = []
+    ligand_len   = []
+    # runs over all specified chemical elements
+    for sym in range(len(ligand_atoms)):
+        coord = analyse_bonds(atoms, metal, ligand_atoms[sym], verbose=False)
+        ligand_coord += coord[1][0]
+        ligand_len   += coord[2][0]
+    # extracts the ligand donor atom indices from ligand_coord
+    coord_idx = [ligand_coord[atom][1] for atom in range(len(ligand_coord))]
+    coord_len = ligand_len
 
     ## gets the molecule numbers corresponding to the atom indices
     molidx = {}
@@ -311,15 +316,23 @@ def analyse_chelation(atoms, metal, ligand_atom, mult=1):
     molecules = [*counter.keys()]
     chelation_num = [*counter.values()]
     # convert chelation number to the IUPAC denticity notation (ie: 1 to κ1- (monodentate ligand), 2 to κ2- (bidentate ligand))
-    chelation_type = ["κ" + str(chelation_num[i]) for i in chelation_num]
-
+    chelation_type = ["κ" + str(i) for i in chelation_num]
 
     ## for the molecules coordinating to the metal atom, determines their chemical formula.
     molecule_formulas = []
+    molecule_lengths  = []
     for mol_num in molecules:
         index = molecules.index(mol_num)
         # for said molecule number, obtains all atom indices in said molecule as a list.
         molIdxs[str(mol_num)] = [idx for idx in range(len(component_list)) if component_list[idx] == molecules[index]]
+        # gets which atom indices appears in the list of coordinating atoms
+        ca = set([*molIdxs.values()][index]) & set(coord_idx)
+        # gets the indices corresponding to these atoms for coord_len
+        ca_idx = [coord_idx.index(i) for i in ca]
+        # obtains the bond lengths for the coordinating ligand and appends to list
+        bond_lengths = [coord_len[i] for i in ca_idx]
+        # get average of bond lengths and append to a new list
+        molecule_lengths.append(sum(bond_lengths)/len(bond_lengths))
         # converts the atom indices list to their respective chemical symbols.
         idx_symbols = [atoms.get_chemical_symbols()[idx] for idx in [*molIdxs.values()][index]]
         # converts string of chemical symbols into an atoms object
@@ -330,13 +343,17 @@ def analyse_chelation(atoms, metal, ligand_atom, mult=1):
         molecule_formulas.append(chemical_formula)
 
     ## determines the molecular formula of the complex
-    ligand_type = ["(" + str(chelation_type[i]) + "-" + molecule_formulas[i] + ")" for i in range(len(molecule_formulas))]
-    ligand_count = collections.Counter(ligand_type)
+    # determines ligand formula and binding mode, then sorts ligand formulas.
+    ligand_type = list(zip(chelation_type, molecule_formulas))
+    ligand_type.sort(key=lambda x: x[1])
+    ligand_info = ["(" + str(ligand_type[i][0]) + "-" + str(ligand_type[i][1]) + ")" for i in range(len(molecule_formulas))]
+    ligand_count = collections.Counter(ligand_info)
+    # constructs molecular formula
     complex = metal
     for k, v in ligand_count.items():
         entry = str(k) + str(v)
         complex += entry
 
     ## Puts all relevant variables into a dictionary
-    bond_info = {'complex': complex, 'molecules': molecules, 'formula': molecule_formulas, 'chelation': chelation_type}
+    bond_info = {'complex': complex, 'molecules': molecules, 'formula': molecule_formulas, 'chelation': chelation_type, 'bond lengths': molecule_lengths}
     return bond_info
