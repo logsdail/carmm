@@ -1,5 +1,3 @@
-import matplotlib.pyplot as plt
-
 def color_bar(width, height, bottom, vmin, vmax, orientation, label, cmapcolour):
     """Basic Colour Bar
     figsize= y axis how tall
