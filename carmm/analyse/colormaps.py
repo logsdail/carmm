@@ -41,7 +41,6 @@ def color_bar(width, height, bottom, vmin, vmax, orientation, label, cmapcolour,
     norm = mpl.colors.Normalize(vmin=vmin, vmax=vmax)
 
     fig.colorbar(mpl.cm.ScalarMappable(norm=norm, cmap=colour),
-                cax=ax, orientation=orientation, label=label)
+                 cax=ax, orientation=orientation, label=label)
 
     return fig
-
