@@ -5,7 +5,7 @@ import click
 import click_completion
 
 
-from . import vib
+from . import analyse
 click_completion.init()
 
 
@@ -31,9 +31,7 @@ def cli(ctx, verbose, silent):
         click.echo(f"Welcome to carmm!\n")
 
 
-cli.add_command(info.info)
 cli.add_command(analyse.analyse)
-cli.add_command(run.run)
-cli.add_command(build.build)
+
 
 
