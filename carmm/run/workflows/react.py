@@ -62,6 +62,7 @@ class ReactAims:
         self.final = None                   # input final image for NEB
         self.ts = None                      # TS geometry from NEB
         self.prev_calcs = None              # for NEB restart
+        self.interpolation = None           # TODO: use this for NEBs
 
         """ Set the test flag"""
         self.dry_run = dry_run
@@ -345,11 +346,12 @@ class ReactAims:
         params = self.params
         parent_dir = os.getcwd()
 
+
         """Set the environment parameters"""
         set_aims_command(hpc=hpc, basis_set=basis_set, defaults=2020, nodes_per_instance=self.nodes_per_instance)
 
-        if not interpolation:
-            interpolation = "idpp"
+        if not self.interpolation:
+            self.interpolation = "idpp"
 
         """Read the geometry"""
         if self.filename:
@@ -405,7 +407,7 @@ class ReactAims:
                                      end=final,
                                      ase_calc=calculator,
                                      n_images=n,
-                                     interpolation=interpolation,
+                                     interpolation=self.interpolation,
                                      neb_method="improvedtangent",
                                      prev_calculations=self.prev_calcs,
                                      mic=True,
@@ -482,8 +484,8 @@ class ReactAims:
         """Set the environment parameters"""
         set_aims_command(hpc=hpc, basis_set=basis_set, defaults=2020, nodes_per_instance=self.nodes_per_instance)
 
-        if not interpolation:
-            interpolation = "idpp"
+        if not self.interpolation:
+            self.interpolation = "idpp"
 
         """Read the geometry"""
         if self.filename:
@@ -532,11 +534,11 @@ class ReactAims:
             """Setup the input for AIDNEB"""
             aidneb = AIDNEB(start=initial,
                             end=final,
-                            interpolation=interpolation,
+                            interpolation=self.interpolation,
                             # "idpp" can in some cases (e.g. H2) result in geometry coordinates returned as NaN
                             calculator=calculator,
                             n_images=n+2,
-                            max_train_data=50,
+                            max_train_data=40,
                             trainingset=self.prev_calcs,
                             use_previous_observations=True,
                             neb_method='improvedtangent',
@@ -546,13 +548,14 @@ class ReactAims:
             if not self.dry_run:
                 aidneb.run(fmax=fmax,
                            unc_convergence=unc,
-                           ml_steps=100)
+                           ml_steps=40)
             else:
                 os.chdir(parent_dir)
                 return None
 
         """Find maximum energy, i.e. transition state to return it"""
-        neb = read("AIDNEB.traj@:")
+
+        neb = read("AIDNEB.traj@"+str(-len(read("initial_path.traj@:"))) + ":") # read last predicted trajectory
         self.ts = sorted(neb, key=lambda k: k.get_potential_energy(), reverse=True)[0]
         os.chdir(parent_dir)
 
@@ -808,14 +811,11 @@ class ReactAims:
 
         folder_counter = counter
         subdirectory_name = calc_type + filename + "_" + str(counter)
-        subdirectory_name_prev = calc_type + filename + "_" + str(counter - 1)
 
         """Check previous calculations for convergence"""
         if restart and counter > 0:
             restart_found = False
             while not restart_found and counter > 0:
-
-
                 if verbose:
                     print("Previous calculation detected in", calc_type + filename + "_" + str(counter - 1))
                 os.chdir(calc_type + filename + "_" + str(counter - 1))
@@ -825,8 +825,14 @@ class ReactAims:
                         self.prev_calcs = read("evaluated_structures.traj@:")
                         restart_found = True
                         break
-                    elif os.path.exists("AID_observations.traj"):
-                        self.prev_calcs = read("AID_observations.traj@:")
+                    elif os.path.exists("AIDNEB.traj") and os.path.exists("AIDNEB_observations.traj"):
+                        if type(self.prev_calcs) == list:
+                            self.prev_calcs += read("AIDNEB_observations.traj@:")
+                        else:
+                            self.prev_calcs = read("AIDNEB_observations.traj@:")
+
+                        '''Read last predicted trajectory'''
+                        self.interpolation = read("AIDNEB.traj@" + str(-len(read("initial_path.traj@:"))) + ":")
                         restart_found = True
                         break
                     elif verbose:
