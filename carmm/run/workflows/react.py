@@ -832,7 +832,8 @@ class ReactAims:
                             self.prev_calcs = read("AIDNEB_observations.traj@:")
 
                         '''Read last predicted trajectory'''
-                        self.interpolation = read("AIDNEB.traj@" + str(-len(read("initial_path.traj@:"))) + ":")
+                        '''Guess length from combined AIDNEB based on length of the initial path'''
+                        self.interpolation = read("AIDNEB.traj@" + str(-len(read("initial_path.traj@:")) + 1) + ":")
                         restart_found = True
                         break
                     elif verbose:
