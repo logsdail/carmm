@@ -297,7 +297,7 @@ class ReactAims:
         return self.initial
 
     def search_ts(self, initial, final,
-                  fmax, unc, interpolation="idpp",
+                  fmax, unc, interpolation=None,
                   n=0.25, restart=True, prev_calcs=None,
                   input_check=0.01, verbose=True):
         """
@@ -346,9 +346,9 @@ class ReactAims:
         params = self.params
         parent_dir = os.getcwd()
 
-
         """Set the environment parameters"""
         set_aims_command(hpc=hpc, basis_set=basis_set, defaults=2020, nodes_per_instance=self.nodes_per_instance)
+
 
         if not self.interpolation:
             self.interpolation = "idpp"
@@ -433,7 +433,7 @@ class ReactAims:
 
         return self.ts
 
-    def search_ts_aidneb(self, initial, final, fmax, unc, interpolation="idpp", n=15,
+    def search_ts_aidneb(self, initial, final, fmax, unc, interpolation=None, n=15,
                          restart=True, prev_calcs=None, input_check=0.01, verbose=True):
         """
         This function allows calculation of the transition state using the GPAtom software package in an
@@ -455,7 +455,7 @@ class ReactAims:
                 The "idpp" or "linear" interpolation types are supported in ASE. alternatively user can provide a custom
                 interpolation as a list of Atoms objects.
             n: int or flot
-                Desired number of middle images excluding start and end point. If float the number of images is based on
+                Desired number of middle images excluding start and end pointpo. If float the number of images is based on
                 displacement of atoms. Dense sampling aids convergence but does not increase complexity as significantly
                 as for classic NEB.
             restart: bool
@@ -480,6 +480,7 @@ class ReactAims:
         dimensions = sum(initial.pbc)
         params = self.params
         parent_dir = os.getcwd()
+        self.interpolation = interpolation
 
         """Set the environment parameters"""
         set_aims_command(hpc=hpc, basis_set=basis_set, defaults=2020, nodes_per_instance=self.nodes_per_instance)
