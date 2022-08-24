@@ -9,6 +9,7 @@ from ase.io import read
 from ase.vibrations import Vibrations
 from carmm.analyse.forces import is_converged
 from carmm.run.aims_path import set_aims_command
+from ase.io import Trajectory
 
 
 # TODO: Enable serialization with ASE db - save locations of converged files as well as all properties
@@ -533,6 +534,13 @@ class ReactAims:
             if self.dry_run:
                 calculator = EMT()
 
+            '''Training set functionality does not work correctly when reading a list.'''
+            '''Instead we save all geometries to a file the GPATOM can use'''
+            training_set_dump = Trajectory("AIDNEB_observations.traj", 'w')
+            for atoms in self.prev_calcs:
+                training_set_dump.write(atoms)
+            training_set_dump.close()
+
             """Setup the input for AIDNEB"""
             aidneb = AIDNEB(start=initial,
                             end=final,
@@ -541,7 +549,7 @@ class ReactAims:
                             calculator=calculator,
                             n_images=n+2,
                             max_train_data=40,
-                            trainingset=self.prev_calcs,
+                            trainingset="AIDNEB_observations.traj",
                             use_previous_observations=True,
                             neb_method='improvedtangent',
                             mic=True)
@@ -557,7 +565,7 @@ class ReactAims:
 
         """Find maximum energy, i.e. transition state to return it"""
 
-        neb = read("AIDNEB.traj@"+str(-len(read("initial_path.traj@:")) -1) + ":") # read last predicted trajectory
+        neb = read("AIDNEB.traj@" + str(-len(read("initial_path.traj@:")) - 1) + ":") # read last predicted trajectory
         self.ts = sorted(neb, key=lambda k: k.get_potential_energy(), reverse=True)[0]
         os.chdir(parent_dir)
 
@@ -827,19 +835,32 @@ class ReactAims:
                         self.prev_calcs = read("evaluated_structures.traj@:")
                         restart_found = True
                         break
+
+
                     elif os.path.exists("AIDNEB.traj") and os.path.exists("AIDNEB_observations.traj"):
+                        '''No break here, we combine the whole dataset for GPATOM due to better efficiency than MLNEB'''
+                        '''Retrieve all previous geometries and combine'''
+                        #TODO: respect users self-provided prev_calcs
                         if type(self.prev_calcs) == list:
-                            self.prev_calcs += read("AIDNEB_observations.traj@:")
-                        else:
+                            for atoms in read("AIDNEB_observations.traj@:"):
+                                if not atoms in self.prev_calcs:
+                                    self.prev_calcs += [atoms]
+
+                        elif not self.prev_calcs:
                             self.prev_calcs = read("AIDNEB_observations.traj@:")
 
                         '''Read last predicted trajectory'''
                         '''Guess length from combined AIDNEB based on length of the initial path'''
-                        self.interpolation = read("AIDNEB.traj@" + str(-len(read("initial_path.traj@:")) - 1) + ":")
-                        restart_found = True
-                        break
+                        if not self.interpolation:
+                            self.interpolation = read("AIDNEB.traj@" + str(-len(read("initial_path.traj@:")) - 1) + ":")
+                            if verbose:
+                                print("Interpolation retrieved from", calc_type + filename + "_" + str(counter - 1))
+
+                        if verbose:
+                            print("Data from", calc_type + filename + "_" + str(counter - 1), "added to the training set.")
+
                     elif verbose:
-                        print('Previous trajectory not found, starting from scratch.')
+                        print('Previous TS trajectory not found.')
 
                 elif calc_type == "Opt_":
                     """Check for number of restarted optimisations"""
