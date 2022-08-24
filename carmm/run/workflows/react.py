@@ -345,6 +345,7 @@ class ReactAims:
         dimensions = sum(initial.pbc)
         params = self.params
         parent_dir = os.getcwd()
+        self.interpolation = interpolation
 
         """Set the environment parameters"""
         set_aims_command(hpc=hpc, basis_set=basis_set, defaults=2020, nodes_per_instance=self.nodes_per_instance)
