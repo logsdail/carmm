@@ -833,7 +833,7 @@ class ReactAims:
 
                         '''Read last predicted trajectory'''
                         '''Guess length from combined AIDNEB based on length of the initial path'''
-                        self.interpolation = read("AIDNEB.traj@" + str(-len(read("initial_path.traj@:")) -1) + ":")
+                        self.interpolation = read("AIDNEB.traj@" + str(-len(read("initial_path.traj@:")) - 1) + ":")
                         restart_found = True
                         break
                     elif verbose:
