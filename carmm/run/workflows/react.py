@@ -555,7 +555,7 @@ class ReactAims:
 
         """Find maximum energy, i.e. transition state to return it"""
 
-        neb = read("AIDNEB.traj@"+str(-len(read("initial_path.traj@:"))) + ":") # read last predicted trajectory
+        neb = read("AIDNEB.traj@"+str(-len(read("initial_path.traj@:")) -1) + ":") # read last predicted trajectory
         self.ts = sorted(neb, key=lambda k: k.get_potential_energy(), reverse=True)[0]
         os.chdir(parent_dir)
 
@@ -833,7 +833,7 @@ class ReactAims:
 
                         '''Read last predicted trajectory'''
                         '''Guess length from combined AIDNEB based on length of the initial path'''
-                        self.interpolation = read("AIDNEB.traj@" + str(-len(read("initial_path.traj@:")) + 1) + ":")
+                        self.interpolation = read("AIDNEB.traj@" + str(-len(read("initial_path.traj@:")) -1) + ":")
                         restart_found = True
                         break
                     elif verbose:
