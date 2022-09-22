@@ -321,6 +321,7 @@ def analyse_chelation(atoms, metal, ligand_atoms, mult=1):
     ## for the molecules coordinating to the metal atom, determines their chemical formula.
     molecule_formulas = []
     molecule_lengths  = []
+    ligand_indices = []
     for mol_num in molecules:
         index = molecules.index(mol_num)
         # for said molecule number, obtains all atom indices in said molecule as a list.
@@ -341,6 +342,8 @@ def analyse_chelation(atoms, metal, ligand_atoms, mult=1):
         chemical_formula = Formula(str(atom.symbols)).format('hill')
         # appends formula to a list containing all coordinating molecules
         molecule_formulas.append(chemical_formula)
+        # appends ligand indices in the form of a list of lists
+        ligand_indices.append(molIdxs[str(mol_num)])
 
     ## determines the molecular formula of the complex
     # determines ligand formula and binding mode, then sorts ligand formulas.
@@ -354,6 +357,12 @@ def analyse_chelation(atoms, metal, ligand_atoms, mult=1):
         entry = str(k) + str(v)
         complex += entry
 
-    ## Puts all relevant variables into a dictionary
-    bond_info = {'complex': complex, 'molecules': molecules, 'formula': molecule_formulas, 'chelation': chelation_type, 'bond lengths': molecule_lengths}
+    ## Puts all relevant variables into a dictionary.
+    #'complex': molecular formula of complex
+    #'ligand_idx': list of lists containing ligand indices
+    #'formula': formula of ligands coordinating to metal cation
+    #'chelation': list of chelation numbers for the ligands
+    #'bond lengths': average bond lengths of cordinating ligands
+    #'coord number': coordination number of the metal complex
+    bond_info = {'complex': complex, 'ligand_idx': ligand_indices, 'formula': molecule_formulas, 'chelation': chelation_type, 'bond lengths': molecule_lengths, 'coord number': len(ligand_len)}
     return bond_info
