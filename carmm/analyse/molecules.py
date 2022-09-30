@@ -51,20 +51,19 @@ def calculate_formula(atoms, mult=1):
     Hill's notation (CO2).
     '''
 
-    import collections
+    from ase import Atoms
+    from ase.formula import Formula
     molecules = calculate_molecules(atoms, mult=mult)
     molecule_formula = []
     for i in range(len(molecules)):
         # obtain chemical symbols. Ie: for CO2, they are returned as ['C', 'O', 'O'].
         symbols = [atoms[j].symbol for j in molecules[i]]
-        # counters this list
-        c = collections.Counter(symbols)
-        # returns it in Hill notation.
-        chemical_formula = ''
-        for k, v in c.items():
-            entry = str(k) + str(v)
-            chemical_formula += entry
-        # appends chemical formula for molecule i to a list.
+        # converts string of chemical symbols into an atoms object
+        atom = Atoms(symbols)
+        # uses the ASE formula functionality to convert formula into Hill notation
+        chemical_formula = Formula(str(atom.symbols)).format('hill')
+        # appends formula to a list containing all coordinating molecules
         molecule_formula.append(chemical_formula)
 
     return molecule_formula
+

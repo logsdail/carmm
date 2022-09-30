@@ -21,7 +21,7 @@ def test_molecules():
     #view(slab)
     # Verify results
     assert(len(molecules) == 2)
-    assert(symbols[0] == 'Au18' and symbols[1] == 'C1O2')
+    assert(symbols[0] == 'Au18' and symbols[1] == 'CO2')
 
 
 
