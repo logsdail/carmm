@@ -27,6 +27,7 @@ def radial_distribution_function(model, radius, position, verbose=False):
     super_cell_repeat = [int(ceil((radius/lattice_vectors[0])*2)),
                          int(ceil((radius/lattice_vectors[1])*2)),
                          int(ceil((radius/lattice_vectors[2])*2))]
+
     if verbose:
         print("A, B and C vector lengths = ", lattice_vectors)
         print("Super cell expansion necessary to accommodate radius = ", super_cell_repeat)
@@ -34,6 +35,61 @@ def radial_distribution_function(model, radius, position, verbose=False):
 
     distances_all = get_sorted_distances(super_cell, position)
     distances = [ distance for distance in distances_all if distance < radius ]
+
+    return sorted(distances)
+
+
+def element_radial_distribution_function(model, radius, element,position=None, verbose=False):
+    '''
+    Returns a plot of the distribution of the distance between atoms of a specific element up to given radius
+    Plot is currently a frequency vs distance. Current usage is for periodic solids
+
+    Parameters:
+
+    model: Atoms objects
+        The model from which the RDF is to be plotted
+    radius: float
+        The distance around the atom of interest to plot the RDF
+    position: integer
+        The atom index of interest (i.e. centre of RDF). Default is 0
+
+    Returns:
+
+    distances: List of floats
+        An sorted list of all lengths of bonds between the central atom and others in the desired radius
+
+    '''
+
+    from carmm.analyse.bonds import get_sorted_distances
+    from math import ceil
+    from ase.visualize import view
+    #Get chemical symbol
+    symbol = model.get_chemical_symbols()
+
+    #Get indicies of element of interest
+    indices = [i for i, x in enumerate(symbol) if x == element]
+
+    #Update atoms object for only element of interest
+    model = model[indices]
+
+   #If position is not set will automatically use index 0, otherwise will used specified position
+    if position is None:
+        position = 0
+
+    # Create a super cell of the model big enough to get all interactions within radius
+    lattice_vectors = model.get_cell_lengths_and_angles()[:3]
+    super_cell_repeat = [int(ceil((radius/lattice_vectors[0])*2)),
+                         int(ceil((radius/lattice_vectors[1])*2)),
+                         int(ceil((radius/lattice_vectors[2])*2))]
+    from ase.visualize import view
+
+    if verbose:
+        print("A, B and C vector lengths = ", lattice_vectors)
+        print("Super cell expansion necessary to accommodate radius = ", super_cell_repeat)
+    super_cell = model.repeat(super_cell_repeat)
+
+    distances_all = get_sorted_distances(super_cell, position)
+    distances = [distance for distance in distances_all if distance < radius ]
 
     return sorted(distances)
 
