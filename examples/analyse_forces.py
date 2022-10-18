@@ -8,7 +8,7 @@ Created on Fri 21/04/21
 This script checks if forces data stored in the calculator attached to an Atoms
 object meets the convergence criterion used in geometry optimisation.
 
-TODO: TEST WITH CONSTRAINTS ALSO, SHOULD CHECK FOR CONSTRAINED ATOMS AND IGNORE?
+Also works if system includes constraints, i.e. knows which atoms to check forces for.
 """
 
 def test_analyse_forces():

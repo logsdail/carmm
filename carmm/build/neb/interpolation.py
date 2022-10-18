@@ -36,9 +36,9 @@ def check_interpolation(initial, final, n_max, interpolation="linear", verbose=T
     images = [initial]
     images += [initial.copy() for i in range(n_max-2)]
     images += [final]
-    neb = NEB(images, climb=True)
+    neb = NEB(images)
     # Interpolate linearly the potisions of the middle images:
-    neb.interpolate(interpolation)
+    neb.interpolate(interpolation, apply_constraint=True)
 
     #TODO: Tidy up this horrible mix of if statements.
     if save:

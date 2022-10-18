@@ -173,7 +173,7 @@ def surface_coordination(atoms, cutoff=None, verbose=True):
             if not M_M_cn == []:
                 M_M_avg_cn = np.average(M_M_cn)
             else:
-                M_M_avg_cn = "N/A"
+                M_M_avg_cn = "0" # as the concentration of one of the metals is zero in the layer
 
             dict_surf_CN[layer].update({p[0] + "_neighboring_w_" + p[1]: M_M_avg_cn})
 

@@ -14,7 +14,7 @@ def test_run_k_grid():
     slab = slab(adsorbate=True)
     #########
     sampling_density = 0.02 # example value of sampling density /Angstrom
-    k_grid = get_k_grid(slab, sampling_density, surface=True, verbose=True )
+    k_grid = get_k_grid(slab, sampling_density, verbose=True)
     assert k_grid == (6, 6, 1)
     assert get_k_grid(molecule("CO2"), sampling_density) == None
 
