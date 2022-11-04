@@ -1,5 +1,6 @@
 def rotate_and_place_adsorbate(atoms_ads, atoms_site, bond_length,
-                               ads_idx, site_idx, neighb_idx=0, rotation=[0, 0, 0]):
+                               ads_idx, site_idx, neighb_idx=0, rotation=[0, 0, 0],
+                               lps=1, lp_idx=0):
     """
 
     Place and rotates the adsorbate along a bond length defined by vector -
@@ -33,7 +34,8 @@ def rotate_and_place_adsorbate(atoms_ads, atoms_site, bond_length,
     """
 
     # Zeroes and rotates the molecule along the site normal
-    junk, zeroed_adsorbate = place_adsorbate(atoms_ads, atoms_site, ads_idx, site_idx, bond_length)
+    junk, zeroed_adsorbate = place_adsorbate(atoms_ads, atoms_site, ads_idx,
+                                             site_idx, bond_length, lps=lps, lp_idx=lp_idx)
 
     # Find appropriate orthogonal rotation axes.
     x_axis, y_axis, z_axis = find_adsorbate_rotation_axes(atoms_site, site_idx, neighb_idx)
@@ -42,12 +44,12 @@ def rotate_and_place_adsorbate(atoms_ads, atoms_site, bond_length,
     zeroed_adsorbate.rotate(rotation[1], y_axis, center=zeroed_adsorbate.positions[ads_idx])
     zeroed_adsorbate.rotate(rotation[2], z_axis, center=zeroed_adsorbate.positions[ads_idx])
 
-    ads_and_site = zeroed_adsorbate + atoms_site
+    ads_and_site = atoms_site + zeroed_adsorbate
 
     return ads_and_site, zeroed_adsorbate
 
 
-def place_adsorbate(atoms_ads, atoms_site, ads_idx, site_idx, bond_length):
+def place_adsorbate(atoms_ads, atoms_site, ads_idx, site_idx, bond_length, lps=1, lp_idx=0):
     """
     Place and rotates the adsorbate along a bond length defined by vector.
     Molecule rotated such that the center of positions for the molecule points along
@@ -72,7 +74,42 @@ def place_adsorbate(atoms_ads, atoms_site, ads_idx, site_idx, bond_length):
             Array of positions for the rotated adsorbed species only.
 
     """
+
+    from carmm.analyse.neighbours import neighbours
+    import numpy as np
+
+    assert lps < 3,  "Lone pairs greater than 2 not yet implemented."
+    assert lps != 0, "No valid adsorption site available."
+    assert len(atoms_site) != 0, "Adsorbate site should have at least one other atom attached."
+
+    # Otherwise, just find normal based on average of neighbour vectors.
+    # If multiple lps to adsorb to - generate list of potential sites.
     site_normal = find_site_normal(atoms_site, site_idx)
+
+    # Code and logic is sloppy and will be improved.
+    if lps>1:
+
+        neighb_list, shell_list = neighbours(atoms_site, [site_idx], 1)
+
+        assert 1 < len(shell_list[1]) < 5, "Site either has too few or too many neighbours VSEPR."
+#        assert len(shell_list[1]) > 2, "Not implemented LPs above 2."
+
+        if len(shell_list[1])==2:
+            neighb1 = find_generic_normal(atoms_site, site_idx, shell_list[1][0])
+            neighb2 = find_generic_normal(atoms_site, site_idx, shell_list[1][1])
+
+            y_rot = np.cross(neighb1, neighb2)
+            z_rot = np.cross(y_rot, site_normal)
+            print(z_rot)
+
+            if lp_idx==0:
+               theta = np.pi/180 * -52
+            elif lp_idx==1:
+                theta = np.pi/180 * 52
+
+            rot_matrix = normal_rotation_matrix(theta, z_rot)
+
+            site_normal = np.dot(rot_matrix, site_normal.T).T
 
     if len(atoms_ads.numbers) > 1:
         adsorbate_normal = find_adsorbate_normal(atoms_ads, ads_idx)
@@ -85,7 +122,7 @@ def place_adsorbate(atoms_ads, atoms_site, ads_idx, site_idx, bond_length):
     # Places zeroed coordinates at the bonding position
     atoms_ads.positions = atoms_ads.positions + (bond_length * site_normal) + atoms_site.positions[site_idx]
 
-    ads_and_site = atoms_ads + atoms_site
+    ads_and_site = atoms_site + atoms_ads
 
     return ads_and_site, atoms_ads
 
@@ -115,6 +152,7 @@ def find_site_normal(atoms, index):
     vectors = atoms.positions[neighbour_atoms] - atoms.positions[index]
 
     site_normal = np.sum(vectors, axis=0)
+
     site_normal = -site_normal / np.linalg.norm(site_normal)
 
     return site_normal
@@ -148,6 +186,33 @@ def find_adsorbate_normal(atoms, index):
 
     return molecule_vector
 
+def find_generic_normal(atoms, index1, index2):
+    """
+    Returns a normalised vector specifying the direction of a generic
+    bond.
+
+    Args:
+        atoms: Atoms object
+            Contains the atomic position of the adsorbate.
+        index1: integer
+            The atomic index of atom 1.
+        index2: integer
+            The atomic index of atom 2.
+
+    Returns:
+        site_normal: numpy array, (3).
+            Contains the normalised direction of atom1 to atom2.
+            about (0,0,0).
+
+    """
+
+    import numpy as np
+
+    vector = atoms.positions[index2] - atoms.positions[index1]
+
+    molecule_vector = (vector) / np.linalg.norm(vector)
+
+    return molecule_vector
 
 def find_adsorbate_rotation_axes(atoms_site, site_idx, neighb_idx):
     """
@@ -193,14 +258,10 @@ def find_adsorbate_rotation_axes(atoms_site, site_idx, neighb_idx):
         new_site_idx = neighbour_atoms[0]
         neighbour_atoms, shell_list = neighbours(atoms_site, [new_site_idx], 1)
 
-        # Clean up list - removes error producing options.
-        neighbour_atoms.remove(new_site_idx)
-        neighbour_atoms.remove(site_idx)
-
         # Order list for compatability reasons.
-        neighbour_atoms.sort()
+        shell_list[1].sort()
 
-        vectors = atoms_site.positions[neighbour_atoms] - atoms_site.positions[new_site_idx]
+        vectors = atoms_site.positions[shell_list[1]] - atoms_site.positions[new_site_idx]
         neighb_vector = vectors[neighb_idx] / np.linalg.norm(vectors[neighb_idx])
 
     else:
@@ -258,7 +319,6 @@ def rotate_ads2site_vec(atoms, atoms_idx, site_vec, mol_vec):
 
     return rotated_positions
 
-
 def normal_rotation_matrix(theta, ax):
     """
 
@@ -267,7 +327,7 @@ def normal_rotation_matrix(theta, ax):
 
     Args:
         theta: float
-            Angle of rotation in degree.
+            Angle of rotation in radians.
         ax: numpy array, size = (3)
             Direction of the rotation axis, centered on [0, 0, 0]
 
