@@ -25,8 +25,8 @@ def test_adsorbate_placer():
 
     mth_placed.rotate([-45, 0, -45])
 
-    comp_pos1 = np.array([18.78360766, 5.44998722, -0.87248517])
-    comp_pos2 = np.array([20.89866577, 4.39477469, -0.93801803])
+    comp_pos1 = np.array([19.95202473,  5.71058517,  1.61948947])
+    comp_pos2 = np.array([19.95022531,  3.44633423,  0.93801803])
     error_pos1 = np.linalg.norm(comp_pos1 - mth_placed.atoms_ads.positions[0], axis=-1)
     error_pos2 = np.linalg.norm(comp_pos2 - mth_placed.atoms_ads.positions[2], axis=-1)
 
