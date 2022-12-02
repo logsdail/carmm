@@ -57,9 +57,6 @@ class RotationBox():
         # Zeroes and rotates the molecule along the site normal
         junk, self.zeroed_adsorbate = self.place_adsorbate()
 
-        # Find appropriate orthogonal rotation axes.
-        self.x_axis, self.y_axis, self.z_axis = self.find_adsorbate_rotation_axes()
-
         self.zeroed_adsorbate.rotate(rotation[0], self.x_axis, center=self.zeroed_adsorbate.positions[self.ads_idx])
         self.zeroed_adsorbate.rotate(rotation[1], self.y_axis, center=self.zeroed_adsorbate.positions[self.ads_idx])
         self.zeroed_adsorbate.rotate(rotation[2], self.z_axis, center=self.zeroed_adsorbate.positions[self.ads_idx])
@@ -281,6 +278,9 @@ class RotationBox():
         if len(neighbour_atoms) == 1:
             new_site_idx = neighbour_atoms[0]
             neighbour_atoms, shell_list = neighbours(self.atoms_site, [new_site_idx], 1)
+
+            # Remove item of list with name of original, one neighbour atom.
+            shell_list[1].remove(self.site_idx)
 
             # Order list for compatability reasons.
             shell_list[1].sort()
