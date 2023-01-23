@@ -3,7 +3,7 @@ class RotationBox():
     """Object intended to store functions for rotation"""
 
     def __init__(self, atoms_ads, atoms_site, ads_idx, site_idx,
-                  bond_length, neighb_idx=0, lps=1, lp_idx=1, mult=1):
+                 bond_length, neighb_idx=0, lps=1, lp_idx=1, cutoff_mult=1):
 
         self.atoms_ads = atoms_ads
         self.atoms_site = atoms_site
@@ -16,10 +16,10 @@ class RotationBox():
         self.lps = lps
         self.lp_idx = lp_idx
 
-        self.mult = mult
+        self.cutoff_mult = cutoff_mult
 
         # Finds the normal (ie., the prospective bond to which the adsorbate is attached)
-        self.site_norm = self.find_site_normal(self.atoms_site, self.site_idx, self.mult)
+        self.site_norm = self.find_site_normal(self.atoms_site, self.site_idx, self.cutoff_mult)
         # Find the rotation axes the molecule hinges around.
         self.x_axis, self.y_axis, self.z_axis = self.find_adsorbate_rotation_axes()
 
@@ -124,7 +124,7 @@ class RotationBox():
 
         self.zeroed_adsorbate = copy.deepcopy(self.atoms_ads)
 
-    def find_site_normal(self, atoms, index, mult):
+    def find_site_normal(self, atoms, index, cutoff_mult):
         """
 
         Returns a normalised vector specifying the direction of the adsorbate-adsorption
@@ -135,7 +135,7 @@ class RotationBox():
                 Contains the atomic position of the site.
             index: integer
                 The atomic index of the desired site atom.
-            mult: float
+            cutoff_mult: float
                 Multiplier for the cutoff radii of neighbouring atoms (1 = natural cutoff radii).
 
         Returns:
@@ -151,7 +151,7 @@ class RotationBox():
         assert self.lps != 0, "No valid adsorption site available."
         assert len(self.atoms_site) != 0, "Adsorbate site should have at least one other atom attached."
 
-        cutoff = natural_cutoffs(atoms, mult)
+        cutoff = natural_cutoffs(atoms, cutoff_mult)
         neighbour_atoms, shell_list = neighbours(atoms, [index], 1, cutoff)
 
         vectors = atoms.positions[neighbour_atoms] - atoms.positions[index]
@@ -257,6 +257,8 @@ class RotationBox():
                 Index of the site atom bonding adsorbate and adsorption site.
             neighb_idx: integer
                 Index of neighbour used to form principle axes of rotation.
+            cutoff_mult: float
+                Multiplier for the cutoff radii of neighbouring atoms (1 = natural cutoff radii).
 
         Returns:
             x_axis: numpy array, (3)
@@ -274,7 +276,7 @@ class RotationBox():
 
         # Rotations performed on a RHS axis, with rotations about site normal z, x out plane wrt.
         # bond vector of another neighbour to the shell site and z, and y perpendicular to x and z.
-        cutoff = natural_cutoffs(self.atoms_site, self.mult)
+        cutoff = natural_cutoffs(self.atoms_site, self.cutoff_mult)
         neighbour_atoms, shell_list = neighbours(self.atoms_site, [self.site_idx], 1, cutoff)
 
         # Clean up list for clarity.
