@@ -75,8 +75,8 @@ def transpose(periodic,cluster, start, stop, centre_periodic, centre_cluster, fi
     scaled = str(cluster.get_scaled_positions())
     write = write(file_name, cluster)
 
-def cif2labelpun(frag, charge_dict, in_fname, out_fname, origin_atom, partition_mode='radius',
-             radius=5.0, cell_dim=(1, 1, 1)):
+def cif2labelpun(frag, charge_dict, bulk_in_fname, qm_in_fname, out_fname, origin, origin_value, cluster_r, active_r, adjust_charge, bq_margin, bq_density, partition_mode='radius',
+                 radius=5.0, cell_dim=(1, 1, 1)):
     ''' Returns a .pun ChemShell file with region labelled atoms.
         Inherits lattice parameters from Atoms object. Also supports
         radius based partitioning.
@@ -87,50 +87,80 @@ def cif2labelpun(frag, charge_dict, in_fname, out_fname, origin_atom, partition_
     Parameters:
     charge_dict: dict
              Dictionary for charges of each atom
-    in_fname: string
-             Input file name of periodic structure
+    bulk_in_fname: string
+             Input file name of periodic structure to cut the bulk cluster from
+    qm_in_fname: string
+            Input file name of the QM region for partitioning. If not given, bulk_in_fname is used.
     out_fname: string
              Pre-fix filename for .pun output
-    origin_atom: integer
-              Future functionality for shifting the origin atom
+    origin : string
+             Either 'calculate' or 'provide' if the user wants to provide an origin or let the code calculate one.
+    origin_value: array
+             The value of the user provided origin in fractional coordinates.
     partition_mode: string
-              Accepts 'radius' or 'unit_cell' paritioning modes.
-    cell_dim: tuple
-              Contains the periodicity of the unit cell QM region
+              Accepts 'radius' or 'unit_cell' partitioning modes.
+    
     '''
 
     import numpy as np
-    from chemsh import *
+    from chemsh import addons, base, app, cluster, data, forcefield, hybrid, objects, parallel, tasks, tools
+    from chemsh.io.tools import convert_atoms_to_frag
+    from ase.io import read
 
-    frag = chemsh.io.tools.convert_atoms_to_frag(read(in_fname), connect_mode='ionic')
-    frag.addCharges(charge_dict)
+    bulk_frag = convert_atoms_to_frag(atoms=read(bulk_in_fname), connect_mode='ionic')
+    bulk_frag.addCharges(charge_dict)
 
-    print(f"Vectors: {frag.cell.a, frag.cell.b, frag.cell.c, frag.cell.alpha, frag.cell.beta, frag.cell.gamma}")
-    print(f"coords: {frag.coords}")
-    print(f"names: {frag.names}")
+    print(f"Vectors: {bulk_frag.cell.a, bulk_frag.cell.b, bulk_frag.cell.c, bulk_frag.cell.alpha, bulk_frag.cell.beta, bulk_frag.cell.gamma}")
+    print(f"coords: {bulk_frag.coords}")
+    print(f"names: {bulk_frag.names}")
 
-    cluster = frag.construct_cluster(radius_cluster=cluster_r, origin_atom=0, adjust_charge=adjust_charge,
-                                     radius_active=active_r, bq_margin=bq_margin, bq_density=bq_density,
-                                     bq_layer=12.0)
+    if origin == 'calculate':
+        bulk_origin = find_origin(bulk_frag)
+    if origin == 'provide':
+        bulk_origin = origin_value
+    else:
+        sys.exit()
 
-    if partition_mode == 'unit_cell':
-        qm_region_coords = expand_cell(frag, cell_dimensions=cell_dim)
-        qm_region = match_cell(cluster.coords, qm_region_coords)
-    if partition_mode == 'radius':
-        qm_region = radius_qm_region(cluster.coords, radius)
+    cluster = bulk_frag.construct_cluster(radius_cluster=cluster_r, origin=bulk_origin, adjust_charge=adjust_charge,
+                                          radius_active=active_r, bq_margin=bq_margin, bq_density=bq_density,
+                                          bq_layer=12.0)
 
-    partitioned_cluster = chemsh.cluster.partition.partition(cluster, qm_region=qm_region,
-                                                             origin=np.array([0, 0, 0]), cutoff_boundary=4.0,
-                                                             interface_exclude=["O"], qmmm_interface='explicit',
-                                                             radius_active=20.0)
+    if qm_in_fname == None:
+        qm_origin = bulk_origin
+        qm_frag = bulk_frag
+        if partition_mode == 'unit_cell':
+            qm_region = match_cell(cluster.coords, bulk_frag.coords)
+        if partition_mode == 'radius':
+            qm_region = radius_qm_region(cluster.coords, radius)
+        else:
+            sys.exit()
+
+    else:
+        qm_frag = convert_atoms_to_frag(atoms=read(qm_in_fname), connect_mode='ionic')
+        qm_frag.addCharges(charge_dict)
+        qm_origin = find_origin(qm_frag)
+        qm_frag.coords = qm_frag.coords - ((qm_origin * np.diag(qm_frag.cell.vectors)) - (bulk_origin * np.diag(bulk_frag.cell.vectors)))
+        if partition_mode == 'unit_cell':
+            qm_region = match_cell(cluster.coords, qm_frag.coords)
+        if partition_mode == 'radius':
+            qm_region = radius_qm_region(cluster.coords, radius)
+        else:
+            sys.exit()
+
+    partitioned_cluster = cluster.partition(cluster, qm_region=qm_region,
+                                            origin=qm_origin, cutoff_boundary=4.0,
+                                            interface_exclude=["O"], qmmm_interface='explicit',
+                                            radius_active=20.0)
+
     # Saving cluster
     partitioned_cluster.save(out_fname + '.pun', 'pun')
     partitioned_cluster.save(out_fname + '.xyz', 'xyz')
 
     cluster.save('cluster.pun', 'pun')
-    frag.save('frag.pun', 'pun')
-
-def expand_cell(frag, cell_dimensions=(1, 1, 1)):
+    bulk_frag.save('bulk_frag.pun', 'pun')
+    qm_frag.save('qm_frag.pun', 'pun')
+    
+def expand_cell(frag, cell_dimensions):
     import numpy as np
     import copy
     from math import ceil
@@ -150,40 +180,50 @@ def expand_cell(frag, cell_dimensions=(1, 1, 1)):
     frag_comp = copy.deepcopy(frag)
     print(f"VECTORS {frag.cell.vectors}")
 
-    if cell_dimensions[0] % 2 == 0:
-        imin = -cell_dimensions[0] / 2
-        imax = cell_dimensions[0] / 2 + 1
+    if cell_dimensions != (0,0,0):  
+    
+        if cell_dimensions[0] % 2 == 0:
+            imin = -cell_dimensions[0] / 2
+            imax = cell_dimensions[0] / 2 + 1
+        else:
+            imin = -ceil(cell_dimensions[0] / 2)
+            imax = ceil(cell_dimensions[0] / 2)
+
+        if cell_dimensions[1] % 2 == 0:
+            jmin = -cell_dimensions[1] / 2
+            jmax = cell_dimensions[1] + 1
+        else:
+            jmin = -ceil(cell_dimensions[1] / 2)
+            jmax = ceil(cell_dimensions[1] / 2)
+
+        if cell_dimensions[2] % 2 == 0:
+            kmin = -cell_dimensions[2] / 2
+            kmax = cell_dimensions[2] + 1
+        else:
+            kmin = -ceil(cell_dimensions[2] / 2)
+            kmax = ceil(cell_dimensions[2] / 2)
+
+        for i in np.arange(imin, imax):
+            for j in np.arange(jmin, jmax):
+                for k in np.arange(kmin, kmax):
+                    if i == 0 and j == 0 and k == 0:
+                        continue
+                    vec = np.matmul(np.array([i, j, k]), vectors)
+
+                    frag_comp.coords = np.vstack((frag_comp.coords, frag.coords + vec))
+                    
+        for i in frag_comp.coords:
+            print(i * Bohr)
+        frag_comp.save('qmregion.xyz', 'xyz')
+
+        return frag_comp.coords
+
     else:
-        imin = -ceil(cell_dimensions[0] / 2)
-        imax = ceil(cell_dimensions[0] / 2)
+        for i in frag_comp.coords:
+            print(i * Bohr)
+        frag_comp.save('qmregion.xyz', 'xyz')
 
-    if cell_dimensions[1] % 2 == 0:
-        jmin = -cell_dimensions[1] / 2
-        jmax = cell_dimensions[1] + 1
-    else:
-        jmin = -ceil(cell_dimensions[1] / 2)
-        jmax = ceil(cell_dimensions[1] / 2)
-
-    if cell_dimensions[2] % 2 == 0:
-        kmin = -cell_dimensions[2] / 2
-        kmax = cell_dimensions[2] + 1
-    else:
-        kmin = -ceil(cell_dimensions[2] / 2)
-        kmax = ceil(cell_dimensions[2] / 2)
-
-    for i in np.arange(imin, imax):
-        for j in np.arange(jmin, jmax):
-            for k in np.arange(kmin, kmax):
-                vec = np.matmul(np.array([i, j, k]), vectors)
-
-                frag_comp.coords = np.vstack((frag_comp.coords, frag.coords + vec))
-
-    for i in frag_comp.coords:
-        print(i * Bohr)
-
-    frag_comp.save('qmregion.xyz', 'xyz')
-
-    return frag_comp.coords
+        return frag_comp.coords
 
 
 def match_cell(cluster_coords, frag_coords):
@@ -216,3 +256,30 @@ def radius_qm_region(cluster_coords, radius):
 
     return qm_region
 
+def find_origin(frag):
+    import numpy as np
+    # Returns the coordinate space origin of an orthogonal fragment
+    # in fractional coordinates.
+
+    diag_vectors = np.diagonal(frag.cell.vectors)
+    z_max = 0
+    y_max = 0
+    x_max = 0
+    for n in range(frag.natoms):
+        z_value = frag.coords[n, 2]
+        if z_value > z_max:
+            z_max = z_value
+
+        y_value = frag.coords[n, 1]
+        if y_value > y_max:
+            y_max = y_value
+
+        x_value = frag.coords[n, 0]
+        if x_value > x_max:
+            x_max = x_value
+
+    cart_max = np.array([x_max, y_max, z_max])
+    frac_origin = np.array([((cart_max[0] * 0.5) / diag_vectors[0]), ((cart_max[1] * 0.5) / diag_vectors[1]),
+                            ((cart_max[2] * 0.5) / diag_vectors[2])])
+
+    return frac_origin
