@@ -118,8 +118,6 @@ def cif2labelpun(frag, charge_dict, bulk_in_fname, qm_in_fname, out_fname, origi
         bulk_origin = find_origin(bulk_frag)
     if origin == 'provide':
         bulk_origin = origin_value
-    else:
-        sys.exit()
 
     cluster = bulk_frag.construct_cluster(radius_cluster=cluster_r, origin=bulk_origin, adjust_charge=adjust_charge,
                                           radius_active=active_r, bq_margin=bq_margin, bq_density=bq_density,
@@ -132,23 +130,20 @@ def cif2labelpun(frag, charge_dict, bulk_in_fname, qm_in_fname, out_fname, origi
             qm_region = match_cell(cluster.coords, bulk_frag.coords)
         if partition_mode == 'radius':
             qm_region = radius_qm_region(cluster.coords, radius)
-        else:
-            sys.exit()
 
     else:
         qm_frag = convert_atoms_to_frag(atoms=read(qm_in_fname), connect_mode='ionic')
         qm_frag.addCharges(charge_dict)
-        qm_origin = find_origin(qm_frag)
-        qm_frag.coords = qm_frag.coords - ((qm_origin * np.diag(qm_frag.cell.vectors)) - (bulk_origin * np.diag(bulk_frag.cell.vectors)))
+        qm_frac_origin = find_origin(qm_frag)
+        qm_cart_origin = qm_frac_origin * np.diag(qm_frag.cell.vectors)
+        qm_frag.coords = qm_frag.coords - (qm_cart_origin) - (bulk_origin * np.diag(bulk_frag.cell.vectors)))
         if partition_mode == 'unit_cell':
             qm_region = match_cell(cluster.coords, qm_frag.coords)
         if partition_mode == 'radius':
             qm_region = radius_qm_region(cluster.coords, radius)
-        else:
-            sys.exit()
 
     partitioned_cluster = cluster.partition(cluster, qm_region=qm_region,
-                                            origin=qm_origin, cutoff_boundary=4.0,
+                                            origin=qm_cart_origin, cutoff_boundary=4.0,
                                             interface_exclude=["O"], qmmm_interface='explicit',
                                             radius_active=20.0)
 
