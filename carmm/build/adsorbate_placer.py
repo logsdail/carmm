@@ -1,9 +1,39 @@
 class RotationBox():
+    """
 
-    """Object intended to store functions for rotation"""
+    Object intended to store functions for rotation
+
+        Args:
+            atoms_ads: Atoms object
+                Contains positions of adsorbate.
+            atoms_site: Atoms object
+                Contains positions of the adsorption site.
+            ads_idx: integer
+                Index of the adsorbate atom bonding adsorbate and adsorption site.
+            site_idx: integer
+                Index of the site atom bonding adsorbate and adsorption site.
+            bond_length: float
+                Length of the desired bond between the site and adsorbate.
+            neighb_idx: integer
+                Index of neighbour used to form principle axes of rotation.
+            lps: integer
+                Number of lone pairs on the site atom.
+            lp_idx: integer
+                Index of the potential lone pair site (i.e., if two lone pair sites are present,
+                controls which site the atom adsorbs to).
+            cutoff_mult: float
+                Constant factor multiplies species dependent cut-off radii used in
+                carmm.analysis.neighbours to find the first nearest neighbour to the adsorption
+                site (i.e., larger value potentially finds more neighbours).
+        Returns:
+            RotationBox: RotationBox Object
+                Object used to adsorb a given adsorbate to a given site and rotate
+                as desired using internal functions.
+
+    """
 
     def __init__(self, atoms_ads, atoms_site, ads_idx, site_idx,
-                  bond_length, neighb_idx=0, lps=1, lp_idx=1):
+                 bond_length, neighb_idx=0, lps=1, lp_idx=1, cutoff_mult=1):
 
         self.atoms_ads = atoms_ads
         self.atoms_site = atoms_site
@@ -16,8 +46,10 @@ class RotationBox():
         self.lps = lps
         self.lp_idx = lp_idx
 
+        self.cutoff_mult = cutoff_mult
+
         # Finds the normal (ie., the prospective bond to which the adsorbate is attached)
-        self.site_norm = self.find_site_normal(self.atoms_site, self.site_idx)
+        self.site_norm = self.find_site_normal(self.atoms_site, self.site_idx, self.cutoff_mult)
         # Find the rotation axes the molecule hinges around.
         self.x_axis, self.y_axis, self.z_axis = self.find_adsorbate_rotation_axes()
 
@@ -122,7 +154,7 @@ class RotationBox():
 
         self.zeroed_adsorbate = copy.deepcopy(self.atoms_ads)
 
-    def find_site_normal(self, atoms, index):
+    def find_site_normal(self, atoms, index, cutoff_mult):
         """
 
         Returns a normalised vector specifying the direction of the adsorbate-adsorption
@@ -133,6 +165,8 @@ class RotationBox():
                 Contains the atomic position of the site.
             index: integer
                 The atomic index of the desired site atom.
+            cutoff_mult: float
+                Multiplier for the cutoff radii of neighbouring atoms (1 = natural cutoff radii).
 
         Returns:
             site_normal: numpy array, (3).
@@ -140,24 +174,26 @@ class RotationBox():
 
         """
         from carmm.analyse.neighbours import neighbours
+        from ase.neighborlist import natural_cutoffs
         import numpy as np
 
         assert self.lps < 3, "Lone pairs greater than 2 not yet implemented."
         assert self.lps != 0, "No valid adsorption site available."
         assert len(self.atoms_site) != 0, "Adsorbate site should have at least one other atom attached."
 
-        neighbour_atoms, shell_list = neighbours(atoms, [index], 1)
+        cutoff = natural_cutoffs(atoms, cutoff_mult)
+        neighbour_atoms, shell_list = neighbours(atoms, [index], 1, cutoff)
 
         vectors = atoms.positions[neighbour_atoms] - atoms.positions[index]
 
-        self.site_norm = np.sum(vectors, axis=0)
+        site_norm = np.sum(vectors, axis=0)
 
-        self.site_norm = -self.site_norm / np.linalg.norm(self.site_norm)
+        site_norm = -site_norm / np.linalg.norm(site_norm)
 
         # Code and logic is sloppy and will be improved.
         if self.lps > 1:
 
-            neighb_list, shell_list = neighbours(self.atoms_site, [self.site_idx], 1)
+            neighb_list, shell_list = neighbours(self.atoms_site, [self.site_idx], 1, cutoff)
 
             assert 1 < len(shell_list[1]) < 5, "Site either has too few or too many neighbours VSEPR."
             #        assert len(shell_list[1]) > 2, "Not implemented LPs above 2."
@@ -167,7 +203,7 @@ class RotationBox():
                 neighb2 = self.find_generic_normal(self.atoms_site,self.site_idx,shell_list[1][1])
 
                 y_rot = np.cross(neighb1, neighb2)
-                z_rot = np.cross(y_rot, self.site_norm)
+                z_rot = np.cross(y_rot, site_norm)
 
                 if self.lp_idx == 0:
                     theta = np.pi / 180 * -52
@@ -176,9 +212,9 @@ class RotationBox():
 
                 rot_matrix = self.normal_rotation_matrix(theta, z_rot)
 
-                self.site_norm = np.dot(rot_matrix, self.site_norm.T).T
+                site_norm = np.dot(rot_matrix, site_norm.T).T
 
-        return self.site_norm
+        return site_norm
 
     def find_adsorbate_normal(self, atoms, index):
         """
@@ -251,6 +287,8 @@ class RotationBox():
                 Index of the site atom bonding adsorbate and adsorption site.
             neighb_idx: integer
                 Index of neighbour used to form principle axes of rotation.
+            cutoff_mult: float
+                Multiplier for the cutoff radii of neighbouring atoms (1 = natural cutoff radii).
 
         Returns:
             x_axis: numpy array, (3)
@@ -264,10 +302,12 @@ class RotationBox():
         """
         import numpy as np
         from carmm.analyse.neighbours import neighbours
+        from ase.neighborlist import natural_cutoffs
 
         # Rotations performed on a RHS axis, with rotations about site normal z, x out plane wrt.
         # bond vector of another neighbour to the shell site and z, and y perpendicular to x and z.
-        neighbour_atoms, shell_list = neighbours(self.atoms_site, [self.site_idx], 1)
+        cutoff = natural_cutoffs(self.atoms_site, self.cutoff_mult)
+        neighbour_atoms, shell_list = neighbours(self.atoms_site, [self.site_idx], 1, cutoff)
 
         # Clean up list for clarity.
         neighbour_atoms.remove(self.site_idx)
@@ -277,7 +317,7 @@ class RotationBox():
         # Next site is used to find an appropriate x and y rotation axis.
         if len(neighbour_atoms) == 1:
             new_site_idx = neighbour_atoms[0]
-            neighbour_atoms, shell_list = neighbours(self.atoms_site, [new_site_idx], 1)
+            neighbour_atoms, shell_list = neighbours(self.atoms_site, [new_site_idx], 1, cutoff)
 
             # Remove item of list with name of original, one neighbour atom.
             shell_list[1].remove(self.site_idx)

@@ -6,19 +6,20 @@ def get_aims_calculator(dimensions, k_grid=None, xc="pbe", compute_forces="true"
 
     Parameters:
 
-    dimensions: Integer
-        Determines whether we have a "gas"-phase (0) or "periodic" structure (2 or 3)
-    k_grid: List of integers
-        Gives the k-grid sampling in x-, y- and z- direction. e.g. [3, 3, 3]
-    xc: String
-        XC of choice
-    compute_forces: String
-        Determines whether forces are enabled ("true") or not enabled ("false").
+        dimensions: Integer
+            Determines whether we have a "gas"-phase (0) or "periodic" structure (2 or 3)
+        k_grid: List of integers
+            Gives the k-grid sampling in x-, y- and z- direction. e.g. [3, 3, 3]
+        xc: String
+            XC of choice
+        compute_forces: String
+            Determines whether forces are enabled ("true") or not enabled ("false").
     **kwargs:
-        Any other keyword arguments that a user wants to set.
-
-TODO: Reorder inputs so most necessary are first i.e. xc, compute_forces, k_grid (I think?)
-  AL, March 2021: Doesn't matter - if named, the arguments are dynamic (i.e. can be any order)
+        Any other keyword arguments that a user wants to set. These are passed through.
+        
+    Returns:
+            FHI_calc: FHI-aims ASE calculator
+       
     '''
 
     from ase.calculators.aims import Aims
@@ -78,6 +79,8 @@ def get_aims_and_sockets_calculator(dimensions,
             Warn the user about Hartree to eV conversion being performed in ASE rather than FHI-aims.
             ASE uses CODATA 2014 and FHI-aims uses CODATA 2002 which yields energy discrepancies.
             The warning message can be turned off if set to False.
+    **kwargs:
+        Any other keyword arguments that a user wants to set. These are passed through.
 
     Returns:
         Socket_calc: Wrapper for ASE calculator
@@ -157,7 +160,17 @@ def _check_socket(host, port, verbose=False):
 
     return port
 
-
+"""
+    More Notes on get_k_grid:
+        This function uses a simplified defination of reciprocal 
+        lattice parameters: 1/a. This will provide a slightly denser
+        k-grid. Please note the defination of sampling density is not
+        same as k_grid_density keyword in FHI-aims.This sampliing density 
+        is defined as the spacing of k-points along the reciprocal axis 
+        derived from the cell you have provided. k_grid_density is the
+        number of k points per angstrom along the reciprocal axis and
+        it is calculated with the strict defination of reciprocal lattice vectors.
+"""
 def get_k_grid(model, sampling_density, verbose=False):
 
     '''
@@ -169,33 +182,24 @@ def get_k_grid(model, sampling_density, verbose=False):
     for variable supercell sizes.
 
     Parameters:
-    model: Atoms object
-        Periodic model that requires k-grid for calculation in FHI-aims.
-    sampling_density: float
-        Converged value of minimum reciprocal space sampling required for
-        accuracy of the periodic calculation. This is defined as the spacing
-        of k-points along the reciprocal axis derived from the cell you have
-        provided. Value is a fraction between 0 and 1, unit is /Å.
-    dimensions: int
-        2 sets the k-grid in z-direction to 1 for surface slabs, 3 calculates as normal, k_grid not necessary for others
-        that have vacuum padding added.
-    verbose: bool
-        Flag turning print statements on/off
+        model: Atoms object
+            Periodic model that requires k-grid for calculation in FHI-aims.
+        sampling_density: float
+            Converged value of minimum reciprocal space sampling required for
+            accuracy of the periodic calculation. Value is a fraction between
+            0 and 1, unit is /Å.
+        dimensions: int
+            2 sets the k-grid in z-direction to 1 for surface slabs, 3 calculates as normal, k_grid not necessary for others
+            that have vacuum padding added.
+        verbose: bool
+            Flag turning print statements on/off
 
-    Returns:
-        float containing 3 integers: (kx, ky, kz)
-        or
-        None if a non-periodic model is presented
-    More Notes on this function:
-        This function uses a simplified defination of reciprocal 
-        lattice parameters: 1/a. This will provide a slightly denser
-        k-grid. Please note the defination of sampling density is not
-        same as k_grid_density keyword in FHI-aims. k_grid_density is
-        the number of k points per angstrom along the reciprocal axis
-        and it is calculated with the strict defination of reciprocal
-        lattice vectors.
+        Returns:
+            float containing 3 integers: (kx, ky, kz)
+            or
+            None if a non-periodic model is presented
+
     '''
-
 
     import math
     import numpy as np
