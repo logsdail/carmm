@@ -1,6 +1,36 @@
 class RotationBox():
+    """
 
-    """Object intended to store functions for rotation"""
+    Object intended to store functions for rotation
+
+        Args:
+            atoms_ads: Atoms object
+                Contains positions of adsorbate.
+            atoms_site: Atoms object
+                Contains positions of the adsorption site.
+            ads_idx: integer
+                Index of the adsorbate atom bonding adsorbate and adsorption site.
+            site_idx: integer
+                Index of the site atom bonding adsorbate and adsorption site.
+            bond_length: float
+                Length of the desired bond between the site and adsorbate.
+            neighb_idx: integer
+                Index of neighbour used to form principle axes of rotation.
+            lps: integer
+                Number of lone pairs on the site atom.
+            lp_idx: integer
+                Index of the potential lone pair site (i.e., if two lone pair sites are present,
+                controls which site the atom adsorbs to).
+            cutoff_mult: float
+                Constant factor multiplies species dependent cut-off radii used in
+                carmm.analysis.neighbours to find the first nearest neighbour to the adsorption
+                site (i.e., larger value potentially finds more neighbours).
+        Returns:
+            RotationBox: RotationBox Object
+                Object used to adsorb a given adsorbate to a given site and rotate
+                as desired using internal functions.
+
+    """
 
     def __init__(self, atoms_ads, atoms_site, ads_idx, site_idx,
                  bond_length, neighb_idx=0, lps=1, lp_idx=1, cutoff_mult=1):
@@ -156,9 +186,9 @@ class RotationBox():
 
         vectors = atoms.positions[neighbour_atoms] - atoms.positions[index]
 
-        self.site_norm = np.sum(vectors, axis=0)
+        site_norm = np.sum(vectors, axis=0)
 
-        self.site_norm = -self.site_norm / np.linalg.norm(self.site_norm)
+        site_norm = -site_norm / np.linalg.norm(self.site_norm)
 
         # Code and logic is sloppy and will be improved.
         if self.lps > 1:
@@ -182,9 +212,9 @@ class RotationBox():
 
                 rot_matrix = self.normal_rotation_matrix(theta, z_rot)
 
-                self.site_norm = np.dot(rot_matrix, self.site_norm.T).T
+                site_norm = np.dot(rot_matrix, self.site_norm.T).T
 
-        return self.site_norm
+        return site_norm
 
     def find_adsorbate_normal(self, atoms, index):
         """
