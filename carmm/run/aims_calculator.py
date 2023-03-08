@@ -118,7 +118,10 @@ def get_aims_and_sockets_calculator(dimensions,
         print("The communicated energy in Hartree units will be converted to eV in ASE and not FHI-aims.")
         print("The eV/Hartree unit in FHI-aims is given by CODATA 2002 (Web Version 4.0 2003-12-09), Peter J. Mohr, Barry N. Taylor")
         print("ASE uses CODATA 2014, thus the energy in eV from ASE and the FHI-aims outputs will differ.")
-        print("Please be consistent in the unit conversion for data analysis!")
+        print("e.g. the same atoms.get_total_energy() from ASE will have been converted differently here than a non-sockets calculation")
+        print("Definition of the constants in each CODATA version can be found at https://wiki.fysik.dtu.dk/ase/_modules/ase/units.html in CODATA{} and create_units()")
+        print("PLEASE BE CONSISTENT IN THE UNIT CONVERSION FOR DATA ANALYSIS!")
+        print("If you have previous results from the non-sockets calculator, the energy conversion is approximately [Sockets] = [Non-sockets] * 1.00000005204439")
         print("You can turn off this message by setting 'codata_warning' keyword to False.")
 
     return socket_calc, fhi_calc
