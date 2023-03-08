@@ -173,8 +173,9 @@ def get_k_grid(model, sampling_density, verbose=False):
         Periodic model that requires k-grid for calculation in FHI-aims.
     sampling_density: float
         Converged value of minimum reciprocal space sampling required for
-        accuracy of the periodic calculation. Value is a fraction between
-        0 and 1, unit is /Å.
+        accuracy of the periodic calculation. This is defined as the spacing
+        of k-points along the reciprocal axis derived from the cell you have
+        provided. Value is a fraction between 0 and 1, unit is /Å.
     dimensions: int
         2 sets the k-grid in z-direction to 1 for surface slabs, 3 calculates as normal, k_grid not necessary for others
         that have vacuum padding added.
@@ -185,6 +186,14 @@ def get_k_grid(model, sampling_density, verbose=False):
         float containing 3 integers: (kx, ky, kz)
         or
         None if a non-periodic model is presented
+    More Notes on this function:
+        This function uses a simplified defination of reciprocal 
+        lattice parameters: 1/a. This will provide a slightly denser
+        k-grid. Please note the defination of sampling density is not
+        same as k_grid_density keyword in FHI-aims. k_grid_density is
+        the number of k points per angstrom along the reciprocal axis
+        and it is calculated with the strict defination of reciprocal
+        lattice vectors.
     '''
 
 
