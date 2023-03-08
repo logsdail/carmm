@@ -186,9 +186,9 @@ class RotationBox():
 
         vectors = atoms.positions[neighbour_atoms] - atoms.positions[index]
 
-        self.site_norm = np.sum(vectors, axis=0)
+        site_norm = np.sum(vectors, axis=0)
 
-        self.site_norm = -self.site_norm / np.linalg.norm(self.site_norm)
+        site_norm = -site_norm / np.linalg.norm(self.site_norm)
 
         # Code and logic is sloppy and will be improved.
         if self.lps > 1:
@@ -212,9 +212,9 @@ class RotationBox():
 
                 rot_matrix = self.normal_rotation_matrix(theta, z_rot)
 
-                self.site_norm = np.dot(rot_matrix, self.site_norm.T).T
+                site_norm = np.dot(rot_matrix, self.site_norm.T).T
 
-        return self.site_norm
+        return site_norm
 
     def find_adsorbate_normal(self, atoms, index):
         """
