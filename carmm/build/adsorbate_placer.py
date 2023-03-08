@@ -188,7 +188,7 @@ class RotationBox():
 
         site_norm = np.sum(vectors, axis=0)
 
-        site_norm = -site_norm / np.linalg.norm(self.site_norm)
+        site_norm = -site_norm / np.linalg.norm(site_norm)
 
         # Code and logic is sloppy and will be improved.
         if self.lps > 1:
