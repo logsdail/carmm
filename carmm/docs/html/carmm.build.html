@@ -1,0 +1,507 @@
+
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
+
+    <title>carmm.build package &#8212; CARMM  documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/alabaster.css" />
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/sphinx_highlight.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <section id="carmm-build-package">
+<h1>carmm.build package<a class="headerlink" href="#carmm-build-package" title="Permalink to this heading">¶</a></h1>
+<section id="subpackages">
+<h2>Subpackages<a class="headerlink" href="#subpackages" title="Permalink to this heading">¶</a></h2>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="carmm.build.neb.html">carmm.build.neb package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="carmm.build.neb.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="carmm.build.neb.html#module-carmm.build.neb.bond_length_scan">carmm.build.neb.bond_length_scan module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="carmm.build.neb.html#carmm.build.neb.bond_length_scan.dissociation"><code class="docutils literal notranslate"><span class="pre">dissociation()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="carmm.build.neb.html#module-carmm.build.neb.ilm">carmm.build.neb.ilm module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="carmm.build.neb.html#carmm.build.neb.ilm.multiple_local_extrema"><code class="docutils literal notranslate"><span class="pre">multiple_local_extrema()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="carmm.build.neb.html#carmm.build.neb.ilm.neb_identify_local_minima"><code class="docutils literal notranslate"><span class="pre">neb_identify_local_minima()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="carmm.build.neb.html#module-carmm.build.neb.indices">carmm.build.neb.indices module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="carmm.build.neb.html#carmm.build.neb.indices.sort_by_symbols"><code class="docutils literal notranslate"><span class="pre">sort_by_symbols()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="carmm.build.neb.html#carmm.build.neb.indices.switch_all_indices"><code class="docutils literal notranslate"><span class="pre">switch_all_indices()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="carmm.build.neb.html#carmm.build.neb.indices.switch_indices"><code class="docutils literal notranslate"><span class="pre">switch_indices()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="carmm.build.neb.html#module-carmm.build.neb.interpolation">carmm.build.neb.interpolation module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="carmm.build.neb.html#carmm.build.neb.interpolation.check_interpolation"><code class="docutils literal notranslate"><span class="pre">check_interpolation()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="carmm.build.neb.html#module-carmm.build.neb.neb_pathway">carmm.build.neb.neb_pathway module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="carmm.build.neb.html#module-carmm.build.neb.symmetry">carmm.build.neb.symmetry module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="carmm.build.neb.html#carmm.build.neb.symmetry.get_lattice_constant"><code class="docutils literal notranslate"><span class="pre">get_lattice_constant()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="carmm.build.neb.html#carmm.build.neb.symmetry.mirror"><code class="docutils literal notranslate"><span class="pre">mirror()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="carmm.build.neb.html#carmm.build.neb.symmetry.rotate_fcc"><code class="docutils literal notranslate"><span class="pre">rotate_fcc()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="carmm.build.neb.html#carmm.build.neb.symmetry.sort_by_xyz"><code class="docutils literal notranslate"><span class="pre">sort_by_xyz()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="carmm.build.neb.html#carmm.build.neb.symmetry.sort_z"><code class="docutils literal notranslate"><span class="pre">sort_z()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="carmm.build.neb.html#carmm.build.neb.symmetry.translation"><code class="docutils literal notranslate"><span class="pre">translation()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="carmm.build.neb.html#carmm.build.neb.symmetry.wrap_fcc"><code class="docutils literal notranslate"><span class="pre">wrap_fcc()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="carmm.build.neb.html#module-carmm.build.neb">Module contents</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</section>
+<section id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this heading">¶</a></h2>
+</section>
+<section id="module-carmm.build.adsorbate_placer">
+<span id="carmm-build-adsorbate-placer-module"></span><h2>carmm.build.adsorbate_placer module<a class="headerlink" href="#module-carmm.build.adsorbate_placer" title="Permalink to this heading">¶</a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="carmm.build.adsorbate_placer.find_adsorbate_normal">
+<span class="sig-prename descclassname"><span class="pre">carmm.build.adsorbate_placer.</span></span><span class="sig-name descname"><span class="pre">find_adsorbate_normal</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">atoms</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">index</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#carmm.build.adsorbate_placer.find_adsorbate_normal" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a normalised vector specifying the direction of the desired bonding
+atom of the adsorbate, and the mean of the cartesian positions of the adsorbate
+molecule.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>atoms</strong> – Atoms object
+Contains the atomic position of the adsorbate.</p></li>
+<li><p><strong>index</strong> – integer
+The atomic index of the bonding atom.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><dl class="simple">
+<dt>numpy array, (3).</dt><dd><p>Contains the normalised direction of bonding atom-&gt;center of positions
+about (0,0,0).</p>
+</dd>
+</dl>
+</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>site_normal</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="carmm.build.adsorbate_placer.find_adsorbate_rotation_axes">
+<span class="sig-prename descclassname"><span class="pre">carmm.build.adsorbate_placer.</span></span><span class="sig-name descname"><span class="pre">find_adsorbate_rotation_axes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">atoms_site</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">site_idx</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">neighb_idx</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#carmm.build.adsorbate_placer.find_adsorbate_rotation_axes" title="Permalink to this definition">¶</a></dt>
+<dd><p>Find the x, y and z rotation axes, defined by the direction of the bond
+to the adsorbate (site_normal) and the direction of the bond to a given
+pre-existing neighbour atom. If only one around the adsorbate site is found,
+the next atom its neighbours are used.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>atoms_site</strong> – Atoms object
+Contains positions of the adsorption site.</p></li>
+<li><p><strong>site_idx</strong> – integer
+Index of the site atom bonding adsorbate and adsorption site.</p></li>
+<li><p><strong>neighb_idx</strong> – integer
+Index of neighbour used to form principle axes of rotation.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><dl class="simple">
+<dt>numpy array, (3)</dt><dd><p>x rotation axis (perpendicular to site bonds to the adsorbate and
+another neighbour atom).</p>
+</dd>
+<dt>y_axis, numpy array, (3)</dt><dd><p>y rotation axis (perpendicular given x and y rotation axes).</p>
+</dd>
+<dt>z_axis, numpy array, (3)</dt><dd><p>z rotation axis (defined by the site normal).</p>
+</dd>
+</dl>
+</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>x_axis</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="carmm.build.adsorbate_placer.find_site_normal">
+<span class="sig-prename descclassname"><span class="pre">carmm.build.adsorbate_placer.</span></span><span class="sig-name descname"><span class="pre">find_site_normal</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">atoms</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">index</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#carmm.build.adsorbate_placer.find_site_normal" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a normalised vector specifying the direction of the adsorbate-adsorption
+site bond.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>atoms</strong> – Atoms object
+Contains the atomic position of the site.</p></li>
+<li><p><strong>index</strong> – integer
+The atomic index of the desired site atom.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><dl class="simple">
+<dt>numpy array, (3).</dt><dd><p>Contains the normalised direction of the ads+site bond about (0,0,0).</p>
+</dd>
+</dl>
+</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>site_normal</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="carmm.build.adsorbate_placer.normal_rotation_matrix">
+<span class="sig-prename descclassname"><span class="pre">carmm.build.adsorbate_placer.</span></span><span class="sig-name descname"><span class="pre">normal_rotation_matrix</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">theta</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ax</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#carmm.build.adsorbate_placer.normal_rotation_matrix" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a (3x3) rotation matrix for a rotation about a given
+axis by a theta value.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>theta</strong> – float
+Angle of rotation in degree.</p></li>
+<li><p><strong>ax</strong> – numpy array, size = (3)
+Direction of the rotation axis, centered on [0, 0, 0]</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><dl class="simple">
+<dt>numpy array, size = (3x3)</dt><dd><p>Rotation matrix to be applied to atomic positions.</p>
+</dd>
+</dl>
+</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>rotation_matrix</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="carmm.build.adsorbate_placer.place_adsorbate">
+<span class="sig-prename descclassname"><span class="pre">carmm.build.adsorbate_placer.</span></span><span class="sig-name descname"><span class="pre">place_adsorbate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">atoms_ads</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">atoms_site</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ads_idx</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">site_idx</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bond_length</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#carmm.build.adsorbate_placer.place_adsorbate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Place and rotates the adsorbate along a bond length defined by vector.
+Molecule rotated such that the center of positions for the molecule points along
+the bonding direction. Equivalent to rotate_and_place_adsorbate(…,rotation=[0,0,0]).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>atoms_ads</strong> – Atoms object
+Contains positions of adsorbate.</p></li>
+<li><p><strong>atoms_site</strong> – Atoms object
+Contains positions of the adsorption site.</p></li>
+<li><p><strong>ads_idx</strong> – integer
+Index of the adsorbate atom bonding adsorbate and adsorption site.</p></li>
+<li><p><strong>site_idx</strong> – integer
+Index of the site atom bonding adsorbate and adsorption site.</p></li>
+<li><p><strong>bond_length</strong> – float
+Length of the bond for adsorption.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><dl class="simple">
+<dt>numpy array, (:,3)</dt><dd><p>Array of positions of the adsorbed species and site.</p>
+</dd>
+<dt>atom_ads: numpy array, (:,3)</dt><dd><p>Array of positions for the rotated adsorbed species only.</p>
+</dd>
+</dl>
+</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>ads_and_site</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="carmm.build.adsorbate_placer.rotate_ads2site_vec">
+<span class="sig-prename descclassname"><span class="pre">carmm.build.adsorbate_placer.</span></span><span class="sig-name descname"><span class="pre">rotate_ads2site_vec</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">atoms</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">atoms_idx</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">site_vec</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mol_vec</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#carmm.build.adsorbate_placer.rotate_ads2site_vec" title="Permalink to this definition">¶</a></dt>
+<dd><p>Performs a rotation of the molecule onto the site normal.
+ROTATION MATRIX TAKEN FROM <a class="reference external" href="https://gist.github.com/kevinmoran/b45980723e53edeb8a5a43c49f134724">https://gist.github.com/kevinmoran/b45980723e53edeb8a5a43c49f134724</a></p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>atoms</strong> – Atoms object
+Contains positions of adsorbate.</p></li>
+<li><p><strong>atoms_idx</strong> – integer
+Index of the adsorbate atom bonding adsorbate and adsorption site.</p></li>
+<li><p><strong>site_vec</strong> – numpy array, size=(3)
+vector defining the direction</p></li>
+<li><p><strong>mol_vec</strong> – numpy array, size=(3)
+vector defining direction from the bonding atom to the mean of
+the atomic positions.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><dl class="simple">
+<dt>numpy array, size=(Nx3)</dt><dd><p>Position of the atoms rotated so site_vec and mol_vec align.</p>
+</dd>
+</dl>
+</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>rotated_positions</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="carmm.build.adsorbate_placer.rotate_and_place_adsorbate">
+<span class="sig-prename descclassname"><span class="pre">carmm.build.adsorbate_placer.</span></span><span class="sig-name descname"><span class="pre">rotate_and_place_adsorbate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">atoms_ads</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">atoms_site</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bond_length</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ads_idx</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">site_idx</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">neighb_idx</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rotation</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[0,</span> <span class="pre">0,</span> <span class="pre">0]</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#carmm.build.adsorbate_placer.rotate_and_place_adsorbate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Place and rotates the adsorbate along a bond length defined by vector -
+vector calculated assuming VSEPR model with one remaining lone pair.
+Rotation takes places along the bonding direction. See documentation for
+rotation variable for directions of rotation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>atoms_ads</strong> – Atoms object
+Contains positions of adsorbate.</p></li>
+<li><p><strong>atoms_site</strong> – Atoms object
+Contains positions of the adsorption site.</p></li>
+<li><p><strong>bond_length</strong> – float
+Length of the bond for adsorption.</p></li>
+<li><p><strong>ads_idx</strong> – integer
+Index of the adsorbate atom bonding adsorbate and adsorption site.</p></li>
+<li><p><strong>site_idx</strong> – integer
+Index of the site atom bonding adsorbate and adsorption site.</p></li>
+<li><p><strong>neighb_idx</strong> – integer
+Index of neighbour used to form principle axes of rotation.</p></li>
+<li><p><strong>rotation</strong> – list
+Angles in degrees of rotation for absorbate.
+z - along ads and site bond, x - perpendicular to neighbour and bond, y - perpendicular to x and z.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><dl class="simple">
+<dt>numpy array, (:,3)</dt><dd><p>Array of positions of the adsorbed species and site.</p>
+</dd>
+<dt>atom_ads: numpy array, (:,3)</dt><dd><p>Array of positions for the rotated adsorbed species only.</p>
+</dd>
+</dl>
+</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>ads_and_site</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="module-carmm.build.alloy">
+<span id="carmm-build-alloy-module"></span><h2>carmm.build.alloy module<a class="headerlink" href="#module-carmm.build.alloy" title="Permalink to this heading">¶</a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="carmm.build.alloy.binary_alloy">
+<span class="sig-prename descclassname"><span class="pre">carmm.build.alloy.</span></span><span class="sig-name descname"><span class="pre">binary_alloy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">second_element</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_second_element</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">random_level</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#carmm.build.alloy.binary_alloy" title="Permalink to this definition">¶</a></dt>
+<dd><p>Setup a random alloy</p>
+<p>Parameters:</p>
+<dl class="simple">
+<dt>model: Atoms object</dt><dd><p>Atoms object to turn into a binary alloy</p>
+</dd>
+<dt>second_element: String</dt><dd><p>Name of the new element to introduce</p>
+</dd>
+<dt>n_second_element: Integer</dt><dd><p>Number of second element species to introduce</p>
+</dd>
+<dt>random_level: Integer</dt><dd><p>Number of times to randomise element labels (random on random on…)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="carmm.build.alloy.ternary_alloy">
+<span class="sig-prename descclassname"><span class="pre">carmm.build.alloy.</span></span><span class="sig-name descname"><span class="pre">ternary_alloy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">second_element</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">third_element</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_second_element</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_third_element</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">random_level</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#carmm.build.alloy.ternary_alloy" title="Permalink to this definition">¶</a></dt>
+<dd><p>Setup a random alloy</p>
+<p>Parameters:</p>
+<dl class="simple">
+<dt>model: Atoms object</dt><dd><p>Atoms object to turn into a binary alloy</p>
+</dd>
+<dt>second_element: String</dt><dd><p>Name of the new element to introduce</p>
+</dd>
+<dt>third_element: String</dt><dd><p>Name of the third element in the compounds</p>
+</dd>
+<dt>n_second_element: Integer</dt><dd><p>Number of second element species to introduce</p>
+</dd>
+<dt>n_third_element: Integer</dt><dd><p>Number of third element species to introduce</p>
+</dd>
+<dt>random_level: Integer</dt><dd><p>Number of times to randomise element labels (random on random on…)</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="module-carmm.build.cutout">
+<span id="carmm-build-cutout-module"></span><h2>carmm.build.cutout module<a class="headerlink" href="#module-carmm.build.cutout" title="Permalink to this heading">¶</a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="carmm.build.cutout.cutout_sphere">
+<span class="sig-prename descclassname"><span class="pre">carmm.build.cutout.</span></span><span class="sig-name descname"><span class="pre">cutout_sphere</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">atoms</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">centre</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">distance_cutoff</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5.0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#carmm.build.cutout.cutout_sphere" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a spherical cutout of a structure
+TODO: This doesn’t work with periodic boundary conditions.
+It’d be nice to get that working and update the regression to test this.</p>
+<p>Parameters:</p>
+<dl class="simple">
+<dt>atoms: Atoms object</dt><dd><p>Input structure to cutout from</p>
+</dd>
+<dt>centre: Integer</dt><dd><p>Index of central atom in cutout</p>
+</dd>
+<dt>distance_cutoff: Float</dt><dd><p>Distance outside of which atoms are removed</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="carmm.build.cutout.transpose">
+<span class="sig-prename descclassname"><span class="pre">carmm.build.cutout.</span></span><span class="sig-name descname"><span class="pre">transpose</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">periodic</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cluster</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stop</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">centre_periodic</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">centre_cluster</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">file_name</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#carmm.build.cutout.transpose" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a ChemShell cluster representation of a periodic model</p>
+<p>Parameters:
+periodic: Atoms object</p>
+<blockquote>
+<div><p>Input periodic model of interest</p>
+</div></blockquote>
+<dl class="simple">
+<dt>cluster: Atoms object</dt><dd><p>Input cluster model of interest</p>
+</dd>
+<dt>start: Integer</dt><dd><p>Starting index of atoms to copy into cluster</p>
+</dd>
+<dt>stop:  Integer</dt><dd><p>End index of atoms to copy into cluster</p>
+</dd>
+<dt>centre_periodic: Integer</dt><dd><p>Centre of periodic model</p>
+</dd>
+<dt>centre_cluster: Integer</dt><dd><p>Centre of cluster model</p>
+</dd>
+<dt>name: String</dt><dd><p>Name of new model to save</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="module-carmm.build.facets">
+<span id="carmm-build-facets-module"></span><h2>carmm.build.facets module<a class="headerlink" href="#module-carmm.build.facets" title="Permalink to this heading">¶</a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="carmm.build.facets.generate">
+<span class="sig-prename descclassname"><span class="pre">carmm.build.facets.</span></span><span class="sig-name descname"><span class="pre">generate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">bulk_model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">layers</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">facets</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[(1,</span> <span class="pre">1,</span> <span class="pre">1)]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">supercell</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">(1,</span> <span class="pre">1,</span> <span class="pre">1)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vacuum</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#carmm.build.facets.generate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Function to create variety of different facets</p>
+<p>Parameters:</p>
+<dl class="simple">
+<dt>bulk_model: Atoms object or string</dt><dd><p>specify the unit cell of the bulk geometry, or element from which to construct default bulk</p>
+</dd>
+<dt>layers: int</dt><dd><p>specify the repeating layers along the direction defined in ‘axis’ of the ‘center’ function</p>
+</dd>
+<dt>facets: list of array of ints</dt><dd><p>specify the list of facets required as output</p>
+</dd>
+<dt>supercell: array of ints</dt><dd><p>specify the periodicity of the supercell; (x,y,z).   # can this just be an int?  - No, has to be an array #</p>
+</dd>
+<dt>vacuum: float</dt><dd><p>specifies the vacuum addition to the slab in the direction of ‘axis-’ of the ‘center’ function</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="module-carmm.build.unwrap">
+<span id="carmm-build-unwrap-module"></span><h2>carmm.build.unwrap module<a class="headerlink" href="#module-carmm.build.unwrap" title="Permalink to this heading">¶</a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="carmm.build.unwrap.unwrap">
+<span class="sig-prename descclassname"><span class="pre">carmm.build.unwrap.</span></span><span class="sig-name descname"><span class="pre">unwrap</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mol</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">anchor_atom_index</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#carmm.build.unwrap.unwrap" title="Permalink to this definition">¶</a></dt>
+<dd><p>Unwraps molecule in periodic cell. Makes minimum spanning tree of the molecule space continuous.</p>
+<p>Parameters:
+mol: Atoms object</p>
+<blockquote>
+<div><p>Input periodic model of interest.</p>
+</div></blockquote>
+<dl class="simple">
+<dt>anchor_atom_index: index of the Atom that will be used as an anchor for the rest of molecule.</dt><dd><p>Position of this atom will not be changed.</p>
+</dd>
+</dl>
+<p>Returns: Unwrapped molecule</p>
+</dd></dl>
+
+</section>
+<section id="module-carmm.build">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-carmm.build" title="Permalink to this heading">¶</a></h2>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">CARMM</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2023, Logsdail Group.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 6.1.3</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.13</a>
+      
+      |
+      <a href="_sources/carmm.build.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>
