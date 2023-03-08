@@ -203,7 +203,7 @@ class RotationBox():
                 neighb2 = self.find_generic_normal(self.atoms_site,self.site_idx,shell_list[1][1])
 
                 y_rot = np.cross(neighb1, neighb2)
-                z_rot = np.cross(y_rot, self.site_norm)
+                z_rot = np.cross(y_rot, site_norm)
 
                 if self.lp_idx == 0:
                     theta = np.pi / 180 * -52
@@ -212,7 +212,7 @@ class RotationBox():
 
                 rot_matrix = self.normal_rotation_matrix(theta, z_rot)
 
-                site_norm = np.dot(rot_matrix, self.site_norm.T).T
+                site_norm = np.dot(rot_matrix, site_norm.T).T
 
         return site_norm
 
