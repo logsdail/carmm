@@ -1,3 +1,9 @@
+
+'''
+A collection of scripts that can generate and manipulate Chemshell fragment and cluster objects. These can be created
+from ASE Atoms objects and can use either a large, non-periodic structure to cut out a spherical cluster or can
+make a cluster from a periodic model.
+'''
 def cutout_sphere(atoms, centre, distance_cutoff=5.0):
     '''
     Returns a spherical cutout of a structure
