@@ -14,8 +14,8 @@ def get_aims_calculator(dimensions, k_grid=None, xc="pbe", compute_forces="true"
             XC of choice
         compute_forces: String
             Determines whether forces are enabled ("true") or not enabled ("false").
-    **kwargs:
-        Any other keyword arguments that a user wants to set. These are passed through.
+        **kwargs:
+            Any other keyword arguments that a user wants to set. These are passed through.
         
     Returns:
             FHI_calc: FHI-aims ASE calculator
@@ -79,8 +79,8 @@ def get_aims_and_sockets_calculator(dimensions,
             Warn the user about Hartree to eV conversion being performed in ASE rather than FHI-aims.
             ASE uses CODATA 2014 and FHI-aims uses CODATA 2002 which yields energy discrepancies.
             The warning message can be turned off if set to False.
-    **kwargs:
-        Any other keyword arguments that a user wants to set. These are passed through.
+        **kwargs:
+            Any other keyword arguments that a user wants to set. These are passed through.
 
     Returns:
         Socket_calc: Wrapper for ASE calculator
