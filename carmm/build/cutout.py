@@ -254,7 +254,7 @@ def radius_qm_region(cluster_coords, radius):
 def find_origin(frag):
     import numpy as np
     # Returns the coordinate space origin of an orthogonal fragment
-    # in fractional coordinates.
+    # in fractional and cartesian coordinates.
 
     diag_vectors = np.diagonal(frag.cell.vectors)
     z_max = 0
@@ -274,7 +274,8 @@ def find_origin(frag):
             x_max = x_value
 
     cart_max = np.array([x_max, y_max, z_max])
-    frac_origin = np.array([((cart_max[0] * 0.5) / diag_vectors[0]), ((cart_max[1] * 0.5) / diag_vectors[1]),
-                            ((cart_max[2] * 0.5) / diag_vectors[2])])
+    cart_origin = np.array([(cart_max[0] * 0.5), (cart_max[1] * 0.5), (cart_max[2] * 0.5)])
+    frac_origin = np.array([(cart_origin[0] / diag_vectors[0]), (cart_origin[1] / diag_vectors[1]),
+                            (cart_origin[2] / diag_vectors[2])])
 
-    return frac_origin
+    return frac_origin, cart_origin
