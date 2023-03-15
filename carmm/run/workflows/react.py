@@ -780,7 +780,7 @@ class ReactAims:
             vib.write_mode()
         os.chdir(parent_dir)
 
-        return vib.get_zero_point_energy()
+        return vib
 
     def _restart_setup(self, calc_type, filename, restart=False, verbose=True):
         """This is an internal function for generation of an FHi-aims working folders and ensuring that DFT outputs are

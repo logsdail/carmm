@@ -31,7 +31,7 @@ def test_run_workflows_ReactAims():
     '''Call relevant calculations'''
     '''The below has been previously calculated and data is retrieved from saved trajectories'''
     model_optimised, model_postprocessed = reactor.aims_optimise(atoms, fmax=0.01, restart=True)
-    zero_point_energy = reactor.vibrate(atoms, indices =[atom.index for atom in atoms])
+    zero_point_energy = reactor.vibrate(atoms, indices =[atom.index for atom in atoms]).get_zero_point_energy()
 
     assert is_converged(reactor.model_optimised, 0.01), \
     '''The structure saved in React_Aims is not converged'''
