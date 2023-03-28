@@ -36,7 +36,7 @@ def test_analyse_element_radial_distribution_function():
 
     from carmm.analyse.distribution_functions import plot_distribution_function
     plt = plot_distribution_function(distances, title=chemical_symbols[0] + ' Radial Distribution Function')
-    #plt.show()
+    # plt.show()
 
 def test_analyse_average_distribution_function():
     from carmm.analyse.distribution_functions import average_distribution_function
