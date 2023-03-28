@@ -80,7 +80,30 @@ def test_radius_of_gyration():
     rog = radius_of_gyration(model=water)
     assert(1e-5 > abs(rog-0.317063))
 
-test_analyse_radial_distribution_function()
-test_analyse_element_radial_distribution_function()
-test_analyse_average_distribution_function()
-test_radius_of_gyration()
+
+
+
+def test_rdf():
+    from carmm.analyse.distribution_functions import rdf
+
+    # Build model
+    from data.model_gen import get_example_slab as slab
+    slab = slab(adsorbate=True)
+
+    element1 = 'Au'
+    element2 = 'Au'
+    rdf = rdf(slab, element1, element2)
+
+    from carmm.analyse.distribution_functions import plot_rdf
+
+    y_lab = '$g(r)_{Au-Au}$'
+    plt = plot_rdf(rdf, y_lab=y_lab)
+    plt.show()
+
+
+# test_analyse_radial_distribution_function()
+# test_analyse_element_radial_distribution_function()
+# test_analyse_average_distribution_function()
+# test_radius_of_gyration()
+
+test_rdf()

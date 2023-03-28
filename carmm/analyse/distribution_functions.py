@@ -207,4 +207,47 @@ def radius_of_gyration(model):
 
     return radius_gyration
 
+def rdf(a,s1,s2):
 
+    import numpy as np
+    from itertools import product
+    from ase.io import read
+
+    cell_images = np.array(list(product([-1, 0, 1], repeat=3))) @ a.cell.array
+    positions_images = a.positions[None, ...] + cell_images[:, None, :]
+
+    D = positions_images[:, :, None, :] - a.positions[None, None,...]
+    d = np.linalg.norm(D, axis=-1)
+    #np.savetxt(sys.stdout, np.array(a.symbols)[None, :], fmt='%6s')
+    #np.savetxt(sys.stdout, np.sort(d.reshape((-1, d.shape[-1])), axis=0), fmt='%6.2f')
+
+    r = d[:, a.symbols==s1, :][:,:, a.symbols==s2].ravel()
+
+    return r
+
+def plot_rdf(r, bin_sampling=1, title=None, y_lab=None, **kwargs):
+
+  import numpy as np
+  import matplotlib.pyplot as plt
+
+  bins = int(np.ceil(max(r) / bin_sampling))
+  h,e = np.histogram(r, bins=bins) # histogra, edge
+  e = (e[:-1] + e[1:])/2 # centers of bins
+
+  h = h[1:]
+  e = e[1:]
+
+  print(h)
+
+  # plt.plot(e, h, **kwargs)
+  plt.plot(e, (h/ (4 * np.pi * (e ** 2))) +1, **kwargs)
+
+
+  # Aesthetic
+  plt.xlabel('r/Å', fontsize=15)
+  plt.ylabel(y_lab, fontsize=15)
+  plt.xticks(fontsize=15)
+  plt.yticks(fontsize=15)
+  plt.title(title, fontsize=15)
+
+  return plt
