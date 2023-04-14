@@ -75,7 +75,8 @@ def transpose(periodic,cluster, start, stop, centre_periodic, centre_cluster, fi
     scaled = str(cluster.get_scaled_positions())
     write = write(file_name, cluster)
 
-def cif2labelpun(frag, charge_dict, bulk_in_fname, qm_in_fname, out_fname, origin, origin_value, cluster_r, active_r, adjust_charge, bq_margin, bq_density, partition_mode='radius',
+def cif2labelpun(frag, charge_dict, shell_atom, shell_charge, bulk_in_fname, qm_in_fname, out_fname, origin,
+                 origin_value, cluster_r, active_r, adjust_charge, bq_margin, bq_density, partition_mode='radius',
                  radius=5.0, cell_dim=(1, 1, 1)):
     ''' Returns a .pun ChemShell file with region labelled atoms.
         Inherits lattice parameters from Atoms object. Also supports
@@ -87,6 +88,10 @@ def cif2labelpun(frag, charge_dict, bulk_in_fname, qm_in_fname, out_fname, origi
     Parameters:
     charge_dict: dict
              Dictionary for charges of each atom
+    shell_atom: string
+             Symbol of species with a shell
+    shell_charge: float
+             Value of the charge on the shell
     bulk_in_fname: string
              Input file name of periodic structure to cut the bulk cluster from
     qm_in_fname: string
@@ -109,6 +114,7 @@ def cif2labelpun(frag, charge_dict, bulk_in_fname, qm_in_fname, out_fname, origi
 
     bulk_frag = convert_atoms_to_frag(atoms=read(bulk_in_fname), connect_mode='ionic')
     bulk_frag.addCharges(charge_dict)
+    bulk_frag.addShells(shell_atom, displace=0.0, charges={shell_atom:shell_charge})
 
     print(f"Vectors: {bulk_frag.cell.a, bulk_frag.cell.b, bulk_frag.cell.c, bulk_frag.cell.alpha, bulk_frag.cell.beta, bulk_frag.cell.gamma}")
     print(f"coords: {bulk_frag.coords}")
@@ -135,6 +141,7 @@ def cif2labelpun(frag, charge_dict, bulk_in_fname, qm_in_fname, out_fname, origi
     else:
         qm_frag = convert_atoms_to_frag(atoms=read(qm_in_fname), connect_mode='ionic')
         qm_frag.addCharges(charge_dict)
+        qm_frag.addShells(shell_atom, displace=0.0, charges={shell_atom:shell_charge})
         qm_frac_origin = find_origin(qm_frag)
         qm_cart_origin = qm_frac_origin * np.diag(qm_frag.cell.vectors)
         qm_frag.coords = qm_frag.coords - (qm_cart_origin)
@@ -146,7 +153,7 @@ def cif2labelpun(frag, charge_dict, bulk_in_fname, qm_in_fname, out_fname, origi
     partitioned_cluster = cluster.partition(cluster, qm_region=qm_region,
                                             origin=np.array([0,0,0]), cutoff_boundary=4.0,
                                             interface_exclude=["O"], qmmm_interface='explicit',
-                                            radius_active=20.0)
+                                            radius_active=active_r)
 
     # Saving cluster
     partitioned_cluster.save(out_fname + '.pun', 'pun')
