@@ -75,9 +75,9 @@ def transpose(periodic,cluster, start, stop, centre_periodic, centre_cluster, fi
     scaled = str(cluster.get_scaled_positions())
     write = write(file_name, cluster)
 
-def cif2labelpun(frag, charge_dict, shell_atom, shell_charge, bulk_in_fname, qm_in_fname, out_fname, origin,
+def cif2labelpun(charge_dict, shell_atom, shell_charge, bulk_in_fname, qm_in_fname, out_fname, origin,
                  origin_value, cluster_r, active_r, adjust_charge, bq_margin, bq_density, partition_mode='radius',
-                 radius=5.0, cell_dim=(1, 1, 1)):
+                 radius=5.0, del_atom_index=None):
     ''' Returns a .pun ChemShell file with region labelled atoms.
         Inherits lattice parameters from Atoms object. Also supports
         radius based partitioning.
@@ -131,11 +131,14 @@ def cif2labelpun(frag, charge_dict, shell_atom, shell_charge, bulk_in_fname, qm_
     cluster.coords = cluster.coords - (bulk_origin * np.diag(bulk_frag.cell.vectors))
 
     if qm_in_fname == None:
+        print('No QM region specified, using bulk fragment')
         qm_origin = bulk_origin
         qm_frag = bulk_frag
         if partition_mode == 'unit_cell':
+            print('Unit cell partitioning')
             qm_region = match_cell(cluster.coords, bulk_frag.coords)
         if partition_mode == 'radius':
+            print('Radial partitioning')
             qm_region = radius_qm_region(cluster.coords, radius)
 
     else:
@@ -155,9 +158,13 @@ def cif2labelpun(frag, charge_dict, shell_atom, shell_charge, bulk_in_fname, qm_
                                             interface_exclude=["O"], qmmm_interface='explicit',
                                             radius_active=active_r)
 
+    if del_atom_index != None:
+        partitioned_cluster.delete([del_atom_index])
+
     # Saving cluster
     partitioned_cluster.save(out_fname + '.pun', 'pun')
     partitioned_cluster.save(out_fname + '.xyz', 'xyz')
+    xyz_label_writer(partitioned_cluster, 'labeled_cluster.xyz')
 
     cluster.save('cluster.pun', 'pun')
     bulk_frag.save('bulk_frag.pun', 'pun')
@@ -287,3 +294,28 @@ def find_origin(frag):
                             (cart_origin[2] / diag_vectors[2])])
 
     return frac_origin
+
+def xyz_label_writer(frag, outfname):
+
+    '''
+
+    Args:
+        frag: Partitioned cluster fragment to write .xyz file (Chemshell Fragment)
+        outfname: File name of output .xyz file (Str)
+
+    Returns:
+        .xyz file with labeled atoms for visualisation
+
+    '''
+
+    print("Writing labeled xyz file:", outfname)
+    natoms = frag.natoms
+
+    with open(outfname, 'w') as lab:
+        lab.write(str(natoms) + "\n")
+        lab.write('title' + "\n")
+        for i in range(natoms):
+            strbuff = (str(frag.names[i].decode()) + "   " + str(frag.coords[i]).strip('[]') + "\n")
+            lab.write(strbuff)
+
+    return
