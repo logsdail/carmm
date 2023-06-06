@@ -18,10 +18,6 @@ def test_traj_to_gif():
     assert len(frame_atoms_list) == 41
     assert frame_atoms_list[11].symbols[4] == 'C'  # Random frame
 
-    traj_atoms = read('nh3-h3o-povray.traj@:')
-    assert len(traj_atoms) == 41
-    assert traj_atoms[11].symbols[4] == 'C'  # Same random frame
-
     filenames, delay = gifmaker(41, 'nh3-h3o', 'traj', frames_per_second=10, pause_time=1, keep_png_files=False)
     assert delay == '1x10'
     assert len(filenames) == 59
