@@ -85,3 +85,6 @@ def gifmaker(steps, file, ext, frames_per_second, pause_time, keep_png_files):
         for index in indices:
             os.system(f'rm {file}.{index}.png')
         os.system(f'{file}_povray.{ext}')
+
+    # For testing purposes
+    return filenames, delay
