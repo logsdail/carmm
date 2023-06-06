@@ -36,7 +36,9 @@ def traj_to_gif(filename, frames_per_second=30, pause_time=0.5, atom_subs=None, 
     print("Have a nice day!")
 
 
-def atom_subs(atoms, atom_subs, steps, file, ext):
+def atom_sub(atoms, atom_subs, steps, file, ext):
+
+    frame_atoms_list = []
 
     #Replace atoms of one element with another for clearer visualisation
     for frame in range(steps):
@@ -46,9 +48,10 @@ def atom_subs(atoms, atom_subs, steps, file, ext):
                 for i in range(len(frame_atoms.symbols)):
                     if frame_atoms.symbols[i] == list[0]:
                         frame_atoms.symbols[i] = list[1]
+        frame_atoms.append(frame_atoms_list)
         frame_atoms.write(f'{file}_povray.{ext}', append=True)
 
-    return frame_atoms
+    return frame_atoms_list
 
 def povray_render(atoms, steps, file, ext, atom_subs):
 
