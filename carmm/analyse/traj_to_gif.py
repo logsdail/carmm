@@ -36,7 +36,7 @@ def traj_to_gif(filename, frames_per_second=30, pause_time=0.5, atom_subs=None, 
     print("Have a nice day!")
 
 
-def povray_render(atoms, steps, file, ext, atom_subs):
+def atom_subs(atoms, atom_subs, steps, file, ext):
 
     #Replace atoms of one element with another for clearer visualisation
     for frame in range(steps):
@@ -47,6 +47,12 @@ def povray_render(atoms, steps, file, ext, atom_subs):
                     if frame_atoms.symbols[i] == list[0]:
                         frame_atoms.symbols[i] = list[1]
         frame_atoms.write(f'{file}_povray.{ext}', append=True)
+
+    return frame_atoms
+
+def povray_render(atoms, steps, file, ext, atom_subs):
+
+    atom_subs(atoms, atom_subs, steps, file, ext)
 
     #Allow the user to generate the povray images with reminders of the requirements
     view(atoms)
