@@ -14,8 +14,8 @@ def is_converged(atoms, fmax=0.01):
 
     converged = False
 
-    if atoms.fhi_calc:
-        if not atoms.fhi_calc.calculation_required(atoms, ['forces']):
+    if atoms.calc:
+        if not atoms.calc.calculation_required(atoms, ['forces']):
             f = atoms.get_forces()
 
             '''

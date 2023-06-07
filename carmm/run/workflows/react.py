@@ -112,7 +112,7 @@ class ReactAims:
         self.initial = atoms
         dimensions = sum(self.initial.pbc)
         i_geo = atoms.copy()
-        i_geo.fhi_calc = atoms.calc
+        i_geo.calc = atoms.calc
 
         """Parent directory"""
         parent_dir = os.getcwd()
@@ -636,7 +636,7 @@ class ReactAims:
                 image = initial.copy()
                 if not self.dry_run:
                     image.calc = _calc_generator(params, out_fn=str(i)+"_"+out, dimensions=dimensions)[0]
-                    image.calc.launch_client.fhi_calc.directory = "./" + str(i) + "_" + out[:-4]
+                    image.calc.launch_client.calc.directory = "./" + str(i) + "_" + out[:-4]
                 else:
                     image.calc = EMT()
                     image.calc.directory = "./" + str(i) + "_" + out[:-4]
@@ -654,10 +654,10 @@ class ReactAims:
             for i in range(1, len(interpolation)-1):
                 # use i-1 for name to retain folder naming as per "idpp"
                 if not self.dry_run:
-                    images[i].fhi_calc = _calc_generator(params, out_fn=str(i - 1) + "_" + out, dimensions=dimensions)[0]
+                    images[i].calc = _calc_generator(params, out_fn=str(i-1)+"_"+out, dimensions=dimensions)[0]
                 else:
-                    images[i].fhi_calc = EMT()
-                images[i].fhi_calc.launch_client.fhi_calc.directory = "./" + str(i - 1) + "_" + out[:-4]
+                    images[i].calc = EMT()
+                images[i].calc.launch_client.calc.directory = "./"+str(i-1)+"_"+out[:-4]
         else:
             raise ValueError("Interpolation must be a list of Atoms objects, 'idpp' or 'linear'!")
 

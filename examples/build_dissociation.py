@@ -54,7 +54,7 @@ def test_dissociation():
 
     if optimisation:
         for atoms in atoms_list:
-            atoms.fhi_calc = EMT()
+            atoms.calc = EMT()
             opt = BFGS(atoms)
             opt.run(fmax=0.05)
 

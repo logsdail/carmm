@@ -84,7 +84,7 @@ def pre_neb_aims(initial,
         x = 0
         for atoms in atoms_list:
             id = indices[x]
-            atoms.fhi_calc = get_aims_calculator(2, k_grid=(3, 3, 1))
+            atoms.calc = get_aims_calculator(2, k_grid=(3, 3, 1))
             opt = BFGS(atoms,
                        restart="min_"+str(id)+".pckl",
                        trajectory="min_"+str(id)+".traj")
