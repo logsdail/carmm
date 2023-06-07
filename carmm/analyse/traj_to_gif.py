@@ -35,9 +35,6 @@ def traj_to_gif(filename, frames_per_second=30, pause_time=0.5, atom_subs=None, 
 
     print("Have a nice day!")
 
-    # For testing purposes
-    return file, ext, steps
-
 
 def atom_sub(atoms, atom_subs, steps, file, ext):
 
