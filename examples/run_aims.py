@@ -51,9 +51,9 @@ def test_run_aims():
         # Assertion test that the correct calculators are being set
         # ASE version 3.21 or earlier
         if ase_major_version <= 3 and ase_minor_version <= 21:
-            assert (type(sockets_calc.calc) == Aims)
+            assert (type(sockets_calc.fhi_calc) == Aims)
         else:
         # ASE Version 3.22 or later
-            assert(type(sockets_calc.launch_client.calc) == Aims)
+            assert(type(sockets_calc.launch_client.fhi_calc) == Aims)
 
 test_run_aims()

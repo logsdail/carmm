@@ -44,14 +44,14 @@ def get_example_slab(adsorbate=False, type="CO2", surface="111"):
         if type == "CO2":
             position = (slab[17].position[0], slab[17].position[1])
         elif type == "2Cu":
-            position = (slab[5].x, slab[5].y)
+            position = (slab[5].i, slab[5].y)
 
         species = get_example_adsorbate(type)
         add_adsorbate(slab, species, 3.0, position=position)
 
     # Make the model a bit more technically complete - include a calculator.
     from ase.calculators.emt import EMT
-    slab.calc = EMT()
+    slab.fhi_calc = EMT()
 
     return slab
 

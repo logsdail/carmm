@@ -46,7 +46,7 @@ def switch_indices(model, A, B):
     new_model = model[t]
 
     if model.get_calculator() is not None:
-        new_model.calc = prev_calc
+        new_model.fhi_calc = prev_calc
         # Trick calculator check_state by replacing atoms information
         # Can now use energy and forces as no changes in geometry detected
         prev_calc.atoms = new_model

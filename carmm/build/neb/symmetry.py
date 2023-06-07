@@ -169,7 +169,7 @@ def wrap_fcc(model, surface):
 
     # Remove rounding errors and set corner to (0,0,z)
     for i in reversed([atom.index for atom in model]):
-        model.positions[i][0] = (model.positions[i][0] - model[0].x)
+        model.positions[i][0] = (model.positions[i][0] - model[0].i)
         model.positions[i][1] = (model.positions[i][1] - model[0].y)
 
 

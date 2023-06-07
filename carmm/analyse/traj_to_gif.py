@@ -51,11 +51,12 @@ def atom_sub(atoms, atom_subs, steps, file, ext):
         frame_atoms_list.append(frame_atoms)
         frame_atoms.write(f'{file}_povray.{ext}', append=True)
 
+    # For testing purposes
     return frame_atoms_list
 
 def povray_render(atoms, steps, file, ext, atom_subs):
 
-    atom_subs(atoms, atom_subs, steps, file, ext)
+    atom_sub(atoms, atom_subs, steps, file, ext)
 
     #Allow the user to generate the povray images with reminders of the requirements
     view(atoms)
