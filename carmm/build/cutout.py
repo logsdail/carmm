@@ -128,7 +128,7 @@ def cif2labelpun(charge_dict, shell_atom, shell_charge, bulk_in_fname, qm_in_fna
     cluster = bulk_frag.construct_cluster(radius_cluster=cluster_r, origin=bulk_origin, adjust_charge=adjust_charge,
                                           radius_active=active_r, bq_margin=bq_margin, bq_density=bq_density,
                                           bq_layer=12.0)
-    cluster.coords = cluster.coords - (bulk_origin * np.diag(bulk_frag.cell.vectors))
+    cluster.coords = cluster.coords - (bulk_origin * bulk_frag.cell.constants[:3])
 
     if qm_in_fname == None:
         print('No QM region specified, using bulk fragment')
@@ -146,8 +146,8 @@ def cif2labelpun(charge_dict, shell_atom, shell_charge, bulk_in_fname, qm_in_fna
         qm_frag.addCharges(charge_dict)
         qm_frag.addShells(shell_atom, displace=0.0, charges={shell_atom:shell_charge})
         qm_frac_origin = find_origin(qm_frag)
-        qm_cart_origin = qm_frac_origin * np.diag(qm_frag.cell.vectors)
-        qm_frag.coords = qm_frag.coords - (qm_cart_origin)
+        qm_cart_origin = qm_frac_origin * qm_frag.cell.constants[:3]
+        qm_frag.coords = qm_frag.coords - qm_cart_origin
         if partition_mode == 'unit_cell':
             qm_region = match_cell(cluster.coords, qm_frag.coords)
         if partition_mode == 'radius':
@@ -268,30 +268,15 @@ def radius_qm_region(cluster_coords, radius):
 
 def find_origin(frag):
     import numpy as np
-    # Returns the coordinate space origin of an orthogonal fragment
-    # in fractional and cartesian coordinates.
+    # Returns the coordinate space origin of an orthogonal fragment in fractional coordinates.
+    # This is determined as the mean of the maximum and minimum fractional coords of the fragment.
 
-    diag_vectors = np.diagonal(frag.cell.vectors)
-    z_max = 0
-    y_max = 0
-    x_max = 0
-    for n in range(frag.natoms):
-        z_value = frag.coords[n, 2]
-        if z_value > z_max:
-            z_max = z_value
+    frac_max = np.amax(frag.cell.fractional, axis=0)
+    frac_min = np.amin(frag.cell.fractional, axis=0)
 
-        y_value = frag.coords[n, 1]
-        if y_value > y_max:
-            y_max = y_value
-
-        x_value = frag.coords[n, 0]
-        if x_value > x_max:
-            x_max = x_value
-
-    cart_max = np.array([x_max, y_max, z_max])
-    cart_origin = np.array([(cart_max[0] * 0.5), (cart_max[1] * 0.5), (cart_max[2] * 0.5)])
-    frac_origin = np.array([(cart_origin[0] / diag_vectors[0]), (cart_origin[1] / diag_vectors[1]),
-                            (cart_origin[2] / diag_vectors[2])])
+    frac_origin = np.array([((frac_min[0] + frac_max[0]) / 2),
+                            ((frac_min[1] + frac_max[1]) / 2),
+                            ((frac_min[2] + frac_max[2]) / 2)])
 
     return frac_origin
 
