@@ -12,12 +12,12 @@ def test_adsorbate_placer():
     from carmm.build.adsorbate_placer import RotationBox
     from ase import Atoms
 
-    mth = molecule('CH3CH2OH')
-    site = read("data/H-Y_cluster/H-Y_cluster.xyz")
-
-    h_atom = Atoms('H', positions=[(0, 0, 0)])
-
     for cutoff_mult in [1, 1.2]:
+
+        mth = molecule('CH3CH2OH')
+        site = read("data/H-Y_cluster/H-Y_cluster.xyz")
+
+        h_atom = Atoms('H', positions=[(0, 0, 0)])
 
         h_placed = RotationBox(h_atom, site, 0, 0, 1.0, lps=2)
         h_placed.place_adsorbate()
