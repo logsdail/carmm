@@ -28,6 +28,11 @@ def test_build_NEB():
     other_atom_to_swap = 2
     updated_final = switch_indices(final, atom_to_swap, other_atom_to_swap)
 
+    try:
+        switch_indices(final, atom_to_swap, "2")
+    except TypeError:
+        "Indices must be integers, not strings!"
+
     #### Assertion tests ####
     assert(not check_interpolation(initial, updated_final, 10, verbose=False, save=False))
     ########
