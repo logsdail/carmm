@@ -125,10 +125,12 @@ def cif2labelpun(charge_dict, shell_atom, shell_charge, bulk_in_fname, qm_in_fna
     if origin == 'provide':
         bulk_origin = origin_value
 
-    cluster = bulk_frag.construct_cluster(radius_cluster=cluster_r, origin=bulk_origin, adjust_charge=adjust_charge,
+    bulk_frag.coords = bulk_frag.coords - (bulk_origin * bulk_frag.cell.constants[:3])
+
+    cluster = bulk_frag.construct_cluster(radius_cluster=cluster_r, origin=np.array([0,0,0]), adjust_charge=adjust_charge,
                                           radius_active=active_r, bq_margin=bq_margin, bq_density=bq_density,
                                           bq_layer=12.0)
-    cluster.coords = cluster.coords - (bulk_origin * bulk_frag.cell.constants[:3])
+    #cluster.coords = cluster.coords - (bulk_origin * bulk_frag.cell.constants[:3])
 
     if qm_in_fname == None:
         print('No QM region specified, using bulk fragment')
