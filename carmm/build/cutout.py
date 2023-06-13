@@ -75,12 +75,12 @@ def transpose(periodic,cluster, start, stop, centre_periodic, centre_cluster, fi
     scaled = str(cluster.get_scaled_positions())
     write = write(file_name, cluster)
 
-def cif2labelpun(charge_dict, shell_atom, shell_charge, bulk_in_fname, qm_in_fname, out_fname, origin,
-                 origin_value, cluster_r, active_r, adjust_charge, bq_margin, bq_density, partition_mode='radius',
+def cif2labelpun(charge_dict, shell_atom, shell_charge, bulk_in_fname, qm_in_fname, out_fname, cluster_r,
+                 active_r, adjust_charge, bq_margin, bq_density, partition_mode='radius',
                  radius=5.0, del_atom_index=None):
     ''' Returns a .pun ChemShell file with region labelled atoms.
         Inherits lattice parameters from Atoms object. Also supports
-        radius based partitioning.
+        radius based partitioning. Origin is always set to 0,0,0
 
         Requires ChemShell.
         May be moved to ChemShell, but currently put here for collaboration work.
@@ -98,10 +98,6 @@ def cif2labelpun(charge_dict, shell_atom, shell_charge, bulk_in_fname, qm_in_fna
             Input file name of the QM region for partitioning. If not given, bulk_in_fname is used.
     out_fname: string
              Pre-fix filename for .pun output
-    origin : string
-             Either 'calculate' or 'provide' if the user wants to provide an origin or let the code calculate one.
-    origin_value: array
-             The value of the user provided origin in fractional coordinates.
     partition_mode: string
               Accepts 'radius' or 'unit_cell' partitioning modes.
     
@@ -120,21 +116,14 @@ def cif2labelpun(charge_dict, shell_atom, shell_charge, bulk_in_fname, qm_in_fna
     print(f"coords: {bulk_frag.coords}")
     print(f"names: {bulk_frag.names}")
 
-    if origin == 'calculate':
-        bulk_origin = find_origin(bulk_frag)
-    if origin == 'provide':
-        bulk_origin = origin_value
-
-    bulk_frag.coords = bulk_frag.coords - (bulk_origin * bulk_frag.cell.constants[:3])
+    bulk_frag.coords = bulk_frag.coords - (bulk_frag.centroid)
 
     cluster = bulk_frag.construct_cluster(radius_cluster=cluster_r, origin=np.array([0,0,0]), adjust_charge=adjust_charge,
                                           radius_active=active_r, bq_margin=bq_margin, bq_density=bq_density,
                                           bq_layer=12.0)
-    #cluster.coords = cluster.coords - (bulk_origin * bulk_frag.cell.constants[:3])
 
     if qm_in_fname == None:
         print('No QM region specified, using bulk fragment')
-        qm_origin = bulk_origin
         qm_frag = bulk_frag
         if partition_mode == 'unit_cell':
             print('Unit cell partitioning')
@@ -147,9 +136,8 @@ def cif2labelpun(charge_dict, shell_atom, shell_charge, bulk_in_fname, qm_in_fna
         qm_frag = convert_atoms_to_frag(atoms=read(qm_in_fname), connect_mode='ionic')
         qm_frag.addCharges(charge_dict)
         qm_frag.addShells(shell_atom, displace=0.0, charges={shell_atom:shell_charge})
-        qm_frac_origin = find_origin(qm_frag)
-        qm_cart_origin = qm_frac_origin * qm_frag.cell.constants[:3]
-        qm_frag.coords = qm_frag.coords - qm_cart_origin
+        qm_frag.coords = qm_frag.coords - (qm_frag.centroid)
+
         if partition_mode == 'unit_cell':
             qm_region = match_cell(cluster.coords, qm_frag.coords)
         if partition_mode == 'radius':
@@ -267,20 +255,6 @@ def radius_qm_region(cluster_coords, radius):
     qm_region = [x for x in np.where(dist_from_0 < radius)[0]]
 
     return qm_region
-
-def find_origin(frag):
-    import numpy as np
-    # Returns the coordinate space origin of an orthogonal fragment in fractional coordinates.
-    # This is determined as the mean of the maximum and minimum fractional coords of the fragment.
-
-    frac_max = np.amax(frag.cell.fractional, axis=0)
-    frac_min = np.amin(frag.cell.fractional, axis=0)
-
-    frac_origin = np.array([((frac_min[0] + frac_max[0]) / 2),
-                            ((frac_min[1] + frac_max[1]) / 2),
-                            ((frac_min[2] + frac_max[2]) / 2)])
-
-    return frac_origin
 
 def xyz_label_writer(frag, outfname):
 
