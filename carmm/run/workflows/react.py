@@ -536,10 +536,11 @@ class ReactAims:
 
             '''Training set functionality does not work correctly when reading a list.'''
             '''Instead we save all geometries to a file the GPATOM can use'''
-            training_set_dump = Trajectory("AIDNEB_observations.traj", 'w')
-            for atoms in self.prev_calcs:
-                training_set_dump.write(atoms)
-            training_set_dump.close()
+            if self.prev_calcs:
+                training_set_dump = Trajectory("AIDNEB_observations.traj", 'w')
+                for atoms in self.prev_calcs:
+                    training_set_dump.write(atoms)
+                training_set_dump.close()
 
             """Setup the input for AIDNEB"""
             aidneb = AIDNEB(start=initial,
