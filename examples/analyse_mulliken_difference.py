@@ -55,4 +55,5 @@ initial_file = args[1]
 adsorbate_file = args[2] if len(args) >= 3 else None
 
 # Call the function with command-line arguments
-set_initial_charges(final_file, initial_file, adsorbate_file)
+#set_initial_charges(final_file, initial_file, adsorbate_file)   #uncomment this line for use. 
+set_initial_charges ('data/mulliken/aims.out', 'data/mulliken/aims_1.out', 'data/mulliken/pt.in')
