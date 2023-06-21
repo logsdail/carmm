@@ -76,8 +76,7 @@ def transpose(periodic,cluster, start, stop, centre_periodic, centre_cluster, fi
     write = write(file_name, cluster)
 
 def cif2labelpun(charge_dict, shell_atom, shell_charge, bulk_in_fname, qm_in_fname, out_fname, cluster_r,
-                 active_r, adjust_charge, bq_margin, bq_density, partition_mode='radius',
-                 radius=5.0, del_atom_index=None):
+                 active_r, adjust_charge, bq_margin, bq_density, partition_mode='radius', origin=None, radius=5.0, del_atom_index=None):
     ''' Returns a .pun ChemShell file with region labelled atoms.
         Inherits lattice parameters from Atoms object. Also supports
         radius based partitioning. Origin is always set to 0,0,0
@@ -95,12 +94,14 @@ def cif2labelpun(charge_dict, shell_atom, shell_charge, bulk_in_fname, qm_in_fna
     bulk_in_fname: string
              Input file name of periodic structure to cut the bulk cluster from
     qm_in_fname: string
-            Input file name of the QM region for partitioning. If not given, bulk_in_fname is used.
+             Input file name of the QM region for partitioning. If not given, bulk_in_fname is used.
     out_fname: string
-             Pre-fix filename for .pun output
+              Pre-fix filename for .pun output
     partition_mode: string
               Accepts 'radius' or 'unit_cell' partitioning modes.
-    
+    origin: array
+             An array to define the origin of the cluster and the QM region in fractional coordinates. The bulk
+             and QM fragments should be generated from a single unit cell to ensure an overlap.
     '''
 
     import numpy as np
@@ -116,13 +117,18 @@ def cif2labelpun(charge_dict, shell_atom, shell_charge, bulk_in_fname, qm_in_fna
     print(f"coords: {bulk_frag.coords}")
     print(f"names: {bulk_frag.names}")
 
-    bulk_frag.coords = bulk_frag.coords - (bulk_frag.centroid)
+    if origin is None:
+        bulk_frag.coords = bulk_frag.coords - bulk_frag.centroid
+        bulk_origin = np.array([0,0,0])
+    else:
+        bulk_origin = origin
 
-    cluster = bulk_frag.construct_cluster(radius_cluster=cluster_r, origin=np.array([0,0,0]), adjust_charge=adjust_charge,
+    cluster = bulk_frag.construct_cluster(radius_cluster=cluster_r, origin=bulk_origin, adjust_charge=adjust_charge,
                                           radius_active=active_r, bq_margin=bq_margin, bq_density=bq_density,
                                           bq_layer=12.0)
+    print('Cluster cut successfully')
 
-    if qm_in_fname == None:
+    if qm_in_fname is None:
         print('No QM region specified, using bulk fragment')
         qm_frag = bulk_frag
         if partition_mode == 'unit_cell':
@@ -136,7 +142,13 @@ def cif2labelpun(charge_dict, shell_atom, shell_charge, bulk_in_fname, qm_in_fna
         qm_frag = convert_atoms_to_frag(atoms=read(qm_in_fname), connect_mode='ionic')
         qm_frag.addCharges(charge_dict)
         qm_frag.addShells(shell_atom, displace=0.0, charges={shell_atom:shell_charge})
-        qm_frag.coords = qm_frag.coords - (qm_frag.centroid)
+
+        if origin is None:
+            qm_frag.coords = qm_frag.coords - (qm_frag.centroid)
+            qm_origin = np.array([0, 0, 0])
+        else:
+            qm_origin = origin
+
 
         if partition_mode == 'unit_cell':
             qm_region = match_cell(cluster.coords, qm_frag.coords)
@@ -144,11 +156,11 @@ def cif2labelpun(charge_dict, shell_atom, shell_charge, bulk_in_fname, qm_in_fna
             qm_region = radius_qm_region(cluster.coords, radius)
 
     partitioned_cluster = cluster.partition(cluster, qm_region=qm_region,
-                                            origin=np.array([0,0,0]), cutoff_boundary=4.0,
+                                            origin=qm_origin, cutoff_boundary=4.0,
                                             interface_exclude=["O"], qmmm_interface='explicit',
                                             radius_active=active_r)
-
-    if del_atom_index != None:
+    print('Cluster partitioned successfully')
+    if del_atom_index is not None:
         partitioned_cluster.delete([del_atom_index])
 
     # Saving cluster
@@ -280,3 +292,15 @@ def xyz_label_writer(frag, outfname):
             lab.write(strbuff)
 
     return
+
+def cut_atom_centred_region(atoms, symbol, size):
+    '''
+
+    Args:
+        atoms: Atoms object containing a single unit cell (ASE atoms object)
+        symbol: Species that the fragments should be centred on (str)
+        size: Cubic dimension of the returned cut cell (int)
+
+    Returns:
+
+    '''
