@@ -65,8 +65,13 @@ def povray_render(atoms, steps, file, ext, atom_subs):
 
     #Allow the user to generate the povray images with reminders of the requirements
     view(atoms)
-    print(f'***Remember to change output basename to {file}, select "Render all frames" and deselect "Show output window"***')
-    input('Press Enter to continue once Povray is finished visualising...')
+    print(f'***Crucial Steps***\n'
+          f'1. In ASE GUI, navigate to Tools -> Render Scene\n'
+          f'2. Change "Output basename" to {file}\n'
+          f'3. Select "Render all frames"\n'
+          f'4. Deselect "Show output window"\n'
+          f'5. Change any other settings (e.g. Atomic texture set) as desired')
+    input('***Press Enter to continue once Povray is finished visualising...***')
 
 
 def gifmaker(steps, file, ext, frames_per_second, pause_time, keep_png_files, test):
