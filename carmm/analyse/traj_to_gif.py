@@ -93,7 +93,7 @@ def gifmaker(steps, file, ext, frames_per_second, pause_time, keep_png_files, te
 
     #Execute the ImageMagick convert command in the terminal
     if not test:
-        command = (f'convert -verbose -dispose previous -delay {delay} %s -loop 0 {file}.gif' % ' '.join(filenames))
+        command = (f'convert -verbose -delay {delay} %s -loop 0 {file}.gif' % ' '.join(filenames))
         os.system(command)
 
         #Delete the povray image files if requested
