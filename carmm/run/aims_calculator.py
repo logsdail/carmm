@@ -224,3 +224,103 @@ def get_k_grid(model, sampling_density, verbose=False):
         print()
 
     return k_grid
+
+def generate_k_grid(model, k_grid_density=None, sampling_density=None, simplified=False, verbose=False):
+    '''
+    Based on converged value of reciprocal space sampling provided,
+    this function analyses the xyz-dimensions of the simulation cell
+    and returns the minimum k-grid as a tuple that can be used
+    as a value for the k_grid keyword in the Aims calculator.
+    This function allows to maintain consistency in input
+    for variable supercell sizes.
+    Parameters:
+    model: Atoms object
+        Periodic model that requires k-grid for calculation in FHI-aims.
+    k_grid_density: float
+        Converged value of minimum reciprocal space sampling required for
+        accuracy of the periodic calculation. Value is float number defining
+        the density of k-point splits along the reciprocal axis of the
+        reciprocal unit cell, unit is nkpts/Å^-1. This definition is used for
+        k_grid_density keyword in FHI-aims.
+    sampling density: float
+        Another definition of reciprocal space sampling, which corresponds
+        to the spacing of k-points along the reciprocal axis of the
+        reciprocal unit cell. Value is a fraction between 0 and 1, unit is /Å.
+        The format used in literature is often one k-point per (sampling_density) * 2π /Å.
+    dimensions: int
+        2 sets the k-grid in z-direction to 1 for surface slabs, 3 calculates as normal,
+        k_grid not necessary for others that have vacuum padding added.
+    verbose: bool
+        Flag turning print statements on/off
+    Returns:
+        float containing 3 integers: (kx, ky, kz)
+        or
+        None if a non-periodic model is presented
+    '''
+
+    # dimensions == 1 not considered.
+    import math
+    import numpy as np
+
+    dimensions = sum(model.pbc)
+    if dimensions == 0:
+        print("Number of periodic dimensions in", model.get_chemical_formula(),
+              "is", dimensions, "- no k_grid calculated.")
+        print("Valid structures are periodic in 2 (surface) or 3 (bulk) dimensions.")
+        return None
+
+    # These are lattice parameters
+    x = np.linalg.norm(model.get_cell()[0])
+    y = np.linalg.norm(model.get_cell()[1])
+    z = np.linalg.norm(model.get_cell()[2])
+    # These are lattice vectors
+    x_v = model.get_cell()[0]
+    y_v = model.get_cell()[1]
+    z_v = model.get_cell()[2]
+    # volume of the cell
+    Volume = np.dot(x_v, np.cross(y_v, z_v))
+    # These are reciprocal lattice vectors
+    v_x = np.cross(y_v, z_v) * 2 * math.pi / Volume
+    v_y = np.cross(z_v, x_v) * 2 * math.pi / Volume
+    v_z = np.cross(x_v, y_v) * 2 * math.pi / Volume
+    # These are reciprocal lattice parameters
+    l_v_x = np.linalg.norm(v_x)
+    l_v_y = np.linalg.norm(v_y)
+    l_v_z = np.linalg.norm(v_z)
+    # volume of reciprocal cell
+    Volume_v = np.dot(v_x, np.cross(v_y, v_z))
+
+    # Conversion between sampling density and k_grid_density
+    if sampling_density:
+        k_grid_density = 1/(sampling_density * 2 * math.pi)
+    elif k_grid_density:
+        sampling_density = 1/(k_grid_density * 2 * math.pi)
+    else:
+        print("Please provide reciprocal space sampling")
+        return None
+
+    if not simplified:
+        # recognise surface models and set k_z to 1
+        if dimensions == 2:
+            k_z = 1
+        elif dimensions == 3:
+            # remember to change to math.ceil()
+            k_z = k_grid_density * l_v_z  # Is it better if we use round(...,3) first and then math.ceil this value
+            # It seems not reasonable to me if we get something like 7.000001 and round up to 8
+        k_x = k_grid_density * l_v_x
+        k_y = k_grid_density * l_v_y
+    elif simplified:
+        # recognise surface models and set k_z to 1
+        if dimensions == 2:
+            k_z = 1
+        elif dimensions == 3:
+            k_z = math.ceil((1 / sampling_density) * (1 / z))
+
+        k_x = math.ceil((1 / sampling_density) * (1 / x))
+        k_y = math.ceil((1 / sampling_density) * (1 / y))
+
+
+    k_grid = (k_x, k_y, k_z)
+
+    # volume density of k points, unit nkpts/Å^-3
+    k_grid_density_volume = (math.ceil(k_x) * math.ceil(k_y) * math.ceil(k_z)) / Volume_v
