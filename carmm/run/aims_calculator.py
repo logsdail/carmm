@@ -253,6 +253,9 @@ def generate_k_grid(model, k_grid_density=None, sampling_density=None, simplifie
         to the spacing of k-points along the reciprocal axis of the
         reciprocal unit cell. Value is a fraction between 0 and 1, unit is Å^-1.
         The format used in literature is often one k-point per (sampling_density) * 2π Å^-1.
+    simplified: bool
+        If True, the simplified definition of reciprocal lattice parameters, which is the
+        reciprocal of real space lattice parameters (1/a), will be used.
     dimensions: int
         2 sets the k-grid in z-direction to 1 for surface slabs, 3 calculates as normal,
         k_grid not necessary for others that have vacuum padding added.
