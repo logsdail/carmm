@@ -20,36 +20,10 @@ def switch_indices(model, A, B):
 
     # Defining list of manipulated atoms
     t = [atom.index for atom in model]
-
-    # Retrieve calculator information
-    # TODO: Move this after the creation of the atoms object, so we reduce if statements.
-    # I'm not sure we need any of this here _unless_ we need to copy across the forces?
-    if model.get_calculator() is not None:
-        # If it exists, forces array needs to be adjusted.
-        prev_calc = model.get_calculator()
-        # Removed redundant variable
-        #prev_calc_results = prev_calc.results
-        if "forces" in prev_calc.results:
-            f = prev_calc.results["forces"]
-        else:
-            f = []
-    else:
-        f = []
-
     t[A], t[B] = t[B], t[A]
-    # Ensure function works if force information empty
-    # TODO: Where is this information subsequently used?
-    if not f == []:
-        f[A], f[B] = f[B], f[A]
 
     # Generate a new model based on switched indices
     new_model = model[t]
-
-    if model.get_calculator() is not None:
-        new_model.calc = prev_calc
-        # Trick calculator check_state by replacing atoms information
-        # Can now use energy and forces as no changes in geometry detected
-        prev_calc.atoms = new_model
 
     # User can interact with the new model
     return new_model
@@ -76,8 +50,8 @@ def switch_all_indices(model, new_indices):
     # List of indices that have been swapped
     swapped = []
 
-    # TODO: Add a sanity check to make sure the length of new_indices matches the size
-    #       of the model!
+    assert len(new_indices) == len(model), "Wrong number of indices provided"
+
     for i in range(len(new_indices)):
         if new_indices[i] is not i and i not in swapped:
             new_model = switch_indices(new_model, i, new_indices[i])
@@ -104,49 +78,3 @@ def sort_by_symbols(model):
         blank += model[[atom.index for atom in model if atom.symbol == i]]
 
     return blank
-
-
-'''
-def switch_indices_old(model, A, B, output_file):
-    ## Takes 4 arguments: filename/Atoms object,
-    ## indices A,B to switch around
-    ## and output_file 'name.traj'
-    from ase.io.trajectory import Trajectory
-
-    if isinstance(model, str) is True:
-       model = read(model)
-
-    e=model.get_potential_energy()
-    f=model.get_forces()
-    new_model=Atoms()
-
-    # index manipulation
-    if not isinstance(A, int) and isinstance(B, int):
-        raise ValueError
-        print("Indices must be integers.")
-
-    elif A ==B:
-        print("Chosen idices are identical.")
-
-    elif B < A:
-            A,B = B,A # make sure indices are in the right order
-
-    for i in range(0,A):
-        new_model += model[i]
-    new_model +=model[B]
-    for i in range(A+1,B):
-        new_model += model[i]
-    new_model += model[A]
-    for i in range(B+1,len(model.get_tags())):
-        new_model += model[i]
-    # Copy parameters into the new model
-    new_model.set_cell(model.get_cell())
-    new_model.set_pbc(model.get_pbc())
-    new_model.set_constraint(model._get_constraints())
-
-    # writer section
-    #write('Model_corrected.traj', new_model)
-    t1=Trajectory(str(output_file), 'w')
-    t1.write(new_model, energy=e, forces=f)
-    t1.close()
-'''
