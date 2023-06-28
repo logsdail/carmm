@@ -5,7 +5,6 @@ import os
 
 def traj_to_gif(filename, frames_per_second=30, pause_time=0.5, atom_subs=None, convert_flags=None,
                 keep_temp_files=True, test=False):
-
     """
     A function which takes a .traj file, visualises it in povray with your desired settings and outputs a .gif file.
     When the function gives you the ase viewer, rotate to your desired view, go to Tools -> Render Scene, select the
@@ -33,11 +32,11 @@ def traj_to_gif(filename, frames_per_second=30, pause_time=0.5, atom_subs=None, 
     file = filename.split('/')[-1]
     file, ext = file.split('.')
 
-    atoms = read(filename+'@:')
+    atoms = read(filename + '@:')
     steps = len(atoms)
 
     if not test:
-        povray_render(atoms, steps, file, ext, atom_subs)
+        povray_render(atoms, steps, file, ext, atom_subs, test)
 
     gifmaker(steps, file, ext, frames_per_second, pause_time, convert_flags, keep_temp_files, test)
 
@@ -48,7 +47,6 @@ def traj_to_gif(filename, frames_per_second=30, pause_time=0.5, atom_subs=None, 
 
 
 def atom_sub(atoms, atom_subs, steps, file, ext):
-
     frame_atoms_list = []
 
     # Replace atoms of one element with another for clearer visualisation
@@ -66,31 +64,35 @@ def atom_sub(atoms, atom_subs, steps, file, ext):
     return frame_atoms_list
 
 
-def povray_render(atoms, steps, file, ext, atom_subs):
-
-    atom_sub(atoms, atom_subs, steps, file, ext)
+def povray_render(atoms, atom_subs, steps, file, ext, test):
+    if not test:
+        atom_sub(atoms, atom_subs, steps, file, ext)
 
     # Allow the user to generate the povray images with reminders of the requirements
-    view(atoms)
     print(f'***Crucial Steps***\n'
           f'1. In ASE GUI, navigate to Tools -> Render Scene\n'
           f'2. Change "Output basename" to {file}\n'
           f'3. Select "Render all frames"\n'
           f'4. Deselect "Show output window"\n'
           f'5. Change any other settings (e.g. Atomic texture set) as desired')
-    input('***Press Enter to continue once Povray is finished visualising...***\n')
+
+    if test:
+        frame_atoms_list = atom_sub(atoms, atom_subs, steps, file, ext)
+        return frame_atoms_list
+    else:
+        view(atoms)
+        input('***Press Enter to continue once Povray is finished visualising...***\n')
 
 
 def gifmaker(steps, file, ext, frames_per_second, pause_time, convert_flags, keep_png_files, test):
-
     # Generate the list of povray image filenames
-    digits = len(str(steps-1))
+    digits = len(str(steps - 1))
     indices = [f'%d0{digits}' % i for i in range(steps)]
     filenames = [f'{file}.{index}.png' for index in indices]
 
     # Get the frames_per_second into a format that ImageMagick accepts for the delay flag
     if frames_per_second <= 1:
-        delay = str(1/frames_per_second)
+        delay = str(1 / frames_per_second)
     else:
         delay = f'1x{frames_per_second}'
 
