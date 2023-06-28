@@ -25,12 +25,12 @@ def get_aims_calculator(dimensions, k_grid=None, xc="pbe", compute_forces="true"
     from ase.calculators.aims import Aims
 
     # Default is suitable for molecular calculations
-    fhi_calc =  Aims(
-                     spin='none',
-                     relativistic=('atomic_zora','scalar'),
-                     compute_forces=compute_forces,
-                     **kwargs
-                     )
+    fhi_calc = Aims(
+        spin='none',
+        relativistic=('atomic_zora', 'scalar'),
+        compute_forces=compute_forces,
+        **kwargs
+    )
 
     # Set the XC for the calculation. For LibXC, override_warning_libxc *needs*
     # to be set first, otherwise we get a termination.
@@ -45,6 +45,7 @@ def get_aims_calculator(dimensions, k_grid=None, xc="pbe", compute_forces="true"
         fhi_calc.set(k_grid=k_grid)
 
     return fhi_calc
+
 
 def get_aims_and_sockets_calculator(dimensions,
                                     # i-Pi settings for sockets
@@ -95,7 +96,7 @@ def get_aims_and_sockets_calculator(dimensions,
         # we need to specifically state what the name of the login node is so the two packages can communicate
         # In order to manage this communication in all situations, here we will find and use the hostname *even*
         # if on the same computer (it should work irrespective)
-        host=socket.gethostname()
+        host = socket.gethostname()
 
     # Random port assignment
     if port:
@@ -110,7 +111,7 @@ def get_aims_and_sockets_calculator(dimensions,
     # **kwargs is a passthrough of keyword arguments
     fhi_calc = get_aims_calculator(dimensions, **kwargs)
     # Add in PIMD command to get sockets working
-    fhi_calc.set(use_pimd_wrapper = [host, port])
+    fhi_calc.set(use_pimd_wrapper=[host, port])
 
     # Setup sockets calculator that "wraps" FHI-aims
     from ase.calculators.socketio import SocketIOCalculator
@@ -119,12 +120,14 @@ def get_aims_and_sockets_calculator(dimensions,
     if codata_warning:
         print("You are using i-Pi based socket connectivity between ASE and FHI-aims.")
         print("The communicated energy in Hartree units will be converted to eV in ASE and not FHI-aims.")
-        print("The eV/Hartree unit in FHI-aims is given by CODATA 2002 (Web Version 4.0 2003-12-09), Peter J. Mohr, Barry N. Taylor")
+        print(
+            "The eV/Hartree unit in FHI-aims is given by CODATA 2002 (Web Version 4.0 2003-12-09), Peter J. Mohr, Barry N. Taylor")
         print("ASE uses CODATA 2014, thus the energy in eV from ASE and the FHI-aims outputs will differ.")
         print("Please be consistent in the unit conversion for data analysis!")
         print("You can turn off this message by setting 'codata_warning' keyword to False.")
 
     return socket_calc, fhi_calc
+
 
 def _check_socket(host, port, verbose=False):
     '''
@@ -149,7 +152,7 @@ def _check_socket(host, port, verbose=False):
         # Repeat until we find a port number that is not in use currently.
         while not sock.connect_ex((host, port)):
             # Debug statement
-            if verbose: print("Port #"+str(port-1)+" is unavailable.")
+            if verbose: print("Port #" + str(port - 1) + " is unavailable.")
             # Update port
             port += 1
             # Raise issue if port number gets to big!
@@ -162,7 +165,6 @@ def _check_socket(host, port, verbose=False):
 
 
 def get_k_grid(model, sampling_density, verbose=False):
-
     '''
     Based converged value of reciprocal space sampling provided,
     this function analyses the xyz-dimensions of the simulation cell
@@ -206,14 +208,13 @@ def get_k_grid(model, sampling_density, verbose=False):
         k_z = math.ceil((1 / sampling_density) * (1 / z))
     else:
         print("Number of periodic dimensions in", model.get_chemical_formula(),
-                "is", dimensions, "- no k_grid calculated.")
+              "is", dimensions, "- no k_grid calculated.")
         print("Valid structures are periodic in 2 (surface) or 3 (bulk) dimensions.")
         return None
 
     k_x = math.ceil((1 / sampling_density) * (1 / x))
     k_y = math.ceil((1 / sampling_density) * (1 / y))
     # recognise surface models and set k_z to 1
-
 
     k_grid = (k_x, k_y, k_z)
 
@@ -225,8 +226,9 @@ def get_k_grid(model, sampling_density, verbose=False):
 
     return k_grid
 
+
 def generate_k_grid(model, k_grid_density=None, sampling_density=None, simplified=False, verbose=False):
-    '''
+    """
     Based on converged value of reciprocal space sampling provided,
     this function analyses the xyz-dimensions of the simulation cell
     and returns the minimum k-grid as a tuple that can be used
@@ -245,8 +247,8 @@ def generate_k_grid(model, k_grid_density=None, sampling_density=None, simplifie
     sampling density: float
         Another definition of reciprocal space sampling, which corresponds
         to the spacing of k-points along the reciprocal axis of the
-        reciprocal unit cell. Value is a fraction between 0 and 1, unit is /Å.
-        The format used in literature is often one k-point per (sampling_density) * 2π /Å.
+        reciprocal unit cell. Value is a fraction between 0 and 1, unit is Å^-1.
+        The format used in literature is often one k-point per (sampling_density) * 2π Å^-1.
     dimensions: int
         2 sets the k-grid in z-direction to 1 for surface slabs, 3 calculates as normal,
         k_grid not necessary for others that have vacuum padding added.
@@ -256,9 +258,8 @@ def generate_k_grid(model, k_grid_density=None, sampling_density=None, simplifie
         float containing 3 integers: (kx, ky, kz)
         or
         None if a non-periodic model is presented
-    '''
+    """
 
-    # dimensions == 1 not considered.
     import math
     import numpy as np
 
@@ -292,9 +293,9 @@ def generate_k_grid(model, k_grid_density=None, sampling_density=None, simplifie
 
     # Conversion between sampling density and k_grid_density
     if sampling_density:
-        k_grid_density = 1/(sampling_density * 2 * math.pi)
+        k_grid_density = 1 / (sampling_density * 2 * math.pi)
     elif k_grid_density:
-        sampling_density = 1/(k_grid_density * 2 * math.pi)
+        sampling_density = 1 / (k_grid_density * 2 * math.pi)
     else:
         print("Please provide reciprocal space sampling")
         return None
@@ -304,9 +305,8 @@ def generate_k_grid(model, k_grid_density=None, sampling_density=None, simplifie
         if dimensions == 2:
             k_z = 1
         elif dimensions == 3:
-            # remember to change to math.ceil()
-            k_z = k_grid_density * l_v_z  # Is it better if we use round(...,3) first and then math.ceil this value
-            # It seems not reasonable to me if we get something like 7.000001 and round up to 8
+            k_z = k_grid_density * l_v_z
+
         k_x = k_grid_density * l_v_x
         k_y = k_grid_density * l_v_y
     elif simplified:
@@ -314,13 +314,22 @@ def generate_k_grid(model, k_grid_density=None, sampling_density=None, simplifie
         if dimensions == 2:
             k_z = 1
         elif dimensions == 3:
-            k_z = math.ceil((1 / sampling_density) * (1 / z))
+            k_z = (1 / sampling_density) * (1 / z)
 
-        k_x = math.ceil((1 / sampling_density) * (1 / x))
-        k_y = math.ceil((1 / sampling_density) * (1 / y))
-
-
-    k_grid = (k_x, k_y, k_z)
+        k_x = (1 / sampling_density) * (1 / x)
+        k_y = (1 / sampling_density) * (1 / y)
+    # Is it better if we use round(...,3) first and then math.ceil this value
+    # It seems not reasonable to me if we get something like 7.000001 and round up to 8
+    k_grid = (math.ceil(k_x), math.ceil(k_y), math.ceil(k_z))
 
     # volume density of k points, unit nkpts/Å^-3
     k_grid_density_volume = (math.ceil(k_x) * math.ceil(k_y) * math.ceil(k_z)) / Volume_v
+
+    if verbose:
+        print("Based on lattice xyz dimensions", "x", round(x, 3), "y", round(y, 3), "z", round(z, 3))
+        print('Lattice vectors:', 'x', x_v, 'y', y_v, 'z', z_v)
+        print("and", str(k_grid_density), "sampling density, the k-grid chosen for periodic calculation is",
+              str(k_grid) + ".")
+        print('volume density of k-points', k_grid_density_volume)
+
+    return k_grid
