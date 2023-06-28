@@ -25,12 +25,12 @@ def get_aims_calculator(dimensions, k_grid=None, xc="pbe", compute_forces="true"
     from ase.calculators.aims import Aims
 
     # Default is suitable for molecular calculations
-    fhi_calc = Aims(
-        spin='none',
-        relativistic=('atomic_zora', 'scalar'),
-        compute_forces=compute_forces,
-        **kwargs
-    )
+    fhi_calc =  Aims(
+                     spin='none',
+                     relativistic=('atomic_zora','scalar'),
+                     compute_forces=compute_forces,
+                     **kwargs
+                     )
 
     # Set the XC for the calculation. For LibXC, override_warning_libxc *needs*
     # to be set first, otherwise we get a termination.
@@ -45,7 +45,6 @@ def get_aims_calculator(dimensions, k_grid=None, xc="pbe", compute_forces="true"
         fhi_calc.set(k_grid=k_grid)
 
     return fhi_calc
-
 
 def get_aims_and_sockets_calculator(dimensions,
                                     # i-Pi settings for sockets
@@ -96,7 +95,7 @@ def get_aims_and_sockets_calculator(dimensions,
         # we need to specifically state what the name of the login node is so the two packages can communicate
         # In order to manage this communication in all situations, here we will find and use the hostname *even*
         # if on the same computer (it should work irrespective)
-        host = socket.gethostname()
+        host=socket.gethostname()
 
     # Random port assignment
     if port:
@@ -111,7 +110,7 @@ def get_aims_and_sockets_calculator(dimensions,
     # **kwargs is a passthrough of keyword arguments
     fhi_calc = get_aims_calculator(dimensions, **kwargs)
     # Add in PIMD command to get sockets working
-    fhi_calc.set(use_pimd_wrapper=[host, port])
+    fhi_calc.set(use_pimd_wrapper = [host, port])
 
     # Setup sockets calculator that "wraps" FHI-aims
     from ase.calculators.socketio import SocketIOCalculator
@@ -120,14 +119,17 @@ def get_aims_and_sockets_calculator(dimensions,
     if codata_warning:
         print("You are using i-Pi based socket connectivity between ASE and FHI-aims.")
         print("The communicated energy in Hartree units will be converted to eV in ASE and not FHI-aims.")
-        print(
-            "The eV/Hartree unit in FHI-aims is given by CODATA 2002 (Web Version 4.0 2003-12-09), Peter J. Mohr, Barry N. Taylor")
-        print("ASE uses CODATA 2014, thus the energy in eV from ASE and the FHI-aims outputs will differ.")
-        print("Please be consistent in the unit conversion for data analysis!")
+        print("The eV/Hartree unit in FHI-aims is given by CODATA 2002 (Web Version 4.0 2003-12-09), Peter J. Mohr, Barry N. Taylor")
+        print("ASE uses CODATA 2014, thus the output energy in eV from sockets (ASE conversion) and non-sockets (FHI-aims conversion) will differ.")
+        print("e.g. the same atoms.get_total_energy() from ASE will be different using the different calculators.")
+        print("Specifically, this is because in non-sockets Aims calculates in a.u., converts to eV (CODATA 2002) and passes that to ASE to output.")
+        print("But in sockets, Aims calculates in a.u., passes the a.u. value to ASE through this sockets calculator, ASE converts to eV (CODATA 2014) and outputs that.")
+        print("Definition of the constants in each CODATA version can be found at https://wiki.fysik.dtu.dk/ase/_modules/ase/units.html in CODATA{} and create_units().")
+        print("PLEASE BE CONSISTENT IN THE UNIT CONVERSION FOR DATA ANALYSIS!")
+        print("If you have previous results from the non-sockets calculator, the energy conversion is approximately [Sockets] = [Non-sockets] * 1.00000005204439.")
         print("You can turn off this message by setting 'codata_warning' keyword to False.")
 
     return socket_calc, fhi_calc
-
 
 def _check_socket(host, port, verbose=False):
     '''
@@ -152,7 +154,7 @@ def _check_socket(host, port, verbose=False):
         # Repeat until we find a port number that is not in use currently.
         while not sock.connect_ex((host, port)):
             # Debug statement
-            if verbose: print("Port #" + str(port - 1) + " is unavailable.")
+            if verbose: print("Port #"+str(port-1)+" is unavailable.")
             # Update port
             port += 1
             # Raise issue if port number gets to big!
@@ -165,6 +167,7 @@ def _check_socket(host, port, verbose=False):
 
 
 def get_k_grid(model, sampling_density, verbose=False):
+
     '''
     Based converged value of reciprocal space sampling provided,
     this function analyses the xyz-dimensions of the simulation cell
@@ -208,13 +211,14 @@ def get_k_grid(model, sampling_density, verbose=False):
         k_z = math.ceil((1 / sampling_density) * (1 / z))
     else:
         print("Number of periodic dimensions in", model.get_chemical_formula(),
-              "is", dimensions, "- no k_grid calculated.")
+                "is", dimensions, "- no k_grid calculated.")
         print("Valid structures are periodic in 2 (surface) or 3 (bulk) dimensions.")
         return None
 
     k_x = math.ceil((1 / sampling_density) * (1 / x))
     k_y = math.ceil((1 / sampling_density) * (1 / y))
     # recognise surface models and set k_z to 1
+
 
     k_grid = (k_x, k_y, k_z)
 
