@@ -78,7 +78,7 @@ def povray_render(atoms, steps, file, ext, atom_subs):
           f'3. Select "Render all frames"\n'
           f'4. Deselect "Show output window"\n'
           f'5. Change any other settings (e.g. Atomic texture set) as desired')
-    input('***Press Enter to continue once Povray is finished visualising...***')
+    input('***Press Enter to continue once Povray is finished visualising...***\n')
 
 
 def gifmaker(steps, file, ext, frames_per_second, pause_time, convert_flags, keep_png_files, test):
