@@ -318,6 +318,7 @@ def generate_k_grid(model, k_grid_density=None, sampling_density=None, simplifie
         if dimensions == 2:
             k_z = 1
         elif dimensions == 3:
+            # 2π is omitted here, because it cancels out.
             k_z = (1 / sampling_density) * (1 / z)
 
         k_x = (1 / sampling_density) * (1 / x)
