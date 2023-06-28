@@ -2,7 +2,7 @@ from ase.io import read, write
 from ase.visualize import view
 import os
 
-def traj_to_gif(filename, frames_per_second=30, pause_time=0.5, atom_subs=None, keep_temp_files=True, test=False):
+def traj_to_gif(filename, frames_per_second=30, pause_time=0.5, atom_subs=None, convert_flags=None, keep_temp_files=True, test=False):
 
     '''
     A function which takes a .traj file, visualises it in povray with your desired settings and outputs a .gif file.
@@ -14,8 +14,10 @@ def traj_to_gif(filename, frames_per_second=30, pause_time=0.5, atom_subs=None, 
     :param filename: (str) Full name/directory of the .traj file to convert
     :param frames_per_second: (float) Speed of switching images (Default is 30 fps)
     :param pause_time: (float) Time to pause on the first and last images (Default is 0.5 seconds)
-    :param atom_subs: (list of lists of strings) Pairs of atomic symbols with the first being changed to the second in all
-    images for clearer visualisation
+    :param atom_subs: (list of lists of strings) Pairs of atomic symbols with the first being changed to the second in
+    all images for clearer visualisation
+    :param convert_flags: (dict of strings) Flags and corresponding parameters for the ImageMagick 'convert' function. For default
+    parameters, leave out. Default options are '-verbose -dispose previous -loop 0'
     :param keep_temp_files: (boolean) If set to False, will delete the created povray .traj and .png files after use
     :param test: (boolean) Do not change! A quick fix to stop the unittest from getting stuck waiting for a user input
     :return: A .gif file of the .traj file, visualised in povray
@@ -33,7 +35,7 @@ def traj_to_gif(filename, frames_per_second=30, pause_time=0.5, atom_subs=None, 
     if not test:
         povray_render(atoms, steps, file, ext, atom_subs)
 
-    gifmaker(steps, file, ext, frames_per_second, pause_time, keep_temp_files, test)
+    gifmaker(steps, file, ext, frames_per_second, pause_time, convert_flags, keep_temp_files, test)
 
     print("Happy cooking!")
 
@@ -74,7 +76,7 @@ def povray_render(atoms, steps, file, ext, atom_subs):
     input('***Press Enter to continue once Povray is finished visualising...***')
 
 
-def gifmaker(steps, file, ext, frames_per_second, pause_time, keep_png_files, test):
+def gifmaker(steps, file, ext, frames_per_second, pause_time, convert_flags, keep_png_files, test):
 
     #Generate the list of povray image filenames
     digits = len(str(steps-1))
@@ -96,9 +98,18 @@ def gifmaker(steps, file, ext, frames_per_second, pause_time, keep_png_files, te
             filenames.insert(-1, f'{file}.{indices[-1]}.png')
             count += 1
 
+    # Convert flags
+    # Default values
+    if convert_flags is None:
+        convert_flags = {'-verbose': '', '-dispose': 'previous', '-loop': '0'}
+    # Concatenate string for command
+    convert_options = ''
+    for key, value in convert_flags.items():
+        convert_options += f'{key} {value} '
+
     #Execute the ImageMagick convert command in the terminal
     if not test:
-        command = (f'convert -verbose -dispose previous -delay {delay} %s -loop 0 {file}.gif' % ' '.join(filenames))
+        command = (f'convert {convert_options} -delay {delay} %s {file}.gif' % ' '.join(filenames))
         os.system(command)
 
         #Delete the povray image files if requested
