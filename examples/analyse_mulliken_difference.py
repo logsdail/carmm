@@ -49,6 +49,9 @@ def set_initial_charges(final_file, initial_file, adsorbate_file=None):
     final_r.set_initial_charges(mulliken_charge)
     view(final_r)    
 
+'''
+uncomment these lines while using the script locally, and comment out the last line.
+
 args = sys.argv[1:]
 final_file = args[0]
 initial_file = args[1]
@@ -56,3 +59,5 @@ adsorbate_file = args[2] if len(args) >= 3 else None
 
 # Call the function with command-line arguments
 set_initial_charges(final_file, initial_file, adsorbate_file)
+'''
+set_initial_charge('/data/aims.out', '/data/aims1.out', '/data/geometry.in')
