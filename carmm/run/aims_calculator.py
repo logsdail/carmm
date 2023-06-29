@@ -190,12 +190,12 @@ def get_k_grid(model, sampling_density, verbose=False, simplify=True):
             Converged value of minimum reciprocal space sampling required for
             accuracy of the periodic calculation. Value is a fraction between
             0 and 1, unit is /Å.
-            Its physical meaning is the spacing of k-points along the axes of the
-            reciprocal unit cell. It is often reported as one k-point per
-            (sampling_density) * 2π Å^-1 in literature
-            k_grid_density keyword in FHI-aims used another definition of reciprocal
-            space sampling. Value is float number defining the density of k-point
-            splits along the axes of the reciprocal unit cell, unit is nkpts/Å^-1.
+            It is often reported as one k-point per (sampling_density) * 2π Å^-1
+            in literature, representing the spacing of k-points along the axes of
+            the reciprocal unit cell.
+            k_grid_density in FHI-aims is float number defining the density of
+            k-point splits along the axes of the reciprocal unit cell, unit
+            is nkpts/Å^-1.
             k_grid_density = 1 / (sampling_density * 2 * math.pi)
         simplify: bool
             Flag switching between the simplified definition of reciprocal lattice
@@ -221,22 +221,12 @@ def get_k_grid(model, sampling_density, verbose=False, simplify=True):
     y = np.linalg.norm(model.get_cell()[1])
     z = np.linalg.norm(model.get_cell()[2])
 
-    # 2π is omitted here as it cancels out. k_z = (1 / (sampling_density * 2π)) * (2π / z)
-    if dimensions == 2:
-        k_z = 1
-    elif dimensions == 3:
-        k_z = math.ceil((1 / sampling_density) * (1 / z))
+    if simplify:
+        # Simplified reciprocal lattice parameters
+        l_v_x = 2 * math.pi / x
+        l_v_y = 2 * math.pi / y
+        l_v_z = 2 * math.pi / z
     else:
-        print("Number of periodic dimensions in", model.get_chemical_formula(),
-              "is", dimensions, "- no k_grid calculated.")
-        print("Valid structures are periodic in 2 (surface) or 3 (bulk) dimensions.")
-        return None
-
-    k_x = math.ceil((1 / sampling_density) * (1 / x))
-    k_y = math.ceil((1 / sampling_density) * (1 / y))
-    # recognise surface models and set k_z to 1
-
-    if not simplify:
         # These are lattice vectors
         x_v = model.get_cell()[0]
         y_v = model.get_cell()[1]
@@ -252,14 +242,14 @@ def get_k_grid(model, sampling_density, verbose=False, simplify=True):
         l_v_y = np.linalg.norm(v_y)
         l_v_z = np.linalg.norm(v_z)
 
-        k_grid_density = 1 / (sampling_density * 2 * math.pi)
-        if dimensions == 2:
-            k_z = 1
-        elif dimensions == 3:
-            k_z = math.ceil(k_grid_density * l_v_z)
+    k_grid_density = 1 / (sampling_density * 2 * math.pi)
+    if dimensions == 2:
+        k_z = 1
+    elif dimensions == 3:
+        k_z = math.ceil(k_grid_density * l_v_z)
 
-        k_x = math.ceil(k_grid_density * l_v_x)
-        k_y = math.ceil(k_grid_density * l_v_y)
+    k_x = math.ceil(k_grid_density * l_v_x)
+    k_y = math.ceil(k_grid_density * l_v_y)
 
     k_grid = (k_x, k_y, k_z)
 
