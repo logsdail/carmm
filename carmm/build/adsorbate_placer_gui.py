@@ -28,20 +28,20 @@ def rotationbox_gui(RotationObj, output="output.xyz"):
 
     import copy
 
-    global x, y, z
+    global _x, _y, _z
     global _RotationObj, _output_name
 
     _RotationObj = copy.deepcopy(RotationObj)
 
     master = Tk()
 
-    x = Scale(master, from_=0, to=360, label='x')
-    y = Scale(master, from_=0, to=360, label='y')
-    z = Scale(master, from_=0, to=360, label='z')
+    _x = Scale(master, from_=0, to=360, label='x')
+    _y = Scale(master, from_=0, to=360, label='y')
+    _z = Scale(master, from_=0, to=360, label='z')
 
-    x.grid(row=0,column=0)
-    y.grid(row=0,column=1)
-    z.grid(row=0,column=2)
+    _x.grid(row=0,column=0)
+    _y.grid(row=0,column=1)
+    _z.grid(row=0,column=2)
 
     _output_name=output
 
