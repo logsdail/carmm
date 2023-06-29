@@ -247,6 +247,11 @@ def get_k_grid(model, sampling_density, verbose=False, simplify=True):
         k_z = 1
     elif dimensions == 3:
         k_z = math.ceil(k_grid_density * l_v_z)
+    else:
+        print("Number of periodic dimensions in", model.get_chemical_formula(),
+              "is", dimensions, "- no k_grid calculated.")
+        print("Valid structures are periodic in 2 (surface) or 3 (bulk) dimensions.")
+        return None
 
     k_x = math.ceil(k_grid_density * l_v_x)
     k_y = math.ceil(k_grid_density * l_v_y)
