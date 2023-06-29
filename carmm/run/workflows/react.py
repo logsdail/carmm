@@ -9,6 +9,7 @@ from ase.io import read
 from ase.vibrations import Vibrations
 from carmm.analyse.forces import is_converged
 from carmm.run.aims_path import set_aims_command
+from ase.io import Trajectory
 
 
 # TODO: Enable serialization with ASE db - save locations of converged files as well as all properties
@@ -62,6 +63,7 @@ class ReactAims:
         self.final = None                   # input final image for NEB
         self.ts = None                      # TS geometry from NEB
         self.prev_calcs = None              # for NEB restart
+        self.interpolation = None           # TODO: use this for NEBs
 
         """ Set the test flag"""
         self.dry_run = dry_run
@@ -296,7 +298,7 @@ class ReactAims:
         return self.initial
 
     def search_ts(self, initial, final,
-                  fmax, unc, interpolation="idpp",
+                  fmax, unc, interpolation=None,
                   n=0.25, restart=True, prev_calcs=None,
                   input_check=0.01, verbose=True):
         """
@@ -344,12 +346,14 @@ class ReactAims:
         dimensions = sum(initial.pbc)
         params = self.params
         parent_dir = os.getcwd()
+        self.interpolation = interpolation
 
         """Set the environment parameters"""
         set_aims_command(hpc=hpc, basis_set=basis_set, defaults=2020, nodes_per_instance=self.nodes_per_instance)
 
-        if not interpolation:
-            interpolation = "idpp"
+
+        if not self.interpolation:
+            self.interpolation = "idpp"
 
         """Read the geometry"""
         if self.filename:
@@ -405,7 +409,7 @@ class ReactAims:
                                      end=final,
                                      ase_calc=calculator,
                                      n_images=n,
-                                     interpolation=interpolation,
+                                     interpolation=self.interpolation,
                                      neb_method="improvedtangent",
                                      prev_calculations=self.prev_calcs,
                                      mic=True,
@@ -431,7 +435,7 @@ class ReactAims:
 
         return self.ts
 
-    def search_ts_aidneb(self, initial, final, fmax, unc, interpolation="idpp", n=15,
+    def search_ts_aidneb(self, initial, final, fmax, unc, interpolation=None, n=15,
                          restart=True, prev_calcs=None, input_check=0.01, verbose=True):
         """
         This function allows calculation of the transition state using the GPAtom software package in an
@@ -453,7 +457,7 @@ class ReactAims:
                 The "idpp" or "linear" interpolation types are supported in ASE. alternatively user can provide a custom
                 interpolation as a list of Atoms objects.
             n: int or flot
-                Desired number of middle images excluding start and end point. If float the number of images is based on
+                Desired number of middle images excluding start and end pointpo. If float the number of images is based on
                 displacement of atoms. Dense sampling aids convergence but does not increase complexity as significantly
                 as for classic NEB.
             restart: bool
@@ -478,12 +482,13 @@ class ReactAims:
         dimensions = sum(initial.pbc)
         params = self.params
         parent_dir = os.getcwd()
+        self.interpolation = interpolation
 
         """Set the environment parameters"""
         set_aims_command(hpc=hpc, basis_set=basis_set, defaults=2020, nodes_per_instance=self.nodes_per_instance)
 
-        if not interpolation:
-            interpolation = "idpp"
+        if not self.interpolation:
+            self.interpolation = "idpp"
 
         """Read the geometry"""
         if self.filename:
@@ -529,15 +534,22 @@ class ReactAims:
             if self.dry_run:
                 calculator = EMT()
 
+            '''Training set functionality does not work correctly when reading a list.'''
+            '''Instead we save all geometries to a file the GPATOM can use'''
+            training_set_dump = Trajectory("AIDNEB_observations.traj", 'w')
+            for atoms in self.prev_calcs:
+                training_set_dump.write(atoms)
+            training_set_dump.close()
+
             """Setup the input for AIDNEB"""
             aidneb = AIDNEB(start=initial,
                             end=final,
-                            interpolation=interpolation,
+                            interpolation=self.interpolation,
                             # "idpp" can in some cases (e.g. H2) result in geometry coordinates returned as NaN
                             calculator=calculator,
                             n_images=n+2,
-                            max_train_data=50,
-                            trainingset=self.prev_calcs,
+                            max_train_data=40,
+                            trainingset="AIDNEB_observations.traj",
                             use_previous_observations=True,
                             neb_method='improvedtangent',
                             mic=True)
@@ -546,13 +558,14 @@ class ReactAims:
             if not self.dry_run:
                 aidneb.run(fmax=fmax,
                            unc_convergence=unc,
-                           ml_steps=100)
+                           ml_steps=40)
             else:
                 os.chdir(parent_dir)
                 return None
 
         """Find maximum energy, i.e. transition state to return it"""
-        neb = read("AIDNEB.traj@:")
+
+        neb = read("AIDNEB.traj@" + str(-len(read("initial_path.traj@:")) - 1) + ":") # read last predicted trajectory
         self.ts = sorted(neb, key=lambda k: k.get_potential_energy(), reverse=True)[0]
         os.chdir(parent_dir)
 
@@ -808,14 +821,11 @@ class ReactAims:
 
         folder_counter = counter
         subdirectory_name = calc_type + filename + "_" + str(counter)
-        subdirectory_name_prev = calc_type + filename + "_" + str(counter - 1)
 
         """Check previous calculations for convergence"""
         if restart and counter > 0:
             restart_found = False
             while not restart_found and counter > 0:
-
-
                 if verbose:
                     print("Previous calculation detected in", calc_type + filename + "_" + str(counter - 1))
                 os.chdir(calc_type + filename + "_" + str(counter - 1))
@@ -825,12 +835,32 @@ class ReactAims:
                         self.prev_calcs = read("evaluated_structures.traj@:")
                         restart_found = True
                         break
-                    elif os.path.exists("AID_observations.traj"):
-                        self.prev_calcs = read("AID_observations.traj@:")
-                        restart_found = True
-                        break
+
+
+                    elif os.path.exists("AIDNEB.traj") and os.path.exists("AIDNEB_observations.traj"):
+                        '''No break here, we combine the whole dataset for GPATOM due to better efficiency than MLNEB'''
+                        '''Retrieve all previous geometries and combine'''
+                        #TODO: respect users self-provided prev_calcs
+                        if type(self.prev_calcs) == list:
+                            for atoms in read("AIDNEB_observations.traj@:"):
+                                if not atoms in self.prev_calcs:
+                                    self.prev_calcs += [atoms]
+
+                        elif not self.prev_calcs:
+                            self.prev_calcs = read("AIDNEB_observations.traj@:")
+
+                        '''Read last predicted trajectory'''
+                        '''Guess length from combined AIDNEB based on length of the initial path'''
+                        if not self.interpolation:
+                            self.interpolation = read("AIDNEB.traj@" + str(-len(read("initial_path.traj@:")) - 1) + ":")
+                            if verbose:
+                                print("Interpolation retrieved from", calc_type + filename + "_" + str(counter - 1))
+
+                        if verbose:
+                            print("Data from", calc_type + filename + "_" + str(counter - 1), "added to the training set.")
+
                     elif verbose:
-                        print('Previous trajectory not found, starting from scratch.')
+                        print('Previous TS trajectory not found.')
 
                 elif calc_type == "Opt_":
                     """Check for number of restarted optimisations"""

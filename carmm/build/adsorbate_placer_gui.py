@@ -5,23 +5,43 @@
 from tkinter import *
 
 def rotationbox_gui(RotationObj, output="output.xyz"):
+    '''
+
+    A graphical view of the adsorbate-site system,
+    allowing you to visually rotate the adsorbate in place
+    and produce a structure file with that configuration.
+    Begin the visualisation by pressing "Start ASE",
+    rotate the adsorbate using the x, y and z sliders,
+    and write the structure to the desired filename
+    using the "Print Position" button.
+
+    Args:
+        RotationObj: RotationBox object
+            The desired adsorbate-site system as a RotationBox() object from build/adsorbate_placer.py
+        output: string
+            The desired filename to print the structure to (include desired file extension)
+
+    Returns:
+        On press of "Print Position" button, file containing Atoms object
+
+    '''
 
     import copy
 
-    global x, y, z
+    global _x, _y, _z
     global _RotationObj, _output_name
 
     _RotationObj = copy.deepcopy(RotationObj)
 
     master = Tk()
 
-    x = Scale(master, from_=0, to=360, label='x')
-    y = Scale(master, from_=0, to=360, label='y')
-    z = Scale(master, from_=0, to=360, label='z')
+    _x = Scale(master, from_=0, to=360, label='x')
+    _y = Scale(master, from_=0, to=360, label='y')
+    _z = Scale(master, from_=0, to=360, label='z')
 
-    x.grid(row=0,column=0)
-    y.grid(row=0,column=1)
-    z.grid(row=0,column=2)
+    _x.grid(row=0,column=0)
+    _y.grid(row=0,column=1)
+    _z.grid(row=0,column=2)
 
     _output_name=output
 

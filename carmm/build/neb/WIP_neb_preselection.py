@@ -1,3 +1,5 @@
+"""
+
 def pre_neb_aims(initial,
                  final,
                  hpc="hawk",
@@ -96,3 +98,5 @@ def pre_neb_aims(initial,
 
     else:
         print("No multiple extrema detected in the predicted Minimum Energy Path.")
+
+"""
