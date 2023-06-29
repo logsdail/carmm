@@ -183,10 +183,10 @@ def get_k_grid(model, sampling_density, verbose=False, simplify=True):
             Converged value of minimum reciprocal space sampling required for
             accuracy of the periodic calculation. Value is a fraction between
             0 and 1, unit is /Å.
-            Physical meaning is the spacing of k-points along the axes of the
+            Its physical meaning is the spacing of k-points along the axes of the
             reciprocal unit cell. It is often reported as one k-point per
-            (sampling_density) * 2π Å^-1
-            k_grid_density keyword in FHI-aims is another definition of reciprocal
+            (sampling_density) * 2π Å^-1 in literature
+            k_grid_density keyword in FHI-aims used another definition of reciprocal
             space sampling. Value is float number defining the density of k-point
             splits along the axes of the reciprocal unit cell, unit is nkpts/Å^-1.
             k_grid_density = 1 / (sampling_density * 2 * math.pi)
