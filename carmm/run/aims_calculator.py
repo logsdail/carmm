@@ -215,20 +215,6 @@ def get_k_grid(model, sampling_density, verbose=False, simplify=True):
     x = np.linalg.norm(model.get_cell()[0])
     y = np.linalg.norm(model.get_cell()[1])
     z = np.linalg.norm(model.get_cell()[2])
-    # These are lattice vectors
-    x_v = model.get_cell()[0]
-    y_v = model.get_cell()[1]
-    z_v = model.get_cell()[2]
-    # volume of the cell
-    volume = np.dot(x_v, np.cross(y_v, z_v))
-    # These are reciprocal lattice vectors
-    v_x = np.cross(y_v, z_v) * 2 * math.pi / volume
-    v_y = np.cross(z_v, x_v) * 2 * math.pi / volume
-    v_z = np.cross(x_v, y_v) * 2 * math.pi / volume
-    # These are reciprocal lattice parameters
-    l_v_x = np.linalg.norm(v_x)
-    l_v_y = np.linalg.norm(v_y)
-    l_v_z = np.linalg.norm(v_z)
 
     if dimensions == 2:
         k_z = 1
@@ -245,6 +231,21 @@ def get_k_grid(model, sampling_density, verbose=False, simplify=True):
     # recognise surface models and set k_z to 1
 
     if not simplify:
+        # These are lattice vectors
+        x_v = model.get_cell()[0]
+        y_v = model.get_cell()[1]
+        z_v = model.get_cell()[2]
+        # volume of the cell
+        volume = np.dot(x_v, np.cross(y_v, z_v))
+        # These are reciprocal lattice vectors
+        v_x = np.cross(y_v, z_v) * 2 * math.pi / volume
+        v_y = np.cross(z_v, x_v) * 2 * math.pi / volume
+        v_z = np.cross(x_v, y_v) * 2 * math.pi / volume
+        # These are reciprocal lattice parameters
+        l_v_x = np.linalg.norm(v_x)
+        l_v_y = np.linalg.norm(v_y)
+        l_v_z = np.linalg.norm(v_z)
+
         k_grid_density = 1 / (sampling_density * 2 * math.pi)
         if dimensions == 2:
             k_z = 1

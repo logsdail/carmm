@@ -11,11 +11,26 @@ def test_run_k_grid():
 
     #### Traditional ASE functionality #####
     from data.model_gen import get_example_slab as slab
-    slab = slab(adsorbate=True)
+    slab111 = slab(adsorbate=True)
+    slab110 = slab(adsorbate=True, surface="110")
+    slab100 = slab(adsorbate=True, surface="100")
     #########
     sampling_density = 0.02 # example value of sampling density /Angstrom
-    k_grid = get_k_grid(slab, sampling_density, verbose=True)
-    assert k_grid == (6, 6, 1)
+    k_grid111 = get_k_grid(slab111, sampling_density, verbose=True)
+    assert k_grid111 == (6, 6, 1)
+    k_grid110 = get_k_grid(slab110, sampling_density, verbose=True)
+    assert k_grid110 == (5, 6, 1)
+    k_grid100 = get_k_grid(slab100, sampling_density, verbose=True)
+    assert k_grid100 == (6, 6, 1)
     assert get_k_grid(molecule("CO2"), sampling_density) == None
+
+    # This part tests generating k-grid with the strict definition of reciprocal lattice parameters
+    k_grid111 = get_k_grid(slab111, sampling_density, verbose=True, simplify=False)
+    assert k_grid111 == (7, 7, 1)
+    k_grid110 = get_k_grid(slab110, sampling_density, verbose=True, simplify=False)
+    assert k_grid110 == (5, 6, 1)
+    k_grid100 = get_k_grid(slab100, sampling_density, verbose=True, simplify=False)
+    assert k_grid100 == (6, 6, 1)
+    assert get_k_grid(molecule("CO2"), sampling_density, simplify=False) == None
 
 test_run_k_grid()
