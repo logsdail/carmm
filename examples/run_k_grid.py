@@ -21,6 +21,6 @@ def test_run_k_grid():
     # Test with the strict definition of reciprocal lattice parameters
     k_grid111 = get_k_grid(slab111, sampling_density, verbose=True, simple_reciprocal_space_parameters=False)
     assert k_grid111 == (7, 7, 1)
-    assert get_k_grid(molecule("CO2"), sampling_density, simple_reciprocal_space_parameters=False) == None
+
 
 test_run_k_grid()

@@ -273,6 +273,7 @@ def get_k_grid(model, sampling_density, verbose=False, simple_reciprocal_space_p
               str(k_grid) + ".")
         if not simple_reciprocal_space_parameters:
             print("Please note you are using the strict definition of reciprocal lattice vector here. "
-                  "This would generate a slightly denser k-grid in some cases.")
+                  "This would generate a slightly denser k-grid than using simple reciprocal space parameters in "
+                  "cases where a non-orthogonal cell is used as input.")
 
     return k_grid
