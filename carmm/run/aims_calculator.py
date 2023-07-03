@@ -174,7 +174,7 @@ def _check_socket(host, port, verbose=False):
     return port
 
 
-def get_k_grid(model, sampling_density, verbose=False, simplify=True):
+def get_k_grid(model, sampling_density, verbose=False, simple_reciprocal_space_parameters=True):
     """
     Based converged value of reciprocal space sampling provided,
     this function analyses the xyz-dimensions of the simulation cell
@@ -187,17 +187,23 @@ def get_k_grid(model, sampling_density, verbose=False, simplify=True):
         model: Atoms object
             Periodic model that requires k-grid for calculation in FHI-aims.
         sampling_density: float
-            Converged value of minimum reciprocal space sampling required for
-            accuracy of the periodic calculation. Value is a fraction between
-            0 and 1, unit is /Å.
+            In a simple approach, this is a value of minimum reciprocal space
+            sampling required for accuracy of the periodic calculation. The
+            value is a fraction between 0 and 1, unit is /Å.
             It is often reported as one k-point per (sampling_density) * 2π Å^-1
-            in literature, representing the spacing of k-points along the axes of
+            in literature, representing the spacing of k-points along the vector of
             the reciprocal unit cell.
-            k_grid_density in FHI-aims is float number defining the density of
-            k-point splits along the axes of the reciprocal unit cell, unit
-            is nkpts/Å^-1.
+
+            In FHI-aims, there is a similar parameter called "k_grid_density",
+            which is float defining the density of k-point splits along the
+            vector of the reciprocal unit cell, unit is nkpts/Å^-1.
+            This FHI-aims specific parameter is inversely related to the
+            definition above for sampling density as:
             k_grid_density = 1 / (sampling_density * 2 * math.pi)
-        simplify: bool
+
+            Ultimately the choice of definition is a matter of taste, and should be
+            explained in any distribution of the outcomes
+        simple_reciprocal_space_parameters: bool
             Flag switching between the simplified definition of reciprocal lattice
             parameters, which is 2π/a (a is the real space lattice parameter), and
             the strict definition (see code or textbook).
@@ -215,22 +221,26 @@ def get_k_grid(model, sampling_density, verbose=False, simplify=True):
 
     dimensions = sum(model.pbc)
 
-    # define k_grid sampling density /A
-    # These are lattice parameters
-    x = np.linalg.norm(model.get_cell()[0])
-    y = np.linalg.norm(model.get_cell()[1])
-    z = np.linalg.norm(model.get_cell()[2])
+    if dimensions == 0:
+        print("You are studying a molecular system. This has no periodicity, and therefore no k-grid is necessary. "
+              "Returning null")
+        return None
 
-    if simplify:
+    # These are lattice vectors
+    x_v = model.get_cell()[0]
+    y_v = model.get_cell()[1]
+    z_v = model.get_cell()[2]
+    # These are lattice parameters
+    x = np.linalg.norm(x_v)
+    y = np.linalg.norm(y_v)
+    z = np.linalg.norm(z_v)
+
+    if simple_reciprocal_space_parameters:
         # Simplified reciprocal lattice parameters
         l_v_x = 2 * math.pi / x
         l_v_y = 2 * math.pi / y
         l_v_z = 2 * math.pi / z
     else:
-        # These are lattice vectors
-        x_v = model.get_cell()[0]
-        y_v = model.get_cell()[1]
-        z_v = model.get_cell()[2]
         # volume of the cell
         volume = np.dot(x_v, np.cross(y_v, z_v))
         # These are reciprocal lattice vectors
@@ -243,18 +253,16 @@ def get_k_grid(model, sampling_density, verbose=False, simplify=True):
         l_v_z = np.linalg.norm(v_z)
 
     k_grid_density = 1 / (sampling_density * 2 * math.pi)
-    if dimensions == 2:
-        k_z = 1
-    elif dimensions == 3:
-        k_z = math.ceil(k_grid_density * l_v_z)
-    else:
-        print("Number of periodic dimensions in", model.get_chemical_formula(),
-              "is", dimensions, "- no k_grid calculated.")
-        print("Valid structures are periodic in 2 (surface) or 3 (bulk) dimensions.")
-        return None
 
     k_x = math.ceil(k_grid_density * l_v_x)
     k_y = math.ceil(k_grid_density * l_v_y)
+    k_z = math.ceil(k_grid_density * l_v_z)
+
+    # Remove k-sampling if direction is not periodic in any dimension
+    if dimensions < 3:
+        k_z = 1
+    if dimensions < 2:
+        k_y = 1
 
     k_grid = (k_x, k_y, k_z)
 
@@ -263,7 +271,7 @@ def get_k_grid(model, sampling_density, verbose=False, simplify=True):
         print("and", "one k-point per", str(sampling_density), "* 2π Å^-1",
               "sampling density, the k-grid chosen for periodic calculation is",
               str(k_grid) + ".")
-        if not simplify:
+        if not simple_reciprocal_space_parameters:
             print("Please note you are using the strict definition of reciprocal lattice vector here. "
                   "This would generate a slightly denser k-grid in some cases.")
 
