@@ -26,13 +26,13 @@ def test_traj_to_gif():
 
     fps = 10
     filenames, delay = gifmaker(41, 'nh3-h3o', 'traj', frames_per_second=fps, pause_time=1, convert_flags=None,
-                                keep_png_files=False, test=True)
+                                clean=False, test=True)
     assert len(filenames) == 59
     assert delay == '1x10'
 
     fps = 0.1
     filenames, delay = gifmaker(41, 'nh3-h3o', 'traj', frames_per_second=fps, pause_time=1, convert_flags=None,
-                                keep_png_files=False, test=True)
+                                clean=False, test=True)
     assert delay == '10.0'
 
 
