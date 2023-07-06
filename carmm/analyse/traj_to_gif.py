@@ -1,10 +1,11 @@
 from ase.io import read
 from ase.visualize import view
 import os
+from carmm.analyse.povray_render import povray_render
 
 
-def traj_to_gif(filename, frames_per_second=30, pause_time=0.5, atom_subs=None, convert_flags=None,
-                clean=True, test=False):
+def traj_to_gif(filename, automatic=False, frames_per_second=30, pause_time=0.5, atom_subs=None, convert_flags=None,
+                clean=True, test=False, **kwargs):
     """
     A function which takes a .traj file, visualises it in povray with your desired settings and outputs a .gif file.
     When the function gives you the ase viewer, rotate to your desired view, go to Tools -> Render Scene, select the
@@ -35,8 +36,10 @@ def traj_to_gif(filename, frames_per_second=30, pause_time=0.5, atom_subs=None, 
     atoms = read(filename + '@:')
     steps = len(atoms)
 
-    if not test:
-        povray_render(atoms, steps, file, ext, atom_subs, test)
+    # for frame in range(steps):
+    #     frame_atoms = atoms[frame]
+    #     if automatic:
+    #         povray_render(frame_atoms, )
 
     gifmaker(steps, file, ext, frames_per_second, pause_time, convert_flags, clean, test)
 
@@ -46,42 +49,42 @@ def traj_to_gif(filename, frames_per_second=30, pause_time=0.5, atom_subs=None, 
     return file, ext, steps
 
 
-def atom_sub(atoms, atom_subs, steps, file, ext):
-    frame_atoms_list = []
+# def atom_sub(atoms, atom_subs, steps, file, ext):
+#     frame_atoms_list = []
+#
+#     # Replace atoms of one element with another for clearer visualisation
+#     for frame in range(steps):
+#         frame_atoms = atoms[frame]
+#         if atom_subs is not None:
+#             for sub in atom_subs:
+#                 for i in range(len(frame_atoms.symbols)):
+#                     if frame_atoms.symbols[i] == sub[0]:
+#                         frame_atoms.symbols[i] = sub[1]
+#         frame_atoms_list.append(frame_atoms)
+#         frame_atoms.write(f'{file}_povray.{ext}', append=True)
+#
+#     # For testing purposes
+#     return frame_atoms_list
 
-    # Replace atoms of one element with another for clearer visualisation
-    for frame in range(steps):
-        frame_atoms = atoms[frame]
-        if atom_subs is not None:
-            for sub in atom_subs:
-                for i in range(len(frame_atoms.symbols)):
-                    if frame_atoms.symbols[i] == sub[0]:
-                        frame_atoms.symbols[i] = sub[1]
-        frame_atoms_list.append(frame_atoms)
-        frame_atoms.write(f'{file}_povray.{ext}', append=True)
 
-    # For testing purposes
-    return frame_atoms_list
-
-
-def povray_render(atoms, atom_subs, steps, file, ext, test):
-    if not test:
-        atom_sub(atoms, atom_subs, steps, file, ext)
-
-    # Allow the user to generate the povray images with reminders of the requirements
-    print(f'***Crucial Steps***\n'
-          f'1. In ASE GUI, navigate to Tools -> Render Scene\n'
-          f'2. Change "Output basename" to {file}\n'
-          f'3. Select "Render all frames"\n'
-          f'4. Deselect "Show output window"\n'
-          f'5. Change any other settings (e.g. Atomic texture set) as desired')
-
-    if test:
-        frame_atoms_list = atom_sub(atoms, atom_subs, steps, file, ext)
-        return frame_atoms_list
-    else:
-        view(atoms)
-        input('***Press Enter to continue once Povray is finished visualising...***\n')
+# def povray_render(atoms, atom_subs, steps, file, ext, test):
+#     if not test:
+#         atom_sub(atoms, atom_subs, steps, file, ext)
+#
+#     # Allow the user to generate the povray images with reminders of the requirements
+#     print(f'***Crucial Steps***\n'
+#           f'1. In ASE GUI, navigate to Tools -> Render Scene\n'
+#           f'2. Change "Output basename" to {file}\n'
+#           f'3. Select "Render all frames"\n'
+#           f'4. Deselect "Show output window"\n'
+#           f'5. Change any other settings (e.g. Atomic texture set) as desired')
+#
+#     if test:
+#         frame_atoms_list = atom_sub(atoms, atom_subs, steps, file, ext)
+#         return frame_atoms_list
+#     else:
+#         view(atoms)
+#         input('***Press Enter to continue once Povray is finished visualising...***\n')
 
 
 def gifmaker(steps, file, ext, frames_per_second, pause_time, convert_flags, clean, test):
