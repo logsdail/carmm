@@ -103,8 +103,11 @@ def gifmaker(steps, file, filenames, frames_per_second, pause_time, convert_flag
         convert_options += f'{key} {value} '
 
     # Execute the ImageMagick convert command in the terminal
-    command = (f'convert {convert_options} -delay {delay} %s {file}.gif' % ' '.join(filenames))
-    os.system(command)
+    try:
+        command = (f'convert {convert_options} -delay {delay} %s {file}.gif' % ' '.join(filenames))
+        os.system(command)
+    except:
+        print('FileNotFoundError: Files do not exist')
 
     # Delete the povray image files if requested
     if not keep_temp_files:
