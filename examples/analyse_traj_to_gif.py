@@ -21,8 +21,8 @@ def test_traj_to_gif():
     assert ext == 'traj'
     assert steps == 41
     assert len(atoms[17]) == 8  # Random frame
-    assert frame_atoms_list[11].symbols[4] == 'C'  # Random frame
-    assert frame_atoms_list[38].symbols[0] == 'N'  # Random frame
+    assert atoms[11].symbols[4] == 'C'  # Random frame
+    assert atoms[38].symbols[0] == 'N'  # Random frame
     assert filenames[7] == 'nh3-h3o.07.png'
 
     fps = 10
