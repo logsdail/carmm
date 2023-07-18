@@ -1,7 +1,8 @@
 from ase.io import read, write
 
 
-def povray_render(atoms, output='povray', view=False, atom_subs=None, generic_projection_settings=None, povray_settings=None):
+def povray_render(atoms, output='povray', view=False, atom_subs=None,
+                  generic_projection_settings=None, povray_settings=None):
     """
     Saves a .png file showing a povray rendered visualisation of an atoms object.
     :param atoms: (Atoms object) Structure to be visualised
@@ -27,6 +28,19 @@ def povray_render(atoms, output='povray', view=False, atom_subs=None, generic_pr
             'camera_dist': 50,
         }
 
+    # Camera type information
+    if povray_settings['camera_type'] == 'orthographic':
+        print('For the orthographic camera type, use "orthographic angle X", where X=5 by default.\n'
+              'Increasing/decreasing X has the effect of zooming in/out, respectively.')
+    if povray_settings['camera_type'] == 'perspective':
+        print('Perspective camera type is much less supported. e.g. Unable to zoom in/out.\n'
+              'Instead, try the "orthographic angle X" camera type, where X=5 by default.\n'
+              'Increasing/decreasing X has the effect of zooming in/out, respectively.')
+    if povray_settings['camera_type'] == 'ultra_wide_angle':
+        print('Ultra Wide Angle camera type is much less supported. e.g. Unable to zoom in/out.\n'
+              'Instead, try the "orthographic angle X" camera type, where X=5 by default.\n'
+              'Increasing/decreasing X has the effect of zooming in/out, respectively.')
+
     if view:
         povray_settings['display'] = True
     else:
@@ -35,7 +49,15 @@ def povray_render(atoms, output='povray', view=False, atom_subs=None, generic_pr
     if atom_subs is not None:
         atoms = atom_sub(atoms, atom_subs)
 
-    write(f'{output}.pov', atoms, **generic_projection_settings, povray_settings=povray_settings).render()
+    povobj = write(f'{output}.pov', atoms, **generic_projection_settings, povray_settings=povray_settings)
+    try:
+        povobj.render()
+    except FileNotFoundError:
+        # Give an error message without stopping (unittest will always fail here)
+        print('FileNotFoundError: POVRAY failed to render. Do you have POVRAY installed?')
+
+    # For testing purposes
+    return generic_projection_settings, povray_settings
 
 
 def atom_sub(atoms, atom_subs):
