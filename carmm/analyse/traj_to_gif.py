@@ -48,13 +48,12 @@ def traj_to_gif(filename, automatic=False, generic_projection_settings=None, pov
         for frame in range(steps):
             frame_atoms = atoms[frame]
             povray_render(frame_atoms, output=f'{file}.{indices[frame]}', view=False, atom_subs=atom_subs,
-                      generic_projection_settings=generic_projection_settings,
-                      povray_settings=povray_settings)
+                          generic_projection_settings=generic_projection_settings, povray_settings=povray_settings)
     else:
         if atom_subs is not None:
             for frame in range(steps):
                 frame_atoms = atoms[frame]
-                atoms[frame] = atom_subs(frame_atoms, atom_subs)
+                atoms[frame] = atom_sub(frame_atoms, atom_subs)
             if keep_temp_files:
                 atoms.write(f'{file}_povray.traj')
         print(f'***Crucial Steps***\n'
@@ -66,8 +65,7 @@ def traj_to_gif(filename, automatic=False, generic_projection_settings=None, pov
         view(atoms)
         input('***Press Enter to continue once Povray is finished visualising...***\n')
 
-    gifmaker(steps, file, filenames, frames_per_second, pause_time, convert_flags,
-             keep_temp_files)
+    gifmaker(file, filenames, frames_per_second, pause_time, convert_flags, indices, keep_temp_files)
 
     print("Happy cooking!")
 
@@ -75,8 +73,7 @@ def traj_to_gif(filename, automatic=False, generic_projection_settings=None, pov
     return file, ext, steps, atoms, filenames
 
 
-def gifmaker(steps, file, filenames, frames_per_second, pause_time, convert_flags,
-             keep_temp_files):
+def gifmaker(file, filenames, frames_per_second, pause_time, convert_flags, indices, keep_temp_files):
 
     # Get the frames_per_second into a format that ImageMagick accepts for the delay flag
     if frames_per_second <= 1:
@@ -111,8 +108,10 @@ def gifmaker(steps, file, filenames, frames_per_second, pause_time, convert_flag
 
     # Delete the povray image files if requested
     if not keep_temp_files:
-        for index in filenames:
-            os.system(f'rm {filenames[index]}')
+        for index in indices:
+            os.system(f'rm {file}.{index}.ini')
+            os.system(f'rm {file}.{index}.pov')
+            os.system(f'rm {file}.{index}.png')
 
     # For testing purposes
     return filenames, delay, convert_options
