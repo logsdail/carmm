@@ -34,13 +34,13 @@ def test_povray_render():
         'rotation': '90x,80y,90z',
         'radii': radius_list,
         'colors': colors,
-        'textures': ['jmol'] * len(atoms),
     }
 
     povray_settings = {
         'camera_type': 'orthographic angle 7',
         'camera_dist': 100,
         'celllinewidth': 0.07,
+        'textures': ['jmol'] * len(atoms),
     }
 
     povray_render(atoms, generic_projection_settings=generic_projection_settings, povray_settings=povray_settings)
@@ -55,7 +55,6 @@ def test_povray_render():
         'rotation': '90x,80y,90z',
         'radii': radius_list,
         'colors': colors,
-        'textures': ['jmol'] * len(atoms),
         'display': False
     }
 
@@ -63,6 +62,7 @@ def test_povray_render():
         'camera_type': 'orthographic angle 7',
         'camera_dist': 100,
         'celllinewidth': 0.07,
+        'textures': ['jmol'] * len(atoms),
     }
 
     gen_proj_sett, povray_sett = povray_render(atoms)
@@ -80,6 +80,6 @@ def test_povray_render():
 
     # Atom substitution function, useful for easily changing element colours
     subbed_atoms = atom_sub(atoms, atom_subs=[['N', 'C'], ['O', 'N']])
-    assert atoms.symbols[4] == 'C'
-    assert atoms.symbols[0] == 'N'
-    assert len(atoms) == 8
+    assert subbed_atoms.symbols[4] == 'C'
+    assert subbed_atoms.symbols[0] == 'N'
+    assert len(subbed_atoms) == 8
