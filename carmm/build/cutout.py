@@ -270,16 +270,9 @@ def radius_qm_region(cluster_coords, radius):
 
 def xyz_label_writer(frag, outfname):
 
-    '''
-
-    Args:
-        frag: Partitioned cluster fragment to write .xyz file (Chemshell Fragment)
-        outfname: File name of output .xyz file (Str)
-
-    Returns:
-        .xyz file with labeled atoms for visualisation
-
-    '''
+    # writes a .xyz file with labeled atoms for visualisation
+    # frag: Partitioned cluster fragment to write .xyz file (Chemshell Fragment)
+    # outfname: File name of output .xyz file (Str)
 
     print("Writing labeled xyz file:", outfname)
     natoms = frag.natoms
@@ -293,14 +286,83 @@ def xyz_label_writer(frag, outfname):
 
     return
 
+
 def cut_atom_centred_region(atoms, symbol, size):
     '''
-
+    ONLY WORKS FOR ORTHONORMAL (CUBIC) CELLS
     Args:
-        atoms: Atoms object containing a single unit cell (ASE atoms object)
+        atoms: Atoms object containing unit cell (ASE atoms object)
         symbol: Species that the fragments should be centred on (str)
-        size: Cubic dimension of the returned cut cell (int)
+        size: Size of the returned cut cell based on multiples of the unit cell (int)
 
     Returns:
-
+        Two cut atoms objects centred on a single atom, one with periodicity and another without.
     '''
+    import numpy as np
+    from ase.build import cut
+
+    # Make a cell double the size to cut down by a half in the final cut
+    cell = atoms * (2 * size)
+
+    initialiser = False
+    for index in [atom.index for atom in cell if atom.symbol == symbol]:
+
+        test = np.sqrt(
+            (cell.positions[index][0] ** 2) + (cell.positions[index][1] ** 2) + (cell.positions[index][2] ** 2))
+        if initialiser is False:
+            magnitude = test
+            initialiser = True
+            continue
+
+        if test > magnitude:
+            magnitude = test
+            magnitude_index = index
+
+    maximum = cell.positions[magnitude_index]
+    mid = maximum * 0.5
+
+    tol = np.max(cell.get_cell())
+
+    coeff_old = 1
+
+    first_try = find_closest_index(target=mid, atoms=cell, symbol=symbol, tolerance=tol, coeff=coeff_old)
+
+    attempt = first_try
+    while len(attempt) != 1:
+        coeff_new = coeff_old * 0.5
+        print(coeff_new)
+        new_attempt = find_closest_index(target=mid, atoms=cell, symbol=symbol, tolerance=tol, coeff=coeff_new)
+        attempt = new_attempt
+        coeff_old = coeff_new
+    print(attempt)
+    centre_atom = cell[attempt]
+    print(centre_atom)
+    print(centre_atom.positions)
+    scaled = centre_atom.positions / cell.cell.cellpar()[:3]
+    print(scaled)
+
+    bulk_cut_cell = cut(cell, a=(-0.5, 0, 0), b=(0, -0.5, 0), c=(0, 0, -0.5), origo=scaled)
+    qm_cut_cell = cut(cell, a=(-0.5, 0, 0), b=(0, -0.5, 0), c=(0, 0, -0.5), origo=scaled, extend=1.125)
+    #print(bulk_cut_cell)
+    #print(qm_cut_cell)
+    return bulk_cut_cell, qm_cut_cell
+
+
+def find_closest_index(target, atoms, symbol, tolerance, coeff):
+    import numpy as np
+    # Finds the index of the atom closest to a given cartesian location within a cell
+    # Target: Target location within a cell (array)
+    # atoms: ASE atoms object containing the cell
+    # symbol: Element symbol to define the atoms to select
+    # tolerance: The initial tolerance by which the closeness to the target is measured
+    # coeff: The coefficient by which the tolerance is reduced by
+
+    closest = list([])
+    for n in [atom.index for atom in atoms if atom.symbol == symbol]:
+        if np.allclose(atoms.positions[n], target, atol=(tolerance * coeff)) is True:
+            closest.append(n)
+
+        else:
+            continue
+
+    return closest
