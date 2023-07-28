@@ -14,7 +14,7 @@ def test_povray_render():
     atoms = read('data/NH3-H3O_traj/nh3-h3o.traj')
 
     # An alternative to substituting atoms: changing the colour of specific elements
-    # Use 'colors': None for default colours
+    # Use "'colors': None," for default colours
     color_dict = {
         'H': [255, 255, 255],
         'N': [48, 80, 248],
@@ -55,7 +55,6 @@ def test_povray_render():
         'rotation': '90x,80y,90z',
         'radii': radius_list,
         'colors': colors,
-        'display': False
     }
 
     assert povray_sett == {
@@ -63,6 +62,7 @@ def test_povray_render():
         'camera_dist': 100,
         'celllinewidth': 0.07,
         'textures': ['jmol'] * len(atoms),
+        'display': False,
     }
 
     gen_proj_sett, povray_sett = povray_render(atoms)
@@ -76,6 +76,7 @@ def test_povray_render():
     assert povray_sett == {
         'camera_type': 'orthographic angle 5',
         'camera_dist': 50,
+        'display': False,
     }
 
     # Atom substitution function, useful for easily changing element colours
@@ -83,3 +84,6 @@ def test_povray_render():
     assert subbed_atoms.symbols[4] == 'C'
     assert subbed_atoms.symbols[0] == 'N'
     assert len(subbed_atoms) == 8
+
+
+test_povray_render()

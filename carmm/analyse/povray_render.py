@@ -1,4 +1,5 @@
 from ase.io import read, write
+import subprocess
 
 
 def povray_render(atoms, output='povray', view=False, atom_subs=None,
@@ -52,9 +53,9 @@ def povray_render(atoms, output='povray', view=False, atom_subs=None,
     povobj = write(f'{output}.pov', atoms, **generic_projection_settings, povray_settings=povray_settings)
     try:
         povobj.render()
-    except FileNotFoundError:
+    except (FileNotFoundError, subprocess.CalledProcessError) as err:
         # Give an error message without stopping (unittest will always fail here)
-        print('FileNotFoundError: POVRAY failed to render. Do you have POVRAY installed?')
+        print(f'{err}: POVRAY failed to render. Do you have POVRAY installed?')
 
     # For testing purposes
     return generic_projection_settings, povray_settings
