@@ -111,7 +111,7 @@ def cif2labelpun(charge_dict, shell_atom, shell_charge, bulk_in_fname, qm_in_fna
 
     bulk_frag = convert_atoms_to_frag(atoms=read(bulk_in_fname), connect_mode='ionic')
     bulk_frag.addCharges(charge_dict)
-    bulk_frag.addShells(shell_atom, displace=0.0, charges={shell_atom:shell_charge})
+    bulk_frag.addShells(shell_atom, displace=0.0, charges={shell_atom: shell_charge})
 
     print(f"Vectors: {bulk_frag.cell.a, bulk_frag.cell.b, bulk_frag.cell.c, bulk_frag.cell.alpha, bulk_frag.cell.beta, bulk_frag.cell.gamma}")
     print(f"coords: {bulk_frag.coords}")
@@ -119,13 +119,15 @@ def cif2labelpun(charge_dict, shell_atom, shell_charge, bulk_in_fname, qm_in_fna
 
     if origin is None:
         bulk_frag.coords = bulk_frag.coords - bulk_frag.centroid
-        bulk_origin = np.array([0,0,0])
+        bulk_origin = np.array([0, 0, 0])
     else:
         bulk_origin = origin
 
     cluster = bulk_frag.construct_cluster(radius_cluster=cluster_r, origin=bulk_origin, adjust_charge=adjust_charge,
                                           radius_active=active_r, bq_margin=bq_margin, bq_density=bq_density,
                                           bq_layer=12.0)
+    cluster.save('cluster.pun', 'pun')
+    cluster.save('cluster.xyz', 'xyz')
     print('Cluster cut successfully')
 
     if qm_in_fname is None:
@@ -141,22 +143,23 @@ def cif2labelpun(charge_dict, shell_atom, shell_charge, bulk_in_fname, qm_in_fna
     else:
         qm_frag = convert_atoms_to_frag(atoms=read(qm_in_fname), connect_mode='ionic')
         qm_frag.addCharges(charge_dict)
-        qm_frag.addShells(shell_atom, displace=0.0, charges={shell_atom:shell_charge})
+        qm_frag.addShells(shell_atom, displace=0.0, charges={shell_atom: shell_charge})
 
         if origin is None:
-            qm_frag.coords = qm_frag.coords - (qm_frag.centroid)
+            qm_frag.coords = qm_frag.coords - qm_frag.centroid
             qm_origin = np.array([0, 0, 0])
         else:
             qm_origin = origin
-
 
         if partition_mode == 'unit_cell':
             qm_region = match_cell(cluster.coords, qm_frag.coords)
         if partition_mode == 'radius':
             qm_region = radius_qm_region(cluster.coords, radius)
 
+    # Partitioning routine uses a cartesian origin rather than a fractional one
+    qm_cart_origin = qm_origin * qm_frag.cell.consts[:3]
     partitioned_cluster = cluster.partition(cluster, qm_region=qm_region,
-                                            origin=qm_origin, cutoff_boundary=4.0,
+                                            origin=qm_cart_origin, cutoff_boundary=4.0,
                                             interface_exclude=["O"], qmmm_interface='explicit',
                                             radius_active=active_r)
     print('Cluster partitioned successfully')
@@ -168,10 +171,10 @@ def cif2labelpun(charge_dict, shell_atom, shell_charge, bulk_in_fname, qm_in_fna
     partitioned_cluster.save(out_fname + '.xyz', 'xyz')
     xyz_label_writer(partitioned_cluster, 'labeled_cluster.xyz')
 
-    cluster.save('cluster.pun', 'pun')
     bulk_frag.save('bulk_frag.pun', 'pun')
     qm_frag.save('qm_frag.pun', 'pun')
-    
+
+
 def expand_cell(frag, cell_dimensions):
     import numpy as np
     import copy
@@ -287,13 +290,15 @@ def xyz_label_writer(frag, outfname):
     return
 
 
-def cut_atom_centred_region(atoms, symbol, size):
+def cut_atom_centred_region(atoms, symbol, size, search_multiplier=0.5):
     '''
     ONLY WORKS FOR ORTHONORMAL (CUBIC) CELLS
     Args:
         atoms: Atoms object containing unit cell (ASE atoms object)
         symbol: Species that the fragments should be centred on (str)
         size: Size of the returned cut cell based on multiples of the unit cell (int)
+        search_multiplier: The number by which the lattice parameter is multiplied that defines how quickly the
+                           centre atom is found (float)
 
     Returns:
         Two cut atoms objects centred on a single atom, one with periodicity and another without.
@@ -301,8 +306,9 @@ def cut_atom_centred_region(atoms, symbol, size):
     import numpy as np
     from ase.build import cut
 
-    # Make a cell double the size to cut down by a half in the final cut
-    cell = atoms * (2 * size)
+    # Make a cell much larger than size to cut down in the final cut
+    expander = 5
+    cell = atoms * (expander * size)
 
     initialiser = False
     for index in [atom.index for atom in cell if atom.symbol == symbol]:
@@ -329,11 +335,15 @@ def cut_atom_centred_region(atoms, symbol, size):
 
     attempt = first_try
     while len(attempt) != 1:
-        coeff_new = coeff_old * 0.5
+        coeff_new = coeff_old * search_multiplier
         print(coeff_new)
         new_attempt = find_closest_index(target=mid, atoms=cell, symbol=symbol, tolerance=tol, coeff=coeff_new)
         attempt = new_attempt
+        print(len(attempt))
         coeff_old = coeff_new
+        if len(attempt) == 0:
+            print('Could not find a unique centre atom. Try increasing the search_multiplier.')
+            exit()
     print(attempt)
     centre_atom = cell[attempt]
     print(centre_atom)
@@ -341,28 +351,34 @@ def cut_atom_centred_region(atoms, symbol, size):
     scaled = centre_atom.positions / cell.cell.cellpar()[:3]
     print(scaled)
 
-    bulk_cut_cell = cut(cell, a=(-0.5, 0, 0), b=(0, -0.5, 0), c=(0, 0, -0.5), origo=scaled)
-    qm_cut_cell = cut(cell, a=(-0.5, 0, 0), b=(0, -0.5, 0), c=(0, 0, -0.5), origo=scaled, extend=1.125)
+    bulk_cut_cell = cut(cell, a=((1/expander), 0, 0), b=(0, (1/expander), 0), c=(0, 0, (1/expander)), origo=scaled)
+    qm_cut_cell = cut(cell, a=((1/expander), 0, 0), b=(0, (1/expander), 0), c=(0, 0, (1/expander)), origo=scaled, extend=1.125)
     #print(bulk_cut_cell)
     #print(qm_cut_cell)
     return bulk_cut_cell, qm_cut_cell
 
 
-def find_closest_index(target, atoms, symbol, tolerance, coeff):
+def find_closest_index(target, atoms, symbol):
     import numpy as np
     # Finds the index of the atom closest to a given cartesian location within a cell
-    # Target: Target location within a cell (array)
+    # Target: Target location within a cell in cartesian coordinates (array)
     # atoms: ASE atoms object containing the cell
     # symbol: Element symbol to define the atoms to select
-    # tolerance: The initial tolerance by which the closeness to the target is measured
-    # coeff: The coefficient by which the tolerance is reduced by
+    import numpy as np
 
-    closest = list([])
+    closest = 0
+    closest_index = 0
     for n in [atom.index for atom in atoms if atom.symbol == symbol]:
-        if np.allclose(atoms.positions[n], target, atol=(tolerance * coeff)) is True:
-            closest.append(n)
+        dist = np.sqrt(
+            ((atoms.positions[n][0] - target[0]) ** 2) + ((atoms.positions[n][1] - target[1]) ** 2)
+            + ((atoms.positions[n][2] - target[2]) ** 2))
+
+        if dist < closest or n == 1:
+            closest = dist
+            closest_index = n
 
         else:
             continue
 
-    return closest
+    return closest_index
+
