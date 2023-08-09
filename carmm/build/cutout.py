@@ -298,11 +298,9 @@ def cut_atom_centred_region(atoms, symbol, size):
         atoms: Atoms object containing unit cell (ASE atoms object)
         symbol: Species that the fragments should be centred on (str)
         size: Size of the returned cut cell based on multiples of the unit cell (int)
-        search_multiplier: The number by which the lattice parameter is multiplied that defines how quickly the
-                           centre atom is found (float)
 
     Returns:
-        Two cut atoms objects centred on a single atom, one with periodicity and another without.
+        Two cut atoms objects centred on a single atom, one with intact periodicity and another without.
     '''
     import numpy as np
     from ase.build import cut
@@ -311,18 +309,12 @@ def cut_atom_centred_region(atoms, symbol, size):
     expander = 5
     cell = atoms * (expander * size)
 
-
-#    initialiser = False
+    # Finds the atom index with greatest displacement from 0,0,0 where symbol=symbol
+    initialiser = False
     for index in [atom.index for atom in cell if atom.symbol == symbol]:
 
-        # TODO: Make this function use the mean of the x y z coords to find the centre of atomic positions
-        positions = cell.positions[index]
-    '''
-        indices = list([])
-        indices.append(index)
-        
-        test = np.sqrt(
-            (cell.positions[index][0] ** 2) + (cell.positions[index][1] ** 2) + (cell.positions[index][2] ** 2))
+        test = np.linalg.norm(cell.positions[index], axis=-1)
+
         if initialiser is False:
             magnitude = test
             initialiser = True
@@ -334,15 +326,11 @@ def cut_atom_centred_region(atoms, symbol, size):
 
     maximum = cell.positions[magnitude_index]
     mid = maximum * 0.5
-    '''
+
     closest_index = find_closest_index(target=mid, atoms=cell, symbol=symbol)
 
-    attempt = closest_index
-    centre_atom = cell[attempt]
-    print(centre_atom)
-    print(centre_atom.position)
+    centre_atom = cell[closest_index]
     scaled = centre_atom.position / cell.cell.cellpar()[:3]
-    print(scaled)
 
     bulk_cut_cell = cut(cell, a=((1/expander), 0, 0), b=(0, (1/expander), 0), c=(0, 0, (1/expander)), origo=scaled)
     qm_cut_cell = cut(cell, a=((1/expander), 0, 0), b=(0, (1/expander), 0), c=(0, 0, (1/expander)), origo=scaled, extend=1.125)
