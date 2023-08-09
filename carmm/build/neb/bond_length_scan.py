@@ -43,6 +43,10 @@ def dissociation(atoms, i1, i2, step_size=0.05, n_steps=20, final_distance=None,
     from ase.constraints import FixBondLength
     import copy
     import numpy as np
+    from ase.neighborlist import natural_cutoffs
+
+    # retrieve natural cutoffs for atomic radii
+    cutOff = natural_cutoffs(atoms, mult=1)
 
     # retrieve initial atom - atom distance and atom[i2] position
     pos_diff = atoms[i1].position - atoms[i2].position
@@ -62,13 +66,13 @@ def dissociation(atoms, i1, i2, step_size=0.05, n_steps=20, final_distance=None,
                 # Take the z coordinate of the most abundant element in the surface slab
                 chem_symbol_count = [[x, atoms.get_chemical_symbols().count(x)] for x in set(atoms.get_chemical_symbols())]
                 # Sort the list by the count
-                def take_second(n):
-                    return n[1]
-                chem_symbol_count.sort(key=take_second)
-
+                chem_symbol_count.sort(key=lambda k: k[1])
                 surf_z_list = [atom.z for atom in atoms if atom.symbol == chem_symbol_count[-1][0]]
             # The maximum z-coordinate of the surface atoms is retrieved
             surf_z = np.amax(surf_z_list)
+            surf_atom_top = [atom for atom in atoms if atom.z == surf_z][0]
+
+            assert z_bias > surf_z + cutOff[surf_atom_top.index], "Your z-coordinate bias is too close to the surface"
 
     atoms_list = []
     distance_list = []
@@ -81,12 +85,12 @@ def dissociation(atoms, i1, i2, step_size=0.05, n_steps=20, final_distance=None,
 
     for i in range(1, n_steps+1):
         # operate on a deepcopy for intended functionality
-        atoms = copy.deepcopy(atoms)
+        atoms = atoms.copy()
         # remove previous constraints and set up new ones
         atoms.set_constraint()
 
         # initial moving atom position
-        imap = copy.deepcopy(atoms[i2].position)
+        imap = atoms.copy()[i2].position
 
         # move atoms and fix bond length in fixed increments or fraction of final_distance
         measured_distance = (initial_dist + i * step_size)
@@ -99,9 +103,11 @@ def dissociation(atoms, i1, i2, step_size=0.05, n_steps=20, final_distance=None,
 
         # apply bias in z-coordinate towards the surface atoms
         if z_bias:
-            # TODO: consult minimum distance from surface (can cause trouble for group)
             # min distance in Angstrom from surf atoms
-            z_threshold_min = surf_z + z_diff
+            if group_move:
+                pass
+            else:
+                z_threshold_min = surf_z + z_diff
             # make sure atoms from a group do not clash into surface atoms
             # move towards the surface or away if necessary
             if group_move:
@@ -130,7 +136,7 @@ def dissociation(atoms, i1, i2, step_size=0.05, n_steps=20, final_distance=None,
             atoms.set_constraint(new_constraint)
 
         # Record the size of fixed bond
-        atoms_list += [copy.deepcopy(atoms)]
+        atoms_list += [atoms.copy()]
         distance_list += [np.linalg.norm(atoms[i1].position - atoms[i2].position)]
 
     return atoms_list, distance_list
