@@ -290,7 +290,7 @@ def xyz_label_writer(frag, outfname):
     return
 
 
-def cut_atom_centred_region(atoms, symbol, size, search_multiplier=0.5):
+def cut_atom_centred_region(atoms, symbol, size):
     '''
     ONLY WORKS FOR ORTHONORMAL (CUBIC) CELLS
     Args:
@@ -331,24 +331,13 @@ def cut_atom_centred_region(atoms, symbol, size, search_multiplier=0.5):
 
     coeff_old = 1
 
-    first_try = find_closest_index(target=mid, atoms=cell, symbol=symbol, tolerance=tol, coeff=coeff_old)
+    first_try = find_closest_index(target=mid, atoms=cell, symbol=symbol)
 
     attempt = first_try
-    while len(attempt) != 1:
-        coeff_new = coeff_old * search_multiplier
-        print(coeff_new)
-        new_attempt = find_closest_index(target=mid, atoms=cell, symbol=symbol, tolerance=tol, coeff=coeff_new)
-        attempt = new_attempt
-        print(len(attempt))
-        coeff_old = coeff_new
-        if len(attempt) == 0:
-            print('Could not find a unique centre atom. Try increasing the search_multiplier.')
-            exit()
-    print(attempt)
     centre_atom = cell[attempt]
     print(centre_atom)
-    print(centre_atom.positions)
-    scaled = centre_atom.positions / cell.cell.cellpar()[:3]
+    print(centre_atom.position)
+    scaled = centre_atom.position / cell.cell.cellpar()[:3]
     print(scaled)
 
     bulk_cut_cell = cut(cell, a=((1/expander), 0, 0), b=(0, (1/expander), 0), c=(0, 0, (1/expander)), origo=scaled)
@@ -359,7 +348,6 @@ def cut_atom_centred_region(atoms, symbol, size, search_multiplier=0.5):
 
 
 def find_closest_index(target, atoms, symbol):
-    import numpy as np
     # Finds the index of the atom closest to a given cartesian location within a cell
     # Target: Target location within a cell in cartesian coordinates (array)
     # atoms: ASE atoms object containing the cell
