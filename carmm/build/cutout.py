@@ -273,7 +273,8 @@ def radius_qm_region(cluster_coords, radius):
 
 def xyz_label_writer(frag, outfname):
 
-    # writes a .xyz file with labeled atoms for visualisation
+    # TODO: Move to Chemshell as a utility function
+    # writes a .xyz file with labeled atoms for visualisation with VMD
     # frag: Partitioned cluster fragment to write .xyz file (Chemshell Fragment)
     # outfname: File name of output .xyz file (Str)
 
@@ -310,9 +311,16 @@ def cut_atom_centred_region(atoms, symbol, size):
     expander = 5
     cell = atoms * (expander * size)
 
-    initialiser = False
+
+#    initialiser = False
     for index in [atom.index for atom in cell if atom.symbol == symbol]:
 
+        # TODO: Make this function use the mean of the x y z coords to find the centre of atomic positions
+        positions = cell.positions[index]
+    '''
+        indices = list([])
+        indices.append(index)
+        
         test = np.sqrt(
             (cell.positions[index][0] ** 2) + (cell.positions[index][1] ** 2) + (cell.positions[index][2] ** 2))
         if initialiser is False:
@@ -326,14 +334,10 @@ def cut_atom_centred_region(atoms, symbol, size):
 
     maximum = cell.positions[magnitude_index]
     mid = maximum * 0.5
+    '''
+    closest_index = find_closest_index(target=mid, atoms=cell, symbol=symbol)
 
-    tol = np.max(cell.get_cell())
-
-    coeff_old = 1
-
-    first_try = find_closest_index(target=mid, atoms=cell, symbol=symbol)
-
-    attempt = first_try
+    attempt = closest_index
     centre_atom = cell[attempt]
     print(centre_atom)
     print(centre_atom.position)
@@ -342,12 +346,11 @@ def cut_atom_centred_region(atoms, symbol, size):
 
     bulk_cut_cell = cut(cell, a=((1/expander), 0, 0), b=(0, (1/expander), 0), c=(0, 0, (1/expander)), origo=scaled)
     qm_cut_cell = cut(cell, a=((1/expander), 0, 0), b=(0, (1/expander), 0), c=(0, 0, (1/expander)), origo=scaled, extend=1.125)
-    #print(bulk_cut_cell)
-    #print(qm_cut_cell)
     return bulk_cut_cell, qm_cut_cell
 
 
 def find_closest_index(target, atoms, symbol):
+
     # Finds the index of the atom closest to a given cartesian location within a cell
     # Target: Target location within a cell in cartesian coordinates (array)
     # atoms: ASE atoms object containing the cell
