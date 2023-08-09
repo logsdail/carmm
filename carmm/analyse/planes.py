@@ -50,10 +50,9 @@ def get_close_contacts(A_mol, B_mol):
 
 
 def distance_between_centers_of_mass(A_mol, B_mol):
-    '''
-    TODO: @Jack Warren 
-    :param A_mol:
-    :param B_mol:
+    ''' 
+    :param A_mol: Atoms object created by molecules the one you want to measure from
+    :param B_mol: Same as A_mol, however its the molecule you're measuring to
     :return:  distance between 2 centers of mass
     '''
     import numpy as np
@@ -68,12 +67,10 @@ def establish_planes(Atom1, Atom2, Atom3):
     '''
     Using 3 points to calculate 3 vectors and establish a plane...
 
-    @Jack Warren: Please complete
     :param Atom1: (x,y,z coordinates of Atom1)
-    :param Atom2:
-    :param Atom3:
-
-    #TODO: This should just return the plot, not show it. 
+    :param Atom2: (x,y,z coordinates of Atom2)
+    :param Atom3: (x,y,z coordinates of Atom3)
+ 
     :return: Graphical Representation of planes
     '''
     import numpy as np
@@ -119,10 +116,9 @@ def plane_of_best_fit(model):
     model: Atoms object
         - The atoms object that has been *previously* loaded (note the IO is not done here)
 
-    # TODO: @Jack Warren what are these variables?
     xs = all x coordinates 
-    ys = all y
-    zs = all z
+    ys = all y coordinates
+    zs = all z coordinates
 
     
     Returns - plt of the plane and the atoms as well as the equation of plane and the errors from atoms that vary from the plane
