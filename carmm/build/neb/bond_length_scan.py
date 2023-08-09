@@ -46,33 +46,34 @@ def dissociation(atoms, i1, i2, step_size=0.05, n_steps=20, final_distance=None,
     from ase.neighborlist import natural_cutoffs
 
     # retrieve natural cutoffs for atomic radii
-    cutOff = natural_cutoffs(atoms, mult=1)
+    cutOff = natural_cutoffs(atoms, mult=2)
 
     # retrieve initial atom - atom distance and atom[i2] position
     pos_diff = atoms[i1].position - atoms[i2].position
     initial_dist = np.linalg.norm(pos_diff)
     initial_i2_pos = copy.deepcopy(atoms[i2].position)
-    z_diff = 2.0
+
     # retrieve z-coordinate for z_bias
     if z_bias:
-        if isinstance(z_bias, (int, float)) and not isinstance(z_bias, bool):
-            surf_z = z_bias - z_diff
-        else:
-            # make sure it works if no tags are set for atoms
-            # should be more reliable if available
-            surf_z_list = [atom.z for atom in atoms if atom.tag > 0]
-            if surf_z_list == []:
-                # Define a list of atom chemical symbols and their count
-                # Take the z coordinate of the most abundant element in the surface slab
-                chem_symbol_count = [[x, atoms.get_chemical_symbols().count(x)] for x in set(atoms.get_chemical_symbols())]
-                # Sort the list by the count
-                chem_symbol_count.sort(key=lambda k: k[1])
-                surf_z_list = [atom.z for atom in atoms if atom.symbol == chem_symbol_count[-1][0]]
-            # The maximum z-coordinate of the surface atoms is retrieved
-            surf_z = np.amax(surf_z_list)
-            surf_atom_top = [atom for atom in atoms if atom.z == surf_z][0]
+        # Define a list of atom chemical symbols and their count
+        # Take the z coordinate of the most abundant element in the surface slab
+        chem_symbol_count = [[x, atoms.get_chemical_symbols().count(x)] for x in set(atoms.get_chemical_symbols())]
+        # Sort the list by the count
+        chem_symbol_count.sort(key=lambda k: k[1])
+        surf_z_list = [atom.z for atom in atoms if atom.symbol == chem_symbol_count[-1][0] and atom.tag > 0]
+        # The maximum z-coordinate of the surface atoms is retrieved
+        surf_z = np.amax(surf_z_list)
+        surf_atom_top = [atom for atom in atoms if atom.z == surf_z][0]
 
-            assert z_bias > surf_z + cutOff[surf_atom_top.index], "Your z-coordinate bias is too close to the surface"
+        if isinstance(z_bias, (int, float)) and not isinstance(z_bias, bool):
+            z_threshold_min = z_bias
+        else:
+            z_threshold_min = surf_z + cutOff[surf_atom_top.index]
+
+        assert z_threshold_min >= surf_z + cutOff[surf_atom_top.index], \
+            f"Your z-coordinate bias is too close to the surface, Surface z: {surf_z}, with a radius of: " \
+            f"{cutOff[surf_atom_top.index]} z-bias: {z_bias}."
+
 
     atoms_list = []
     distance_list = []
@@ -107,7 +108,7 @@ def dissociation(atoms, i1, i2, step_size=0.05, n_steps=20, final_distance=None,
             if group_move:
                 pass
             else:
-                z_threshold_min = surf_z + z_diff
+                z_threshold_min = surf_z
             # make sure atoms from a group do not clash into surface atoms
             # move towards the surface or away if necessary
             if group_move:

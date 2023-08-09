@@ -24,6 +24,8 @@ def test_dissociation():
 
     # Generate and optimise slab prior to dissociation
     slab = get_example_slab(adsorbate=True, type="2Cu")
+    # move one of the Cu atoms down, so that the bond is not parallel to the surface
+    slab[-2].z -= 0.7
 
     # move adsorbed Cu atoms (indices 18,19) away from each other
     # if z_bias is True, the distance increment is not exactly step_size value
@@ -31,16 +33,17 @@ def test_dissociation():
     atoms_list, distance_list = dissociation(slab, 18, 19, step_size=0.2, n_steps=10, z_bias=z_bias, group_move=[19])
 
     # Assertion tests - checking no one has broken the code.
-    assert (len(distance_list) == len(atoms_list) == 10)
-    assert(distance_list[0] - 3.099548 < 1e-5)
-    assert(distance_list[9] - 4.815466 < 1e-5)
+    assert len(distance_list) == len(atoms_list) == 10
+    assert(distance_list[0] - 3.111653 < 1e-5)
+    assert(distance_list[9] - 4.939653 < 1e-5)
 
     # Set constraints and remove z_bias to test functionality
     slab.set_constraint([FixAtoms([atom.index for atom in slab if atom.tag > 1])])
     z_bias = False
     atoms_list, distance_list = dissociation(slab, 18, 19, step_size=0.2, n_steps=10, z_bias=z_bias, group_move=[19])
-    assert(distance_list[0] - 3.084995 < 1e-5)
-    assert(distance_list[9] - 4.884995 < 1e-5)
+    assert(distance_list[0] - 3.168703 < 1e-5)
+    assert(distance_list[9] - 4.968703 < 1e-5)
+
 
     """
     # Optimisation is disabled to ensure quick testing
