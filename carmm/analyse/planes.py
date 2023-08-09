@@ -44,7 +44,7 @@ def get_close_contacts(A_mol, B_mol):
         measured += [bond_list_atom]
     close_contacts = [np.amin(i) for i in measured]
 
-    # TODO: Document the return - this is a list of shortest distances from each atom in A
+    
 
     return close_contacts
 
