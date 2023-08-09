@@ -106,16 +106,9 @@ def dissociation(atoms, i1, i2, step_size=0.05, n_steps=20, final_distance=None,
         if z_bias:
             # min distance in Angstrom from surf atoms
             if group_move:
-                pass
-            else:
-                z_threshold_min = surf_z
-            # make sure atoms from a group do not clash into surface atoms
-            # move towards the surface or away if necessary
-            if group_move:
                 z_threshold_max = np.amin([atom.z for atom in atoms[group_move]])
             else:
                 z_threshold_max = atoms[i2].z
-
 
             if z_threshold_max > z_threshold_min:
                 atoms[i2].z -= (initial_i2_pos[2] - surf_z)/n_steps

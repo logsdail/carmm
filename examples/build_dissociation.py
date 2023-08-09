@@ -37,10 +37,22 @@ def test_dissociation():
     assert(distance_list[0] - 3.111653 < 1e-5)
     assert(distance_list[9] - 4.939653 < 1e-5)
 
+    # if z_bias is a float, the atom or group of atoms will be biased to stay around the z_bias value in z-coordinate
+    z_bias = 16
+    atoms_list, distance_list = dissociation(slab, 18, 19, step_size=0.2, n_steps=10, z_bias=z_bias, group_move=[19])
+
+    # Assertion tests - checking no one has broken the code.
+    assert len(distance_list) == len(atoms_list) == 10
+    assert (distance_list[0] - 3.2525338 < 1e-5)
+    assert (distance_list[9] - 4.881640 < 1e-5)
+
+
+
     # Set constraints and remove z_bias to test functionality
     slab.set_constraint([FixAtoms([atom.index for atom in slab if atom.tag > 1])])
     z_bias = False
-    atoms_list, distance_list = dissociation(slab, 18, 19, step_size=0.2, n_steps=10, z_bias=z_bias, group_move=[19])
+    # group_move set to False since only one atom is moving
+    atoms_list, distance_list = dissociation(slab, 18, 19, step_size=0.2, n_steps=10, z_bias=z_bias, group_move=False)
     assert(distance_list[0] - 3.168703 < 1e-5)
     assert(distance_list[9] - 4.968703 < 1e-5)
 
