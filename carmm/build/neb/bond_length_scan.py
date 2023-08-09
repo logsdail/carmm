@@ -41,7 +41,6 @@ def dissociation(atoms, i1, i2, step_size=0.05, n_steps=20, final_distance=None,
     '''
 
     from ase.constraints import FixBondLength
-    import copy
     import numpy as np
     from ase.neighborlist import natural_cutoffs
 
@@ -51,7 +50,7 @@ def dissociation(atoms, i1, i2, step_size=0.05, n_steps=20, final_distance=None,
     # retrieve initial atom - atom distance and atom[i2] position
     pos_diff = atoms[i1].position - atoms[i2].position
     initial_dist = np.linalg.norm(pos_diff)
-    initial_i2_pos = copy.deepcopy(atoms[i2].position)
+    initial_i2_pos = atoms[i2].position
 
     # retrieve z-coordinate for z_bias
     if z_bias:
@@ -82,7 +81,7 @@ def dissociation(atoms, i1, i2, step_size=0.05, n_steps=20, final_distance=None,
     if not atoms.constraints:
         initial_constraint = None
     else:
-        initial_constraint = copy.deepcopy(atoms.constraints)
+        initial_constraint = atoms.constraints
 
     for i in range(1, n_steps+1):
         # operate on a deepcopy for intended functionality
