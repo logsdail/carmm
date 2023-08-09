@@ -59,7 +59,7 @@ def dissociation(atoms, i1, i2, step_size=0.05, n_steps=20, final_distance=None,
         chem_symbol_count = [[x, atoms.get_chemical_symbols().count(x)] for x in set(atoms.get_chemical_symbols())]
         # Sort the list by the count
         chem_symbol_count.sort(key=lambda k: k[1])
-        surf_z_list = [atom.z for atom in atoms if atom.symbol == chem_symbol_count[-1][0] and atom.tag > 0]
+        surf_z_list = [atom.z for atom in atoms if atom.symbol == chem_symbol_count[-1][0] and atom.index not in group_move]
         # The maximum z-coordinate of the surface atoms is retrieved
         surf_z = np.amax(surf_z_list)
         surf_atom_top = [atom for atom in atoms if atom.z == surf_z][0]
