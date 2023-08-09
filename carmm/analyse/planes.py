@@ -64,29 +64,32 @@ def distance_between_centers_of_mass(A_mol, B_mol):
     return pos_diff
 
 
-def establish_planes(Atom1, Atom2, Atom3):
+def establish_planes(model):
     '''
     Using 3 points to calculate 3 vectors and establish a plane...
 
-    @Jack Warren: Please complete
-    :param Atom1: (x,y,z coordinates of Atom1)
-    :param Atom2:
-    :param Atom3:
-
-    #TODO: This should just return the plot, not show it. 
+    Script should now just use the model instead of manually defining atoms
     :return: Graphical Representation of planes
     '''
     import numpy as np
     import matplotlib.pyplot as plt
-    from mpl_toolkits.mplot3d import Axes3D
+    from carmm.analyse.molecules import calculate_molecules
+    from ase.io import read
 
-    Atom1 = np.array([5,5,5])
-    Atom2 = np.array([0,-4,0])
-    Atom3 = np.array([0,0,1])
+    atoms = read(model)
+    molecules = calculate_molecules(atoms)
 
-    Vector1 = Atom1-Atom2
-    Vector2 = Atom2-Atom3
-    Vector3 = Atom1-Atom3
+    A_mol = atoms[molecules[0]]
+    B_mol = atoms[molecules[1]]
+    C_mol = atoms[molecules[2]]
+
+    Pos1 = A_mol.positions[:, 0, 1, 2]
+    Pos2 = B_mol.positions[:, 0, 1, 2]
+    Pos3 = C_mol.positions[:, 0, 1, 2]
+
+    Vector1 = Pos1-Pos2
+    Vector2 = Pos2-Pos3
+    Vector3 = Pos3-Pos1
 
 # a plane is a*x+b*y+c*z+d=0
 # [a,b,c] is the normal. Thus, we have to calculate d and we're set
@@ -129,9 +132,7 @@ def plane_of_best_fit(model):
     '''
 
     import matplotlib.pyplot as plt
-    from mpl_toolkits.mplot3d import Axes3D
     import numpy as np
-    # from ase.io import read
     from carmm.analyse.molecules import calculate_molecules
     # Read in object and get positional data
     # atoms = read(model)
