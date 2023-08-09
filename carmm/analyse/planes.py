@@ -119,10 +119,10 @@ def plane_of_best_fit(model):
     model: Atoms object
         - The atoms object that has been *previously* loaded (note the IO is not done here)
 
-    # TODO: @Jack Warren what are these variables?
-    xs = all x coordinates 
-    ys = all y
-    zs = all z
+    Model = atoms object Simply feed in a systems "nom"
+    xs = all x coordinates in atoms object
+    ys = all y coordinates in atoms object
+    zs = all z coordinates in atoms object
 
     
     Returns - plt of the plane and the atoms as well as the equation of plane and the errors from atoms that vary from the plane
