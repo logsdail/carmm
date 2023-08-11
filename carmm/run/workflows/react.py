@@ -251,9 +251,13 @@ class ReactAims:
 
         counter, subdirectory_name = self._restart_setup("Charges", self.filename)
 
+        #TODO: move restart setup to the dedicated function
+
         """Check for previously completed calculation"""
-        if os.path.exists(os.path.join(subdirectory_name[:-1]+str(counter-1), filename+"_charges.traj")):
-            file_location = os.path.join(subdirectory_name[:-1]+str(counter-1), filename+"_charges.traj")
+
+        assumed_path = "/".join([subdirectory_name, filename+"_charges.traj"])
+        if os.path.exists(assumed_path):
+            file_location = assumed_path
             self.initial = read(file_location)
             if verbose:
                 print("Previously calculated structure has been found at", file_location)
@@ -361,7 +365,7 @@ class ReactAims:
             previously_converged_ts_search = os.path.join(subdirectory_name[:-1] + str(counter-1), "ML-NEB.traj")
             print("TS search already converged at", previously_converged_ts_search)
 
-            neb = read(previously_converged_ts_search+"@:")
+            neb = read("/".join([subdirectory_name, previously_converged_ts_search+"@:"]))
             self.ts = sorted(neb, key=lambda k: k.get_potential_energy(), reverse=True)[0]
 
             return self.ts
@@ -427,9 +431,10 @@ class ReactAims:
 
         return self.ts
 
+    """
     def search_ts_aidneb(self, initial, final, fmax, unc, interpolation=None, n=15,
                          restart=True, prev_calcs=None, input_check=0.01, verbose=True):
-        """
+        '''
         This function allows calculation of the transition state using the GPAtom software package in an
         ASE/sockets/FHI-aims setup. The resulting converged band will be located in the AIDNEB.traj file.
 
@@ -464,11 +469,11 @@ class ReactAims:
 
         Returns: Atoms object
             Transition state geometry structure
-
-        """
+        '''
+        
         from gpatom.aidneb import AIDNEB
 
-        """Retrieve common properties"""
+        '''Retrieve common properties'''
         basis_set = self.basis_set
         hpc = self.hpc
         dimensions = sum(initial.pbc)
@@ -476,23 +481,23 @@ class ReactAims:
         parent_dir = os.getcwd()
         self.interpolation = interpolation
 
-        """Set the environment parameters"""
+        '''Set the environment parameters'''
         set_aims_command(hpc=hpc, basis_set=basis_set, defaults=2020, nodes_per_instance=self.nodes_per_instance)
 
         if not self.interpolation:
             self.interpolation = "idpp"
 
-        """Read the geometry"""
+        '''Read the geometry'''
         if self.filename:
             filename = self.filename
         else:
             filename = initial.get_chemical_formula()
             self.filename = filename
 
-        """Check for previous calculations"""
+        '''Check for previous calculations'''
         counter, subdirectory_name = self._restart_setup("TS", filename, restart=restart, verbose=verbose)
 
-        """Let the user restart from alternative file or Atoms object"""
+        '''Let the user restart from alternative file or Atoms object'''
         if prev_calcs:
             self.prev_calcs = prev_calcs
             if verbose:
@@ -503,14 +508,14 @@ class ReactAims:
                 self.filename += "_initial"
                 initial = self.aims_optimise(initial, input_check, restart=False, verbose=verbose)[0]
                 self.initial = self.model_optimised
-                """Set original name after input check is complete"""
+                '''Set original name after input check is complete'''
                 self.filename = filename
 
             if not is_converged(final, input_check):
                 self.filename = filename + "_final"
                 final = self.aims_optimise(final, input_check, restart=False, verbose=verbose)[0]
                 self.final = self.model_optimised
-                """Set original name after input check is complete"""
+                '''Set original name after input check is complete'''
                 self.filename = filename
 
         out = str(counter) + "_" + str(filename) + ".out"
@@ -520,7 +525,7 @@ class ReactAims:
 
         # TODO: calculating initial and final structure if possible within the GPAtom code
 
-        """Sockets setup"""
+        '''Sockets setup'''
         with _calc_generator(params, out_fn=out, dimensions=dimensions)[0] as calculator:
 
             if self.dry_run:
@@ -533,7 +538,7 @@ class ReactAims:
                 training_set_dump.write(atoms)
             training_set_dump.close()
 
-            """Setup the input for AIDNEB"""
+            '''Setup the input for AIDNEB'''
             aidneb = AIDNEB(start=initial,
                             end=final,
                             interpolation=self.interpolation,
@@ -546,7 +551,7 @@ class ReactAims:
                             neb_method='improvedtangent',
                             mic=True)
 
-            """Run the NEB optimisation. Adjust fmax to desired convergence criteria, usually 0.01 ev/A"""
+            '''Run the NEB optimisation. Adjust fmax to desired convergence criteria, usually 0.01 ev/A'''
             if not self.dry_run:
                 aidneb.run(fmax=fmax,
                            unc_convergence=unc,
@@ -555,7 +560,7 @@ class ReactAims:
                 os.chdir(parent_dir)
                 return None
 
-        """Find maximum energy, i.e. transition state to return it"""
+        '''Find maximum energy, i.e. transition state to return it'''
 
         neb = read("AIDNEB.traj@" + str(-len(read("initial_path.traj@:")) - 1) + ":") # read last predicted trajectory
         self.ts = sorted(neb, key=lambda k: k.get_potential_energy(), reverse=True)[0]
@@ -565,8 +570,8 @@ class ReactAims:
 
     def search_ts_taskfarm(self, initial, final, fmax, n, method="string", interpolation="idpp", input_check=0.01,
                            max_steps=100, verbose=True):
-        """
-
+        
+        '''
         Args:
             initial: Atoms object
                 Initial structure in the NEB band
@@ -591,22 +596,22 @@ class ReactAims:
 
         Returns: Atoms object
             Transition state geometry structure
-
-        """
+        '''
+        
         from ase.neb import NEB
         from ase.optimize import FIRE
 
-        """Retrieve common properties"""
+        '''Retrieve common properties'''
         basis_set = self.basis_set
         hpc = self.hpc
         dimensions = sum(initial.pbc)
         params = self.params
         parent_dir = os.getcwd()
 
-        """Set the environment parameters"""
+        '''Set the environment parameters'''
         set_aims_command(hpc=hpc, basis_set=basis_set, defaults=2020, nodes_per_instance=self.nodes_per_instance)
 
-        """Read the geometry"""
+        '''Read the geometry'''
         if self.filename:
             filename = self.filename
         else:
@@ -614,7 +619,7 @@ class ReactAims:
 
         counter, subdirectory_name = self._restart_setup("TS", filename, restart=False, verbose=verbose)
 
-        """Ensure input is converged"""
+        '''Ensure input is converged'''
         if input_check:
             npi = self.nodes_per_instance
             self.nodes_per_instance = None
@@ -626,7 +631,7 @@ class ReactAims:
                 self.filename = filename + "_final"
                 final = self.aims_optimise(final, input_check, restart=False, verbose=False)[0]
 
-            """Set original name after input check is complete"""
+            '''Set original name after input check is complete'''
             self.nodes_per_instance = npi
             self.filename = filename
 
@@ -677,11 +682,13 @@ class ReactAims:
             if not self.dry_run:
                 image.calc.close()
 
-        """Find maximum energy, i.e. transition state to return it"""
+        '''Find maximum energy, i.e. transition state to return it'''
         self.ts = sorted(images, key=lambda k: k.get_potential_energy(), reverse=True)[0]
         os.chdir(parent_dir)
 
         return self.ts
+    """
+
 
     def vibrate(self, atoms: Atoms, indices: list, read_only=False):
         """
@@ -768,7 +775,6 @@ class ReactAims:
 
         """Generate a unique folder for aims calculation"""
         if not read_only:
-            os.chdir(vib_dir)
             vib.write_mode()
 
         return vib
