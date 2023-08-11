@@ -31,8 +31,10 @@ def test_run_workflows_ReactAims():
     '''Call relevant calculations'''
     '''The below has been previously calculated and data is retrieved from saved trajectories'''
     model_optimised, model_postprocessed = reactor.aims_optimise(atoms, fmax=0.01, restart=True)
-    zero_point_energy = reactor.vibrate(atoms, indices =[atom.index for atom in atoms])
 
+
+    zero_point_energy = reactor.vibrate(atoms, indices =[atom.index for atom in atoms]).get_zero_point_energy()
+    
     assert is_converged(reactor.model_optimised, 0.01), \
     '''The structure saved in React_Aims is not converged'''
     assert round(zero_point_energy, 3) == 0.275
@@ -95,6 +97,7 @@ def test_run_workflows_ReactAims():
 
     reactor.nodes_per_instance = 1
     TS_CINEB = reactor.search_ts_taskfarm(initial, final, 0.05, n=5, input_check=0.01, max_steps=30)
+
 
     '''Return to parent directory'''
     os.chdir(parent_dir)
