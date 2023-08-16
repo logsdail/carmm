@@ -122,7 +122,7 @@ class ReactAims:
 
         filename = self.filename
 
-        counter, subdirectory_name = self._restart_setup("Opt", self.filename, restart, verbose=verbose)
+        counter, subdirectory_name_previous = self._restart_setup("Opt", self.filename, restart, verbose=verbose)
         out = str(counter) + "_" + str(filename) + ".out"
 
         """Perform calculation only if required"""
@@ -130,12 +130,16 @@ class ReactAims:
             if verbose:
                 print("The forces are below", fmax, "eV/A. No calculation required.")
             self.model_optimised = self.initial
+
         elif is_converged(self.initial, fmax):
             if verbose:
                 print("The forces are below", fmax, "eV/A. No calculation required.")
             self.model_optimised = self.initial
             self.initial = i_geo
+
         else:
+            '''Make sure the new calculation starts in a separate directory'''
+            subdirectory_name = "_".join(subdirectory_name_previous.split("_")[:-1] + [str(counter + 1)])
             os.makedirs(subdirectory_name, exist_ok=True)
 
             """Set the environment variables for geometry optimisation"""
@@ -182,6 +186,9 @@ class ReactAims:
         self.initial = i_geo
 
         if post_process:
+            '''Make sure the new calculation starts in a separate directory'''
+            subdirectory_name = "_".join(subdirectory_name_previous.split("_")[:-1] +[str(counter + 1)])
+
             if verbose:
                 print("Commencing calculation using", post_process, "basis set.")
 
@@ -249,19 +256,21 @@ class ReactAims:
         filename = self.filename
         assert type(filename) == str, "Invalid type, filename should be string"
 
-        counter, subdirectory_name = self._restart_setup("Charges", self.filename)
+        counter, subdirectory_name_previous = self._restart_setup("Charges", self.filename)
 
         #TODO: move restart setup to the dedicated function
 
         """Check for previously completed calculation"""
 
-        assumed_path = "/".join([subdirectory_name, filename+"_charges.traj"])
+        assumed_path = "/".join([subdirectory_name_previous, filename+"_charges.traj"])
         if os.path.exists(assumed_path):
             file_location = assumed_path
             self.initial = read(file_location)
             if verbose:
                 print("Previously calculated structure has been found at", file_location)
             return self.initial
+        else:
+            subdirectory_name = "_".join([subdirectory_name_previous.split("_")[:-1] + str(counter + 1)])
 
         out = str(counter) + "_" + str(filename) + ".out"
 
@@ -360,12 +369,13 @@ class ReactAims:
             filename = initial.get_chemical_formula()
             self.filename = filename
 
-        counter, subdirectory_name = self._restart_setup("TS", filename, restart=restart, verbose=verbose)
-        if os.path.exists(os.path.join(subdirectory_name[:-1] + str(counter-1), "ML-NEB.traj")):
-            previously_converged_ts_search = os.path.join(subdirectory_name[:-1] + str(counter-1), "ML-NEB.traj")
+        counter, subdirectory_name_previous = self._restart_setup("TS", filename, restart=restart, verbose=verbose)
+
+        if os.path.exists(os.path.join(subdirectory_name_previous, "ML-NEB.traj")):
+            previously_converged_ts_search = os.path.join(subdirectory_name_previous, "ML-NEB.traj")
             print("TS search already converged at", previously_converged_ts_search)
 
-            neb = read("/".join([subdirectory_name, previously_converged_ts_search+"@:"]))
+            neb = read("".join([previously_converged_ts_search, "@:"]))
             self.ts = sorted(neb, key=lambda k: k.get_potential_energy(), reverse=True)[0]
 
             return self.ts
@@ -388,6 +398,7 @@ class ReactAims:
         if prev_calcs:
             self.prev_calcs = prev_calcs
 
+        subdirectory_name = "_".join(subdirectory_name_previous.split("_")[:-1] + [str(counter + 1)])
         os.makedirs(subdirectory_name, exist_ok=True)
 
         """Create the sockets calculator - using a with statement means the object is closed at the end."""
@@ -779,7 +790,13 @@ class ReactAims:
 
         return vib
 
+
     def _find_previous_calculation(self, calc_type, filename, verbose):
+
+        # TODO: Bug, calculations are restarted in previous folder rather
+        #  than a new one, resulting in overwritten aims output
+        # TODO: Turn path and filename string generation into a function to avoid redundancy
+
         counter = 0
         prev_calcs = None
         interpolation = None
@@ -843,7 +860,7 @@ class ReactAims:
                     """Read the last optimisation"""
                     traj_name = "/".join([subdirectory_name_previous,
                                           str(counter - 1) + "_" + filename + "_" + str(opt_restarts - 1) + ".traj"])
-                    print(traj_name)
+
                     while os.path.exists(traj_name):
                         if os.path.getsize(traj_name):
                             self.initial = read(traj_name)
@@ -862,6 +879,7 @@ class ReactAims:
 
                 counter -= 1
 
+
         return counter, prev_calcs, interpolation
 
     def _create_new_directory(self, calc_type, filename, counter):
@@ -878,8 +896,6 @@ class ReactAims:
         counter, self.prev_calcs, self.interpolation = self._find_previous_calculation(calc_type, filename, verbose)
 
         subdirectory_name = self._create_new_directory(calc_type, filename, counter)
-
-
 
         return counter, subdirectory_name
 
