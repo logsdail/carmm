@@ -18,17 +18,30 @@ def povray_render(atoms, output='povray', view=False, atom_subs=None,
     """
 
     # Default visual settings
-    if 'rotation' not in generic_projection_settings:
-        generic_projection_settings['rotation'] = '0x,0y,0z'
-    if 'radii' not in generic_projection_settings:
-        generic_projection_settings['radii'] = 1.0
-    if 'colors' not in generic_projection_settings:
-        generic_projection_settings['colors'] = None
+    if generic_projection_settings is None:
+        generic_projection_settings = {
+            'rotation': '0x,0y,0z',
+            'radii': 1.0,
+            'colors': None,
+        }
+    else:
+        if 'rotation' not in generic_projection_settings:
+            generic_projection_settings['rotation'] = '0x,0y,0z'
+        if 'radii' not in generic_projection_settings:
+            generic_projection_settings['radii'] = 1.0
+        if 'colors' not in generic_projection_settings:
+            generic_projection_settings['colors'] = None
 
-    if 'camera_type' not in povray_settings:
-        povray_settings['camera_type'] = 'orthographic angle 5'
-    if 'camera_dist' not in povray_settings:
-        povray_settings['camera_dist'] = 50
+    if povray_settings is None:
+        povray_settings = {
+            'camera_type': 'orthographic angle 5',
+            'camera_dist': 50,
+        }
+    else:
+        if 'camera_type' not in povray_settings:
+            povray_settings['camera_type'] = 'orthographic angle 5'
+        if 'camera_dist' not in povray_settings:
+            povray_settings['camera_dist'] = 50
 
     if view:
         povray_settings['display'] = True
