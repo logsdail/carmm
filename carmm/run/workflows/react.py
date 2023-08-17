@@ -150,7 +150,7 @@ class ReactAims:
                 model_pp = self.model_optimised.copy()
 
                 with calc_generator(self.params, out_fn=self.filename + "_" + post_process + ".out", forces=False,
-                                    dimensions=dimensions, directory=subdirectory_name_tight)[0] as calculator:
+                                    dimensions=self.dimensions, directory=subdirectory_name_tight)[0] as calculator:
                     if not self.dry_run:
                         model_pp.calc = calculator
                     else:
