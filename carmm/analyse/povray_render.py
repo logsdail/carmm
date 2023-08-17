@@ -16,18 +16,24 @@ def povray_render(atoms, output='povray', view=False, atom_subs=None,
     :param povray_settings: (Dict) Settings used by Povray for visualisation
     (see https://gitlab.com/ase/ase/-/blob/master/ase/io/pov.py POVRAY/__init__ for settings options)
     """
-    if generic_projection_settings is None:
-        generic_projection_settings = {
-            'rotation': '0x,0y,0z',
-            'radii': 1.0,
-            'colors': None,
-        }
 
-    if povray_settings is None:
-        povray_settings = {
-            'camera_type': 'orthographic angle 5',
-            'camera_dist': 50,
-        }
+    # Default visual settings
+    if 'rotation' not in generic_projection_settings:
+        generic_projection_settings['rotation'] = '0x,0y,0z'
+    if 'radii' not in generic_projection_settings:
+        generic_projection_settings['radii'] = 1.0
+    if 'colors' not in generic_projection_settings:
+        generic_projection_settings['colors'] = None
+
+    if 'camera_type' not in povray_settings:
+        povray_settings['camera_type'] = 'orthographic angle 5'
+    if 'camera_dist' not in povray_settings:
+        povray_settings['camera_dist'] = 50
+
+    if view:
+        povray_settings['display'] = True
+    else:
+        povray_settings['display'] = False
 
     # Camera type information
     if povray_settings['camera_type'] == 'orthographic':
@@ -41,11 +47,6 @@ def povray_render(atoms, output='povray', view=False, atom_subs=None,
         print('Ultra Wide Angle camera type is much less supported. e.g. Unable to zoom in/out.\n'
               'Instead, try the "orthographic angle X" camera type, where X=5 by default.\n'
               'Increasing/decreasing X has the effect of zooming in/out, respectively.')
-
-    if view:
-        povray_settings['display'] = True
-    else:
-        povray_settings['display'] = False
 
     if atom_subs is not None:
         atoms = atom_sub(atoms, atom_subs)
