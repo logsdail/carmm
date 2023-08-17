@@ -131,7 +131,8 @@ class ReactAims:
         """
         self.initial = atoms
         self.dimensions = sum(self.initial.pbc)
-        self.filename = self.initial.get_chemical_formula()
+        if not self.filename:
+            self.filename = self.initial.get_chemical_formula()
 
     def _perform_optimization(self, subdirectory_name, counter, fmax, relax_unit_cell):
         """
