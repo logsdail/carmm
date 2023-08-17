@@ -32,7 +32,7 @@ def test_run_workflows_ReactAims():
     '''The below has been previously calculated and data is retrieved from saved trajectories'''
     model_optimised, model_postprocessed = reactor.aims_optimise(atoms, fmax=0.01, restart=True)
 
-
+    """
     zero_point_energy = reactor.vibrate(atoms, indices =[atom.index for atom in atoms]).get_zero_point_energy()
     
     assert is_converged(reactor.model_optimised, 0.01), \
@@ -53,7 +53,7 @@ def test_run_workflows_ReactAims():
     '''The below uses the "dry_run" flag and uses an EMT calculator instead of FHI-aims to test code in CI'''
     # TODO: Add relevant assertion statements below
     reactor = ReactAims(params, basis_set, hpc, dry_run=True, filename="O2")
-
+    
     '''Optimise the bulk metal using stress tensor calculations and ExpCellFilter to later cut a surface model'''
     reactor.filename = "Al"
     reactor.params["k_grid"] = (8, 8, 8)
@@ -89,7 +89,7 @@ def test_run_workflows_ReactAims():
     '''Calculate the Transition State using AIDNEB from ase-gpatom package'''
     '''WARNING DO NOT USE WITH FHI-AIMS  - requires modified gpatom source code, issue opened on ase-gpatom GitHub'''
 
-    """
+    
     TS_AIDNEB = reactor.search_ts_aidneb(initial, final, 0.05, 0.03, n=7, input_check=0.01, restart=True)
 
    

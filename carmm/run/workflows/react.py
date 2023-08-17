@@ -10,6 +10,8 @@ from ase.vibrations import Vibrations
 from carmm.analyse.forces import is_converged
 from carmm.run.aims_path import set_aims_command
 from ase.io import Trajectory
+from carmm.run.workflows.helper import CalculationHelper
+from ase.optimize import BFGS
 
 
 # TODO: Enable serialization with ASE db - save locations of converged files as well as all properties
@@ -26,7 +28,8 @@ class ReactAims:
                  hpc: str,
                  filename: str = None,
                  nodes_per_instance: int = None,
-                 dry_run: bool = False):
+                 dry_run: bool = False,
+                 verbose: bool = True):
         """
         Args:
             params: dict
@@ -55,165 +58,110 @@ class ReactAims:
         self.basis_set = basis_set
         self.filename = filename
         self.nodes_per_instance = nodes_per_instance
+        self.verbose = verbose
 
         """Define additional parameters"""
-        self.initial = None                 # input for optimisation or input for NEB initial image
-        self.model_optimised = None         # optimised geometry with calculator attached
-        self.model_post_processed = None    # post processed geometry with new calculator attached
-        self.final = None                   # input final image for NEB
-        self.ts = None                      # TS geometry from NEB
-        self.prev_calcs = None              # for NEB restart
-        self.interpolation = None           # TODO: use this for NEBs
+        self.initial = None  # input for optimisation or input for NEB initial image
+        self.model_optimised = None  # optimised geometry with calculator attached
+        self.model_post_processed = None  # post processed geometry with new calculator attached
+        self.final = None  # input final image for NEB
+        self.ts = None  # TS geometry from NEB
+        self.prev_calcs = None  # for NEB restart
+        self.interpolation = None  # TODO: use this for NEBs
+        self.dimensions = None
 
         """ Set the test flag"""
         self.dry_run = dry_run
 
-    def aims_optimise(self,
-                      atoms: Atoms,
-                      fmax: float = 0.01,
-                      post_process: str = None,
-                      relax_unit_cell: bool = False,
-                      restart: bool = True,
-                      verbose: bool = True):
+    def aims_optimise(self, atoms: Atoms, fmax: float = 0.01, post_process: str = None, relax_unit_cell: bool = False,
+                      restart: bool = True, verbose: bool = True):
 
-        """
-        The function needs information about structure geometry (model), name of hpc system
-        to configure FHI-aims environment variables (hpc). Separate directory is created with a naming convention
-        based on chemical formula and number of restarts, n (opt_formula_n), ensuring that no outputs are overwritten
-        in ASE/FHI-aims.
-        The geometry optimisation is restarted from a new Hessian each 80 steps in BFGS algorithm to overcome deep
-        potential energy local minima with fmax above convergence criteria. One can choose the type of phase of
-        the calculation (gas, surface, bulk) and request a post_processing calculation with a larger basis set.
+        self._initialize_parameters(atoms)
 
-        PARAMETERS:
-        params: dict
-            Dictionary containing user's calculator FHI-aims parameters
-        atoms: Atoms object
-            Contains the geometry information for optimisation
-        fmax: float
-            Force convergence criterion for geometry optimisation, i.e. max forces on any atom in eV/A
-        post_process: str or None
-            Basis set to be used for post_processing if energy calculation using a larger basis set is required
-        relax_unit_cell: bool
-            True requests a strain filter unit cell relaxation
-        restart: bool
-            Request restart from previous geometry if True (True by default)
+        helper = CalculationHelper(calc_type="Opt",
+                                   parent_dir=os.getcwd(),
+                                   filename=self.filename,
+                                   restart=restart,
+                                   verbose=self.verbose)
 
-        Returns a list containing the model with data calculated using
-        light and tight settings: [model_light, model_tight]
-        """
-        from ase.io import read
-        from ase.io.trajectory import Trajectory
-        from carmm.analyse.forces import is_converged
-        from ase.optimize import BFGS
+        counter, out, subdirectory_name, initial = helper.restart_setup()
 
-        """Setup initial parameters"""
-        params = self.params
-        hpc = self.hpc
-        basis_set = self.basis_set
+        if initial is not None:
+            self.initial = initial
+
+        self._perform_optimization(subdirectory_name, counter, fmax, relax_unit_cell)
+        self._finalize_optimization(subdirectory_name, post_process, verbose)
+
+        return self.model_optimised, self.model_post_processed
+
+    def _initialize_parameters(self, atoms):
         self.initial = atoms
-        dimensions = sum(self.initial.pbc)
-        i_geo = atoms.copy()
-        i_geo.calc = atoms.calc
+        self.dimensions = sum(self.initial.pbc)
+        self.filename = self.initial.get_chemical_formula()
 
-        """Read the geometry"""
-        if not self.filename:
-            self.filename = self.initial.get_chemical_formula()
+    def _perform_optimization(self, subdirectory_name, counter, fmax, relax_unit_cell):
+        opt_restarts = 0
 
-        filename = self.filename
-
-        counter, subdirectory_name = self._restart_setup("Opt", self.filename, restart, verbose=verbose)
-        out = str(counter) + "_" + str(filename) + ".out"
-
-        """Perform calculation only if required"""
-        if is_converged(atoms, fmax):
-            if verbose:
-                print("The forces are below", fmax, "eV/A. No calculation required.")
-            self.model_optimised = self.initial
-        elif is_converged(self.initial, fmax):
-            if verbose:
-                print("The forces are below", fmax, "eV/A. No calculation required.")
-            self.model_optimised = self.initial
-            self.initial = i_geo
-        else:
+        if not is_converged(self.initial, fmax):
             os.makedirs(subdirectory_name, exist_ok=True)
 
-            """Set the environment variables for geometry optimisation"""
-            set_aims_command(hpc=hpc, basis_set=basis_set, defaults=2020, nodes_per_instance=self.nodes_per_instance)
-
-            """Occasional optimizer restarts will prevent the calculation from getting stuck in deep local minimum"""
-            opt_restarts = 0
-
-            """Perform DFT calculations for each filename"""
-            with _calc_generator(params,
-                                 out_fn=out,
-                                 dimensions=dimensions,
-                                 relax_unit_cell=relax_unit_cell,
-                                 directory=subdirectory_name)[0] as calculator:
-
+            with_calc_generator(self.params, out_fn=self.filename, dimensions=self.dimensions,
+                                relax_unit_cell=relax_unit_cell,
+                                directory=subdirectory_name)[0] as calculator:
                 if not self.dry_run:
                     self.initial.calc = calculator
                 else:
                     self.initial.calc = EMT()
 
                 while not is_converged(self.initial, fmax):
+                    traj_name = f"{subdirectory_name}/{str(counter)}_{self.filename}_{str(opt_restarts)}.traj"
+
                     if relax_unit_cell:
                         from ase.constraints import StrainFilter
                         unit_cell_relaxer = StrainFilter(self.initial)
-
-                        opt = BFGS(unit_cell_relaxer,
-                                   trajectory="".join([subdirectory_name, "/", str(counter), "_",
-                                                       filename, "_", str(opt_restarts), ".traj"]),
-                                   alpha=70.0
-                                   )
+                        opt = BFGS(unit_cell_relaxer, trajectory=traj_name, alpha=70.0)
                     else:
-                        opt = BFGS(self.initial,
-                                   trajectory="".join([subdirectory_name, "/", str(counter), "_",
-                                                       filename, "_", str(opt_restarts), ".traj"]),
-                                   alpha=70.0
-                                   )
+                        opt = BFGS(self.initial, trajectory=traj_name, alpha=70.0)
 
                     opt.run(fmax=fmax, steps=80)
                     opt_restarts += 1
 
-            self.model_optimised = read("/".join([subdirectory_name,
-                                                  str(counter) + "_" + filename + "_" + str(opt_restarts-1) + ".traj"]))
+            self.model_optimised = read(traj_name)
+        else:
+            if self.verbose:
+                print(f"Structure from {subdirectory_name} is converged")
+            self.model_optimised = self.initial
 
-        self.initial = i_geo
+    def _finalize_optimization(self, subdirectory_name, post_process, verbose):
 
         if post_process:
-            if verbose:
-                print("Commencing calculation using", post_process, "basis set.")
-
-            model_pp = self.model_optimised.copy()
-
-            """Set environment variables for a larger basis set - converged electronic structure"""
             subdirectory_name_tight = subdirectory_name + "_" + post_process
-            os.makedirs(subdirectory_name_tight, exist_ok=True)
+            traj_name = f"{subdirectory_name_tight}/{filename}_{post_process}.traj"
 
-            set_aims_command(hpc=hpc, basis_set=post_process, defaults=2020, nodes_per_instance=self.nodes_per_instance)
+            if os.path.exists(traj_name):
+                self.model_post_processed = read(traj_name)
+            else:
+                subdirectory_name_tight = subdirectory_name + "_" + post_process
+                os.makedirs(subdirectory_name_tight, exist_ok=True)
 
-            """Recalculate the structure using a larger basis set in a separate folder"""
-            with _calc_generator(params,
-                                 out_fn=str(self.filename) + "_" + post_process + ".out",
-                                 forces=False,
-                                 dimensions=dimensions,
-                                 directory=subdirectory_name_tight)[0] as calculator:
-                if not self.dry_run:
-                    model_pp.calc = calculator
-                else:
-                    model_pp.calc = EMT()
-                    
-                model_pp.get_potential_energy()
-                traj = Trajectory("".join([subdirectory_name_tight, "/",
-                                           self.filename,  "_", post_process,".traj"]), "w")
-                traj.write(model_pp)
-                traj.close()
+                set_aims_command(hpc=self.hpc, basis_set=post_process, defaults=2020,
+                                 nodes_per_instance=self.nodes_per_instance)
 
-            """update the instance with a post_processed model"""
-            self.model_post_processed = model_pp
+                model_pp = self.model_optimised.copy()
 
-        return self.model_optimised, self.model_post_processed
+                with calc_generator(self.params, out_fn=self.filename + "_" + post_process + ".out", forces=False,
+                                    dimensions=dimensions, directory=subdirectory_name_tight)[0] as calculator:
+                    if not self.dry_run:
+                        model_pp.calc = calculator
+                    else:
+                        model_pp.calc = EMT()
+
+                    model_pp.get_potential_energy()
+                    traj = Trajectory(traj_name, "w")
+                    traj.write(model_pp)
+                    traj.close()
+
+                self.model_post_processed = model_pp
 
     def get_mulliken_charges(self, initial: Atoms, verbose=True):
 
@@ -249,19 +197,21 @@ class ReactAims:
         filename = self.filename
         assert type(filename) == str, "Invalid type, filename should be string"
 
-        counter, subdirectory_name = self._restart_setup("Charges", self.filename)
+        counter, subdirectory_name_previous = self._restart_setup("Charges", self.filename)
 
-        #TODO: move restart setup to the dedicated function
+        # TODO: move restart setup to the dedicated function
 
         """Check for previously completed calculation"""
 
-        assumed_path = "/".join([subdirectory_name, filename+"_charges.traj"])
+        assumed_path = "/".join([subdirectory_name_previous, filename + "_charges.traj"])
         if os.path.exists(assumed_path):
             file_location = assumed_path
             self.initial = read(file_location)
             if verbose:
                 print("Previously calculated structure has been found at", file_location)
             return self.initial
+        else:
+            subdirectory_name = "_".join([subdirectory_name_previous.split("_")[:-1] + str(counter + 1)])
 
         out = str(counter) + "_" + str(filename) + ".out"
 
@@ -290,12 +240,11 @@ class ReactAims:
 
         self.initial.set_initial_charges(charges)
 
-        traj = Trajectory("/".join([subdirectory_name, filename+"_charges.traj"]), 'w')
+        traj = Trajectory("/".join([subdirectory_name, filename + "_charges.traj"]), 'w')
         traj.write(self.initial)
         traj.close()
 
         return self.initial
-    
 
     def search_ts(self, initial, final,
                   fmax, unc, interpolation=None,
@@ -360,12 +309,13 @@ class ReactAims:
             filename = initial.get_chemical_formula()
             self.filename = filename
 
-        counter, subdirectory_name = self._restart_setup("TS", filename, restart=restart, verbose=verbose)
-        if os.path.exists(os.path.join(subdirectory_name[:-1] + str(counter-1), "ML-NEB.traj")):
-            previously_converged_ts_search = os.path.join(subdirectory_name[:-1] + str(counter-1), "ML-NEB.traj")
+        counter, subdirectory_name_previous = self._restart_setup("TS", filename, restart=restart, verbose=verbose)
+
+        if os.path.exists(os.path.join(subdirectory_name_previous, "ML-NEB.traj")):
+            previously_converged_ts_search = os.path.join(subdirectory_name_previous, "ML-NEB.traj")
             print("TS search already converged at", previously_converged_ts_search)
 
-            neb = read("/".join([subdirectory_name, previously_converged_ts_search+"@:"]))
+            neb = read("".join([previously_converged_ts_search, "@:"]))
             self.ts = sorted(neb, key=lambda k: k.get_potential_energy(), reverse=True)[0]
 
             return self.ts
@@ -388,6 +338,7 @@ class ReactAims:
         if prev_calcs:
             self.prev_calcs = prev_calcs
 
+        subdirectory_name = "_".join(subdirectory_name_previous.split("_")[:-1] + [str(counter + 1)])
         os.makedirs(subdirectory_name, exist_ok=True)
 
         """Create the sockets calculator - using a with statement means the object is closed at the end."""
@@ -470,7 +421,7 @@ class ReactAims:
         Returns: Atoms object
             Transition state geometry structure
         '''
-        
+
         from gpatom.aidneb import AIDNEB
 
         '''Retrieve common properties'''
@@ -570,7 +521,7 @@ class ReactAims:
 
     def search_ts_taskfarm(self, initial, final, fmax, n, method="string", interpolation="idpp", input_check=0.01,
                            max_steps=100, verbose=True):
-        
+
         '''
         Args:
             initial: Atoms object
@@ -597,7 +548,7 @@ class ReactAims:
         Returns: Atoms object
             Transition state geometry structure
         '''
-        
+
         from ase.neb import NEB
         from ase.optimize import FIRE
 
@@ -689,7 +640,6 @@ class ReactAims:
         return self.ts
     """
 
-
     def vibrate(self, atoms: Atoms, indices: list, read_only=False):
         """
 
@@ -779,7 +729,12 @@ class ReactAims:
 
         return vib
 
-    def _find_previous_calculation(self, calc_type, filename, verbose):
+    def _find_previous_calculation(self, calc_type, filename, restart, verbose):
+
+        # TODO: Bug, calculations are restarted in previous folder rather
+        #  than a new one, resulting in overwritten aims output
+        # TODO: Turn path and filename string generation into a function to avoid redundancy
+
         counter = 0
         prev_calcs = None
         interpolation = None
@@ -787,6 +742,8 @@ class ReactAims:
         while calc_type + filename + "_" + str(counter) in [fn for fn in os.listdir() if
                                                             fnmatch.fnmatch(fn, calc_type + "*")]:
             counter += 1
+
+        print(counter, filename)
 
         if counter > 0:
             restart_found = False
@@ -796,54 +753,55 @@ class ReactAims:
                 subdirectory_name_previous = calc_type + filename + "_" + str(counter - 1)
 
                 if calc_type == "TS_":
-                    if os.path.exists("/".join([subdirectory_name_previous, "evaluated_structures.traj"])):
-                        self.prev_calcs = read("/".join([subdirectory_name_previous, "evaluated_structures.traj@:"]))
-                        restart_found = True
-                        break
+                    if restart:
+                        if os.path.exists("/".join([subdirectory_name_previous, "evaluated_structures.traj"])):
+                            self.prev_calcs = read(
+                                "/".join([subdirectory_name_previous, "evaluated_structures.traj@:"]))
+                            restart_found = True
+                            break
+                        elif os.path.exists("/".join([subdirectory_name_previous, "AIDNEB.traj"])) \
+                                and os.path.exists("/".join([subdirectory_name_previous, "AIDNEB_observations.traj"])):
+                            '''No break here, we combine the whole dataset for GPATOM due to better efficiency than MLNEB'''
+                            '''Retrieve all previous geometries and combine'''
+                            # TODO: respect users self-provided prev_calcs
+                            if type(self.prev_calcs) == list:
+                                for atoms in read("/".join([subdirectory_name_previous, "AIDNEB_observations.traj@:"])):
+                                    if not atoms in self.prev_calcs:
+                                        self.prev_calcs += [atoms]
 
+                            elif not self.prev_calcs:
+                                self.prev_calcs = read(
+                                    "/".join([subdirectory_name_previous, "AIDNEB_observations.traj@:"]))
 
-                    elif os.path.exists("/".join([subdirectory_name_previous, "AIDNEB.traj"])) \
-                            and os.path.exists("/".join([subdirectory_name_previous, "AIDNEB_observations.traj"])):
-                        '''No break here, we combine the whole dataset for GPATOM due to better efficiency than MLNEB'''
-                        '''Retrieve all previous geometries and combine'''
-                        # TODO: respect users self-provided prev_calcs
-                        if type(self.prev_calcs) == list:
-                            for atoms in read("/".join([subdirectory_name_previous, "AIDNEB_observations.traj@:"])):
-                                if not atoms in self.prev_calcs:
-                                    self.prev_calcs += [atoms]
+                            '''Read last predicted trajectory'''
+                            '''Guess length from combined AIDNEB based on length of the initial path'''
+                            if not self.interpolation:
+                                self.interpolation = read("/".join([subdirectory_name_previous,
+                                                                    "AIDNEB.traj@" +
+                                                                    str(-len(read("/".join([subdirectory_name_previous,
+                                                                                            "initial_path.traj@:"]))) - 1) + ":"]))
+                                if verbose:
+                                    print("Interpolation retrieved from", calc_type + filename + "_" + str(counter - 1))
 
-                        elif not self.prev_calcs:
-                            self.prev_calcs = read("/".join([subdirectory_name_previous, "AIDNEB_observations.traj@:"]))
-
-                        '''Read last predicted trajectory'''
-                        '''Guess length from combined AIDNEB based on length of the initial path'''
-                        if not self.interpolation:
-                            self.interpolation = read("/".join([subdirectory_name_previous,
-                                                                "AIDNEB.traj@" +
-                                                                str(-len(read("/".join([subdirectory_name_previous,
-                                                                                        "initial_path.traj@:"]))) - 1) + ":"]))
                             if verbose:
-                                print("Interpolation retrieved from", calc_type + filename + "_" + str(counter - 1))
+                                print("Data from", calc_type + filename + "_" + str(counter - 1),
+                                      "added to the training set.")
 
-                        if verbose:
-                            print("Data from", calc_type + filename + "_" + str(counter - 1),
-                                  "added to the training set.")
-
-                    elif verbose:
-                        print('Previous TS trajectory not found.')
+                        elif verbose:
+                            print('Previous TS trajectory not found.')
 
 
                 elif calc_type == "Opt_":
                     """Check for number of restarted optimisations"""
                     opt_restarts = 0
                     while os.path.exists("".join([subdirectory_name_previous, "/", str(counter - 1), "_", filename, "_",
-                                            str(opt_restarts), ".traj"])):
+                                                  str(opt_restarts), ".traj"])):
                         opt_restarts += 1
 
                     """Read the last optimisation"""
                     traj_name = "/".join([subdirectory_name_previous,
                                           str(counter - 1) + "_" + filename + "_" + str(opt_restarts - 1) + ".traj"])
-                    print(traj_name)
+
                     while os.path.exists(traj_name):
                         if os.path.getsize(traj_name):
                             self.initial = read(traj_name)
@@ -875,13 +833,13 @@ class ReactAims:
         assert calc_type in _supported_calc_types
         calc_type += "_"
 
-        counter, self.prev_calcs, self.interpolation = self._find_previous_calculation(calc_type, filename, verbose)
+        counter, self.prev_calcs, self.interpolation = self._find_previous_calculation(calc_type, filename, restart,
+                                                                                       verbose)
 
         subdirectory_name = self._create_new_directory(calc_type, filename, counter)
 
-
-
         return counter, subdirectory_name
+
 
 def _calc_generator(params,
                     out_fn="aims.out",
@@ -939,6 +897,7 @@ def _calc_generator(params,
     fhi_calc.set(**params)
 
     return sockets_calc, fhi_calc
+
 
 '''
 def serialize(self):
