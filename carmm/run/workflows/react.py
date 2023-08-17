@@ -76,6 +76,32 @@ class ReactAims:
     def aims_optimise(self, atoms: Atoms, fmax: float = 0.01, post_process: str = None, relax_unit_cell: bool = False,
                       restart: bool = True, verbose: bool = True):
 
+        """
+         The function needs information about structure geometry (model), name of hpc system
+         to configure FHI-aims environment variables (hpc). Separate directory is created with a naming convention
+         based on chemical formula and number of restarts, ensuring that no outputs are overwritten
+         in ASE/FHI-aims.
+         The geometry optimisation is restarted from a new Hessian each 80 steps in BFGS algorithm to overcome deep
+         potential energy local minima with fmax above convergence criteria. A post_processing calculation with a
+         different basis set can be performed by specifying the basis set name as in post_process.
+         PARAMETERS:
+         params: dict
+             Dictionary containing user's calculator FHI-aims parameters
+         atoms: Atoms object
+             Contains the geometry information for optimisation
+         fmax: float
+             Force convergence criterion for geometry optimisation, i.e. max forces on any atom in eV/A
+         post_process: str or None
+             Basis set to be used for post_processing if energy calculation using a larger basis set is required
+         relax_unit_cell: bool
+             True requests a strain filter unit cell relaxation
+         restart: bool
+             Request restart from previous geometry if True (True by default)
+
+         Returns a list containing the model with data calculated using your choice of settings
+         [model_optimised, model_postprocessed]
+         """
+
         self._initialize_parameters(atoms)
 
         helper = CalculationHelper(calc_type="Opt",
@@ -95,11 +121,29 @@ class ReactAims:
         return self.model_optimised, self.model_post_processed
 
     def _initialize_parameters(self, atoms):
+        """
+        Obtain pbc from Atoms and generate a filename, then assign to self.
+        Args:
+            atoms: Atoms object
+
+        Returns: None
+
+        """
         self.initial = atoms
         self.dimensions = sum(self.initial.pbc)
         self.filename = self.initial.get_chemical_formula()
 
     def _perform_optimization(self, subdirectory_name, counter, fmax, relax_unit_cell):
+        """
+        Args:
+            subdirectory_name: string
+            counter: int
+            fmax: float
+            relax_unit_cell: bool
+
+        Returns:None
+
+        """
         opt_restarts = 0
 
         if not is_converged(self.initial, fmax):
@@ -133,10 +177,20 @@ class ReactAims:
             self.model_optimised = self.initial
 
     def _finalize_optimization(self, subdirectory_name, post_process, verbose):
+        """
+
+        Args:
+            subdirectory_name:
+            post_process:
+            verbose:
+
+        Returns:
+
+        """
 
         if post_process:
             subdirectory_name_tight = subdirectory_name + "_" + post_process
-            traj_name = f"{subdirectory_name_tight}/{filename}_{post_process}.traj"
+            traj_name = f"{subdirectory_name_tight}/{self.filename}_{post_process}.traj"
 
             if os.path.exists(traj_name):
                 self.model_post_processed = read(traj_name)
@@ -728,117 +782,6 @@ class ReactAims:
             vib.write_mode()
 
         return vib
-
-    def _find_previous_calculation(self, calc_type, filename, restart, verbose):
-
-        # TODO: Bug, calculations are restarted in previous folder rather
-        #  than a new one, resulting in overwritten aims output
-        # TODO: Turn path and filename string generation into a function to avoid redundancy
-
-        counter = 0
-        prev_calcs = None
-        interpolation = None
-
-        while calc_type + filename + "_" + str(counter) in [fn for fn in os.listdir() if
-                                                            fnmatch.fnmatch(fn, calc_type + "*")]:
-            counter += 1
-
-        print(counter, filename)
-
-        if counter > 0:
-            restart_found = False
-            while not restart_found and counter > 0:
-                if verbose:
-                    print("Previous calculation detected in", calc_type + filename + "_" + str(counter - 1))
-                subdirectory_name_previous = calc_type + filename + "_" + str(counter - 1)
-
-                if calc_type == "TS_":
-                    if restart:
-                        if os.path.exists("/".join([subdirectory_name_previous, "evaluated_structures.traj"])):
-                            self.prev_calcs = read(
-                                "/".join([subdirectory_name_previous, "evaluated_structures.traj@:"]))
-                            restart_found = True
-                            break
-                        elif os.path.exists("/".join([subdirectory_name_previous, "AIDNEB.traj"])) \
-                                and os.path.exists("/".join([subdirectory_name_previous, "AIDNEB_observations.traj"])):
-                            '''No break here, we combine the whole dataset for GPATOM due to better efficiency than MLNEB'''
-                            '''Retrieve all previous geometries and combine'''
-                            # TODO: respect users self-provided prev_calcs
-                            if type(self.prev_calcs) == list:
-                                for atoms in read("/".join([subdirectory_name_previous, "AIDNEB_observations.traj@:"])):
-                                    if not atoms in self.prev_calcs:
-                                        self.prev_calcs += [atoms]
-
-                            elif not self.prev_calcs:
-                                self.prev_calcs = read(
-                                    "/".join([subdirectory_name_previous, "AIDNEB_observations.traj@:"]))
-
-                            '''Read last predicted trajectory'''
-                            '''Guess length from combined AIDNEB based on length of the initial path'''
-                            if not self.interpolation:
-                                self.interpolation = read("/".join([subdirectory_name_previous,
-                                                                    "AIDNEB.traj@" +
-                                                                    str(-len(read("/".join([subdirectory_name_previous,
-                                                                                            "initial_path.traj@:"]))) - 1) + ":"]))
-                                if verbose:
-                                    print("Interpolation retrieved from", calc_type + filename + "_" + str(counter - 1))
-
-                            if verbose:
-                                print("Data from", calc_type + filename + "_" + str(counter - 1),
-                                      "added to the training set.")
-
-                        elif verbose:
-                            print('Previous TS trajectory not found.')
-
-
-                elif calc_type == "Opt_":
-                    """Check for number of restarted optimisations"""
-                    opt_restarts = 0
-                    while os.path.exists("".join([subdirectory_name_previous, "/", str(counter - 1), "_", filename, "_",
-                                                  str(opt_restarts), ".traj"])):
-                        opt_restarts += 1
-
-                    """Read the last optimisation"""
-                    traj_name = "/".join([subdirectory_name_previous,
-                                          str(counter - 1) + "_" + filename + "_" + str(opt_restarts - 1) + ".traj"])
-
-                    while os.path.exists(traj_name):
-                        if os.path.getsize(traj_name):
-                            self.initial = read(traj_name)
-                            restart_found = True
-                            if verbose:
-                                print("Restarting from", traj_name)
-                            break
-
-                        elif verbose:
-                            print(traj_name + " file empty!")
-
-                        traj_name = "/".join([subdirectory_name_previous,
-                                              str(counter - 1) + "_" + filename + "_" + str(
-                                                  opt_restarts - 1) + ".traj"])
-                        opt_restarts -= 1
-
-                counter -= 1
-
-        return counter, prev_calcs, interpolation
-
-    def _create_new_directory(self, calc_type, filename, counter):
-        subdirectory_name = "".join([calc_type, filename, "_", str(counter)])
-        os.makedirs(subdirectory_name, exist_ok=True)
-
-        return subdirectory_name
-
-    def _restart_setup(self, calc_type, filename, restart=True, verbose=True):
-        _supported_calc_types = ["Opt", "Vib", "TS", "Charges"]
-        assert calc_type in _supported_calc_types
-        calc_type += "_"
-
-        counter, self.prev_calcs, self.interpolation = self._find_previous_calculation(calc_type, filename, restart,
-                                                                                       verbose)
-
-        subdirectory_name = self._create_new_directory(calc_type, filename, counter)
-
-        return counter, subdirectory_name
 
 
 def _calc_generator(params,
