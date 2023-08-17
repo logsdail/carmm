@@ -27,26 +27,34 @@ def test_traj_to_gif():
     assert filenames[7] == 'nh3-h3o.07.png'  # Random frame
 
     indices = [f'%02d' % i for i in range(steps)]
-    fps = 10
-    filenames_gif, delay, convert_options = gifmaker('nh3-h3o', filenames=filenames, frames_per_second=fps,
-                                                     pause_time=1, convert_flags=None, indices=indices,
-                                                     keep_temp_files=True)
-    assert len(filenames_gif) == 59
-    assert delay == '1x10'
-    assert convert_options == '-verbose  -dispose previous -loop 0 '  # Two spaces between -verbose and -dispose
+    filenames_gif, duration, gif_options = gifmaker('nh3-h3o', filenames=filenames, frames_per_second=10,
+                                                    pause_time=1, gif_options=None, indices=indices,
+                                                    keep_temp_files=True)
+    assert len(filenames_gif) == 41
+    assert duration == [1000] + [100]*(steps-2) + [1000]
+    assert gif_options == {
+        'save_all': True,
+        'optimize': False,
+        'loop': 0,
+    }
 
-    fps = 0.1
-    convert_flags = {
-        '-flip': '',
-        '-loop': 2,
+    gif_options = {
+        'optimize': True,
+        'loop': 2,
+        'comment': 'A random other option'
     }
     filenames = [f'{file}.{index}.png' for index in indices]  # Redefine 'filenames' for new pause_time
-    filenames_gif, delay, convert_options = gifmaker('nh3-h3o', filenames=filenames, frames_per_second=fps,
-                                                     pause_time=20, convert_flags=convert_flags, indices=indices,
+    filenames_gif, duration, gif_options = gifmaker('nh3-h3o', filenames=filenames, frames_per_second=0.1,
+                                                     pause_time=20, gif_options=gif_options, indices=indices,
                                                      keep_temp_files=False)
-    assert len(filenames_gif) == 43
-    assert delay == '10.0'
-    assert convert_options == '-flip  -loop 2 '
+    assert len(filenames_gif) == 41
+    assert duration == [20000] + [10000]*(steps-2) + [20000]
+    assert gif_options == {
+        'optimize': True,
+        'loop': 2,
+        'comment': 'A random other option',
+        'save_all': True,
+    }
 
 
 test_traj_to_gif()
