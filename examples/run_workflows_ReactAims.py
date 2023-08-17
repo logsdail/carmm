@@ -30,6 +30,7 @@ def test_run_workflows_ReactAims():
 
     '''Call relevant calculations'''
     '''The below has been previously calculated and data is retrieved from saved trajectories'''
+    model_optimised, model_postprocessed = reactor.aims_optimise(atoms, fmax=0.05, restart=True)
     model_optimised, model_postprocessed = reactor.aims_optimise(atoms, fmax=0.01, restart=True)
 
     """

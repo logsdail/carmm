@@ -105,7 +105,7 @@ class ReactAims:
         if not is_converged(self.initial, fmax):
             os.makedirs(subdirectory_name, exist_ok=True)
 
-            with_calc_generator(self.params, out_fn=self.filename, dimensions=self.dimensions,
+            with _calc_generator(self.params, out_fn=self.filename, dimensions=self.dimensions,
                                 relax_unit_cell=relax_unit_cell,
                                 directory=subdirectory_name)[0] as calculator:
                 if not self.dry_run:
@@ -129,7 +129,7 @@ class ReactAims:
             self.model_optimised = read(traj_name)
         else:
             if self.verbose:
-                print(f"Structure from {subdirectory_name} is converged")
+                print(f"Structure is converged.")
             self.model_optimised = self.initial
 
     def _finalize_optimization(self, subdirectory_name, post_process, verbose):
