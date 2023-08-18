@@ -115,7 +115,7 @@ class ReactAims:
         if initial is not None:
             self.initial = initial
 
-        self._perform_optimization(subdirectory_name, counter, fmax, relax_unit_cell)
+        self._perform_optimization(subdirectory_name, out, counter, fmax, relax_unit_cell)
         self._finalize_optimization(subdirectory_name, post_process, verbose)
 
         return self.model_optimised, self.model_post_processed
@@ -134,7 +134,7 @@ class ReactAims:
         if not self.filename:
             self.filename = self.initial.get_chemical_formula()
 
-    def _perform_optimization(self, subdirectory_name, counter, fmax, relax_unit_cell):
+    def _perform_optimization(self, subdirectory_name, out, counter, fmax, relax_unit_cell):
         """
         Args:
             subdirectory_name: string
@@ -154,7 +154,7 @@ class ReactAims:
             set_aims_command(hpc=self.hpc, basis_set=self.basis_set, defaults=2020,
                              nodes_per_instance=self.nodes_per_instance)
 
-            with _calc_generator(self.params, out_fn=self.filename, dimensions=self.dimensions,
+            with _calc_generator(self.params, out_fn=out, dimensions=self.dimensions,
                                 relax_unit_cell=relax_unit_cell,
                                 directory=subdirectory_name)[0] as calculator:
                 if not self.dry_run:
