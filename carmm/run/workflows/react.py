@@ -150,6 +150,10 @@ class ReactAims:
         if not is_converged(self.initial, fmax):
             os.makedirs(subdirectory_name, exist_ok=True)
 
+            '''Ensure correct basis set is used'''
+            set_aims_command(hpc=self.hpc, basis_set=self.basis_set, defaults=2020,
+                             nodes_per_instance=self.nodes_per_instance)
+
             with _calc_generator(self.params, out_fn=self.filename, dimensions=self.dimensions,
                                 relax_unit_cell=relax_unit_cell,
                                 directory=subdirectory_name)[0] as calculator:
