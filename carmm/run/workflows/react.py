@@ -338,6 +338,8 @@ class ReactAims:
 
         from catlearn.optimize.mlneb import MLNEB
 
+        #TODO: calling mlneb.run() generates files in the current directory, reverting to os.chdir() necessary
+
         """Retrieve common properties"""
         basis_set = self.basis_set
         hpc = self.hpc
@@ -374,6 +376,9 @@ class ReactAims:
                                    verbose=self.verbose)
 
         counter, out, subdirectory_name, minimum_energy_path = helper.restart_setup()
+        if not minimum_energy_path:
+            minimum_energy_path = [None, None]
+
         traj_name = f"{subdirectory_name}/ML-NEB.traj"
 
         if not minimum_energy_path[0]:
