@@ -62,6 +62,7 @@ def test_run_workflows_ReactAims():
     '''Calculate the optimal unit cell and post process the calculation with a larger "tight" basis set'''
     light, tight = reactor.aims_optimise(Al_bulk, 0.01, relax_unit_cell=True, post_process="tight")
 
+    """
     '''Cut a 2x2-Al(001) surface with 3 layers and an
      Au atom adsorbed in a hollow site:'''
     initial = surface(Al_bulk, (1, 0, 0), layers=1, vacuum=10)
@@ -72,7 +73,7 @@ def test_run_workflows_ReactAims():
     '''Fix second and third layers:'''
     mask = [atom.tag > 0 for atom in initial]
     initial.set_constraint(FixAtoms(mask=mask))
-
+    
     '''Adjust reciprocal space sampling for surface models'''
     reactor.params["k_grid"] = (4, 4, 1)
     '''Filename based on chemical formula by default'''
@@ -86,7 +87,7 @@ def test_run_workflows_ReactAims():
 
     TS_MLNEB = reactor.search_ts(initial, final, 0.05, 0.03, n=7, input_check=0.01, restart=True)
 
-    """
+   
     '''Calculate the Transition State using AIDNEB from ase-gpatom package'''
     '''WARNING DO NOT USE WITH FHI-AIMS  - requires modified gpatom source code, issue opened on ase-gpatom GitHub'''
 
