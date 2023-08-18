@@ -32,12 +32,12 @@ def test_run_workflows_ReactAims():
     '''The below has been previously calculated and data is retrieved from saved trajectories'''
     model_optimised, model_postprocessed = reactor.aims_optimise(atoms, fmax=0.05, restart=True)
 
-    """
     zero_point_energy = reactor.vibrate(atoms, indices =[atom.index for atom in atoms]).get_zero_point_energy()
     
     assert is_converged(reactor.model_optimised, 0.01), \
     '''The structure saved in React_Aims is not converged'''
     assert round(zero_point_energy, 3) == 0.275
+
 
     '''Create a reaction pathway'''
     atoms[1].x += 8
@@ -86,6 +86,7 @@ def test_run_workflows_ReactAims():
 
     TS_MLNEB = reactor.search_ts(initial, final, 0.05, 0.03, n=7, input_check=0.01, restart=True)
 
+    """
     '''Calculate the Transition State using AIDNEB from ase-gpatom package'''
     '''WARNING DO NOT USE WITH FHI-AIMS  - requires modified gpatom source code, issue opened on ase-gpatom GitHub'''
 

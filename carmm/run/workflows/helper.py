@@ -8,9 +8,7 @@ class CalculationHelper:
                  parent_dir,
                  filename,
                  restart=True,
-                 verbose=True,
-                 prev_calcs=None,
-                 interpolation=None):
+                 verbose=True):
 
         self.calc_type = calc_type
         self.parent_dir = parent_dir
@@ -28,6 +26,7 @@ class CalculationHelper:
             subdirectory_name_previous = f"{self.calc_type}_{self.filename}_{self.counter - 1}"
 
             # Handle different types of calculations
+            # Note that Vib does not need to be handled here
             if self.calc_type == "Opt":
                 opt_restarts = 0
                 while os.path.exists(os.path.join(subdirectory_name_previous, f"{self.counter - 1}_{self.filename}_{opt_restarts}.traj")):
@@ -46,6 +45,30 @@ class CalculationHelper:
                     traj_name = os.path.join(subdirectory_name_previous, f"{self.counter - 1}_{self.filename}_{opt_restarts - 1}.traj")
                     opt_restarts -= 1
 
+            elif self.calc_type == "Charges":
+                traj_name = os.path.join(subdirectory_name_previous,
+                                         f"{self.filename}_{self.calc_type.lower()}.traj")
+                if os.path.getsize(traj_name):
+                    if self.verbose:
+                        print(f"Restarting calculation from {traj_name}")
+                    initial = read(traj_name)
+                    restart_found = True
+
+            elif self.calc_type == "TS":
+
+                initial = [None, None]
+                traj_name = f"{subdirectory_name_previous}/ML-NEB.traj"
+                if os.path.exists(traj_name):
+                    print("TS search already converged at", traj_name)
+                    minimum_energy_path = read(f"{traj_name}@:")
+                    initial[0] = minimum_energy_path
+                    restart_found = True
+                else:
+                    minimum_energy_path = read(f"{subdirectory_name_previous}/last_predicted_path.traj@:")
+                    initial[1] = minimum_energy_path
+                    restart_found = True
+
+            # Point to the last folder
             self.counter -= 1
 
         return initial
@@ -65,7 +88,6 @@ class CalculationHelper:
 
         subdirectory_name = f"{self.calc_type}_{self.filename}_{self.counter}"
         out = f"{self.counter}_{self.filename}.out"
-
 
 
         return self.counter, out, subdirectory_name, initial
