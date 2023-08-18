@@ -41,8 +41,10 @@ def test_run_workflows_ReactAims():
 
 
     '''Create a reaction pathway'''
-    atoms[1].x += 8
-    transition_state = reactor.search_ts(atoms, model_optimised, 0.05, 0.03, input_check=0.01)
+    atoms1 = atoms.copy()
+    atoms1[1].x += 8
+    atoms2 = atoms.copy()
+    transition_state = reactor.search_ts(atoms1, atoms2, 0.05, 0.03, input_check=0.01)
     activation_energy = transition_state.get_potential_energy()-model_optimised.get_potential_energy()
 
     assert 6.71774 == round(activation_energy, 5)
@@ -54,9 +56,10 @@ def test_run_workflows_ReactAims():
     '''The below uses the "dry_run" flag and uses an EMT calculator instead of FHI-aims to test code in CI'''
     reactor = ReactAims(params, basis_set, hpc, dry_run=True, filename="H")
     H_atom = Atoms("H", positions=[(0,0,0)])
-    reactor.aims_optimise(atoms)
+    reactor.aims_optimise(atoms, post_process="tight")
     reactor.get_mulliken_charges(H_atom)
     reactor.vibrate(H_atom, indices=[0])
+    vib = reactor.vibrate(H_atom, indices=[0], read_only=True)
     
     '''Optimise the bulk metal using stress tensor calculations and ExpCellFilter to later cut a surface model'''
     reactor.filename = "Al"
