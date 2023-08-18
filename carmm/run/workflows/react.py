@@ -284,7 +284,8 @@ class ReactAims:
         if not self.dry_run:
             charges = extract_mulliken_charge(out, len(self.initial))
         else:
-            charges = initial.get_charges()
+            '''Return dummy charges for testing'''
+            charges = [0 for atom in self.initial]
 
         self.initial.set_initial_charges(charges)
 

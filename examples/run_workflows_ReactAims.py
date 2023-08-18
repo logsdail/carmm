@@ -9,6 +9,7 @@ def test_run_workflows_ReactAims():
     from ase.build import molecule, bulk
     from carmm.analyse.forces import is_converged
     import os
+    from ase import Atoms
     from ase.build import surface, add_adsorbate
     from ase.constraints import FixAtoms
 
@@ -51,8 +52,11 @@ def test_run_workflows_ReactAims():
     assert molecule_with_charges[0].charge == 0.0
 
     '''The below uses the "dry_run" flag and uses an EMT calculator instead of FHI-aims to test code in CI'''
-    # TODO: Add relevant assertion statements below
-    reactor = ReactAims(params, basis_set, hpc, dry_run=True, filename="O2")
+    reactor = ReactAims(params, basis_set, hpc, dry_run=True, filename="H")
+    H_atom = Atoms("H", positions=[(0,0,0)])
+    reactor.aims_optimise(atoms)
+    reactor.get_mulliken_charges(H_atom)
+    reactor.vibrate(H_atom, indices=[0])
     
     '''Optimise the bulk metal using stress tensor calculations and ExpCellFilter to later cut a surface model'''
     reactor.filename = "Al"

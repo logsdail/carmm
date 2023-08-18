@@ -48,11 +48,12 @@ class CalculationHelper:
             elif self.calc_type == "Charges":
                 traj_name = os.path.join(subdirectory_name_previous,
                                          f"{self.filename}_{self.calc_type.lower()}.traj")
-                if os.path.getsize(traj_name):
-                    if self.verbose:
-                        print(f"Restarting calculation from {traj_name}")
-                    initial = read(traj_name)
-                    restart_found = True
+                if os.path.exists(traj_name):
+                    if os.path.getsize(traj_name):
+                        if self.verbose:
+                            print(f"Restarting calculation from {traj_name}")
+                        initial = read(traj_name)
+                        restart_found = True
 
             elif self.calc_type == "TS":
 
