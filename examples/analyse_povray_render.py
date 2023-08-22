@@ -47,6 +47,8 @@ def test_povray_render():
 
     # Tests
 
+    # Custom settings
+
     gen_proj_sett, povray_sett = povray_render(atoms,
                                                generic_projection_settings=generic_projection_settings,
                                                povray_settings=povray_settings)
@@ -65,9 +67,10 @@ def test_povray_render():
         'display': False,
     }
 
+    # Default settings
+
     gen_proj_sett, povray_sett = povray_render(atoms)
 
-    # Default generic_projection_settings and povray_settings
     assert gen_proj_sett == {
         'rotation': '0x,0y,0z',
         'radii': 1.0,
@@ -78,6 +81,12 @@ def test_povray_render():
         'camera_dist': 50,
         'display': False,
     }
+
+    # Warnings
+
+    povray_render(atoms, povray_settings={'camera_type': 'orthographic'})
+    povray_render(atoms, povray_settings={'camera_type': 'perspective'})
+    povray_render(atoms, povray_settings={'camera_type': 'ultra_wide_angle'})
 
     # Atom substitution function, useful for easily changing element colours
     subbed_atoms = atom_sub(atoms, atom_subs=[['N', 'C'], ['O', 'N']])

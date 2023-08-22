@@ -83,20 +83,18 @@ def gifmaker(file, filenames, frames_per_second, pause_time, gif_options, indice
         duration[0] = pause_time * 10**3
         duration[-1] = pause_time * 10**3
 
+    # Default gif_options
     if gif_options is None:
-        gif_options = {
-            'save_all': True,
-            'optimize': False,
-            'loop': 0,
-        }
-    else:
-        if 'save_all' not in gif_options:
-            gif_options['save_all'] = True
-        if 'optimize' not in gif_options:
-            gif_options['optimize'] = False
-        if 'loop' not in gif_options:
-            gif_options['loop'] = 0
+        gif_options = {}
 
+    if 'save_all' not in gif_options:
+        gif_options['save_all'] = True
+    if 'optimize' not in gif_options:
+        gif_options['optimize'] = False
+    if 'loop' not in gif_options:
+        gif_options['loop'] = 0
+
+    # Images
     images = []
     for i in range(len(filenames)):
         try:
