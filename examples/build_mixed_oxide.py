@@ -5,7 +5,7 @@ Testing the build_mixed_oxide functionality
 
 def test_build_oxide():
     from carmm.build.mixed_oxide import mixed_oxide
-    from ase.io import read, write
+    from ase.io import read
     import numpy as np
     orig_struc = read('/data/mixed_oxide_files/geometry.in')
     mixed_oxide_geometry = mixed_oxide(orig_struc,'Co', 'Mn',2,+2,+2, 3, 5)
