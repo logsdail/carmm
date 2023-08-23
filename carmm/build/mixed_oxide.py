@@ -52,7 +52,6 @@ def mixed_oxide(atoms_object:Atoms, metal1, metal2, ratio, metal1_charge, metal2
     generated geometry files for a given ratio must be tested for energy and it should be figured out which one is the 
     most stable. 
     But this combinatorial problem can be very huge and hence expensive.'''
-    # print(m2_ind)
     for i in m2_ind:
         sym[i] = metal2.capitalize()
         charge[i] = metal2_charge
@@ -65,7 +64,7 @@ def mixed_oxide(atoms_object:Atoms, metal1, metal2, ratio, metal1_charge, metal2
                       'Using a positive (up-spin) moment')
                 mom[i] = metal2_moment
             elif up_or_down_spin == 'Negative':
-                print('the magnetic moment of the metal atom that you desire to replace has is zero(non-magnetic). '
+                print('the magnetic moment of the metal atom that you desire to replace is zero(non-magnetic). '
                       'Using a negative (down-spin) moment')
                 mom[i] = (-1)*metal2_moment
             else:
