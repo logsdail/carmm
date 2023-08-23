@@ -1,14 +1,8 @@
-import math
-import numpy as np
-from ase import Atoms
-from ase.io import read, write
-import random
-from ase.visualize import view
 
 def mixed_oxide(atoms_object:Atoms, metal1, metal2, ratio, metal1_charge, metal2_charge, metal1_moment, metal2_moment, up_or_down_spin=None):
     '''
-    Provided a geometry.in file for a metal oxide with formula AxOy, this function creates and saves
-    a geometry_mixed.in file for a mixed oxide with formula Ax-kBkOy where A and B are the two metals.
+    Provided an Atoms object of a metal oxide with formula AxOy, this function creates another
+    Atoms object for a mixed oxide with formula Ax-kBkOy where A and B are the two metals.
     x is the initial stoichiometry of A in AxOy.
     The value of k can be figured out from the equation ratio(metal_A:metal_B) = x-k/k for a given value of ratio
     IMPORTANT NOTE: As of now this functionality only works for oxides which the metal A is in only one oxidation state
@@ -23,12 +17,19 @@ def mixed_oxide(atoms_object:Atoms, metal1, metal2, ratio, metal1_charge, metal2
     NOTE: make sure that both metal A and B both have same charges (as this may result in a charge imbalance in the
     final structure
     :param metal1_moment: The initial moment on metal A that you have specified in the input geometry.in
-    :param metal2_moment:
+    :param metal2_moment: The initial moment on metal B that you desire to have in the mixed oxide geometry
     :param up_or_down_spin: if the metal1 has zero magnetic moment and metal2 has a magnetic moment specified by
     metal2_moment, please specify the sign for the magnetic moment of the metal2. Positive (up-spin) or Negative (down-spin)
-    :return:
+    :return: Returns an atoms object of the mixed oxide geometry and a geometry.in file could be written using this atoms object
     '''
-    if up_or_down_spin!=None:
+    
+    import math
+    import numpy as np
+    from ase import Atoms
+    from ase.io import read, write
+    import random
+
+    if up_or_down_spin is not None:
         up_or_down_spin=up_or_down_spin.capitalize()
         print(up_or_down_spin)
 
@@ -39,11 +40,9 @@ def mixed_oxide(atoms_object:Atoms, metal1, metal2, ratio, metal1_charge, metal2
     mom_sign= np.sign(mom)
     m1_ind = []
     for ind,symbol in enumerate(sym):
-        if symbol==metal1.capitalize() and charge[ind]==metal1_charge:
-            if np.abs(mom[ind])==metal1_moment:
-                m1_ind.append(ind)
+        if symbol==metal1.capitalize() and charge[ind]==metal1_charge and np.abs(mom[ind])==metal1_moment:
+            m1_ind.append(ind)
 
-    # print(m1_ind)
     # determining the number of metal1 ions to be replaced with metal2 which depends on the ratio provided by the user.
     k = math.floor((len(m1_ind)/(1+ratio)))
     # random replacement of metal1 ion with metal2 ions
@@ -80,8 +79,7 @@ def mixed_oxide(atoms_object:Atoms, metal1, metal2, ratio, metal1_charge, metal2
     atoms.set_initial_magnetic_moments(mom)
 
     if neutrality_check(atoms):
-        atoms.write('/../../examples/data/geometry_mixed.in')
-        mixed_oxide = read('/../../examples/data/geometry_mixed.in')
+        mixed_oxide = atoms
         print('The mixed oxide geometry has been created and a geometry_mixed.in has been written')
         return mixed_oxide
     elif not neutrality_check(atoms):
