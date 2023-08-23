@@ -1,5 +1,6 @@
 
-def mixed_oxide(atoms_object:Atoms, metal1, metal2, ratio, metal1_charge, metal2_charge, metal1_moment, metal2_moment, up_or_down_spin=None):
+def mixed_oxide(atoms_object:Atoms, metal1:str, metal2:str, ratio:int, metal1_charge:int, metal2_charge:int, 
+                metal1_moment:int, metal2_moment:int, up_or_down_spin=None):
     '''
     Provided an Atoms object of a metal oxide with formula AxOy, this function creates another
     Atoms object for a mixed oxide with formula Ax-kBkOy where A and B are the two metals.
@@ -8,16 +9,17 @@ def mixed_oxide(atoms_object:Atoms, metal1, metal2, ratio, metal1_charge, metal2
     IMPORTANT NOTE: As of now this functionality only works for oxides which the metal A is in only one oxidation state
     like CoO or Mn2O3, etc.
 
-    :param geometry_file: The geometry.in file for the oxide AxOy with initial moments and charges specified.
-    :param metal1: The metal A. eg: Co, Mn, Fe, etc
-    :param metal2: The metal B in Ax-kBkOy
-    :param ratio: The desired ratio of metal A to metal B in the output geometry. In this case x-k/k
-    :param metal1_charge: The charge on metal A that you have specified in the input geometry.in
-    :param metal2_charge: The charge on metal B that you want in the output geometry_mixed.in.
+    :param atoms_object: the Atoms object for the oxide AxOy with initial moments and charges specified. This could be obtained by reading a geometry
+    file.
+    :param metal1: (String) The metal A. eg: Co, Mn, Fe, etc
+    :param metal2: (String) The metal B in Ax-kBkOy
+    :param ratio: (int) The desired ratio of metal A to metal B in the output geometry. In this case x-k/k
+    :param metal1_charge: (int) The charge on metal A that you have specified in the input geometry.in
+    :param metal2_charge: (int) The charge on metal B that you want in the output geometry_mixed.in.
     NOTE: make sure that both metal A and B both have same charges (as this may result in a charge imbalance in the
     final structure
-    :param metal1_moment: The initial moment on metal A that you have specified in the input geometry.in
-    :param metal2_moment: The initial moment on metal B that you desire to have in the mixed oxide geometry
+    :param metal1_moment: (int) The initial moment on metal A that you have specified in the input geometry.in. No need to specify the direction
+    :param metal2_moment: (int) The initial moment on metal B that you desire to have in the mixed oxide geometry. No need to specify the direction
     :param up_or_down_spin: if the metal1 has zero magnetic moment and metal2 has a magnetic moment specified by
     metal2_moment, please specify the sign for the magnetic moment of the metal2. Positive (up-spin) or Negative (down-spin)
     :return: Returns an atoms object of the mixed oxide geometry and a geometry.in file could be written using this atoms object
@@ -26,7 +28,6 @@ def mixed_oxide(atoms_object:Atoms, metal1, metal2, ratio, metal1_charge, metal2
     import math
     import numpy as np
     from ase import Atoms
-    from ase.io import read, write
     import random
 
     if up_or_down_spin is not None:
@@ -57,7 +58,7 @@ def mixed_oxide(atoms_object:Atoms, metal1, metal2, ratio, metal1_charge, metal2
         charge[i] = metal2_charge
         if mom_sign[ind]==0:
             if up_or_down_spin==None:
-                raise Exception('the magnetic moment of the metal atom that you desire to replace has is zero'
+                raise Exception('the magnetic moment of the metal atom that you desire to replace is zero'
                                 '(non-magnetic). Please provide the value for the argument up_or_down_spin')
             elif up_or_down_spin=='Positive':
                 print('the magnetic moment of the metal atom that you desire to replace is zero(non-magnetic). '
