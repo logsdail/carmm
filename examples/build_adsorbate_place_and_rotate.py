@@ -10,6 +10,7 @@ def test_adsorbate_placer():
     from ase.build import molecule
     import numpy as np
     from carmm.build.adsorbate_placer import RotationBox
+    from carmm.build.adsorbate_placer_gui import rotationbox_gui
     from ase import Atoms
 
     for cutoff_mult in [1, 1.2]:
@@ -37,5 +38,7 @@ def test_adsorbate_placer():
 
         from ase.visualize import view
         view(mth_placed.ads_and_site)
+
+        rotationbox_gui(mth_placed, output="output.xyz", dryrun=True)
 
 test_adsorbate_placer()

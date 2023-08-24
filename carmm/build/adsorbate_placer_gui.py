@@ -4,7 +4,7 @@
 
 from tkinter import *
 
-def rotationbox_gui(RotationObj, output="output.xyz"):
+def rotationbox_gui(RotationObj, output="output.xyz", dryrun=False):
     '''
 
     A graphical view of the adsorbate-site system,
@@ -50,7 +50,8 @@ def rotationbox_gui(RotationObj, output="output.xyz"):
     button2 = Button(master, text="Start ASE", command=start_ase_gui)
     button2.grid(row=1, column=2)
 
-    mainloop()
+    if not dryrun:
+        mainloop()
 
 def start_ase_gui():
 
