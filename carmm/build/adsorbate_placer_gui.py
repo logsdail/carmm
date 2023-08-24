@@ -33,7 +33,10 @@ def rotationbox_gui(RotationObj, output="output.xyz", dryrun=False):
 
     _RotationObj = copy.deepcopy(RotationObj)
 
-    master = Tk()
+    try:
+        master = Tk()
+    except:
+        print("Error initialising TKinter.")
 
     _x = Scale(master, from_=0, to=360, label='x')
     _y = Scale(master, from_=0, to=360, label='y')
