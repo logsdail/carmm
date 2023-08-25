@@ -1,3 +1,4 @@
+from ase import Atoms
 
 def mixed_oxide(atoms_object:Atoms, metal1:str, metal2:str, ratio:int, metal1_charge:int, metal2_charge:int, 
                 metal1_moment:int, metal2_moment:int, up_or_down_spin=None):
@@ -87,6 +88,7 @@ def mixed_oxide(atoms_object:Atoms, metal1:str, metal2:str, ratio:int, metal1_ch
                         f'Please make sure that the metal1 and metal1 have the same charge')
 
 def neutrality_check(atoms_object: Atoms):
+    import numpy as np
     charge_list = np.array(atoms_object.get_initial_charges())
     charge_sum = np.sum(charge_list)
     if charge_sum == 0:
