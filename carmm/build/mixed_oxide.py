@@ -81,7 +81,8 @@ def mixed_oxide(atoms_object:Atoms, metal1:str, metal2:str, ratio:int, metal1_ch
 
     if neutrality_check(atoms):
         mixed_oxide = atoms
-        print('The mixed oxide geometry has been created and a geometry_mixed.in has been written')
+        print('The mixed oxide geometry has been created as an atoms object and a geometry.in file can be written'
+              'using the write functionality of ASE.')
         return mixed_oxide
     elif not neutrality_check(atoms):
         raise Exception(f'The mixed oxide generated is not neutral and has an excess charge.'
