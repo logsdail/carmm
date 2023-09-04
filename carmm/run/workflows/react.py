@@ -1,8 +1,6 @@
 # Author: Igor Kowalec
-import fnmatch
 import os
 import numpy as np
-
 from ase.calculators.emt import EMT
 from ase import Atoms
 from ase.io import read
@@ -13,9 +11,7 @@ from ase.io import Trajectory
 from carmm.run.workflows.helper import CalculationHelper
 from ase.optimize import BFGS
 
-
 # TODO: Enable serialization with ASE db - save locations of converged files as well as all properties
-# TODO: rework the use of filename with the calculator to use calc.directory instead as recommended by ASE authors
 
 
 class ReactAims:
@@ -47,6 +43,8 @@ class ReactAims:
                 of FHI-aims.
             dry_run: bool
                 A dry run flag for CI-test
+            verbose: bool
+                Enables the the verbosity of the performed operations
 
         Returns ReactAims object
         """
@@ -120,25 +118,29 @@ class ReactAims:
 
         return self.model_optimised, self.model_post_processed
 
-
     def _initialize_parameters(self, atoms):
         """
-        Obtain pbc from Atoms and generate a filename, then assign to self.
+        Internal function for obtainining periodic boundary conditions from the provided Atoms object and generating
+         a filename if necessary. Values are then assigned to self.
+
         Args:
             atoms: Atoms object
 
         Returns: None
-
         """
         self.initial = atoms
         self.dimensions = sum(self.initial.pbc)
         if not self.filename:
             self.filename = self.initial.get_chemical_formula()
 
-    def _perform_optimization(self, subdirectory_name, out, counter, fmax, relax_unit_cell):
+    def _perform_optimization(self, subdirectory_name: str, out: str, counter: int, fmax: float, relax_unit_cell: bool):
         """
+        An internal function used in aims_optimise to resolve the working directoryand perform the optimisation
+        calculation of a given structure.
+
         Args:
             subdirectory_name: string
+            out: str
             counter: int
             fmax: float
             relax_unit_cell: bool
@@ -151,13 +153,12 @@ class ReactAims:
         if not is_converged(self.initial, fmax):
             os.makedirs(subdirectory_name, exist_ok=True)
 
-            '''Ensure correct basis set is used'''
+            """Ensure correct basis set is used"""
             set_aims_command(hpc=self.hpc, basis_set=self.basis_set, defaults=2020,
                              nodes_per_instance=self.nodes_per_instance)
 
-            with _calc_generator(self.params, out_fn=out, dimensions=self.dimensions,
-                                relax_unit_cell=relax_unit_cell,
-                                directory=subdirectory_name)[0] as calculator:
+            with _calc_generator(self.params, out_fn=out, dimensions=self.dimensions, relax_unit_cell=relax_unit_cell,
+                                    directory=subdirectory_name)[0] as calculator:
                 if not self.dry_run:
                     self.initial.calc = calculator
                 else:
@@ -182,16 +183,20 @@ class ReactAims:
                 print(f"Structure is converged.")
             self.model_optimised = self.initial
 
-    def _finalize_optimization(self, subdirectory_name, post_process):
+    def _finalize_optimization(self, subdirectory_name: str, post_process: str):
         """
+        An internal function used in aims_opimise for postprocessing of an optimisation with a single point energy
+        calculation using a different basis set (from the default basis settings in FHI-aims) as specified in the
+        post_process variable (e.g. "tight").
+
+        Assigns the post-processed structure to self.model_post_processed.
 
         Args:
-            subdirectory_name:
-            post_process:
-            verbose:
+            subdirectory_name: str
+            post_process: str
 
         Returns:
-
+            None
         """
 
         if post_process:
@@ -210,7 +215,7 @@ class ReactAims:
                 model_pp = self.model_optimised.copy()
 
                 with _calc_generator(self.params, out_fn=self.filename + "_" + post_process + ".out", forces=False,
-                                    dimensions=self.dimensions, directory=subdirectory_name_tight)[0] as calculator:
+                                        dimensions=self.dimensions, directory=subdirectory_name_tight)[0] as calculator:
                     if not self.dry_run:
                         model_pp.calc = calculator
                     else:
@@ -223,19 +228,18 @@ class ReactAims:
 
                 self.model_post_processed = model_pp
 
-
     def get_mulliken_charges(self, atoms: Atoms, restart: bool = True):
-
         """
         This function is used to retrieve atomic charges using Mulliken charge
         decomposition as implemented in FHI-aims. A new trajectory file containing
-        the charges
+        the charges is saved.
 
         Args:
-            initial: Atoms
+            atoms: Atoms
                 Atoms object containing structural information for the calculation
-            verbose: bool
-                Flag for turning off printouts in the code
+            restart: bool
+                If False the calculation is started from scratch, even if previous folders following the naming
+                convention are found.
 
         Returns:
             Atoms object with charges appended
@@ -284,7 +288,7 @@ class ReactAims:
         if not self.dry_run:
             charges = extract_mulliken_charge(out, len(self.initial))
         else:
-            '''Return dummy charges for testing'''
+            """Return dummy charges for testing"""
             charges = [0 for atom in self.initial]
 
         self.initial.set_initial_charges(charges)
@@ -296,8 +300,8 @@ class ReactAims:
         return self.initial
 
 
-    def search_ts(self, initial, final,
-                  fmax, unc, interpolation=None,
+    def search_ts(self, initial: Atoms, final: Atoms,
+                  fmax: float, unc: float, interpolation=None,
                   n=0.25, restart=True, prev_calcs=None,
                   input_check=0.01):
         """
@@ -330,8 +334,6 @@ class ReactAims:
             input_check: float or None
                 If float the calculators of the input structures will be checked if the structures are below
                 the requested fmax and an optimisation will be performed if not.
-            verbose: bool
-                Flag for turning off printouts in the code
 
         Returns: Atoms object
             Transition state geometry structure
@@ -428,8 +430,6 @@ class ReactAims:
                         iterations += 1
                     else:
                         return None
-
-
 
         """Find maximum energy, i.e. transition state to return it"""
         if minimum_energy_path[0]:
@@ -792,6 +792,8 @@ def _calc_generator(params,
             Determines whether we have a "gas"-phase (0) or "periodic" structure (2 or 3)
         relax_unit_cell: bool
             Request strain calculation for bulk geometries
+        directory: str
+            Set a directory to be used for initialisation of the FHI-aims calculation
 
     Returns:
         sockets_calc, fhi_calc: sockets calculator and FHI-aims calculator for geometry optimisations
@@ -833,7 +835,10 @@ def _calc_generator(params,
 
 '''
 def serialize(self):
-    """Save the instance to a file"""
+    """Save the instance to a file
+    Cases were this would be useful: providing an input file for repeating the calculation using identical settings.
+    Such file might be provided alongside code and structures on NOMAD to aid transparency and reproducibility.
+    """
     pass
 
 def recover(self):
