@@ -1,5 +1,6 @@
 from ase.io import read
 from ase.visualize import view
+from ase.io.trajectory import TrajectoryWriter
 import os
 from PIL import Image
 from carmm.analyse.povray_render import povray_render, atom_sub
@@ -57,7 +58,9 @@ def traj_to_gif(filename, automatic=False, generic_projection_settings=None, pov
                 frame_atoms = atoms[frame]
                 atoms[frame] = atom_sub(frame_atoms, atom_subs)
             if keep_temp_files:
-                atoms.write(f'{file}_povray.traj')
+                writer = TrajectoryWriter(f'{file}_povray.traj', mode='w')
+                for frame in range(steps):
+                    writer.write(atoms[frame])
         print(f'***Crucial Steps***\n'
               f'1. In ASE GUI, navigate to Tools -> Render Scene\n'
               f'2. Change "Output basename" to {file}\n'
