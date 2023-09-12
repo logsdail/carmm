@@ -88,8 +88,6 @@ class CalculationHelper:
             # Point to the last folder
             self.counter -= 1
 
-        self.counter += 1  # important to ensure new calculation begins in a new folder
-
         return initial
 
     def restart_setup(self):
@@ -114,6 +112,7 @@ class CalculationHelper:
 
         if self.counter > 0 and self.restart:
             initial = self._find_restart()
+            self.counter += 1  # important to ensure new calculation begins in a new folder
         else:
             initial = None
 
