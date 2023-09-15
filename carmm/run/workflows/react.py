@@ -342,11 +342,15 @@ class ReactAims:
         from catlearn.optimize.mlneb import MLNEB
 
         #TODO: calling mlneb.run() generates files in the current directory, reverting to os.chdir() necessary
+        assert not self.nodes_per_instance, "ReactAims.nodes_per_instance is not None \n" \
+                                            "Dependency on the catlearn.mlneb module cannot run TS " \
+                                            "search concurrently without issues. "
 
         """Retrieve common properties"""
         basis_set = self.basis_set
         hpc = self.hpc
         params = self.params
+        parent_dir = os.getcwd()
         if interpolation:
             self.interpolation = interpolation
         else:
@@ -389,7 +393,7 @@ class ReactAims:
             with _calc_generator(params,
                                  out_fn=out,
                                  dimensions=self.dimensions,
-                                 directory=subdirectory_name)[0] as calculator:
+                                 directory=".")[0] as calculator:  # mlneb files are created in main directory, hence the with current directory and os.chdir
 
                 """Let the user restart from alternative file or Atoms object"""
                 if prev_calcs:
@@ -408,6 +412,7 @@ class ReactAims:
                     if iterations > 0:
                         self.prev_calcs = read(f"{subdirectory_name}/last_predicted_path.traj@:")
 
+                    os.chdir(subdirectory_name)
                     """Setup the Catlearn object for MLNEB"""
                     neb_catlearn = MLNEB(start=initial,
                                          end=final,
@@ -428,6 +433,7 @@ class ReactAims:
                                          steps=40)
 
                         iterations += 1
+                        os.chdir(parent_dir)
                     else:
                         return None
 
