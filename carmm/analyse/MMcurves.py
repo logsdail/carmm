@@ -1,4 +1,5 @@
 # A few functions and scripts for generating and analysing interatomic separation curves for simple systems.
+# Authored by Ahment Sayin as part of a Nuffield project placement during August 2023.
 
 # Buckingham Potential
 def buckingham_potential(r, A, rho, C):
