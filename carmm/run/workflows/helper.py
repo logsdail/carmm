@@ -49,17 +49,16 @@ class CalculationHelper:
                 traj_name = os.path.join(subdirectory_name_previous,
                                          f"{self.counter - 1}_{self.filename}_{opt_restarts - 1}.traj")
 
-                while os.path.exists(traj_name):
+                while os.path.exists(traj_name) and not restart_found:
                     if os.path.getsize(traj_name):
                         if self.verbose:
                             print(f"Restarting calculation from {traj_name}")
                         initial = read(traj_name)
                         restart_found = True
-                        break
-
-                    traj_name = os.path.join(subdirectory_name_previous,
-                                             f"{self.counter - 1}_{self.filename}_{opt_restarts - 1}.traj")
-                    opt_restarts -= 1
+                    if not restart_found:
+                        traj_name = os.path.join(subdirectory_name_previous,
+                                                 f"{self.counter - 1}_{self.filename}_{opt_restarts - 1}.traj")
+                        opt_restarts -= 1
 
             elif self.calc_type == "Charges":
                 traj_name = os.path.join(subdirectory_name_previous,
