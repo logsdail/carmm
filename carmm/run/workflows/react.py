@@ -302,7 +302,7 @@ class ReactAims:
 
     def search_ts(self, initial: Atoms, final: Atoms,
                   fmax: float, unc: float, interpolation=None,
-                  n=0.25, restart=True, prev_calcs=None,
+                  n=0.25, steps=40, restart=True, prev_calcs=None,
                   input_check=0.01):
         """
         This function allows calculation of the transition state using the CatLearn software package in an
@@ -430,7 +430,7 @@ class ReactAims:
                                          trajectory=traj_name,
                                          ml_steps=75,
                                          sequential=False,
-                                         steps=80)
+                                         steps=steps)
 
                         iterations += 1
                         os.chdir(parent_dir)
