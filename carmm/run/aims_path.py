@@ -88,12 +88,12 @@ def _get_cpu_command(hpc, nodes_per_instance=None):
         "hawk": {
             "cpus_per_node": 40,
             "cpu_command": f"--nodes=$SLURM_NNODES --ntasks=$SLURM_NTASKS -d mpirun",
-            "cpu_command_task_farming": f"--nodes={nodes_per_instance} --ntasks={int(hpc_settings["hawk"].cpus_per_node * nodes_per_instance)} -d mpirun",
+            "cpu_command_task_farming": f"--nodes={nodes_per_instance} --ntasks={int(hpc_settings["hawk"]["cpus_per_node"] * nodes_per_instance)} -d mpirun",
         },
         "hawk-amd": {
             "cpus_per_node": 64,
             "cpu_command": f"--nodes=$SLURM_NNODES --ntasks=$SLURM_NTASKS -d mpirun",
-            "cpu_command_task_farming":  f"--nodes={nodes_per_instance} --ntasks={int(hpc_settings["hawk-amd"].cpus_per_node * nodes_per_instance)} -d mpirun",
+            "cpu_command_task_farming":  f"--nodes={nodes_per_instance} --ntasks={int(hpc_settings["hawk-amd"]["cpus_per_node"] * nodes_per_instance)} -d mpirun",
         },
         "isambard": {
             "cpus_per_node": 64,
@@ -106,12 +106,12 @@ def _get_cpu_command(hpc, nodes_per_instance=None):
         "archer2": {
             "cpus_per_node": 128,
             "cpu_command: "",
-            "cpu_command_task_farming": f"--nodes={nodes_per_instance} --ntasks={int(hpc_settings.["archer2"].cpus_per_node * nodes_per_instance)}",
+            "cpu_command_task_farming": f"--nodes={nodes_per_instance} --ntasks={int(hpc_settings.["archer2"]["cpus_per_node"] * nodes_per_instance)}",
         },
         "aws": {
             "cpus_per_node": 72,
             "cpu_command": "",
-            "cpu_command_task_farming": f"--nodes={nodes_per_instance} --ntasks={int(hpc_settings["aws"].cpus_per_node * nodes_per_instance)}",
+            "cpu_command_task_farming": f"--nodes={nodes_per_instance} --ntasks={int(hpc_settings["aws"]["cpus_per_node"] * nodes_per_instance)}",
         }
     }
 
@@ -131,9 +131,9 @@ def _get_cpu_command(hpc, nodes_per_instance=None):
             print("         Check if you are accidentally underpopulating the nodes.")  
 
     if nodes_per_instance:
-        return hpc_settings[hpc].cpu_command_task_farming
+        return hpc_settings[hpc]["cpu_command_task_farming"]
     else:
-        return hpc_settings[hpc].cpu_command
+        return hpc_settings[hpc]["cpu_command"]
 
 
     
