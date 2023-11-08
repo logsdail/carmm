@@ -95,8 +95,9 @@ def _get_cpu_command(hpc, nodes_per_instance=None):
     # This dictionary contains settings related to each HPC infrastructure
     hpc_settings = {
         "hawk": {
+            "cpus_per_node": 40,
             "cpu_command": f"--nodes=$SLURM_NNODES --ntasks=$SLURM_NTASKS -d mpirun",
-            "cpu_command_task_farming": f"--nodes={nodes_per_instance} --ntasks={int(cpus_per_node["hawk"] * nodes_per_instance)} -d mpirun",
+            "cpu_command_task_farming": f"--nodes={nodes_per_instance} --ntasks={int(hpc_settings['hawk']['cpus_per_node'] * nodes_per_instance)} -d mpirun",
         },
         "hawk-amd": {
             "cpu_command": f"--nodes=$SLURM_NNODES --ntasks=$SLURM_NTASKS -d mpirun",
