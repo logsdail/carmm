@@ -71,7 +71,7 @@ def set_aims_command(hpc='hawk', basis_set='light', defaults=2010, nodes_per_ins
         requested_nodes = os.environ["SLURM_NNODES"]
 
         # Check if using a full node, for efficiency
-        if (requested_tasks/requested_nodes) % cpus_per_node[hpc] not 0:
+        if (requested_tasks/requested_nodes) % cpus_per_node[hpc] != 0:
             print("WARNING: You are not using all the CPUs on the requested nodes.")
             print("         Check if you are accidentally underpopulating the nodes.")       
 
