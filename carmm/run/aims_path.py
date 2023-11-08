@@ -67,8 +67,13 @@ def set_aims_command(hpc='hawk', basis_set='light', defaults=2010, nodes_per_ins
     }
 
     if hpc in ["hawk","hawk-amd"]:
-        requested_tasks = os.environ["SLURM_NTASKS"]
-        requested_nodes = os.environ["SLURM_NNODES"]
+        # Placed inside try/except to work when environment variables aren't defined
+        try:
+            requested_tasks = os.environ["SLURM_NTASKS"]
+            requested_nodes = os.environ["SLURM_NNODES"]
+        except:
+            requested_tasks = cpus_per_node[hpc]
+            requested_nodes = 1
 
         # Check if using a full node, for efficiency
         if (requested_tasks/requested_nodes) % cpus_per_node[hpc] != 0:
