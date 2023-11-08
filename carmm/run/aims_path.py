@@ -16,6 +16,8 @@ def set_aims_command(hpc='hawk', basis_set='light', defaults=2010, nodes_per_ins
         that come with new FHI-aims release, which adhere to the year 2010
          or 2020 standard. Old 2010 value by default to avoid disruption
          for users.
+    nodes_per_instance: int, optional
+        Number of nodes per separate instance of FHI-aims, when running task-farmed
     """
     import os
 
@@ -55,17 +57,65 @@ def set_aims_command(hpc='hawk', basis_set='light', defaults=2010, nodes_per_ins
         executable = fhi_aims_directory[hpc] + executable_d["compiled"]
 
     """Set the relevant environment variables based on HPC"""
-    os.environ["AIMS_SPECIES_DIR"] = fhi_aims_directory[hpc] + species
+    os.environ["AIMS_SPECIES_DIR"] = fhi_aims_directory[hpc] + species     
 
-    cpus_per_node = {
-        "hawk": 40,
-        "hawk-amd": 64,
-        "archer2": 128,
-        "isambard": 64,
-        "young":64,
-        "aws": 72
+    # Define the executable command
+    if nodes_per_instance:
+        # Check validity of task-farming setup before proceeding.
+        # Todo: Add Isambard/Young as needed
+        assert hpc in ["archer2", "hawk", "hawk-amd", "aws"], \
+            "Only ARCHER2, Hawk and AWS supported for task-farming at the moment."
+
+        if hpc == "aws":
+            assert nodes_per_instance == 1, "FHI-aims does not run on more than one node on AWS at present."
+
+    # This has a helper function as we need to take different actions 
+    # if running single or task-farmed calculations
+    cpu_command = _get_cpu_command(hpc, nodes_per_instance)
+
+    os.environ["ASE_AIMS_COMMAND"] = f"{preamble[hpc]} {cpu_command} {executable}"
+
+def _get_cpu_command(hpc, nodes_per_instance=None):
+    """
+    Helper function to return appropriate syntax for cpu settings on each HPC
+
+    Parameters:
+        As for set_aims_command
+    """
+
+    # This dictionary contains settings related to each HPC infrastructure
+    hpc_settings = {
+        "hawk": {
+            "cpus_per_node": 40,
+            "cpu_command": f"--nodes=$SLURM_NNODES --ntasks=$SLURM_NTASKS -d mpirun",
+            "cpu_command_task_farming": f"--nodes={nodes_per_instance} --ntasks={int(hpc_settings["hawk"].cpus_per_node * nodes_per_instance)} -d mpirun",
+        },
+        "hawk-amd": {
+            "cpus_per_node": 64,
+            "cpu_command": f"--nodes=$SLURM_NNODES --ntasks=$SLURM_NTASKS -d mpirun",
+            "cpu_command_task_farming":  f"--nodes={nodes_per_instance} --ntasks={int(hpc_settings["hawk-amd"].cpus_per_node * nodes_per_instance)} -d mpirun",
+        },
+        "isambard": {
+            "cpus_per_node": 64,
+            "cpu_command": "-n $NPROCS",
+        },
+        "young": {
+            "cpus_per_node": 64,
+            "cpu_command": "",
+        },
+        "archer2": {
+            "cpus_per_node": 128,
+            "cpu_command: "",
+            "cpu_command_task_farming": f"--nodes={nodes_per_instance} --ntasks={int(hpc_settings.["archer2"].cpus_per_node * nodes_per_instance)}",
+        },
+        "aws": {
+            "cpus_per_node": 72,
+            "cpu_command": "",
+            "cpu_command_task_farming": f"--nodes={nodes_per_instance} --ntasks={int(hpc_settings["aws"].cpus_per_node * nodes_per_instance)}",
+        }
     }
 
+    # Check calculation effiency
     if hpc in ["hawk","hawk-amd"]:
         # Placed inside try/except to work when environment variables aren't defined
         try:
@@ -78,40 +128,13 @@ def set_aims_command(hpc='hawk', basis_set='light', defaults=2010, nodes_per_ins
         # Check if using a full node, for efficiency
         if (requested_tasks/requested_nodes) % cpus_per_node[hpc] != 0:
             print("WARNING: You are not using all the CPUs on the requested nodes.")
-            print("         Check if you are accidentally underpopulating the nodes.")       
+            print("         Check if you are accidentally underpopulating the nodes.")  
 
-    cpu_command = {
-        "hawk": f"--nodes=$SLURM_NNODES --ntasks=$SLURM_NTASKS -d mpirun",
-        "hawk-amd": f"--nodes=$SLURM_NNODES --ntasks=$SLURM_NTASKS -d mpirun",
-        "isambard": "-n $NPROCS",
-        "archer2": "",
-        "young": "",
-        "aws": ""
-    }
-    
     if nodes_per_instance:
-
-        # Moved assertions up so we check validity before proceeding.
-        # Todo: Add Isambard/Young as needed
-        assert hpc in ["archer2", "hawk", "hawk-amd", "aws"], \
-            "Only ARCHER2, Hawk and AWS supported for task-farming at the moment."
-
-        if hpc == "aws":
-            assert nodes_per_instance == 1, "FHI-aims does not run on more than one node on AWS at present."
-
-        # Can only be initialised if nodes_per_instance exists
-        # Todo: Can we get total nodes from all runtime environments, and then use same
-        #       one dictionary for task-farming and normal single run (i.e. nodes_per_instance == total_nodes)
-        cpu_command_task_farming = {
-            "archer2": f"--nodes={nodes_per_instance} --ntasks={int(cpus_per_node[hpc] * nodes_per_instance)}",
-            "hawk": f"--nodes={nodes_per_instance} --ntasks={int(cpus_per_node[hpc] * nodes_per_instance)} -d mpirun",
-            "hawk-amd": f"--nodes={nodes_per_instance} --ntasks={int(cpus_per_node[hpc] * nodes_per_instance)} -d mpirun",
-            "aws": f"--nodes={nodes_per_instance} --ntasks={int(cpus_per_node[hpc] * nodes_per_instance)}",
-        }
-
-    if not nodes_per_instance:
-        # Default is setup a standard single run calculation
-        os.environ["ASE_AIMS_COMMAND"] = f"{preamble[hpc]} {cpu_command[hpc]} {executable}"
+        return hpc_settings[hpc].cpu_command_task_farming
     else:
-        # Setup runtime for task-farming. 
-        os.environ["ASE_AIMS_COMMAND"] = f"{preamble[hpc]} {cpu_command_task_farming[hpc]} {executable}"
+        return hpc_settings[hpc].cpu_command
+
+
+    
+    
