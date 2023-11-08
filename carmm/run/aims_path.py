@@ -82,15 +82,6 @@ def _get_cpu_command(hpc, nodes_per_instance=None):
     Parameters:
         As for set_aims_command
     """
-    # This dictionary contains the cpus_per_node on the HPC
-    cpus_per_node = {
-        "hawk": 40,
-        "hawk-amd": 64,
-        "isambard": 64,
-        "young": 64,
-        "archer2": 128,
-        "aws": 72,
-    }
     
     # This dictionary contains settings related to each HPC infrastructure
     hpc_settings = {
@@ -100,22 +91,27 @@ def _get_cpu_command(hpc, nodes_per_instance=None):
             "cpu_command_task_farming": f"--nodes={nodes_per_instance} --ntasks={int(hpc_settings['hawk']['cpus_per_node'] * nodes_per_instance)} -d mpirun",
         },
         "hawk-amd": {
+            "cpus_per_node": 64,
             "cpu_command": f"--nodes=$SLURM_NNODES --ntasks=$SLURM_NTASKS -d mpirun",
-            "cpu_command_task_farming":  f"--nodes={nodes_per_instance} --ntasks={int(cpus_per_node["hawk-amd"] * nodes_per_instance)} -d mpirun",
+            "cpu_command_task_farming":  f"--nodes={nodes_per_instance} --ntasks={int(hpc_settings['hawk-amd']['cpus_per_node'] * nodes_per_instance)} -d mpirun",
         },
         "isambard": {
+            "cpus_per_node": 64,
             "cpu_command": "-n $NPROCS",
         },
         "young": {
+            "cpus_per_node": 64,
             "cpu_command": "",
         },
         "archer2": {
+            "cpus_per_node": 128,
             "cpu_command: "",
-            "cpu_command_task_farming": f"--nodes={nodes_per_instance} --ntasks={int(cpus_per_node["archer2"] * nodes_per_instance)}",
+            "cpu_command_task_farming": f"--nodes={nodes_per_instance} --ntasks={int(hpc_settings['archer2']['cpus_per_node'] * nodes_per_instance)}",
         },
         "aws": {
+            "cpus_per_node": 72,
             "cpu_command": "",
-            "cpu_command_task_farming": f"--nodes={nodes_per_instance} --ntasks={int(cpus_per_node["aws"] * nodes_per_instance)}",
+            "cpu_command_task_farming": f"--nodes={nodes_per_instance} --ntasks={int(hpc_settings['aws']['cpus_per_node'] * nodes_per_instance)}",
         }
     }
 
@@ -126,11 +122,11 @@ def _get_cpu_command(hpc, nodes_per_instance=None):
             requested_tasks = os.environ["SLURM_NTASKS"]
             requested_nodes = os.environ["SLURM_NNODES"]
         except:
-            requested_tasks = cpus_per_node[hpc]
+            requested_tasks = hpc_settings[hpc]["cpus_per_node"]
             requested_nodes = 1
 
         # Check if using a full node, for efficiency
-        if (requested_tasks/requested_nodes) % cpus_per_node[hpc] != 0:
+        if (requested_tasks/requested_nodes) % hpc_settings[hpc]["cpus_per_node"] != 0:
             print("WARNING: You are not using all the CPUs on the requested nodes.")
             print("         Check if you are accidentally underpopulating the nodes.")  
 
