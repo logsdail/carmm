@@ -1,4 +1,6 @@
 from ase.io import read, write
+from ase.data.colors import jmol_colors
+from ase.data import atomic_numbers
 import subprocess
 
 
@@ -38,8 +40,16 @@ def povray_render(atoms, output='povray', view=False, atom_subs=None,
         generic_projection_settings['rotation'] = '0x,0y,0z'
     if 'radii' not in generic_projection_settings:
         generic_projection_settings['radii'] = 1.0
+
     if 'colors' not in generic_projection_settings:
         generic_projection_settings['colors'] = None
+    else:
+        for atom in atoms:
+            sym = atom.symbol
+            if sym not in generic_projection_settings['colors']:
+                generic_projection_settings['colors'][sym] = jmol_colors[atomic_numbers(sym)]
+
+    print(generic_projection_settings['colors'])
 
     if povray_settings is None:
         povray_settings = {}
