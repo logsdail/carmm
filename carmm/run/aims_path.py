@@ -82,47 +82,24 @@ def _get_cpu_command(hpc, nodes_per_instance=None):
     Parameters:
         As for set_aims_command
     """
+
+    # This dictionary contains settings related to each HPC infrastructure
     hpc_settings = {
-        "hawk": { "cpus_per_node": 40 },
-        "hawk-amd": { "cpus_per_node": 64 },
-        "isambard": { "cpus_per_node": 64 },
-        "young": { "cpus_per_node": 64 },
-        "archer2": { "cpus_per_node": 128 },
-        "aws": { "cpus_per_node": 72 }
+        "hawk": { "cpus_per_node": 40, "cpu_command": f"--nodes=$SLURM_NNODES --ntasks=$SLURM_NTASKS -d mpirun", },
+        "hawk-amd": { "cpus_per_node": 64, "cpu_command": f"--nodes=$SLURM_NNODES --ntasks=$SLURM_NTASKS -d mpirun", },
+        "isambard": { "cpus_per_node": 64, "cpu_command": f"-n $NPROCS", },
+        "young": { "cpus_per_node": 64, "cpu_command": "", },
+        "archer2": { "cpus_per_node": 128, "cpu_command": "", },
+        "aws": { "cpus_per_node": 72, "cpu_command": "",  }
     }
     
-    # This dictionary contains settings related to each HPC infrastructure
-    # It overwrites the previous definition, but we need the CPU counts to define the extended form.
-    hpc_settings = {
-        "hawk": {
-            "cpus_per_node": hpc_settings['hawk']['cpus_per_node'],
-            "cpu_command": f"--nodes=$SLURM_NNODES --ntasks=$SLURM_NTASKS -d mpirun",
-            "cpu_command_task_farming": f"--nodes={nodes_per_instance} --ntasks={int(hpc_settings['hawk']['cpus_per_node'] * nodes_per_instance)} -d mpirun",
-        },
-        "hawk-amd": {
-            "cpus_per_node": hpc_settings['hawk-amd']['cpus_per_node'],
-            "cpu_command": f"--nodes=$SLURM_NNODES --ntasks=$SLURM_NTASKS -d mpirun",
-            "cpu_command_task_farming":  f"--nodes={nodes_per_instance} --ntasks={int(hpc_settings['hawk-amd']['cpus_per_node'] * nodes_per_instance)} -d mpirun",
-        },
-        "isambard": {
-            "cpus_per_node": hpc_settings['isambard']['cpus_per_node'],
-            "cpu_command": "-n $NPROCS",
-        },
-        "young": {
-            "cpus_per_node": hpc_settings['young']['cpus_per_node'],
-            "cpu_command": "",
-        },
-        "archer2": {
-            "cpus_per_node": hpc_settings['archer2']['cpus_per_node'],
-            "cpu_command": "",
-            "cpu_command_task_farming": f"--nodes={nodes_per_instance} --ntasks={int(hpc_settings['archer2']['cpus_per_node'] * nodes_per_instance)}",
-        },
-        "aws": {
-            "cpus_per_node": hpc_settings['aws']['cpus_per_node'],
-            "cpu_command": "",
-            "cpu_command_task_farming": f"--nodes={nodes_per_instance} --ntasks={int(hpc_settings['aws']['cpus_per_node'] * nodes_per_instance)}",
-        }
-    }
+    # This content adds capabilities relating to task-farming.
+    # Todo: Extend for Isambard/Young
+    if nodes_per_instance:
+        hpc_settings["hawk"]["cpu_command_task_farming"] = f"--nodes={nodes_per_instance} --ntasks={int(hpc_settings['hawk']['cpus_per_node'] * nodes_per_instance)} -d mpirun"
+        hpc_settings["hawk-amd"]["cpu_command_task_farming"] = f"--nodes={nodes_per_instance} --ntasks={int(hpc_settings['hawk-amd']['cpus_per_node'] * nodes_per_instance)} -d mpirun"
+        hpc_settings["archer2"]["cpu_command_task_farming"] = f"--nodes={nodes_per_instance} --ntasks={int(hpc_settings['archer2']['cpus_per_node'] * nodes_per_instance)}"
+        hpc_settings["aws"]["cpu_command_task_farming"] = f"--nodes={nodes_per_instance} --ntasks={int(hpc_settings['aws']['cpus_per_node'] * nodes_per_instance)}"
 
     # Check calculation effiency
     if hpc in ["hawk","hawk-amd"]:
