@@ -95,30 +95,30 @@ def _get_cpu_command(hpc, nodes_per_instance=None):
     # It overwrites the previous definition, but we need the CPU counts to define the extended form.
     hpc_settings = {
         "hawk": {
-            "cpus_per_node": hpc_settings['hawk']['cpus_per_node']
+            "cpus_per_node": hpc_settings['hawk']['cpus_per_node'],
             "cpu_command": f"--nodes=$SLURM_NNODES --ntasks=$SLURM_NTASKS -d mpirun",
             "cpu_command_task_farming": f"--nodes={nodes_per_instance} --ntasks={int(hpc_settings['hawk']['cpus_per_node'] * nodes_per_instance)} -d mpirun",
         },
         "hawk-amd": {
-            "cpus_per_node": hpc_settings['hawk-amd']['cpus_per_node']
+            "cpus_per_node": hpc_settings['hawk-amd']['cpus_per_node'],
             "cpu_command": f"--nodes=$SLURM_NNODES --ntasks=$SLURM_NTASKS -d mpirun",
             "cpu_command_task_farming":  f"--nodes={nodes_per_instance} --ntasks={int(hpc_settings['hawk-amd']['cpus_per_node'] * nodes_per_instance)} -d mpirun",
         },
         "isambard": {
-            "cpus_per_node": hpc_settings['isambard']['cpus_per_node']
+            "cpus_per_node": hpc_settings['isambard']['cpus_per_node'],
             "cpu_command": "-n $NPROCS",
         },
         "young": {
-            "cpus_per_node": hpc_settings['young']['cpus_per_node']
+            "cpus_per_node": hpc_settings['young']['cpus_per_node'],
             "cpu_command": "",
         },
         "archer2": {
-            "cpus_per_node": hpc_settings['archer2']['cpus_per_node']
+            "cpus_per_node": hpc_settings['archer2']['cpus_per_node'],
             "cpu_command": "",
             "cpu_command_task_farming": f"--nodes={nodes_per_instance} --ntasks={int(hpc_settings['archer2']['cpus_per_node'] * nodes_per_instance)}",
         },
         "aws": {
-            "cpus_per_node": hpc_settings['aws']['cpus_per_node']
+            "cpus_per_node": hpc_settings['aws']['cpus_per_node'],
             "cpu_command": "",
             "cpu_command_task_farming": f"--nodes={nodes_per_instance} --ntasks={int(hpc_settings['aws']['cpus_per_node'] * nodes_per_instance)}",
         }
