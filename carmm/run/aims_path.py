@@ -105,13 +105,13 @@ def _get_cpu_command(hpc, nodes_per_instance=None):
     if hpc in ["hawk","hawk-amd"]:
         # Necessary import
         import os
+        
         # Placed inside try/except to work when environment variables aren't defined
-        try:
-            requested_tasks = os.environ["SLURM_NTASKS"]
-            requested_nodes = os.environ["SLURM_NNODES"]
-        except:
-            requested_tasks = hpc_settings[hpc]["cpus_per_node"]
-            requested_nodes = 1
+        try: requested_tasks = os.environ["SLURM_NTASKS"]
+        except: requested_tasks = hpc_settings[hpc]["cpus_per_node"]
+
+        try: requested_nodes = os.environ["SLURM_NNODES"]
+        except: requested_nodes = 1
 
         # Check if using a full node, for efficiency
         if (requested_tasks/requested_nodes) % hpc_settings[hpc]["cpus_per_node"] != 0:
