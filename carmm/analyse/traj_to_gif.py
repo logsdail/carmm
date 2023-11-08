@@ -10,24 +10,39 @@ def traj_to_gif(filename, automatic=False, generic_projection_settings=None, pov
                 pause_time=0.5, atom_subs=None, gif_options=None, keep_temp_files=True, **kwargs):
     """
     A function which takes a .traj file, visualises it in povray with your desired settings and outputs a .gif file.
-    The ImageMagick linux suite is required for this function.
-    :param filename: (Str) Full name/directory of the .traj file to convert
-    :param automatic: (Bool) If True, automatically renders images using given settings. If False, opens ASE GUI to
-    allow the user to manually render the images (**FOLLOW THE GIVEN INSTRUCTIONS**)
-    :param generic_projection_settings: (Dict) Settings used by PlottingVariables
-    (see https://gitlab.com/ase/ase/-/blob/master/ase/io/utils.py PlottingVariables/__init__ for settings options)
-    :param povray_settings: (Dict) Settings used by Povray for visualisation
-    (see https://gitlab.com/ase/ase/-/blob/master/ase/io/pov.py POVRAY/__init__ for settings options)
-    :param frames_per_second: (Float) Speed of switching images (Default is 30 fps)
-    :param pause_time: (Float) Time (in seconds) to pause on the first and last images (Default is 0.5 seconds)
-    :param atom_subs: (List of lists of strs) Pairs of atomic symbols with the first being changed to the second in
-    all images for clearer visualisation
-    :param gif_options: (Dict of strs) Flags and corresponding parameters for the Pillow.Image.save() function.
-    For default parameters, leave out this parameter. Default options are: "save_all=True, optimize=False, loop=0"
-    (see https://pillow.readthedocs.io/en/latest/handbook/image-file-formats.html#gif-saving for full list of options)
-    :param keep_temp_files: (Bool) If False, will delete the created .png, .pov and .ini files after use. If True, will
-    keep these files and produce a .traj file if any atoms were substituted
-    :return: A .gif file of the .traj file, visualised in povray
+
+    Parameters:
+
+    filename: String
+        Full name/directory of the .traj file to convert
+    automatic: Boolean
+        If True, automatically renders images using given settings
+        If False, opens ASE GUI to allow the user to manually render the images (**FOLLOW THE GIVEN INSTRUCTIONS**)
+    generic_projection_settings: Dictionary
+        Settings used by PlottingVariables for automatic rendering
+        (see https://gitlab.com/ase/ase/-/blob/master/ase/io/utils.py PlottingVariables/__init__ for settings options)
+    povray_settings: Dictionary
+        Settings used by Povray for automatic rendering
+        (see https://gitlab.com/ase/ase/-/blob/master/ase/io/pov.py POVRAY/__init__ for settings options)
+    frames_per_second: Float
+        Speed of switching images (Default is 30 fps)
+    pause_time: Float
+        Time (in seconds) to pause on the first and last images (Default is 0.5 seconds)
+    atom_subs: List of lists of strings
+        Pairs of atomic symbols with the first being changed to the second in
+        all images for clearer visualisation. An alternate solution to changing atom colours.
+        Tip: Find a second atom with a similar atomic radius to the first with a more distinctive colour
+    gif_options: Dictionary of strings
+        Settings for the Pillow.Image.save() function. For default setting, don't include
+        this parameter. Default options are: "save_all=True, optimize=False, loop=0"
+        (see https://pillow.readthedocs.io/en/latest/handbook/image-file-formats.html#gif-saving for full list of options)
+    keep_temp_files: Boolean
+        If False, will delete the created .png, .pov and .ini files after use. If True, will
+        keep these files and produce a .traj file if any atoms were substituted
+
+    Returns:
+
+    A .gif file of the .traj file, visualised in Povray with the desired settings
     """
 
     # Retrieve the file name and file extension from (potentially) a full directory path

@@ -6,15 +6,28 @@ def povray_render(atoms, output='povray', view=False, atom_subs=None,
                   generic_projection_settings=None, povray_settings=None):
     """
     Saves a .png file showing a povray rendered visualisation of an atoms object.
-    :param atoms: (Atoms object) Structure to be visualised
-    :param output: (Str) Output file basename i.e. 'output'.pov, 'output'.ini etc.
-    :param view: (Bool) Show the output window
-    :param atom_subs: (List of Lists of Strings) Pairs of atomic symbols with the first being changed to the second
-    for clearer visualisation
-    :param generic_projection_settings: (Dict) Settings used by PlottingVariables
-    (see https://gitlab.com/ase/ase/-/blob/master/ase/io/utils.py PlottingVariables/__init__ for settings options)
-    :param povray_settings: (Dict) Settings used by Povray for visualisation
-    (see https://gitlab.com/ase/ase/-/blob/master/ase/io/pov.py POVRAY/__init__ for settings options)
+
+    Parameters:
+
+    atoms: Atoms object
+        Structure to be visualised
+    output: String
+        Output file basename i.e. 'output'.pov, 'output'.ini etc.
+    view: Boolean
+        Show the output window
+    atom_subs: List of Lists of Strings
+        Pairs of atomic symbols with the first being changed to the second for clearer visualisation
+        Tip: Find a second atom with a similar atomic radius to the first with a more distinctive colour
+    generic_projection_settings: Dictionary
+        Settings used by PlottingVariables
+        (see https://gitlab.com/ase/ase/-/blob/master/ase/io/utils.py PlottingVariables/__init__ for settings options)
+    povray_settings: Dictionary
+        Settings used by Povray for visualisation
+        (see https://gitlab.com/ase/ase/-/blob/master/ase/io/pov.py POVRAY/__init__ for settings options)
+
+    Returns:
+
+    A .png file of the atoms object, visualised in Povray with the desired settings
     """
 
     # Default visual settings
