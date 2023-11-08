@@ -105,7 +105,7 @@ def _get_cpu_command(hpc, nodes_per_instance=None):
         },
         "archer2": {
             "cpus_per_node": 128,
-            "cpu_command: "",
+            "cpu_command": "",
             "cpu_command_task_farming": f"--nodes={nodes_per_instance} --ntasks={int(hpc_settings['archer2']['cpus_per_node'] * nodes_per_instance)}",
         },
         "aws": {
