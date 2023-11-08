@@ -1,8 +1,6 @@
 # Author: Igor Kowalec
-import fnmatch
 import os
 import numpy as np
-
 from ase.calculators.emt import EMT
 from ase import Atoms
 from ase.io import read
@@ -10,10 +8,10 @@ from ase.vibrations import Vibrations
 from carmm.analyse.forces import is_converged
 from carmm.run.aims_path import set_aims_command
 from ase.io import Trajectory
-
+from carmm.run.workflows.helper import CalculationHelper
+from ase.optimize import BFGS
 
 # TODO: Enable serialization with ASE db - save locations of converged files as well as all properties
-# TODO: rework the use of filename with the calculator to use calc.directory instead as recommended by ASE authors
 
 
 class ReactAims:
@@ -26,7 +24,8 @@ class ReactAims:
                  hpc: str,
                  filename: str = None,
                  nodes_per_instance: int = None,
-                 dry_run: bool = False):
+                 dry_run: bool = False,
+                 verbose: bool = True):
         """
         Args:
             params: dict
@@ -44,6 +43,8 @@ class ReactAims:
                 of FHI-aims.
             dry_run: bool
                 A dry run flag for CI-test
+            verbose: bool
+                Enables the the verbosity of the performed operations
 
         Returns ReactAims object
         """
@@ -55,178 +56,190 @@ class ReactAims:
         self.basis_set = basis_set
         self.filename = filename
         self.nodes_per_instance = nodes_per_instance
+        self.verbose = verbose
 
         """Define additional parameters"""
-        self.initial = None                 # input for optimisation or input for NEB initial image
-        self.model_optimised = None         # optimised geometry with calculator attached
-        self.model_post_processed = None    # post processed geometry with new calculator attached
-        self.final = None                   # input final image for NEB
-        self.ts = None                      # TS geometry from NEB
-        self.prev_calcs = None              # for NEB restart
-        self.interpolation = None           # TODO: use this for NEBs
+        self.initial = None  # input for optimisation or input for NEB initial image
+        self.model_optimised = None  # optimised geometry with calculator attached
+        self.model_post_processed = None  # post processed geometry with new calculator attached
+        self.final = None  # input final image for NEB
+        self.ts = None  # TS geometry from NEB
+        self.prev_calcs = None  # for NEB restart
+        self.interpolation = None  # TODO: use this for NEBs
+        self.dimensions = None
 
         """ Set the test flag"""
         self.dry_run = dry_run
 
-    def aims_optimise(self,
-                      atoms: Atoms,
-                      fmax: float = 0.01,
-                      post_process: str = None,
-                      relax_unit_cell: bool = False,
-                      restart: bool = True,
-                      verbose: bool = True):
+    def aims_optimise(self, atoms: Atoms, fmax: float = 0.01, post_process: str = None, relax_unit_cell: bool = False,
+                      restart: bool = True):
 
         """
-        The function needs information about structure geometry (model), name of hpc system
-        to configure FHI-aims environment variables (hpc). Separate directory is created with a naming convention
-        based on chemical formula and number of restarts, n (opt_formula_n), ensuring that no outputs are overwritten
-        in ASE/FHI-aims.
-        The geometry optimisation is restarted from a new Hessian each 80 steps in BFGS algorithm to overcome deep
-        potential energy local minima with fmax above convergence criteria. One can choose the type of phase of
-        the calculation (gas, surface, bulk) and request a post_processing calculation with a larger basis set.
+         The function needs information about structure geometry (model), name of hpc system
+         to configure FHI-aims environment variables (hpc). Separate directory is created with a naming convention
+         based on chemical formula and number of restarts, ensuring that no outputs are overwritten
+         in ASE/FHI-aims.
+         The geometry optimisation is restarted from a new Hessian each 80 steps in BFGS algorithm to overcome deep
+         potential energy local minima with fmax above convergence criteria. A post_processing calculation with a
+         different basis set can be performed by specifying the basis set name as in post_process.
+         PARAMETERS:
+         params: dict
+             Dictionary containing user's calculator FHI-aims parameters
+         atoms: Atoms object
+             Contains the geometry information for optimisation
+         fmax: float
+             Force convergence criterion for geometry optimisation, i.e. max forces on any atom in eV/A
+         post_process: str or None
+             Basis set to be used for post_processing if energy calculation using a larger basis set is required
+         relax_unit_cell: bool
+             True requests a strain filter unit cell relaxation
+         restart: bool
+             Request restart from previous geometry if True (True by default)
 
-        PARAMETERS:
-        params: dict
-            Dictionary containing user's calculator FHI-aims parameters
-        atoms: Atoms object
-            Contains the geometry information for optimisation
-        fmax: float
-            Force convergence criterion for geometry optimisation, i.e. max forces on any atom in eV/A
-        post_process: str or None
-            Basis set to be used for post_processing if energy calculation using a larger basis set is required
-        relax_unit_cell: bool
-            True requests a strain filter unit cell relaxation
-        restart: bool
-            Request restart from previous geometry if True (True by default)
+         Returns a list containing the model with data calculated using your choice of settings
+         [model_optimised, model_postprocessed]
+         """
 
-        Returns a list containing the model with data calculated using
-        light and tight settings: [model_light, model_tight]
+        self._initialize_parameters(atoms)
+
+        helper = CalculationHelper(calc_type="Opt",
+                                   parent_dir=os.getcwd(),
+                                   filename=self.filename,
+                                   restart=restart,
+                                   verbose=self.verbose)
+
+        counter, out, subdirectory_name, initial = helper.restart_setup()
+
+        if initial is not None:
+            self.initial = initial
+
+        self._perform_optimization(subdirectory_name, out, counter, fmax, relax_unit_cell)
+        self._finalize_optimization(subdirectory_name, post_process)
+
+        return self.model_optimised, self.model_post_processed
+
+    def _initialize_parameters(self, atoms):
         """
-        from ase.io import read
-        from ase.io.trajectory import Trajectory
-        from carmm.analyse.forces import is_converged
-        from ase.optimize import BFGS
+        Internal function for obtainining periodic boundary conditions from the provided Atoms object and generating
+         a filename if necessary. Values are then assigned to self.
 
-        """Setup initial parameters"""
-        params = self.params
-        hpc = self.hpc
-        basis_set = self.basis_set
+        Args:
+            atoms: Atoms object
+
+        Returns: None
+        """
         self.initial = atoms
-        dimensions = sum(self.initial.pbc)
-        i_geo = atoms.copy()
-        i_geo.calc = atoms.calc
-
-        """Read the geometry"""
+        self.dimensions = sum(self.initial.pbc)
         if not self.filename:
             self.filename = self.initial.get_chemical_formula()
 
-        filename = self.filename
+    def _perform_optimization(self, subdirectory_name: str, out: str, counter: int, fmax: float, relax_unit_cell: bool):
+        """
+        An internal function used in aims_optimise to resolve the working directoryand perform the optimisation
+        calculation of a given structure.
 
-        counter, subdirectory_name = self._restart_setup("Opt", self.filename, restart, verbose=verbose)
-        out = str(counter) + "_" + str(filename) + ".out"
+        Args:
+            subdirectory_name: string
+            out: str
+            counter: int
+            fmax: float
+            relax_unit_cell: bool
 
-        """Perform calculation only if required"""
-        if is_converged(atoms, fmax):
-            if verbose:
-                print("The forces are below", fmax, "eV/A. No calculation required.")
-            self.model_optimised = self.initial
-        elif is_converged(self.initial, fmax):
-            if verbose:
-                print("The forces are below", fmax, "eV/A. No calculation required.")
-            self.model_optimised = self.initial
-            self.initial = i_geo
-        else:
+        Returns:None
+
+        """
+        opt_restarts = 0
+
+        if not is_converged(self.initial, fmax):
             os.makedirs(subdirectory_name, exist_ok=True)
 
-            """Set the environment variables for geometry optimisation"""
-            set_aims_command(hpc=hpc, basis_set=basis_set, defaults=2020, nodes_per_instance=self.nodes_per_instance)
+            """Ensure correct basis set is used"""
+            set_aims_command(hpc=self.hpc, basis_set=self.basis_set, defaults=2020,
+                             nodes_per_instance=self.nodes_per_instance)
 
-            """Occasional optimizer restarts will prevent the calculation from getting stuck in deep local minimum"""
-            opt_restarts = 0
-
-            """Perform DFT calculations for each filename"""
-            with _calc_generator(params,
-                                 out_fn=out,
-                                 dimensions=dimensions,
-                                 relax_unit_cell=relax_unit_cell,
-                                 directory=subdirectory_name)[0] as calculator:
-
+            with _calc_generator(self.params, out_fn=out, dimensions=self.dimensions, relax_unit_cell=relax_unit_cell,
+                                    directory=subdirectory_name)[0] as calculator:
                 if not self.dry_run:
                     self.initial.calc = calculator
                 else:
                     self.initial.calc = EMT()
 
                 while not is_converged(self.initial, fmax):
+                    traj_name = f"{subdirectory_name}/{str(counter)}_{self.filename}_{str(opt_restarts)}.traj"
+
                     if relax_unit_cell:
                         from ase.constraints import StrainFilter
                         unit_cell_relaxer = StrainFilter(self.initial)
-
-                        opt = BFGS(unit_cell_relaxer,
-                                   trajectory="".join([subdirectory_name, "/", str(counter), "_",
-                                                       filename, "_", str(opt_restarts), ".traj"]),
-                                   alpha=70.0
-                                   )
+                        opt = BFGS(unit_cell_relaxer, trajectory=traj_name, alpha=70.0)
                     else:
-                        opt = BFGS(self.initial,
-                                   trajectory="".join([subdirectory_name, "/", str(counter), "_",
-                                                       filename, "_", str(opt_restarts), ".traj"]),
-                                   alpha=70.0
-                                   )
+                        opt = BFGS(self.initial, trajectory=traj_name, alpha=70.0)
 
                     opt.run(fmax=fmax, steps=80)
                     opt_restarts += 1
 
-            self.model_optimised = read("/".join([subdirectory_name,
-                                                  str(counter) + "_" + filename + "_" + str(opt_restarts-1) + ".traj"]))
+            self.model_optimised = read(traj_name)
+        else:
+            if self.verbose:
+                print(f"Structure is converged.")
+            self.model_optimised = self.initial
 
-        self.initial = i_geo
+    def _finalize_optimization(self, subdirectory_name: str, post_process: str):
+        """
+        An internal function used in aims_opimise for postprocessing of an optimisation with a single point energy
+        calculation using a different basis set (from the default basis settings in FHI-aims) as specified in the
+        post_process variable (e.g. "tight").
+
+        Assigns the post-processed structure to self.model_post_processed.
+
+        Args:
+            subdirectory_name: str
+            post_process: str
+
+        Returns:
+            None
+        """
 
         if post_process:
-            if verbose:
-                print("Commencing calculation using", post_process, "basis set.")
-
-            model_pp = self.model_optimised.copy()
-
-            """Set environment variables for a larger basis set - converged electronic structure"""
             subdirectory_name_tight = subdirectory_name + "_" + post_process
-            os.makedirs(subdirectory_name_tight, exist_ok=True)
+            traj_name = f"{subdirectory_name_tight}/{self.filename}_{post_process}.traj"
 
-            set_aims_command(hpc=hpc, basis_set=post_process, defaults=2020, nodes_per_instance=self.nodes_per_instance)
+            if os.path.exists(traj_name):
+                self.model_post_processed = read(traj_name)
+            else:
+                subdirectory_name_tight = subdirectory_name + "_" + post_process
+                os.makedirs(subdirectory_name_tight, exist_ok=True)
 
-            """Recalculate the structure using a larger basis set in a separate folder"""
-            with _calc_generator(params,
-                                 out_fn=str(self.filename) + "_" + post_process + ".out",
-                                 forces=False,
-                                 dimensions=dimensions,
-                                 directory=subdirectory_name_tight)[0] as calculator:
-                if not self.dry_run:
-                    model_pp.calc = calculator
-                else:
-                    model_pp.calc = EMT()
-                    
-                model_pp.get_potential_energy()
-                traj = Trajectory("".join([subdirectory_name_tight, "/",
-                                           self.filename,  "_", post_process,".traj"]), "w")
-                traj.write(model_pp)
-                traj.close()
+                set_aims_command(hpc=self.hpc, basis_set=post_process, defaults=2020,
+                                 nodes_per_instance=self.nodes_per_instance)
 
-            """update the instance with a post_processed model"""
-            self.model_post_processed = model_pp
+                model_pp = self.model_optimised.copy()
 
-        return self.model_optimised, self.model_post_processed
+                with _calc_generator(self.params, out_fn=self.filename + "_" + post_process + ".out", forces=False,
+                                        dimensions=self.dimensions, directory=subdirectory_name_tight)[0] as calculator:
+                    if not self.dry_run:
+                        model_pp.calc = calculator
+                    else:
+                        model_pp.calc = EMT()
 
-    def get_mulliken_charges(self, initial: Atoms, verbose=True):
+                    model_pp.get_potential_energy()
+                    traj = Trajectory(traj_name, "w")
+                    traj.write(model_pp)
+                    traj.close()
 
+                self.model_post_processed = model_pp
+
+    def get_mulliken_charges(self, atoms: Atoms, restart: bool = True):
         """
         This function is used to retrieve atomic charges using Mulliken charge
         decomposition as implemented in FHI-aims. A new trajectory file containing
-        the charges
+        the charges is saved.
 
         Args:
-            initial: Atoms
+            atoms: Atoms
                 Atoms object containing structural information for the calculation
-            verbose: bool
-                Flag for turning off printouts in the code
+            restart: bool
+                If False the calculation is started from scratch, even if previous folders following the naming
+                convention are found.
 
         Returns:
             Atoms object with charges appended
@@ -239,31 +252,20 @@ class ReactAims:
         params = self.params
         hpc = self.hpc
         basis_set = self.basis_set
-        self.initial = initial
-        dimensions = sum(self.initial.pbc)
 
-        """Read the geometry"""
-        if not self.filename:
-            self.filename = self.initial.get_chemical_formula()
+        self._initialize_parameters(atoms)
 
-        filename = self.filename
-        assert type(filename) == str, "Invalid type, filename should be string"
+        helper = CalculationHelper(calc_type="Charges",
+                                   parent_dir=os.getcwd(),
+                                   filename=self.filename,
+                                   restart=restart,
+                                   verbose=self.verbose)
 
-        counter, subdirectory_name = self._restart_setup("Charges", self.filename)
+        counter, out, subdirectory_name, initial = helper.restart_setup()
 
-        #TODO: move restart setup to the dedicated function
-
-        """Check for previously completed calculation"""
-
-        assumed_path = "/".join([subdirectory_name, filename+"_charges.traj"])
-        if os.path.exists(assumed_path):
-            file_location = assumed_path
-            self.initial = read(file_location)
-            if verbose:
-                print("Previously calculated structure has been found at", file_location)
+        if initial is not None:
+            self.initial = initial
             return self.initial
-
-        out = str(counter) + "_" + str(filename) + ".out"
 
         """Set the environment variables for geometry optimisation"""
         set_aims_command(hpc=hpc, basis_set=basis_set, defaults=2020)
@@ -274,7 +276,7 @@ class ReactAims:
         os.makedirs(subdirectory_name, exist_ok=True)
 
         with _calc_generator(params, out_fn=out,
-                             dimensions=dimensions, forces=False,
+                             dimensions=self.dimensions, forces=False,
                              directory=subdirectory_name)[0] as calculator:
             if not self.dry_run:
                 self.initial.calc = calculator
@@ -286,21 +288,22 @@ class ReactAims:
         if not self.dry_run:
             charges = extract_mulliken_charge(out, len(self.initial))
         else:
-            charges = initial.get_charges()
+            """Return dummy charges for testing"""
+            charges = [0 for atom in self.initial]
 
         self.initial.set_initial_charges(charges)
 
-        traj = Trajectory("/".join([subdirectory_name, filename+"_charges.traj"]), 'w')
+        traj = Trajectory(f"{subdirectory_name}/{self.filename}_{helper.calc_type.lower()}.traj", 'w')
         traj.write(self.initial)
         traj.close()
 
         return self.initial
-    
 
-    def search_ts(self, initial, final,
-                  fmax, unc, interpolation=None,
+
+    def search_ts(self, initial: Atoms, final: Atoms,
+                  fmax: float, unc: float, interpolation=None,
                   n=0.25, restart=True, prev_calcs=None,
-                  input_check=0.01, verbose=True):
+                  input_check=0.01):
         """
         This function allows calculation of the transition state using the CatLearn software package in an
         ASE/sockets/FHI-aims setup. The resulting converged band will be located in the MLNEB.traj file.
@@ -331,8 +334,6 @@ class ReactAims:
             input_check: float or None
                 If float the calculators of the input structures will be checked if the structures are below
                 the requested fmax and an optimisation will be performed if not.
-            verbose: bool
-                Flag for turning off printouts in the code
 
         Returns: Atoms object
             Transition state geometry structure
@@ -340,96 +341,111 @@ class ReactAims:
 
         from catlearn.optimize.mlneb import MLNEB
 
+        #TODO: calling mlneb.run() generates files in the current directory, reverting to os.chdir() necessary
+        assert not self.nodes_per_instance, "ReactAims.nodes_per_instance is not None \n" \
+                                            "Dependency on the catlearn.mlneb module cannot run TS " \
+                                            "search concurrently without issues. "
+
         """Retrieve common properties"""
         basis_set = self.basis_set
         hpc = self.hpc
-        dimensions = sum(initial.pbc)
         params = self.params
-        self.interpolation = interpolation
+        parent_dir = os.getcwd()
+        if interpolation:
+            self.interpolation = interpolation
+        else:
+            self.interpolation = "idpp"
+
+        self._initialize_parameters(initial)
+
 
         """Set the environment parameters"""
         set_aims_command(hpc=hpc, basis_set=basis_set, defaults=2020, nodes_per_instance=self.nodes_per_instance)
 
-        if not self.interpolation:
-            self.interpolation = "idpp"
-
-        """Read the geometry"""
-        if self.filename:
-            filename = self.filename
-        else:
-            filename = initial.get_chemical_formula()
-            self.filename = filename
-
-        counter, subdirectory_name = self._restart_setup("TS", filename, restart=restart, verbose=verbose)
-        if os.path.exists(os.path.join(subdirectory_name[:-1] + str(counter-1), "ML-NEB.traj")):
-            previously_converged_ts_search = os.path.join(subdirectory_name[:-1] + str(counter-1), "ML-NEB.traj")
-            print("TS search already converged at", previously_converged_ts_search)
-
-            neb = read("/".join([subdirectory_name, previously_converged_ts_search+"@:"]))
-            self.ts = sorted(neb, key=lambda k: k.get_potential_energy(), reverse=True)[0]
-
-            return self.ts
-
-        elif input_check:
+        if input_check:
+            filename_copy = self.filename
             """Ensure input is converged"""
             if not is_converged(initial, input_check):
-                self.filename += "_initial"
-                initial = self.aims_optimise(initial, input_check, restart=True, verbose=False)[0]
+                self.filename = f"{filename_copy}_initial"
+                initial = self.aims_optimise(initial, input_check, restart=True)[0]
             if not is_converged(final, input_check):
-                self.filename = filename + "_final"
-                final = self.aims_optimise(final, input_check, restart=True, verbose=False)[0]
+                self.filename =  f"{filename_copy}_final"
+                final = self.aims_optimise(final, input_check, restart=True)[0]
 
             """Set original name after input check is complete"""
-            self.filename = filename
+            self.filename = filename_copy
 
-        out = str(counter) + "_" + str(filename) + ".out"
+        '''Setup the TS calculation'''
+        helper = CalculationHelper(calc_type="TS",
+                                   parent_dir=os.getcwd(),
+                                   filename=self.filename,
+                                   restart=restart,
+                                   verbose=self.verbose)
 
-        """Let the user restart from alternative file or Atoms object"""
-        if prev_calcs:
-            self.prev_calcs = prev_calcs
+        counter, out, subdirectory_name, minimum_energy_path = helper.restart_setup()
+        if not minimum_energy_path:
+            minimum_energy_path = [None, None]
 
-        os.makedirs(subdirectory_name, exist_ok=True)
+        traj_name = f"{subdirectory_name}/ML-NEB.traj"
 
-        """Create the sockets calculator - using a with statement means the object is closed at the end."""
-        with _calc_generator(params,
-                             out_fn=out,
-                             dimensions=dimensions,
-                             directory=subdirectory_name)[0] as calculator:
-            if self.dry_run:
-                calculator = EMT()
-            iterations = 0
-            while not os.path.exists("/".join([subdirectory_name, 'ML-NEB.traj'])):
-                if iterations > 0:
-                    self.prev_calcs = read("/".join([subdirectory_name, "last_predicted_path.traj@:"]))
+        if not minimum_energy_path[0]:
+            """Create the sockets calculator - using a with statement means the object is closed at the end."""
+            with _calc_generator(params,
+                                 out_fn=out,
+                                 dimensions=self.dimensions,
+                                 directory=".")[0] as calculator:  # mlneb files are created in main directory, hence the with current directory and os.chdir
 
-                """Setup the Catlearn object for MLNEB"""
-                neb_catlearn = MLNEB(start=initial,
-                                     end=final,
-                                     ase_calc=calculator,
-                                     n_images=n,
-                                     interpolation=self.interpolation,
-                                     neb_method="improvedtangent",
-                                     prev_calculations=self.prev_calcs,
-                                     mic=True,
-                                     restart=restart)
-                if not self.dry_run:
-                    """Run the NEB optimisation. Adjust fmax to desired convergence criteria, usually 0.05 eV/A"""
-                    neb_catlearn.run(fmax=fmax,
-                                     unc_convergence=unc,
-                                     trajectory="/".join([subdirectory_name, 'ML-NEB.traj']),
-                                     ml_steps=75,
-                                     sequential=False,
-                                     steps=40)
+                """Let the user restart from alternative file or Atoms object"""
+                if prev_calcs:
+                    self.prev_calcs = prev_calcs
+                elif minimum_energy_path[1]:
+                    self.prev_calcs = minimum_energy_path[1]
 
-                    iterations += 1
-                else:
-                    return None
+                os.makedirs(subdirectory_name, exist_ok=True)
+
+                if self.dry_run:
+                    calculator = EMT()
+
+                iterations = 0
+
+                while not os.path.exists(traj_name):
+                    if iterations > 0:
+                        self.prev_calcs = read(f"{subdirectory_name}/last_predicted_path.traj@:")
+
+                    os.chdir(subdirectory_name)
+                    """Setup the Catlearn object for MLNEB"""
+                    neb_catlearn = MLNEB(start=initial,
+                                         end=final,
+                                         ase_calc=calculator,
+                                         n_images=n,
+                                         interpolation=self.interpolation,
+                                         neb_method="improvedtangent",
+                                         prev_calculations=self.prev_calcs,
+                                         mic=True,
+                                         restart=restart)
+                    if not self.dry_run:
+                        """Run the NEB optimisation. Adjust fmax to desired convergence criteria, usually 0.05 eV/A"""
+                        neb_catlearn.run(fmax=fmax,
+                                         unc_convergence=unc,
+                                         trajectory=traj_name,
+                                         ml_steps=75,
+                                         sequential=False,
+                                         steps=40)
+
+                        iterations += 1
+                        os.chdir(parent_dir)
+                    else:
+                        return None
 
         """Find maximum energy, i.e. transition state to return it"""
-        neb = read("/".join([subdirectory_name, "ML-NEB.traj@:"]))
+        if minimum_energy_path[0]:
+            neb = minimum_energy_path[0]
+        else:
+            neb = read(traj_name)
         self.ts = sorted(neb, key=lambda k: k.get_potential_energy(), reverse=True)[0]
 
         return self.ts
+
 
     """
     def search_ts_aidneb(self, initial, final, fmax, unc, interpolation=None, n=15,
@@ -470,7 +486,7 @@ class ReactAims:
         Returns: Atoms object
             Transition state geometry structure
         '''
-        
+
         from gpatom.aidneb import AIDNEB
 
         '''Retrieve common properties'''
@@ -570,7 +586,7 @@ class ReactAims:
 
     def search_ts_taskfarm(self, initial, final, fmax, n, method="string", interpolation="idpp", input_check=0.01,
                            max_steps=100, verbose=True):
-        
+
         '''
         Args:
             initial: Atoms object
@@ -597,7 +613,7 @@ class ReactAims:
         Returns: Atoms object
             Transition state geometry structure
         '''
-        
+
         from ase.neb import NEB
         from ase.optimize import FIRE
 
@@ -689,7 +705,6 @@ class ReactAims:
         return self.ts
     """
 
-
     def vibrate(self, atoms: Atoms, indices: list, read_only=False):
         """
 
@@ -716,16 +731,8 @@ class ReactAims:
         basis_set = self.basis_set
         hpc = self.hpc
         params = self.params
-        parent_dir = os.getcwd()
-        dimensions = sum(atoms.pbc)
-
-        if not self.filename:
-            """develop a naming scheme based on chemical formula"""
-            self.filename = atoms.get_chemical_formula()
-
-        vib_dir = f"{parent_dir}/VibData_{self.filename}/Vibs"
-        print(vib_dir)
-
+        self._initialize_parameters(atoms)
+        vib_dir = f"{os.getcwd()}/VibData_{self.filename}/Vibs"
         vib = Vibrations(atoms, indices=indices, name=vib_dir)
 
         """If a calculation was terminated prematurely (e.g. time limit) empty .json files remain and the calculation
@@ -735,13 +742,12 @@ class ReactAims:
         """Extract vibration data from existing files"""
         if read_only:
             vib.read()
-
+            return vib
         else:
             """Calculate required vibration modes"""
             required_cache = [os.path.join(vib_dir, "cache." + str(x) + y + ".json") for x in indices for y in [
                 "x+", "x-", "y+", "y-", "y-", "z+", "z-"]]
             check_required_modes_files = np.array([os.path.exists(file) for file in required_cache])
-
             if np.all(check_required_modes_files):
                 vib.read()
             else:
@@ -749,139 +755,29 @@ class ReactAims:
                 set_aims_command(hpc=hpc, basis_set=basis_set,
                                  defaults=2020, nodes_per_instance=self.nodes_per_instance)
 
-                """Generate a unique folder for aims calculation"""
-                counter, subdirectory_name = self._restart_setup("Vib",
-                                                                 filename=self.filename,
-                                                                 restart=False,
-                                                                 verbose=False)
+                helper = CalculationHelper(calc_type="Vib",
+                                           parent_dir=os.getcwd(),
+                                           filename=self.filename,
+                                           restart=False,
+                                           verbose=self.verbose)
 
+                counter, out, subdirectory_name, initial = helper.restart_setup()
                 os.makedirs(subdirectory_name, exist_ok=True)
 
-                """Name the aims output file"""
-                out = str(counter) + "_" + str(self.filename) + ".out"
-
                 """Calculate vibrations and write the in a separate directory"""
-                with _calc_generator(params, out_fn=out,
-                                     dimensions=dimensions, directory=subdirectory_name)[0] as calculator:
+                with _calc_generator(params, out_fn=out, dimensions=self.dimensions, directory=subdirectory_name
+                                     )[0] as calculator:
                     if not self.dry_run:
                         atoms.calc = calculator
                     else:
                         atoms.calc = EMT()
-
                     vib = Vibrations(atoms, indices=indices, name=vib_dir)
                     vib.run()
 
             vib.summary()
-
-        """Generate a unique folder for aims calculation"""
-        if not read_only:
             vib.write_mode()
+            return vib
 
-        return vib
-
-    def _find_previous_calculation(self, calc_type, filename, verbose):
-        counter = 0
-        prev_calcs = None
-        interpolation = None
-
-        while calc_type + filename + "_" + str(counter) in [fn for fn in os.listdir() if
-                                                            fnmatch.fnmatch(fn, calc_type + "*")]:
-            counter += 1
-
-        if counter > 0:
-            restart_found = False
-            while not restart_found and counter > 0:
-                if verbose:
-                    print("Previous calculation detected in", calc_type + filename + "_" + str(counter - 1))
-                subdirectory_name_previous = calc_type + filename + "_" + str(counter - 1)
-
-                if calc_type == "TS_":
-                    if os.path.exists("/".join([subdirectory_name_previous, "evaluated_structures.traj"])):
-                        self.prev_calcs = read("/".join([subdirectory_name_previous, "evaluated_structures.traj@:"]))
-                        restart_found = True
-                        break
-
-
-                    elif os.path.exists("/".join([subdirectory_name_previous, "AIDNEB.traj"])) \
-                            and os.path.exists("/".join([subdirectory_name_previous, "AIDNEB_observations.traj"])):
-                        '''No break here, we combine the whole dataset for GPATOM due to better efficiency than MLNEB'''
-                        '''Retrieve all previous geometries and combine'''
-                        # TODO: respect users self-provided prev_calcs
-                        if type(self.prev_calcs) == list:
-                            for atoms in read("/".join([subdirectory_name_previous, "AIDNEB_observations.traj@:"])):
-                                if not atoms in self.prev_calcs:
-                                    self.prev_calcs += [atoms]
-
-                        elif not self.prev_calcs:
-                            self.prev_calcs = read("/".join([subdirectory_name_previous, "AIDNEB_observations.traj@:"]))
-
-                        '''Read last predicted trajectory'''
-                        '''Guess length from combined AIDNEB based on length of the initial path'''
-                        if not self.interpolation:
-                            self.interpolation = read("/".join([subdirectory_name_previous,
-                                                                "AIDNEB.traj@" +
-                                                                str(-len(read("/".join([subdirectory_name_previous,
-                                                                                        "initial_path.traj@:"]))) - 1) + ":"]))
-                            if verbose:
-                                print("Interpolation retrieved from", calc_type + filename + "_" + str(counter - 1))
-
-                        if verbose:
-                            print("Data from", calc_type + filename + "_" + str(counter - 1),
-                                  "added to the training set.")
-
-                    elif verbose:
-                        print('Previous TS trajectory not found.')
-
-
-                elif calc_type == "Opt_":
-                    """Check for number of restarted optimisations"""
-                    opt_restarts = 0
-                    while os.path.exists("".join([subdirectory_name_previous, "/", str(counter - 1), "_", filename, "_",
-                                            str(opt_restarts), ".traj"])):
-                        opt_restarts += 1
-
-                    """Read the last optimisation"""
-                    traj_name = "/".join([subdirectory_name_previous,
-                                          str(counter - 1) + "_" + filename + "_" + str(opt_restarts - 1) + ".traj"])
-                    print(traj_name)
-                    while os.path.exists(traj_name):
-                        if os.path.getsize(traj_name):
-                            self.initial = read(traj_name)
-                            restart_found = True
-                            if verbose:
-                                print("Restarting from", traj_name)
-                            break
-
-                        elif verbose:
-                            print(traj_name + " file empty!")
-
-                        traj_name = "/".join([subdirectory_name_previous,
-                                              str(counter - 1) + "_" + filename + "_" + str(
-                                                  opt_restarts - 1) + ".traj"])
-                        opt_restarts -= 1
-
-                counter -= 1
-
-        return counter, prev_calcs, interpolation
-
-    def _create_new_directory(self, calc_type, filename, counter):
-        subdirectory_name = "".join([calc_type, filename, "_", str(counter)])
-        os.makedirs(subdirectory_name, exist_ok=True)
-
-        return subdirectory_name
-
-    def _restart_setup(self, calc_type, filename, restart=True, verbose=True):
-        _supported_calc_types = ["Opt", "Vib", "TS", "Charges"]
-        assert calc_type in _supported_calc_types
-        calc_type += "_"
-
-        counter, self.prev_calcs, self.interpolation = self._find_previous_calculation(calc_type, filename, verbose)
-
-        subdirectory_name = self._create_new_directory(calc_type, filename, counter)
-
-
-
-        return counter, subdirectory_name
 
 def _calc_generator(params,
                     out_fn="aims.out",
@@ -902,6 +798,8 @@ def _calc_generator(params,
             Determines whether we have a "gas"-phase (0) or "periodic" structure (2 or 3)
         relax_unit_cell: bool
             Request strain calculation for bulk geometries
+        directory: str
+            Set a directory to be used for initialisation of the FHI-aims calculation
 
     Returns:
         sockets_calc, fhi_calc: sockets calculator and FHI-aims calculator for geometry optimisations
@@ -940,9 +838,13 @@ def _calc_generator(params,
 
     return sockets_calc, fhi_calc
 
+
 '''
 def serialize(self):
-    """Save the instance to a file"""
+    """Save the instance to a file
+    Cases were this would be useful: providing an input file for repeating the calculation using identical settings.
+    Such file might be provided alongside code and structures on NOMAD to aid transparency and reproducibility.
+    """
     pass
 
 def recover(self):
