@@ -35,10 +35,8 @@ def traj_to_gif(filename, automatic=False, generic_projection_settings=None, pov
         filename = 'atoms.traj'
     file = filename.split('/')[-1]
     ext = file.split('.')[-1]
-    print(ext)
     file = file.split('.')[:-1]
     file = '.'.join(file)
-    print(file)
 
     if ext != 'traj':
         raise RuntimeError('Function only supports .traj files')
