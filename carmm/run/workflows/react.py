@@ -302,7 +302,7 @@ class ReactAims:
 
     def search_ts(self, initial: Atoms, final: Atoms,
                   fmax: float, unc: float, interpolation=None,
-                  n=0.25, restart=True, prev_calcs=None,
+                  n=0.25, steps=40, restart=True, prev_calcs=None,
                   input_check=0.01):
         """
         This function allows calculation of the transition state using the CatLearn software package in an
@@ -393,7 +393,7 @@ class ReactAims:
             with _calc_generator(params,
                                  out_fn=out,
                                  dimensions=self.dimensions,
-                                 directory=".")[0] as calculator:  # mlneb files are created in main directory, hence the with current directory and os.chdir
+                                 directory=".")[0] as calculator:  # mlneb files are created in main directory, hence the workaround with current directory and os.chdir
 
                 """Let the user restart from alternative file or Atoms object"""
                 if prev_calcs:
@@ -430,7 +430,7 @@ class ReactAims:
                                          trajectory=traj_name,
                                          ml_steps=75,
                                          sequential=False,
-                                         steps=40)
+                                         steps=steps)
 
                         iterations += 1
                         os.chdir(parent_dir)
@@ -811,6 +811,7 @@ def _calc_generator(params,
     """On machines where ASE and FHI-aims are run separately (e.g. ASE on login node, FHI-aims on compute nodes)
     we need to specifically state what the name of the login node is so the two packages can communicate"""
     sockets_calc, fhi_calc = get_aims_and_sockets_calculator(dimensions=dimensions,
+                                                             logfile=f"{directory}/socketio.log",
                                                              verbose=True,
                                                              codata_warning=False,
                                                              directory=directory
