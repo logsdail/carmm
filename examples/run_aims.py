@@ -1,10 +1,7 @@
 #!/usr/bin/env python3
 
 '''
-This modules tests aims calculator on different machines - Hawk, Isambard and archer.
-The dimensions from 0 to 3 test the different aims setting as described in
-carmm.run.get_aims_calculator
-TODO: rework the assertion to actually test the aims_path output - include expected string values
+This modules tests aims calculator on different machines
 '''
 
 def test_run_aims():
@@ -29,13 +26,9 @@ def test_run_aims():
         'aws': 'time srun --mpi=pmi2 --hint=nomultithread --distribution=block:block --nodes=1 --ntasks=72 apptainer exec /shared/logsdail_group/sing/mkl_aims_2.sif bash /shared/logsdail_group/sing/sing_fhiaims_script.sh $@'
     }
 
-
-
     for hpc in ['hawk', 'hawk-amd', 'isambard', 'archer2', 'young', 'aws']:
         '''Assign the executable command based on HPC'''
         set_aims_command(hpc)
-
-
 
         assert os.environ['ASE_AIMS_COMMAND'] == expected_paths[hpc], f"Path incorrect on {hpc}: {expected_paths[hpc]}\n" \
                                                                       f"Currently: {os.environ['ASE_AIMS_COMMAND']}"
