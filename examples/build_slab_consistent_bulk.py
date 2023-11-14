@@ -7,7 +7,7 @@ def test_build_slab_consistent_bulk():
     from carmm.build.slab_consistent_bulk_generator import bulk_identifier
     from ase.io import read
     from ase.formula import Formula
-    slab = read('data/slab_consistent_bulk/geometry_CoO_111_slab.in')
+    slab = read('data/slab_consistent_bulk/geometry_CoO_111_slab_model.in')
     new_bulk = bulk_identifier(slab)
     emp_formula = new_bulk.get_chemical_formula(mode='hill', empirical=True)
     total_atoms = 0
