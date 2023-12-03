@@ -5,6 +5,7 @@ from carmm.run.aims_path import set_aims_command
 import subprocess, os
 
 CO = read('data/CO_BSSE/C_monoxide_pbe.traj')
+wkdir = os.getcwd()
 os.chdir(path='data/CO_BSSE')
 set_aims_command(hpc='hawk', basis_set='light', defaults=2020)
 toy_calc = get_aims_calculator(dimensions=0, xc='pbe')
@@ -21,5 +22,5 @@ assert lines[6] == "empty -0.0000000000000000 0.0000000000000000 -0.653694797332
 subprocess.check_call(['rm', 'control.in'])
 subprocess.check_call(['rm', 'geometry.in'])
 subprocess.check_call(['rm', 'parameters.ase'])
-
+os.chdir(path=wkdir)
 
