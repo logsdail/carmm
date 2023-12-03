@@ -16,10 +16,7 @@ def counterpoise_calc(complex_struc, a_id, b_id, symbol_not_index, fhi_calc=None
 
     Returns: counterpoise correction value for basis set superposition error
     """
-    import subprocess
     from copy import deepcopy
-    from carmm.run.aims_calculator import get_aims_and_sockets_calculator
-    from ase.calculators.emt import EMT
     # Let's say we have A and B in this complex
     # ?_only has A or B in the geometry of the binding complex with its own basis
     # ?_plus_ghost has A or B in the same geometry with ghost atoms added
@@ -54,9 +51,6 @@ def counterpoise_calc(complex_struc, a_id, b_id, symbol_not_index, fhi_calc=None
             binding_complex.calc = calc
             if dry_run:
                 binding_complex.calc = EMT()
-
-            energy = binding_complex.get_potential_energy()
-            energies.append(energy)
         """
         if 'compute_forces' in fhi_calc.parameters:
             fhi_calc.parameters.pop('compute_forces')
@@ -81,16 +75,15 @@ def ghost_calculate(calc, atoms=None, properties=['energy'],
     """
     This is a modified version of ase.calculators.calculator.FileIOCalculator.calculate to make ghost atoms work
     Args:
-        calc:
-        atoms:
-        properties:
-        system_changes:
-        ghosts:
-        dry_run:
+        calc: fhi_aims calculator constructed by ase
+        atoms: ASE atoms object for counterpoise correction
+        properties: list of str. properties to be calculated, default is energy. See original function
+        system_changes: list of str. See original function.
+        ghosts: bool list. Ghost is Ture and Atom is False. The length is the same as atoms.
+        dry_run: flag for CI-test.
 
     """
     from ase.calculators.calculator import Calculator
-    from ase.calculators.emt import EMT
     import subprocess
     Calculator.calculate(calc, atoms, properties, system_changes)
     calc.write_input(calc.atoms, properties, system_changes, ghosts=ghosts)

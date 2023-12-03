@@ -2,9 +2,10 @@ from ase.io import read
 from carmm.analyse.counterpoise_onepot import counterpoise_calc
 from carmm.run.aims_calculator import get_aims_calculator
 from carmm.run.aims_path import set_aims_command
-import subprocess
+import subprocess, os
 
-CO = read('C_monoxide_pbe.traj')
+CO = read('data/CO_BSSE/C_monoxide_pbe.traj')
+os.chdir(path='data/CO_BSSE')
 set_aims_command(hpc='hawk', basis_set='light', defaults=2020)
 toy_calc = get_aims_calculator(dimensions=0, xc='pbe')
 toy_calc.set(xc='pbe', spin='collinear', default_initial_moment=0.5, relativistic='atomic_zora scalar')
@@ -20,4 +21,5 @@ assert lines[6] == "empty -0.0000000000000000 0.0000000000000000 -0.653694797332
 subprocess.check_call(['rm', 'control.in'])
 subprocess.check_call(['rm', 'geometry.in'])
 subprocess.check_call(['rm', 'parameters.ase'])
+
 
