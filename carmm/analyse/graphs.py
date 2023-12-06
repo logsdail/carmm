@@ -111,3 +111,101 @@ def set_graph_axes_heatmap(plt, x, y):
     plt.colorbar()
     plt.xlim(min(x), max(x))
     plt.ylim(min(y), max(y))
+
+
+def plot_energy_profile(data, x_labels, **kwargs):
+    '''
+    Author: Igor Kowalec
+    This function is used for plotting solid+dashed line style reaction energy profiles, which often require manual
+    tweaking using other software.
+
+    Args:
+        data: dict
+            A dictionary of key-value pairs, where the keys are used as the title of the data series, and the values are
+            lists of floats to be plotted on the
+        x_labels: list
+            A list of strings containing x-axis labels - intermediates, reaction steps etc.
+        **kwargs: dict
+            TODO: Consult what is useful, write them out
+
+    Returns:
+        matplotlib.pyplot
+    '''
+
+    import matplotlib.pyplot as plt
+    from matplotlib import colors as mcolors
+    import numpy as np
+
+    # Endure that data is uniform for all datasets
+    # TODO: allow x-y value pairs in situations where e.g. some intermediates are skipped
+    for series in data:
+        energies = data[series]
+        assert len(energies) == len(x_labels), f"Length of {series} values: {energies} " \
+                                               f"does not match the length of x_labels: " \
+                                               f"{len(energies)} =/= {len(x_labels)} \n" \
+                        f"This function currently only supports datasets representing an identical reaction pathway."
+
+
+    # Define keyword arguments
+    font_size = kwargs.get("font_size", 14)
+    figsize = kwargs.get("figsize", (10, 6))
+    colours = kwargs.get("colours", list(mcolors.TABLEAU_COLORS.values())[:len(data)])
+    linestyles = kwargs.get("linestyles", [])
+    linestyle = kwargs.get("linestyle", "-")
+    x_labels_rotation = kwargs.get("x_labels_rotation", 90)
+    x_axis_title = kwargs.get("x_axis_title", "{x}")
+    y_axis_title = kwargs.get("y_axis_title", "Δ$E$ /eV")
+    legend_xy_offset = kwargs.get("legend_xy_offset", (1, 1))
+
+    # Create a linear plot
+    fig, ax = plt.subplots(figsize=figsize)  # Set the figure size
+
+    # Plot horizontal lines for each point and dashed lines connecting them
+    for x, y_tuple in enumerate(zip(*[data[surface] for surface in data])):
+        labels = [key for key in data]
+
+        for _, y in enumerate(y_tuple):
+            if linestyles:
+                linestyle = linestyle[_]
+            ax.hlines(y, x - 0.2, x + 0.2,
+                      colors=colours[_],
+                      linestyle=linestyle,
+                      linewidth=2,
+                      label=labels[_] if x == 0 else '')
+
+        # Connect the points with dashed lines
+        if x < len(x_labels) - 1:
+            for _, y in enumerate(y_tuple):
+                ax.plot([x + 0.2, x + 1 - 0.2], [y, data[labels[_]][x + 1]],
+                        linestyle='--',
+                        color=colours[_],
+                        linewidth=1,
+                        alpha=0.7)
+
+    # Replace the existing lines for setting x-axis ticks and labels with the following:
+    ax.set_xticks(np.arange(len(x_labels)))
+    ax.set_xticklabels(x_labels, rotation=x_labels_rotation, ha="center", fontsize=font_size)
+
+    # Set y-axis font size
+    ax.yaxis.set_tick_params(labelsize=font_size)
+
+    # Set chart title and labels with increased font size
+    ax.set_xlabel(x_axis_title, fontsize=font_size)
+    ax.set_ylabel(y_axis_title, fontsize=font_size)
+
+    # Add a legend with increased font size
+    ax.legend(fontsize=font_size, loc='upper left', bbox_to_anchor=legend_xy_offset)
+
+    # Add a grid
+    ax.grid(axis='y', linestyle='-', alpha=0.5)
+
+    # Remove the top and right spines
+    ax.spines['top'].set_visible(False)
+    ax.spines['right'].set_visible(False)
+
+    # Show the chart
+    plt.tight_layout()
+
+    return plt
+
+
