@@ -20,7 +20,7 @@ def test_plot_energy_profile():
     # Assert number of plotted lines remains consistent
     assert len(plt.gca().get_lines()) / (len(states) - 1) == len(dummy_data_dictionary)
 
-    plt.show()
+    # plt.show()
 
 
 test_plot_energy_profile()
