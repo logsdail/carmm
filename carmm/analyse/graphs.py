@@ -122,7 +122,7 @@ def plot_energy_profile(data, x_labels, **kwargs):
     Args:
         data: dict
             A dictionary of key-value pairs, where the keys are used as the title of the data series, and the values are
-            lists of floats to be plotted on the
+            lists of floats to be plotted on the y-axis.
         x_labels: list
             A list of strings containing x-axis labels - intermediates, reaction steps etc.
         **kwargs: dict
