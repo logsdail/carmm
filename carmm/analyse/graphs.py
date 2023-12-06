@@ -166,7 +166,8 @@ def plot_energy_profile(data, x_labels, **kwargs):
 
         for _, y in enumerate(y_tuple):
             if linestyles:
-                linestyle = linestyle[_]
+                linestyle = linestyles[_]
+
             ax.hlines(y, x - 0.2, x + 0.2,
                       colors=colours[_],
                       linestyle=linestyle,
