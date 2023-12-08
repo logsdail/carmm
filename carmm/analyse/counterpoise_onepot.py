@@ -2,11 +2,16 @@ def counterpoise_calc(complex_struc, a_id, b_id, symbol_not_index, fhi_calc=None
                       verbose=False, dry_run=False):
     """
     This function does counterpoise (CP) correction in one go, assuming a binding complex AB.
-    Let's say we have A and B in this complex
+
+    CP correction = A_only + B_only - A_plus_ghost - B_plus_ghost
     A_only has A in the geometry of the binding complex with its own basis
     A_plus_ghost has A in the same geometry as in the complex with B replaced by ghost atoms
-    CP correction = A_only + B_only - A_plus_ghost - B_plus_ghost
-    This value should be added to the energy change of interest, such as adsorption energy.
+    This value should be positive by this definition and should be added to the energy change of interest,
+    such as adsorption energy.
+
+    Some references:
+    Szalewicz, K., & Jeziorski, B. (1998). The Journal of Chemical Physics, 109(3), 1198–1200.
+    https://doi.org/10.1063/1.476667
 
     Parameters:
         complex_struc: ASE Atoms
@@ -26,6 +31,20 @@ def counterpoise_calc(complex_struc, a_id, b_id, symbol_not_index, fhi_calc=None
 
     Returns: counterpoise correction value for basis set superposition error
     """
+    # Checking if a_id and b_id are mapped correctly
+    if not (isinstance(a_id, list) and isinstance(b_id, list)):
+        raise TypeError('Please supply a_id and b_id as list.')
+
+    if symbol_not_index:
+        if (False in [isinstance(i, str) for i in a_id]) or (False in [isinstance(i, str) for i in b_id]):
+            raise TypeError('An item in a_id or b_id is not a string while you specified using symbols')
+        elif False in [atom.symbol in a_id+b_id for atom in complex_struc]:
+            raise RuntimeError('There is a symbol missing in a_id or b_id')
+    else:
+        if (False in [isinstance(i, int) for i in a_id]) or (False in [isinstance(i, int) for i in b_id]):
+            raise TypeError('An item in a_id or b_id is not an integer while you specified using indices')
+        elif False in [atom.index in a_id+b_id for atom in complex_struc]:
+            raise RuntimeError('There is an index missing in a_id or b_id')
 
     species_list = [f'{a_name}_only', f'{a_name}_plus_ghost', f'{b_name}_only', f'{b_name}_plus_ghost']
 
