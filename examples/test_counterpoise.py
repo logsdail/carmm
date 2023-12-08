@@ -38,6 +38,9 @@ cp_index = counterpoise_calc(CO, a_id=[1], b_id=[0], symbol_not_index=False, fhi
                              verbose=True, dry_run=True)
 cp_symbol = counterpoise_calc(CO, a_id=['C'], b_id=['O'], symbol_not_index=True, fhi_calc=toy_calc, dry_run=True)
 
+# CP correction = A_only + B_only - A_plus_ghost - B_plus_ghost
+# This value should be added to the energy change of interest, such as adsorption energy.
+
 assert cp_index == -8.707358006176946e-05
 assert cp_symbol == -8.707358006176946e-05
 
