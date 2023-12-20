@@ -44,14 +44,12 @@ cp_symbol = counterpoise_calc(CO, a_id=['C'], b_id=['O'], symbol_not_index=True,
 assert cp_index == -8.707358006176946e-05
 assert cp_symbol == -8.707358006176946e-05
 
+# Check the last geometry.in file. Only for CI test.
 f = open("geometry.in", 'r')
 lines = f.readlines()
 assert lines[6] == "empty -0.0000000000000000 0.0000000000000000 -0.6536947973321450 C\n"
 
-# Remove input files. Only for CI-tests
-subprocess.check_call(['rm', 'control.in'])
-subprocess.check_call(['rm', 'geometry.in'])
-subprocess.check_call(['rm', 'parameters.ase'])
+
 # Return to examples directory
 os.chdir(path=examples_directory)
 

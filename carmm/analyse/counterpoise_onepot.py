@@ -1,4 +1,4 @@
-def counterpoise_calc(complex_struc, a_id, b_id, symbol_not_index, fhi_calc=None, a_name='A', b_name='B',
+def counterpoise_calc(complex_struc, a_id, b_id, fhi_calc=None, a_name='A', b_name='B',
                       verbose=False, dry_run=False):
     """
     This function does counterpoise (CP) correction in one go, assuming a binding complex AB.
@@ -19,38 +19,43 @@ def counterpoise_calc(complex_struc, a_id, b_id, symbol_not_index, fhi_calc=None
         a_id: list of atom symbols or atom indices for species A
         b_id: list of atom symbols or atom indices for species B
             Please use both symbols or both indices for a_id and b_id.
-        symbol_not_index: bool
-            This indicates whether symbols are used.
         fhi_calc: ase.calculators.aims.Aims object
             A FHI_aims calculator constructed with ase Aims
-        a_name: The name of the first species for your counterpoise correction, which has symbol (or index) a_id.
-        b_name: The name of the second species for your counterpoise correction, which has symbol (or index) b_id.
+        a_name: optional.
+        b_name: optional.
+            The name of the two species for your counterpoise correction, which has symbol (or index) a_id and b_id.
         verbose: Flag for printing output.
         dry_run: bool
             Flag for test run (CI-test)
 
-    Returns: counterpoise correction value for basis set superposition error
+    Returns: float. counterpoise correction value for basis set superposition error
     """
     # Checking if a_id and b_id are mapped correctly
     if not (isinstance(a_id, list) and isinstance(b_id, list)):
         raise TypeError('Please supply a_id and b_id as list.')
 
-    if symbol_not_index:
-        if (False in [isinstance(i, str) for i in a_id]) or (False in [isinstance(i, str) for i in b_id]):
-            raise TypeError('An item in a_id or b_id is not a string while you specified using symbols')
-        elif False in [atom.symbol in a_id+b_id for atom in complex_struc]:
-            raise RuntimeError('There is a symbol missing in a_id or b_id')
-    else:
-        if (False in [isinstance(i, int) for i in a_id]) or (False in [isinstance(i, int) for i in b_id]):
-            raise TypeError('An item in a_id or b_id is not an integer while you specified using indices')
-        elif False in [atom.index in a_id+b_id for atom in complex_struc]:
-            raise RuntimeError('There is an index missing in a_id or b_id')
+    id_type = type(a_id[0])
+
+    for some_id in a_id + b_id:
+        if not isinstance(some_id, id_type):
+            raise RuntimeError("a_id and b_id should be either lists of indices or lists of strings")
+
+    if id_type is str:
+        symbol_not_index = True
+        if len(a_id + b_id) == len(complex_struc.symbols):
+            raise RuntimeError("The number of symbols are not the same as in the complex")
+    elif id_type is int:
+        symbol_not_index = False
+        if len(a_id + b_id) == len(complex_struc):
+            raise RuntimeError("The number of indices are not the same as in the complex")
 
     species_list = [f'{a_name}_only', f'{a_name}_plus_ghost', f'{b_name}_only', f'{b_name}_plus_ghost']
 
     energies = []
-    ghosts_cp = get_ghosts(complex_struc=complex_struc, a_id=a_id, b_id=b_id, symbol_not_index=symbol_not_index)
-    structures_cp = get_structures(complex_struc=complex_struc, a_id=a_id, b_id=b_id, symbol_not_index=symbol_not_index)
+    # This stores bool lists which indicates if an atom is ghost for each species in the order of
+    # ['A_only', 'A_plus_ghost', 'B_only', 'B_plus_ghost']
+    ghosts_cp = get_which_are_ghosts(complex_struc, a_id, b_id, symbol_not_index)
+    structures_cp = get_structures(complex_struc, a_id, b_id, symbol_not_index)
     for index in range(4):
         if 'compute_forces' in fhi_calc.parameters:
             fhi_calc.parameters.pop('compute_forces')
@@ -73,9 +78,9 @@ def counterpoise_calc(complex_struc, a_id, b_id, symbol_not_index, fhi_calc=None
     return cp_corr
 
 
-def get_ghosts(complex_struc, a_id, b_id, symbol_not_index):
+def get_which_are_ghosts(complex_struc, a_id, b_id, symbol_not_index):
     """
-        This function generates bool lists for writing ghosts input for counterpoise correction in one go,
+        This function generates bool lists for writing geometry.in files for counterpoise correction in one go,
         assuming a binding complex AB.
         Parameters:
             complex_struc: ASE Atoms
@@ -86,29 +91,17 @@ def get_ghosts(complex_struc, a_id, b_id, symbol_not_index):
             symbol_not_index: bool
                 This indicates whether symbols are used.
 
-        Returns: list of ghosts for each species used in counterpoise correction
+        Returns: A list of bool list for each species (Ghost atom is true; Real atom is False).
         """
 
-    species_list = ['A_only', 'A_plus_ghost', 'B_only', 'B_plus_ghost']
-    ghosts_cp = []  # This stores indices of ghost atoms for each species
-    for species in species_list:
-        binding_complex = complex_struc
-
-        if 'only' in species:
-            ghost_list = None
-        else:
-            if 'A' in species:
-                ghost_id = b_id
-            elif 'B' in species:
-                ghost_id = a_id
-
-            if symbol_not_index:
-                ghost_list = [atom.symbol in ghost_id for atom in binding_complex]
-            else:
-                ghost_list = [atom.index in ghost_id for atom in binding_complex]
-
-        ghosts_cp.append(ghost_list)
-
+    # This stores bool lists which indicates if an atom is ghost for each species in the order of
+    # ['A_only', 'A_plus_ghost', 'B_only', 'B_plus_ghost']
+    if symbol_not_index:
+        ghosts_cp = [None, [atom.symbol in b_id for atom in complex_struc],
+                     None, [atom.symbol in a_id for atom in complex_struc]]
+    else:
+        ghosts_cp = [None, [atom.index in b_id for atom in complex_struc],
+                     None, [atom.index in a_id for atom in complex_struc]]
     return ghosts_cp
 
 
@@ -126,38 +119,22 @@ def get_structures(complex_struc, a_id, b_id, symbol_not_index):
         """
     from copy import deepcopy
 
-    species_list = ['A_only', 'A_plus_ghost', 'B_only', 'B_plus_ghost']
-    structures_cp = []
-    for species in species_list:
-        binding_complex = deepcopy(complex_struc)
-        binding_complex.set_constraint()
-        if 'ghost' in species:
-            structures_cp.append(binding_complex)
-        elif 'only' in species:
-
-            if 'A' in species:
-                del_id = b_id
-            elif 'B' in species:
-                del_id = a_id
-
-            if symbol_not_index:
-                del_list = [atom.index for atom in binding_complex if atom.symbol in del_id]
-            else:
-                del_list = del_id
-
-            del binding_complex[del_list]
-
-            structures_cp.append(binding_complex)
+    # This stores the atoms objects used in cp correction in the order of
+    # ['A_only', 'A_plus_ghost', 'B_only', 'B_plus_ghost']
+    structures_cp = [deepcopy(complex_struc)] * 4
+    # Convert a_id and b_id to index
+    if symbol_not_index:
+        b_id = [atom.index for atom in complex_struc if atom.symbol in b_id]
+        a_id = [atom.index for atom in complex_struc if atom.symbol in a_id]
+    del structures_cp[0][b_id]
+    del structures_cp[2][a_id]
 
     return structures_cp
 
 
-all_changes = ['positions', 'numbers', 'cell', 'pbc',
-               'initial_charges', 'initial_magmoms']
-
-
-def ghost_calculate(calc, atoms=None, properties=['energy'],
-                    system_changes=all_changes, ghosts=None, dry_run=False):
+def ghost_calculate(calc, atoms=None, properties=['energy'], system_changes=['positions', 'numbers', 'cell', 'pbc',
+                                                                             'initial_charges', 'initial_magmoms'],
+                    ghosts=None, dry_run=False):
     """
     This is a modified version of ase.calculators.calculator.FileIOCalculator.calculate to make ghost atoms work
     Args:
