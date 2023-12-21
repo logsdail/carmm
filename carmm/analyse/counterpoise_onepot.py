@@ -1,4 +1,4 @@
-def counterpoise_calc(complex_struc, a_id, b_id, fhi_calc=None, a_name='A', b_name='B',
+def counterpoise_calc(complex_struc, a_id, b_id, fhi_calc=None, a_name=None, b_name=None,
                       verbose=False, dry_run=False):
     """
     This function does counterpoise (CP) correction in one go, assuming a binding complex AB.
@@ -41,35 +41,42 @@ def counterpoise_calc(complex_struc, a_id, b_id, fhi_calc=None, a_name='A', b_na
             raise RuntimeError("a_id and b_id should be either lists of indices or lists of strings")
 
     if id_type is str:
-        symbol_not_index = True
-        if len(a_id + b_id) == len(complex_struc.symbols):
+        if len(a_id + b_id) != len(complex_struc.symbols):
             raise RuntimeError("The number of symbols are not the same as in the complex")
+        # Convert symbols to indices
+        a_id = [atom.index for atom in complex_struc if atom.symbol in a_id]
+        b_id = [atom.index for atom in complex_struc if atom.symbol in b_id]
     elif id_type is int:
-        symbol_not_index = False
-        if len(a_id + b_id) == len(complex_struc):
+        if len(a_id + b_id) != len(complex_struc):
             raise RuntimeError("The number of indices are not the same as in the complex")
 
+    # Collect info for input files of A_only, A_plus_ghost, B_only, and B_plus_ghost
+    # Get bool lists where a ghost atom is True and a real atom is false
+    # Delete B(A) for A(B)_only
+    ghosts_lists_cp, structures_cp = gather_info_for_write_input(complex_struc, a_id, b_id)
+
+    # a_name and b_name are default as atoms.symbols
+    if a_name is None or b_name is None:
+        a_name = str(structures_cp[0].symbols)
+        b_name = str(structures_cp[2].symbols)
+    # Output names
     species_list = [f'{a_name}_only', f'{a_name}_plus_ghost', f'{b_name}_only', f'{b_name}_plus_ghost']
 
+    if 'compute_forces' in fhi_calc.parameters:
+        fhi_calc.parameters.pop('compute_forces')
+    # Create an empty list to store energies for postprocessing.
     energies = []
-    # This stores bool lists which indicates if an atom is ghost for each species in the order of
-    # ['A_only', 'A_plus_ghost', 'B_only', 'B_plus_ghost']
-    ghosts_cp = get_which_are_ghosts(complex_struc, a_id, b_id, symbol_not_index)
-    structures_cp = get_structures(complex_struc, a_id, b_id, symbol_not_index)
     for index in range(4):
-        if 'compute_forces' in fhi_calc.parameters:
-            fhi_calc.parameters.pop('compute_forces')
         fhi_calc.outfilename = species_list[index] + '.out'
         structures_cp[index].calc = fhi_calc
-        ghost_calculate(calc=structures_cp[index].calc, atoms=structures_cp[index], ghosts=ghosts_cp[index],
-                        dry_run=dry_run)
+        # Run the calculation. A workaround. Default calculate function doesn't work with ghost atoms.
+        calculate_energy_ghost_compatible(calc=structures_cp[index].calc, atoms=structures_cp[index],
+                                          ghosts=ghosts_lists_cp[index], dry_run=dry_run)
+        # Get the energy from the converged output.
         energy_i = structures_cp[index].get_potential_energy()
         energies.append(energy_i)
 
-    # This could be done easily without an extra ghost_calculate function if we have the same version of ASE on Gitlab,
-    # where ghosts can be specified while constructing the calculator.
-
-    # Counterpoise correction for basis set superposition error
+    # Counterpoise correction for basis set superposition error. See docstring for the formula.
     cp_corr = energies[0] + energies[2] - energies[1] - energies[3]
 
     if verbose:
@@ -78,68 +85,57 @@ def counterpoise_calc(complex_struc, a_id, b_id, fhi_calc=None, a_name='A', b_na
     return cp_corr
 
 
-def get_which_are_ghosts(complex_struc, a_id, b_id, symbol_not_index):
+def gather_info_for_write_input(atoms, a_id, b_id):
     """
-        This function generates bool lists for writing geometry.in files for counterpoise correction in one go,
-        assuming a binding complex AB.
-        Parameters:
-            complex_struc: ASE Atoms
-                This is the Atoms object which stores the optimized structure of the binding complex
-            a_id: list of atom symbols or atom indices for species A
-            b_id: list of atom symbols or atom indices for species B
-                Please use both symbols or both indices for a_id and b_id.
-            symbol_not_index: bool
-                This indicates whether symbols are used.
-
-        Returns: A list of bool list for each species (Ghost atom is true; Real atom is False).
-        """
-
-    # This stores bool lists which indicates if an atom is ghost for each species in the order of
-    # ['A_only', 'A_plus_ghost', 'B_only', 'B_plus_ghost']
-    if symbol_not_index:
-        ghosts_cp = [None, [atom.symbol in b_id for atom in complex_struc],
-                     None, [atom.symbol in a_id for atom in complex_struc]]
-    else:
-        ghosts_cp = [None, [atom.index in b_id for atom in complex_struc],
-                     None, [atom.index in a_id for atom in complex_struc]]
-    return ghosts_cp
-
-
-def get_structures(complex_struc, a_id, b_id, symbol_not_index):
+    This function collects info for writing input files for A_only, A_plus_ghost, B_only, and B_plus_ghost
+    The geometry.in files are written with ase.io.aims.write_aims.
+    For species with ghost atoms, write_aims needs a bool list for the keyword argument "ghosts",
+    where a ghost atom is True and a normal atom is False.
+    Parameters:
+        atoms: ASE atoms object. The complex.
+        a_id: indices for A
+        b_id: indices for B
+    Returns:
+        A list of four bool lists (Ghost atom is True; Real atom is False)
+        A list of atoms objects
+        Both in the order of A_only, A_plus_ghost, B_only, B_plus_ghost.
     """
-        This function generates a list of atoms objects for counterpoise correction, assuming a binding complex AB.
-        Parameters:
-            complex_struc: ASE Atoms
-                This is the Atoms object which stores the optimized structure of the binding complex
-            a_id: list of atom symbols or atom indices for species A
-            b_id: list of atom symbols or atom indices for species B
-                Please use both symbols or both indices for a_id and b_id.
-            symbol_not_index: bool
-                This indicates whether symbols are used.
-        """
+
+    # Determine whether an atom is ghost atom or not.
+    ghosts_cp = [None, [atom.index in b_id for atom in atoms],
+                 None, [atom.index in a_id for atom in atoms]]
+    # A list of four bool lists. For ?_only, the value is None.
+    # For ?_plus_ghost, the bool list has the same length as complex_struc. (Ghost atom is True; Real atom is False)
+    # Order: A_only, A_plus_ghost, B_only, B_plus_ghost
+
     from copy import deepcopy
+    # Prepare atoms objects. Delete A or B as appropriate
+    a_only = deepcopy(atoms)
+    del a_only[b_id]  # Delete B from the complex.
+    b_only = deepcopy(atoms)
+    del b_only[a_id]  # Delete A from the complex.
+    structures_cp = [a_only, atoms, b_only, atoms]
+    # Order: A_only, A_plus_ghost, B_only, B_plus_ghost
+    # ?_plus_ghost use the same atoms object as the complex
 
-    # This stores the atoms objects used in cp correction in the order of
-    # ['A_only', 'A_plus_ghost', 'B_only', 'B_plus_ghost']
-    structures_cp = [deepcopy(complex_struc)] * 4
-    # Convert a_id and b_id to index
-    if symbol_not_index:
-        b_id = [atom.index for atom in complex_struc if atom.symbol in b_id]
-        a_id = [atom.index for atom in complex_struc if atom.symbol in a_id]
-    del structures_cp[0][b_id]
-    del structures_cp[2][a_id]
-
-    return structures_cp
+    return ghosts_cp, structures_cp
 
 
-def ghost_calculate(calc, atoms=None, properties=['energy'], system_changes=['positions', 'numbers', 'cell', 'pbc',
-                                                                             'initial_charges', 'initial_magmoms'],
-                    ghosts=None, dry_run=False):
+def calculate_energy_ghost_compatible(calc, atoms=None, properties=['energy'],
+                                      system_changes=['positions', 'numbers', 'cell', 'pbc',
+                                                      'initial_charges', 'initial_magmoms'],
+                                      ghosts=None, dry_run=False):
     """
     This is a modified version of ase.calculators.calculator.FileIOCalculator.calculate to make ghost atoms work
+    Do the calculation and read the results.
+
+    This is a workaround. The same could be done easily if we were using the same version of ASE on Gitlab.
+    The Aims calculator were rewritten where ghosts can be specified while constructing the calculator
+    (not available in current release)
+
     Args:
-        calc: fhi_aims calculator constructed by ase
-        atoms: ASE atoms object for counterpoise correction
+        calc: fhi_aims calculator constructed by ASE
+        atoms: ASE atoms object
         properties: list of str. properties to be calculated, default is energy. See original function
         system_changes: list of str. See original function.
         ghosts: bool list. Ghost is Ture and Atom is False. The length is the same as atoms.
@@ -151,7 +147,7 @@ def ghost_calculate(calc, atoms=None, properties=['energy'], system_changes=['po
     Calculator.calculate(calc, atoms, properties, system_changes)
     calc.write_input(calc.atoms, properties, system_changes, ghosts=ghosts)
     command = calc.command
-    if dry_run:
+    if dry_run:  # Only for CI tests
         command = 'ls'
     subprocess.check_call(command, shell=True, cwd=calc.directory)
     calc.read_results()
