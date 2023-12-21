@@ -1,7 +1,8 @@
 def counterpoise_calc(complex_struc, a_id, b_id, fhi_calc=None, a_name=None, b_name=None,
                       verbose=False, dry_run=False):
     """
-    This function does counterpoise (CP) correction in one go, assuming a binding complex AB.
+    This function does counterpoise (CP) correction for basis set super position error (BSSE) in one go,
+    assuming a binding complex AB.
 
     CP correction = A_only + B_only - A_plus_ghost - B_plus_ghost
     A_only has A in the geometry of the binding complex with its own basis
@@ -10,8 +11,12 @@ def counterpoise_calc(complex_struc, a_id, b_id, fhi_calc=None, a_name=None, b_n
     such as adsorption energy.
 
     Some references:
-    Szalewicz, K., & Jeziorski, B. (1998). The Journal of Chemical Physics, 109(3), 1198–1200.
+    1. Szalewicz, K., & Jeziorski, B. (1998). The Journal of Chemical Physics, 109(3), 1198–1200.
     https://doi.org/10.1063/1.476667
+
+    2. Galano, A., & Alvarez-Idaboy, J. R. (2006). Journal of Computational Chemistry, 27(11), 1203–1210.
+    https://doi.org/10.1002/JCC.20438
+    (See the second paragraph in the introduction for a good explanation of why BSSE arises)
 
     Parameters:
         complex_struc: ASE Atoms
@@ -21,8 +26,8 @@ def counterpoise_calc(complex_struc, a_id, b_id, fhi_calc=None, a_name=None, b_n
             Please use both symbols or both indices for a_id and b_id.
         fhi_calc: ase.calculators.aims.Aims object
             A FHI_aims calculator constructed with ase Aims
-        a_name: optional.
-        b_name: optional.
+        a_name: string. optional.
+        b_name: string. optional.
             The name of the two species for your counterpoise correction, which has symbol (or index) a_id and b_id.
         verbose: Flag for printing output.
         dry_run: bool
@@ -30,25 +35,8 @@ def counterpoise_calc(complex_struc, a_id, b_id, fhi_calc=None, a_name=None, b_n
 
     Returns: float. counterpoise correction value for basis set superposition error
     """
-    # Checking if a_id and b_id are mapped correctly
-    if not (isinstance(a_id, list) and isinstance(b_id, list)):
-        raise TypeError('Please supply a_id and b_id as list.')
-
-    id_type = type(a_id[0])
-
-    for some_id in a_id + b_id:
-        if not isinstance(some_id, id_type):
-            raise RuntimeError("a_id and b_id should be either lists of indices or lists of strings")
-
-    if id_type is str:
-        if len(a_id + b_id) != len(complex_struc.symbols):
-            raise RuntimeError("The number of symbols are not the same as in the complex")
-        # Convert symbols to indices
-        a_id = [atom.index for atom in complex_struc if atom.symbol in a_id]
-        b_id = [atom.index for atom in complex_struc if atom.symbol in b_id]
-    elif id_type is int:
-        if len(a_id + b_id) != len(complex_struc):
-            raise RuntimeError("The number of indices are not the same as in the complex")
+    # Check if a_id and b_id are mapped correctly and convert symbols to indices
+    a_id, b_id = check_and_convert_id(complex_struc, a_id, b_id)
 
     # Collect info for input files of A_only, A_plus_ghost, B_only, and B_plus_ghost
     # Get bool lists where a ghost atom is True and a real atom is false
@@ -62,6 +50,7 @@ def counterpoise_calc(complex_struc, a_id, b_id, fhi_calc=None, a_name=None, b_n
     # Output names
     species_list = [f'{a_name}_only', f'{a_name}_plus_ghost', f'{b_name}_only', f'{b_name}_plus_ghost']
 
+    # Empty sites does not work with forces. Remove compute_forces.
     if 'compute_forces' in fhi_calc.parameters:
         fhi_calc.parameters.pop('compute_forces')
     # Create an empty list to store energies for postprocessing.
@@ -85,14 +74,50 @@ def counterpoise_calc(complex_struc, a_id, b_id, fhi_calc=None, a_name=None, b_n
     return cp_corr
 
 
-def gather_info_for_write_input(atoms, a_id, b_id):
+def check_and_convert_id(complex_struc, a_id, b_id):
+    """
+    This function checks if a_id and b_id are supplied correctly (lists of indices or lists of strings),
+    and convert symbols to indices.
+    Args:
+        complex_struc: see counterpoise_calc
+        a_id:  see counterpoise_calc
+        b_id:  see counterpoise_calc
+
+    Returns:
+        a_id, b_id. Two lists of indices for A and B, respectively.
+
+    """
+    # Checking if a_id and b_id are mapped correctly
+    if not (isinstance(a_id, list) and isinstance(b_id, list)):
+        raise TypeError('Please supply a_id and b_id as list.')
+
+    id_type = type(a_id[0])
+
+    for some_id in a_id + b_id:
+        if not isinstance(some_id, id_type):
+            raise RuntimeError("a_id and b_id should be either lists of indices or lists of strings")
+
+    if id_type is str:
+        if len(a_id + b_id) != len(complex_struc.symbols):
+            raise RuntimeError("The number of symbols are not the same as in the complex")
+        # Convert symbols to indices
+        a_id = [atom.index for atom in complex_struc if atom.symbol in a_id]
+        b_id = [atom.index for atom in complex_struc if atom.symbol in b_id]
+    elif id_type is int:
+        if len(a_id + b_id) != len(complex_struc):
+            raise RuntimeError("The number of indices are not the same as in the complex")
+
+    return a_id, b_id
+
+
+def gather_info_for_write_input(complex_struc, a_id, b_id):
     """
     This function collects info for writing input files for A_only, A_plus_ghost, B_only, and B_plus_ghost
     The geometry.in files are written with ase.io.aims.write_aims.
     For species with ghost atoms, write_aims needs a bool list for the keyword argument "ghosts",
     where a ghost atom is True and a normal atom is False.
     Parameters:
-        atoms: ASE atoms object. The complex.
+        complex_struc: The complex. See counterpoise_calc.
         a_id: indices for A
         b_id: indices for B
     Returns:
@@ -102,19 +127,19 @@ def gather_info_for_write_input(atoms, a_id, b_id):
     """
 
     # Determine whether an atom is ghost atom or not.
-    ghosts_cp = [None, [atom.index in b_id for atom in atoms],
-                 None, [atom.index in a_id for atom in atoms]]
+    ghosts_cp = [None, [atom.index in b_id for atom in complex_struc],
+                 None, [atom.index in a_id for atom in complex_struc]]
     # A list of four bool lists. For ?_only, the value is None.
     # For ?_plus_ghost, the bool list has the same length as complex_struc. (Ghost atom is True; Real atom is False)
     # Order: A_only, A_plus_ghost, B_only, B_plus_ghost
 
     from copy import deepcopy
     # Prepare atoms objects. Delete A or B as appropriate
-    a_only = deepcopy(atoms)
+    a_only = deepcopy(complex_struc)
     del a_only[b_id]  # Delete B from the complex.
-    b_only = deepcopy(atoms)
+    b_only = deepcopy(complex_struc)
     del b_only[a_id]  # Delete A from the complex.
-    structures_cp = [a_only, atoms, b_only, atoms]
+    structures_cp = [a_only, complex_struc, b_only, complex_struc]
     # Order: A_only, A_plus_ghost, B_only, B_plus_ghost
     # ?_plus_ghost use the same atoms object as the complex
 
