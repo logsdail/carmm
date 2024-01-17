@@ -107,10 +107,10 @@ def _get_cpu_command(hpc, nodes_per_instance=None):
         import os
         
         # Placed inside try/except to work when environment variables aren't defined
-        try: requested_tasks = os.environ["SLURM_NTASKS"]
+        try: requested_tasks = int(os.environ["SLURM_NTASKS"])
         except: requested_tasks = hpc_settings[hpc]["cpus_per_node"]
 
-        try: requested_nodes = os.environ["SLURM_NNODES"]
+        try: requested_nodes = int(os.environ["SLURM_NNODES"])
         except: requested_nodes = 1
 
         # Check if using a full node, for efficiency
