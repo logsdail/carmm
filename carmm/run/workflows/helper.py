@@ -11,31 +11,55 @@ class CalculationHelper:
                  filename: str,
                  restart=True,
                  verbose=True):
+        '''
+        Args:
+            calc_type: str
+                Define calculation type to choose the setup and restart routine. Valid choices are currently:
+                "Opt", "Charges", "TS". Note that vibration calculations are not currently governed by the
+                Calculation Helper.
+            parent_dir: str
+                The parent directory of each CalculationHelper instance is be controlled be setting the parent_dir
+                excplicitly, this is subsequently used for detecting previous calculations in restart_setup().
+            filename: str
+                String containing the name of the file to be used for detecting restarts and setting up working
+                directories.
+            restart: bool
+                Attempt to restart the calculation by looking through detected previous working directories and
+                reading the relevant files. If False, a new calculation will be restarted from scratch.
+            verbose: bool
+                Control the verbosity of the calculation setup by turning on (True) or off (False).
+        '''
 
+        '''Set properties of the CalculationHelper object'''
         self.calc_type = calc_type
         self.parent_dir = parent_dir
         self.filename = filename
         self.restart = restart
         self.verbose = verbose
         self.counter = 0
+
+        '''Placeholders for properties retrieved from TS calculations'''
         self.prev_calcs = None
         self.interpolation = None
 
     def _find_restart(self):
-        """
+        '''
         A function searching for previous converged calculations based on the calculation type in self.calc_type and
         the naming convention based on self.filename.
 
         Returns:
             For self.calc_type in ["Opt", "Charges"] returns an Atoms object
             For self.calc_type == "TS" returns a list of Atoms object
-        """
+        '''
         import os
         from ase.io import read
 
         restart_found = False
         initial = None
+
+        '''Iterate over folders found based on the naming convention'''
         while not restart_found and self.counter > 0:
+
             subdirectory_name_previous = f"{self.calc_type}_{self.filename}_{self.counter - 1}"
 
             # Handle different types of calculations
@@ -49,6 +73,7 @@ class CalculationHelper:
                 traj_name = os.path.join(subdirectory_name_previous,
                                          f"{self.counter - 1}_{self.filename}_{opt_restarts - 1}.traj")
 
+                '''Iterate over traj_name Trajectory files found inside the working directories'''
                 while os.path.exists(traj_name) and not restart_found:
                     if os.path.getsize(traj_name):
                         if self.verbose:
@@ -71,7 +96,8 @@ class CalculationHelper:
                         restart_found = True
 
             elif self.calc_type == "TS":
-
+                '''Initialize a list for starting configurations files in initial. The initial[0] and initial[1] 
+                correspond to converged and unconverged minimum_energy_paths, respectively.'''
                 initial = [None, None]
                 traj_name = f"{subdirectory_name_previous}/ML-NEB.traj"
                 if os.path.exists(traj_name):
