@@ -8,19 +8,19 @@ def test_povray_render():
     from carmm.analyse.povray_render import povray_render, atom_sub
     from ase.io import read
     import numpy as np
-    from ase.data import covalent_radii
+    from ase.data import covalent_radii, atomic_numbers
+    from ase.data.colors import jmol_colors
 
     # Main example script
     atoms = read('data/NH3-H3O_traj/nh3-h3o.traj')
 
-    # An alternative to substituting atoms: changing the colour of specific elements
-    # Use "'colors': None," for default colours
+    # An alternative to substituting atoms: changing the colour of specific elements (use any of the below methods)
+    # Use "'colors': None," for all default colours
     color_dict = {
-        'H': [255, 255, 255],
-        'N': [48, 80, 248],
-        'O': [255, 13, 13],
+        'H': np.array([255, 255, 255])/255,  # 1. RGB colours converted to between 0 and 1
+        'N': jmol_colors[atomic_numbers['N']],  # 2. Use default jmol_colours in ASE
+        # 3. Don't specify atom color: function will automatically use default jmol_colors in ASE
     }
-    colors = np.array([color_dict[atom.symbol] for atom in atoms])/255  # RGB colours between 0 and 1
 
     radius_scale = 0.8
     radius_list = []
@@ -33,7 +33,7 @@ def test_povray_render():
     generic_projection_settings = {
         'rotation': '90x,80y,90z',
         'radii': radius_list,
-        'colors': colors,
+        'colors': color_dict,
     }
 
     povray_settings = {
@@ -53,11 +53,13 @@ def test_povray_render():
                                                generic_projection_settings=generic_projection_settings,
                                                povray_settings=povray_settings)
 
-    assert gen_proj_sett == {
-        'rotation': '90x,80y,90z',
-        'radii': radius_list,
-        'colors': colors,
-    }
+
+    assert gen_proj_sett['rotation'] == '90x,80y,90z'
+    assert gen_proj_sett['radii'] == radius_list
+    np.testing.assert_almost_equal(gen_proj_sett['colors']['H'], np.array([1, 1, 1]), decimal=3)
+    np.testing.assert_almost_equal(gen_proj_sett['colors']['N'], np.array([0.188, 0.314, 0.973]), decimal=3)
+    np.testing.assert_almost_equal(gen_proj_sett['colors']['O'], np.array([1, 0.051, 0.051]), decimal=3)
+
 
     assert povray_sett == {
         'camera_type': 'orthographic angle 7',
