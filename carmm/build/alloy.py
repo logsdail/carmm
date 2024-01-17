@@ -1,3 +1,5 @@
+from ase import Atoms
+
 def binary_alloy(model, second_element, n_second_element, random_level=1):
     '''
     Setup a random alloy
@@ -129,3 +131,33 @@ def ternary_alloy(model, second_element, third_element, n_second_element, n_thir
 
     return new_model
    
+
+def get_SAA_surfaces(surface_slab: Atoms, SAA_elements: list, substitution_indices: list, include_pristine: bool):
+    '''Generate a list of single atom alloy (SSA) surfaces as Atoms objects. SSA surfaces contain substitutions
+    as combinations of chemical symbols without replacement based on the list of chemical species listed in
+    SAA_elements
+
+    Args:
+        surface: Atoms object
+        substitution_indices: list of int
+        include_pristine: bool
+
+    Returns:
+        list of Atoms objects
+    '''
+    from itertools import combinations
+
+    element_combinations = [combo for combo in combinations(SAA_elements, len(substitution_indices))]
+    list_of_SAAs = [surface_slab.copy() for element_pair in range(len(element_combinations))]
+
+    for _, elements in enumerate(element_combinations):
+        symbols = list_of_SAAs[_].symbols
+        for __, sub_index in enumerate(substitution_indices):
+            symbols[sub_index] = elements[__]
+
+        list_of_SAAs[_].symbols = symbols
+
+    if include_pristine:
+        list_of_SAAs.append(surface_slab.copy())
+
+    return list_of_SAAs
