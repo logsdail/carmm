@@ -47,9 +47,7 @@ def povray_render(atoms, output='povray', view=False, atom_subs=None,
         for atom in atoms:
             sym = atom.symbol
             if sym not in generic_projection_settings['colors']:
-                generic_projection_settings['colors'][sym] = jmol_colors[atomic_numbers(sym)]
-
-    print(generic_projection_settings['colors'])
+                generic_projection_settings['colors'][sym] = jmol_colors[atomic_numbers[sym]]
 
     if povray_settings is None:
         povray_settings = {}
