@@ -33,8 +33,8 @@ def test_build_alloy():
     from carmm.build.alloy import get_SAA_surfaces
     SAA_elements = ['Ag', 'Au', 'Cu', 'Pd', 'Ni', 'Ti']
     substitution_indices = [13, 16]
-    SSA_surfaces = get_SAA_surfaces(slab, SAA_elements, substitution_indices, include_pristine=True)
+    SAA_surfaces = get_SAA_surfaces(slab, SAA_elements, substitution_indices, include_pristine=True)
 
-    assert len(SSA_surfaces) == 16
+    assert len(SAA_surfaces) == 16
 
 test_build_alloy()
