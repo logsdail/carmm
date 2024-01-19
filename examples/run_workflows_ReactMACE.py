@@ -34,5 +34,7 @@ def test_run_workflows_ReactAims():
     assert is_converged(reactor.model_optimised, 0.01), \
         '''The structure saved in React_Aims is not converged'''
 
+    os.chdir(parent_dir)
+
 
 test_run_workflows_ReactAims()
