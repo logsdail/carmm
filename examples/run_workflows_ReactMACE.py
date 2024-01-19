@@ -24,7 +24,7 @@ def test_run_workflows_ReactAims():
     atoms = molecule('H2')
 
     '''Build the React_Aims object using the set of settings'''
-    reactor = ReactMACE(params)
+    reactor = ReactMACE(params, dry_run=True)
 
     '''Call relevant calculations'''
     '''The below has been previously calculated and data is retrieved from saved trajectories'''

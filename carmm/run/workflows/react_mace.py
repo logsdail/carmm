@@ -4,7 +4,7 @@ from ase.io import read
 from ase.optimize import BFGS
 from carmm.run.workflows.helper import CalculationHelper
 from carmm.analyse.forces import is_converged
-from mace.calculators import mace_mp
+# from mace.calculators import mace_mp
 import os
 
 class ReactMACE:
