@@ -133,7 +133,7 @@ def ternary_alloy(model, second_element, third_element, n_second_element, n_thir
    
 
 def get_SAA_surfaces(surface_slab: Atoms, SAA_elements: list, substitution_indices: list, include_pristine: bool):
-    '''Generate a list of single atom alloy (SSA) surfaces as Atoms objects. SSA surfaces contain substitutions
+    '''Generate a list of single atom alloy (SSA) surfaces as Atoms objects. SAA surfaces contain substitutions
     as combinations of chemical symbols without replacement based on the list of chemical species listed in
     SAA_elements
 
