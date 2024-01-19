@@ -1,3 +1,4 @@
+# Author: Igor Kowalec
 '''
 This example shows how to use the work flow functionality with CARMM to optimise
 reactants/products and find transition states in an automated manner using the MACE-MP force field.

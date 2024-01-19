@@ -1,3 +1,4 @@
+# Author: Igor Kowalec
 from ase import Atoms
 from ase.calculators.emt import EMT
 from ase.io import read
@@ -18,6 +19,8 @@ class ReactMACE:
         > pip install --upgrade pip
         > pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118
         > pip install mace-torch
+
+    When installed, uncomment the import in line 8
     '''
 
     def __init__(self,
@@ -81,7 +84,7 @@ class ReactMACE:
     def _perform_optimization(self, subdirectory_name: str, out: str, counter: int, fmax: float,
                               relax_unit_cell: bool):
         """
-        An internal function used in aims_optimise to resolve the working directoryand perform the optimisation
+        An internal function used in mace_optimise to resolve the working directory and perform the optimisation
         calculation of a given structure.
 
         Args:
