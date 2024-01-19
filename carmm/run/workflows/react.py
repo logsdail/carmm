@@ -44,7 +44,7 @@ class ReactAims:
             dry_run: bool
                 A dry run flag for CI-test
             verbose: bool
-                Enables the the verbosity of the performed operations
+                Enables the verbosity of the performed operations
 
         Returns ReactAims object
         """
@@ -120,7 +120,7 @@ class ReactAims:
 
     def _initialize_parameters(self, atoms):
         """
-        Internal function for obtainining periodic boundary conditions from the provided Atoms object and generating
+        Internal function for obtaining periodic boundary conditions from the provided Atoms object and generating
          a filename if necessary. Values are then assigned to self.
 
         Args:
@@ -135,7 +135,7 @@ class ReactAims:
 
     def _perform_optimization(self, subdirectory_name: str, out: str, counter: int, fmax: float, relax_unit_cell: bool):
         """
-        An internal function used in aims_optimise to resolve the working directoryand perform the optimisation
+        An internal function used in aims_optimise to resolve the working directory and perform the optimisation
         calculation of a given structure.
 
         Args:

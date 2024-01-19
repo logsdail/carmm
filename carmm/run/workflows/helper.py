@@ -1,9 +1,9 @@
 # Author: Igor Kowalec
 
 class CalculationHelper:
-    """
+    '''
     A class for aiding setup of DFT calculations in an ASE/i-Pi/FHI-aims configuration using carmm.run.workflows.react.
-    """
+    '''
 
     def __init__(self,
                  calc_type: str,
