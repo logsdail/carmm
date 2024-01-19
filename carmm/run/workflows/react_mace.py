@@ -4,7 +4,7 @@ from ase.io import read
 from ase.optimize import BFGS
 from carmm.run.workflows.helper import CalculationHelper
 from carmm.analyse.forces import is_converged
-# from mace.calculators import mace_mp
+# from mace.calculators import mace_mp as calculator
 import os
 
 class ReactMACE:
@@ -99,10 +99,13 @@ class ReactMACE:
         if not is_converged(self.initial, fmax):
             os.makedirs(subdirectory_name, exist_ok=True)
 
+            if self.dry_run:
+                calculator = EMT
+
             if not self.dry_run:
-                self.initial.calc = mace_mp(**self.params)
+                self.initial.calc = calculator(**self.params)
             else:
-                self.initial.calc = EMT()
+                self.initial.calc = calculator()
 
             while not is_converged(self.initial, fmax):
                 traj_name = f"{subdirectory_name}/{str(counter)}_{self.filename}_{str(opt_restarts)}.traj"
