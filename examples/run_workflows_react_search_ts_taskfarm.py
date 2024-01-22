@@ -1,7 +1,7 @@
 '''
 This example shows how to use the work flow functionality with CARMM to optimise
-reactants/products and find transition states in an automated manner.
-
+reactants/products and find transition states in an automated manner using task-farming
+in an ASE/i-Pi/FHI-aims setup
 '''
 
 
@@ -37,12 +37,11 @@ def test_run_workflows_react_ts_taskfarm():
 
     '''Adjust reciprocal space s2mpling for surface models'''
     reactor.params["k_grid"] = (2, 2, 1)
-
     '''Filename based on chemical formula by default'''
     reactor.filename = None
 
     '''TS input - Provide initial optimised image and one not converged - check using input_check. 
-    Calculate the Transition State using ML-NEB'''
+    Calculate the Transition State'''
     final = initial.copy()
     final[-1].x += final.get_cell()[0, 0] / 2
 
