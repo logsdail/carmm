@@ -1,4 +1,4 @@
-def set_aims_command(hpc='hawk', basis_set='light', defaults=2010, nodes_per_instance=None):
+def set_aims_command(hpc='hawk', basis_set='light', defaults=2010, nodes_per_instance=None, override_cpu_population_warning=False):
     """
     Choose supercomputer and basis_set to obtain FHI-aims run command.
     Can be useful to e.g. perform a calculation with a larger basis set
@@ -18,6 +18,8 @@ def set_aims_command(hpc='hawk', basis_set='light', defaults=2010, nodes_per_ins
          for users.
     nodes_per_instance: int, optional
         Number of nodes per separate instance of FHI-aims, when running task-farmed
+    override_warning:bool
+        Explicitly turn off the warning when underpopulating the nodes.
     """
     import os
 
@@ -71,11 +73,11 @@ def set_aims_command(hpc='hawk', basis_set='light', defaults=2010, nodes_per_ins
 
     # This has a helper function as we need to take different actions 
     # if running single or task-farmed calculations
-    cpu_command = _get_cpu_command(hpc, nodes_per_instance)
+    cpu_command = _get_cpu_command(hpc, nodes_per_instance, override_cpu_population_warning=True)
 
     os.environ["ASE_AIMS_COMMAND"] = f"{preamble[hpc]} {cpu_command} {executable}"
 
-def _get_cpu_command(hpc, nodes_per_instance=None):
+def _get_cpu_command(hpc, nodes_per_instance=None, override_cpu_population_warning=False):
     """
     Helper function to return appropriate syntax for cpu settings on each HPC
 
@@ -114,7 +116,7 @@ def _get_cpu_command(hpc, nodes_per_instance=None):
         except: requested_nodes = 1
 
         # Check if using a full node, for efficiency
-        if (requested_tasks/requested_nodes) % hpc_settings[hpc]["cpus_per_node"] != 0:
+        if (requested_tasks/requested_nodes) % hpc_settings[hpc]["cpus_per_node"] != 0 and not override_cpu_population_warning:
             print("WARNING: You are not using all the CPUs on the requested nodes.")
             print("         Check if you are accidentally underpopulating the nodes.")  
 

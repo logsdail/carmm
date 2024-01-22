@@ -610,8 +610,6 @@ class ReactAims:
                 Maximum number of iteration before stopping the optimizer
             verbose: bool
                 Flag for turning off printouts in the code
-            override_warning: bool
-                Override the warning about unused CPUs
 
         Returns: Atoms object
             Transition state geometry structure
@@ -628,7 +626,8 @@ class ReactAims:
         parent_dir = os.getcwd()
 
         '''Set the environment parameters'''
-        set_aims_command(hpc=hpc, basis_set=basis_set, defaults=2020, nodes_per_instance=self.nodes_per_instance)
+        set_aims_command(hpc=hpc, basis_set=basis_set, defaults=2020,
+                         nodes_per_instance=self.nodes_per_instance, override_cpu_population_warning=True)
 
         '''Read the geometry'''
         if self.filename:
@@ -638,6 +637,7 @@ class ReactAims:
 
         '''Ensure input is converged'''
         if input_check:
+            '''Use all nodes for the initial optimisation'''
             npi = self.nodes_per_instance
             self.nodes_per_instance = None
 
