@@ -34,7 +34,7 @@ def test_run_workflows_ReactAims_parallel():
     '''Input previously generated and calculated ASE Atoms object - pristine surface'''
     molecules = [f"C{n}H{2*n+2}" for n in range(2,4)]*10
     sampled_structures = [[f"Test_{i}", molecule(molecules[i])] for i in range(20)]
-
+    
     '''Prepare the tasks in the form of a generator'''
     def condensed_generator(n):
         params = PARAMS.copy()
@@ -75,5 +75,6 @@ def test_run_workflows_ReactAims_parallel():
 
     '''Return to parent directory'''
     os.chdir(parent_dir)
+
 
 test_run_workflows_ReactAims_parallel()

@@ -583,6 +583,7 @@ class ReactAims:
         os.chdir(parent_dir)
 
         return self.ts
+    """
 
     def search_ts_taskfarm(self, initial, final, fmax, n, method="string", interpolation="idpp", input_check=0.01,
                            max_steps=100, verbose=True):
@@ -609,6 +610,8 @@ class ReactAims:
                 Maximum number of iteration before stopping the optimizer
             verbose: bool
                 Flag for turning off printouts in the code
+            override_warning: bool
+                Override the warning about unused CPUs
 
         Returns: Atoms object
             Transition state geometry structure
@@ -633,8 +636,6 @@ class ReactAims:
         else:
             filename = initial.get_chemical_formula()
 
-        counter, subdirectory_name = self._restart_setup("TS", filename, restart=False, verbose=verbose)
-
         '''Ensure input is converged'''
         if input_check:
             npi = self.nodes_per_instance
@@ -642,68 +643,86 @@ class ReactAims:
 
             if not is_converged(initial, input_check):
                 self.filename = filename + "_initial"
-                initial = self.aims_optimise(initial, input_check, restart=False, verbose=False)[0]
+                initial = self.aims_optimise(initial, fmax=input_check, restart=True)[0]
             if not is_converged(final, input_check):
                 self.filename = filename + "_final"
-                final = self.aims_optimise(final, input_check, restart=False, verbose=False)[0]
+                final = self.aims_optimise(final, fmax=input_check, restart=True)[0]
 
             '''Set original name after input check is complete'''
             self.nodes_per_instance = npi
             self.filename = filename
 
-        out = str(counter) + "_" + str(filename) + ".out"
+        '''Setup the TS calculation'''
 
-        os.makedirs(subdirectory_name, exist_ok=True)
-        os.chdir(subdirectory_name)
+        helper = CalculationHelper(calc_type="TS_farm",
+                                   parent_dir=os.getcwd(),
+                                   filename=self.filename,
+                                   restart=False,  # TODO: Not implemented yet
+                                   verbose=self.verbose)
 
-        if interpolation in ["idpp", "linear"]:
-            images = [initial]
-            for i in range(n):
-                image = initial.copy()
+        counter, out, subdirectory_name, minimum_energy_path = helper.restart_setup()
+        if not minimum_energy_path:
+            minimum_energy_path = [None, None]
+
+        traj_name = f"{subdirectory_name}/NEB.traj"
+
+        # TODO: if NEB confirmed as converged it will be stored at minimum_energy_path[0], otherwise path will be
+        #   in minimum_energy_path[1]
+
+        if not minimum_energy_path[0]:
+            """Create the sockets calculators"""
+
+            os.makedirs(subdirectory_name, exist_ok=True)
+            os.chdir(subdirectory_name)
+
+            if interpolation in ["idpp", "linear"]:
+                images = [initial]
+                for i in range(n):
+                    image = initial.copy()
+                    if not self.dry_run:
+                        image.calc = _calc_generator(params, out_fn=f"{str(i)}_{out}", dimensions=dimensions)[0]
+                        image.calc.launch_client.calc.directory = f"./{str(i)}_{out[:-4]}"
+                    else:
+                        image.calc = EMT()
+                        image.calc.directory = f"./{str(i)}_{out[:-4]}"
+
+                    images.append(image)
+
+                images.append(final)
+            elif isinstance(interpolation, list):
+                assert [isinstance(i, Atoms) for i in interpolation], \
+                    "Interpolation must be a list of Atoms objects, 'idpp' or 'linear'!"
+                assert len(interpolation)-2 == n, \
+                    "Number of middle images is fed interpolation must match specified n to ensure correct parallelisation"
+
+                images = interpolation
+                for i in range(1, len(interpolation)-1):
+                    # use i-1 for name to retain folder naming as per "idpp"
+                    if not self.dry_run:
+                        images[i].calc = _calc_generator(params, out_fn=f"{str(i-1)}_{out}", dimensions=dimensions)[0]
+                    else:
+                        images[i].calc = EMT()
+                    images[i].calc.launch_client.calc.directory = f"./{str(i-1)}_{out[:-4]}"
+            else:
+                raise ValueError("Interpolation must be a list of Atoms objects, 'idpp' or 'linear'!")
+
+            neb = NEB(images, k=0.05, method=method, climb=True, parallel=True, allow_shared_calculator=False)
+            if interpolation in ["idpp", "linear"]:
+                neb.interpolate(method=interpolation, mic=True, apply_constraint=True)
+
+            qn = FIRE(neb, trajectory=f'{self.filename}_NEB.traj')
+            qn.run(fmax=fmax, steps=max_steps)
+
+            for image in images[1:-1]:
                 if not self.dry_run:
-                    image.calc = _calc_generator(params, out_fn=str(i)+"_"+out, dimensions=dimensions)[0]
-                    image.calc.launch_client.calc.directory = "./" + str(i) + "_" + out[:-4]
-                else:
-                    image.calc = EMT()
-                    image.calc.directory = "./" + str(i) + "_" + out[:-4]
-
-                images.append(image)
-
-            images.append(final)
-        elif isinstance(interpolation, list):
-            assert [isinstance(i, Atoms) for i in interpolation], \
-                "Interpolation must be a list of Atoms objects, 'idpp' or 'linear'!"
-            assert len(interpolation)-2 == n, \
-                "Number of middle images is fed interpolation must match specified n to ensure correct parallelisation"
-
-            images = interpolation
-            for i in range(1, len(interpolation)-1):
-                # use i-1 for name to retain folder naming as per "idpp"
-                if not self.dry_run:
-                    images[i].calc = _calc_generator(params, out_fn=str(i-1)+"_"+out, dimensions=dimensions)[0]
-                else:
-                    images[i].calc = EMT()
-                images[i].calc.launch_client.calc.directory = "./"+str(i-1)+"_"+out[:-4]
-        else:
-            raise ValueError("Interpolation must be a list of Atoms objects, 'idpp' or 'linear'!")
-
-        neb = NEB(images, k=0.05, method=method, climb=True, parallel=True, allow_shared_calculator=False)
-        if interpolation in ["idpp", "linear"]:
-            neb.interpolate(method=interpolation, mic=True, apply_constraint=True)
-
-        qn = FIRE(neb, trajectory='neb.traj')
-        qn.run(fmax=fmax, steps=max_steps)
-
-        for image in images[1:-1]:
-            if not self.dry_run:
-                image.calc.close()
+                    image.calc.close()
 
         '''Find maximum energy, i.e. transition state to return it'''
         self.ts = sorted(images, key=lambda k: k.get_potential_energy(), reverse=True)[0]
         os.chdir(parent_dir)
 
         return self.ts
-    """
+
 
     def vibrate(self, atoms: Atoms, indices: list, read_only=False):
         """

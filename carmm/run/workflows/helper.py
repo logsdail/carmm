@@ -110,8 +110,19 @@ class CalculationHelper:
                     initial[1] = minimum_energy_path
                     restart_found = True
 
+            if self.calc_type == "TS_farm":
+                initial = [None, None]
+                traj_name = f"{subdirectory_name_previous}/{self.filename}_NEB.traj"
+
+                if os.path.exists(traj_name):
+                    print("Previous TS task-farmed search found at", traj_name)
+                    minimum_energy_path = read(f"{traj_name}@:")
+                    initial[1] = minimum_energy_path
+                    restart_found = True
+
             # Point to the last folder
             self.counter -= 1
+
 
         # Important to ensure new calculation begins in a new folder - adjust outside the while loop
         self.counter += 1
@@ -131,7 +142,7 @@ class CalculationHelper:
         from fnmatch import fnmatch
         import os
 
-        supported_calc_types = ["Opt", "Vib", "TS", "Charges"]
+        supported_calc_types = ["Opt", "Vib", "TS", "TS_farm", "Charges"]
         assert self.calc_type in supported_calc_types
 
         while f"{self.calc_type}_{self.filename}_{self.counter}" in [
