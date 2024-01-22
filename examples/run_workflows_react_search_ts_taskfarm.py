@@ -49,6 +49,7 @@ def test_run_workflows_react_ts_taskfarm():
     Make sure total number of nodes requested in job submission is equal to nodes_per_instance * n. 
     E.g. for a band of 7 images and 1 node used per FHI-aims instance request 5 nodes in job submission'''
 
+    reactor.dry_run = True # Set to False for real calculations
     reactor.nodes_per_instance = 1
     TS_CINEB = reactor.search_ts_taskfarm(initial=initial,
                                           final=final,
