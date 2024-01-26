@@ -5,7 +5,7 @@ from ase.io import read
 from ase.optimize import BFGS
 from carmm.run.workflows.helper import CalculationHelper
 from carmm.analyse.forces import is_converged
-# from mace.calculators import mace_mp as calculator
+from mace.calculators import mace_mp as calculator
 import os
 
 class ReactMACE:
@@ -19,6 +19,9 @@ class ReactMACE:
         > pip install --upgrade pip
         > pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118
         > pip install mace-torch
+
+    If you want to make use of dispersion correction install also:
+        > pip install torch-dftd
 
     When installed, uncomment the import in line 8
     '''
@@ -97,6 +100,7 @@ class ReactMACE:
         Returns:None
 
         """
+        global calculator
         opt_restarts = 0
 
         if not is_converged(self.initial, fmax):
