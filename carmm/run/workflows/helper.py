@@ -110,7 +110,7 @@ class CalculationHelper:
                     initial[1] = minimum_energy_path
                     restart_found = True
 
-            if self.calc_type == "TS_farm":
+            elif self.calc_type == "TS_farm":
                 initial = [None, None]
                 traj_name = f"{subdirectory_name_previous}/{self.filename}_NEB.traj"
 
