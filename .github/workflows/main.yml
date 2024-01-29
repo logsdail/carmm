@@ -44,7 +44,7 @@ jobs:
         python -m pip install --upgrade ase-gpatom
         python -m pip install --upgrade pytest
         python -m pip install --upgrade pytest-cov
-        pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118
+        python -m pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118
         python -m pip install --upgrade mace-torch
         
     
