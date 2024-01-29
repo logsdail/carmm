@@ -92,6 +92,7 @@ def test_run_workflows_ReactMACE():
     ts = reactor.search_ts_neb(initial=neb_input[0],
                                final=neb_input[1],
                                fmax=0.05,
+                               k=0.05,
                                n=7,
                                interpolation="idpp",
                                input_check=0.05,

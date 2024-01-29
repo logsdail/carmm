@@ -148,7 +148,7 @@ class ReactMACE:
             self.filename = self.initial.get_chemical_formula()
 
 
-    def search_ts_neb(self, initial, final, fmax, n, method="aseneb", interpolation="idpp", input_check=0.01,
+    def search_ts_neb(self, initial, final, fmax, n, k=0.05, method="aseneb", interpolation="idpp", input_check=0.01,
                                max_steps=100, restart=True):
 
         '''
@@ -161,6 +161,8 @@ class ReactMACE:
                 Convergence criterion of forces in eV/A
             n: int
                 number of middle images, the following is recommended: n * npi = total_no_CPUs
+            k: float or list of floats
+                Spring constant(s) in eV/Ang.  One number or one for each spring.
             method: str
                 NEB method for the CI-NEB as implemented in ASE, 'string' by default
             interpolation: str or []
@@ -180,11 +182,9 @@ class ReactMACE:
 
         from ase.neb import NEB
         from ase.optimize import FIRE
+        import numpy as np
 
         '''Retrieve common properties'''
-        global calculator
-        dimensions = sum(initial.pbc)
-        params = self.params
         parent_dir = os.getcwd()
 
         '''Read the geometry'''
@@ -216,9 +216,22 @@ class ReactMACE:
 
         if not minimum_energy_path:
             minimum_energy_path = [None, None]
+        elif restart:
+            mep = minimum_energy_path[1][-n:]
+            previous_neb = NEB(mep,
+                      k=k,
+                      method=method,
+                      climb=True,
+                      parallel=True,
+                      allow_shared_calculator=False)
 
-        # TODO: if NEB confirmed as converged it will be stored at minimum_energy_path[0], otherwise path will be
-        #   in minimum_energy_path[1]
+            forces_array = previous_neb.get_forces()
+            residual = previous_neb.get_residual()
+
+            if residual <= fmax:
+                minimum_energy_path[0] = mep
+            else:
+                interpolation = mep
 
         if not minimum_energy_path[0]:
             """Create the calculators for all images"""
@@ -254,7 +267,7 @@ class ReactMACE:
                 raise ValueError("Interpolation must be a list of Atoms objects, 'idpp' or 'linear'!")
 
             neb = NEB(images,
-                      k=0.05,
+                      k=k,
                       method=method,
                       climb=True,
                       parallel=True,
@@ -266,8 +279,10 @@ class ReactMACE:
             qn = FIRE(neb, trajectory=f'{self.filename}_NEB.traj')
             qn.run(fmax=fmax, steps=max_steps)
 
+            minimum_energy_path[0] = images
+
         '''Find maximum energy, i.e. transition state to return it'''
-        self.ts = sorted(images, key=lambda k: k.get_potential_energy(), reverse=True)[0]
+        self.ts = sorted(minimum_energy_path[0], key=lambda k: k.get_potential_energy(), reverse=True)[0]
         os.chdir(parent_dir)
 
         return self.ts
