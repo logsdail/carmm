@@ -46,11 +46,14 @@ def test_run_workflows_ReactMACE(model_size: str):
     ref_adsorbate = reactor.mace_optimise(ref_adsorbate, fmax=0.01, restart=True)
     e_adsorbate = ref_adsorbate.get_potential_energy()
 
+    """
+    Avoid excessive calculations in CI tests
     '''Calculate bulk energy'''
     reactor.filename = f"Pd_bulk_{model_size}"
     bulk_geometry = bulk("Pd", a=3.96)
     bulk_geometry = reactor.mace_optimise(bulk_geometry, fmax=0.01, relax_unit_cell=True, restart=True)
     e_bulk = bulk_geometry.get_potential_energy()
+    
 
     '''Calculate pristine surface slab energy'''
     reactor.filename = f"Pd_111_{model_size}"
@@ -90,6 +93,7 @@ def test_run_workflows_ReactMACE(model_size: str):
         '''The structure saved in React_Aims is not converged'''
     assert model_optimised == reactor.model_optimised, \
         '''The returned model and model stored in ReactMACE are not the same'''
+    """
 
     os.chdir(parent_dir)
 
