@@ -107,7 +107,7 @@ def test_run_workflows_ReactMACE():
     H_H[0].x += 7
     ts = reactor.search_ts_neb(initial=H2, final=H_H, fmax=0.05, k=0.05, n=5, interpolation="idpp", input_check=0.05,
                                restart=True)
-
+    print(len(reactor.interpolation))
     '''Test reusing manually provided interpolation'''
     ts = reactor.search_ts_neb(initial=H2, final=H_H, fmax=0.05, k=0.05, n=5, interpolation=reactor.interpolation,
                                input_check=0.05, restart=False)

@@ -256,9 +256,6 @@ class ReactMACE:
             elif isinstance(interpolation, list):
                 assert [isinstance(i, Atoms) for i in interpolation], \
                     "Interpolation must be a list of Atoms objects, 'idpp' or 'linear'!"
-                assert len(interpolation) - 2 == n, \
-                    "Number of middle images is fed interpolation must match specified n to ensure correct parallelisation"
-
                 images = interpolation
                 for i in range(1, len(interpolation) - 1):
                     if not self.dry_run:
