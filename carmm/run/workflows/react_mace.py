@@ -17,7 +17,7 @@ class ReactMACE:
 
     To install MACE via pip:
         > pip install --upgrade pip
-        > pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118
+        > pip install torch==2.0.1 torchvision==0.15.2 torchaudio==2.0.2 --index-url https://download.pytorch.org/whl/cu118
         > pip install mace-torch
 
     If you want to make use of dispersion correction install also:
