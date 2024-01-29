@@ -99,13 +99,21 @@ def test_run_workflows_ReactMACE():
                                restart=True)
 
     '''Call relevant calculations'''
-    '''The below has been previously calculated and data is retrieved from saved trajectories'''
-    model_optimised = reactor.mace_optimise(slab, fmax=0.01, restart=True)
+    '''Dissociate hydrogen using MACE forcefield'''
+    reactor = ReactMACE(params)
+    H2 = ref_adsorbate.copy()
+    print(H2)
+    H_H = ref_adsorbate.copy()
+    H_H[0].x += 7
+    ts = reactor.search_ts_neb(initial=H2, final=H_H, fmax=0.05, k=0.05, n=5, interpolation="idpp", input_check=0.05,
+                               restart=True)
+
+    '''Test reusing manually provided interpolation'''
+    ts = reactor.search_ts_neb(initial=H2, final=H_H, fmax=0.05, k=0.05, n=5, interpolation=reactor.interpolation,
+                               input_check=0.05, restart=False)
 
     assert is_converged(reactor.model_optimised, 0.05), \
         '''The structure saved in React_Aims is not converged'''
-    assert model_optimised == reactor.model_optimised, \
-        '''The returned model and model stored in ReactMACE are not the same'''
 
     os.chdir(parent_dir)
 

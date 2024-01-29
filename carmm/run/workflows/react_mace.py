@@ -197,10 +197,10 @@ class ReactMACE:
         if input_check:
             if not is_converged(initial, input_check):
                 self.filename = filename + "_initial"
-                initial = self.aims_optimise(initial, fmax=input_check, restart=True)[0]
+                initial = self.mace_optimise(initial, fmax=input_check, restart=True)
             if not is_converged(final, input_check):
                 self.filename = filename + "_final"
-                final = self.aims_optimise(final, fmax=input_check, restart=True)[0]
+                final = self.mace_optimise(final, fmax=input_check, restart=True)
 
             '''Revert to original name'''
             self.filename = filename
@@ -280,6 +280,7 @@ class ReactMACE:
             qn.run(fmax=fmax, steps=max_steps)
 
             minimum_energy_path[0] = images
+            self.interpolation = minimum_energy_path[0]
 
         '''Find maximum energy, i.e. transition state to return it'''
         self.ts = sorted(minimum_energy_path[0], key=lambda k: k.get_potential_energy(), reverse=True)[0]
