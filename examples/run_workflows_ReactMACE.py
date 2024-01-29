@@ -22,6 +22,7 @@ def test_run_workflows_ReactMACE():
     from carmm.build.neb.symmetry import sort_z
     from ase.constraints import FixAtoms
     import os
+    import math
 
     '''Work in a dedicated folder'''
     parent_dir = os.getcwd()
@@ -47,7 +48,8 @@ def test_run_workflows_ReactMACE():
     ref_adsorbate = reactor.mace_optimise(ref_adsorbate, fmax=0.01, restart=False)
     e_adsorbate = ref_adsorbate.get_potential_energy()
 
-    print(e_adsorbate)
+    assert math.sqrt((e_adsorbate - (-6.557687))**2) < 1e-6, "H2 energy with a small dataset should produce -6.557687"
+
     """
     Avoid excessive calculations in CI tests
     '''Calculate bulk energy'''
