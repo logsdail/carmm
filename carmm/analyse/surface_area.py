@@ -1,4 +1,4 @@
-def surface_area(atom):
+ def surface_area(atom):
     '''
     A function to calculate the surface of a slab.
 
