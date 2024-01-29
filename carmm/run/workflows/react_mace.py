@@ -229,6 +229,7 @@ class ReactMACE:
             residual = previous_neb.get_residual()
 
             if residual <= fmax:
+                self.interpolation = mep
                 minimum_energy_path[0] = mep
             else:
                 self.interpolation = mep
