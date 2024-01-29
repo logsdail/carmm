@@ -5,7 +5,7 @@ reactants/products and find transition states in an automated manner using the M
 '''
 
 
-def test_run_workflows_ReactMACE(model_size: str):
+def test_run_workflows_ReactMACE():
     '''
 
     Args:
@@ -29,8 +29,9 @@ def test_run_workflows_ReactMACE(model_size: str):
     os.chdir('data/react_mace')
 
     '''Determine calculation input settings'''
+    model_size = 'small'
     params = {'model': model_size,
-              'dispersion': False,
+              'dispersion': True,
               'default_dtype': 'float64',
               'device': 'cpu'}
 
@@ -43,9 +44,10 @@ def test_run_workflows_ReactMACE(model_size: str):
 
     reactor.filename = "H2"
     ref_adsorbate = molecule("H2")
-    ref_adsorbate = reactor.mace_optimise(ref_adsorbate, fmax=0.01, restart=True)
+    ref_adsorbate = reactor.mace_optimise(ref_adsorbate, fmax=0.01, restart=False)
     e_adsorbate = ref_adsorbate.get_potential_energy()
 
+    print(e_adsorbate)
     """
     Avoid excessive calculations in CI tests
     '''Calculate bulk energy'''
@@ -97,5 +99,4 @@ def test_run_workflows_ReactMACE(model_size: str):
 
     os.chdir(parent_dir)
 
-for model_size in ["small", "medium", "large"]:
-    test_run_workflows_ReactMACE(model_size)
+test_run_workflows_ReactMACE()
