@@ -31,7 +31,7 @@ def test_run_workflows_ReactMACE():
     '''Determine calculation input settings'''
     model_size = 'small'
     params = {'model': model_size,
-              'dispersion': True,
+              'dispersion': False,
               'default_dtype': 'float64',
               'device': 'cpu'}
 
