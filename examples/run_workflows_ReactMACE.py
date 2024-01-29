@@ -50,8 +50,6 @@ def test_run_workflows_ReactMACE():
 
     assert math.sqrt((e_adsorbate - (-6.557687))**2) < 1e-6, "H2 energy with a small dataset should produce -6.557687"
 
-    """
-    Avoid excessive calculations in CI tests
     '''Calculate bulk energy'''
     reactor.filename = f"Pd_bulk_{model_size}"
     bulk_geometry = bulk("Pd", a=3.96)
@@ -74,9 +72,10 @@ def test_run_workflows_ReactMACE():
     adsorption_sites = [
         {"site": "fcc", "position": 25},
         {"site": "hcp", "position": 26},
-        {"site": "atop", "position": 56}
+        # {"site": "atop", "position": 56}
         ]
 
+    neb_input = []
     for configuration in adsorption_sites:
         reactor.filename = f"Pd_111_H_{configuration['site']}_{model_size}"
         slab_copy = slab.copy()
@@ -84,10 +83,19 @@ def test_run_workflows_ReactMACE():
         slab_with_adsorbate = reactor.mace_optimise(slab_copy, fmax=0.01, restart=True)
         e_slab = slab_with_adsorbate.get_potential_energy()
 
+        neb_input.append(slab_with_adsorbate)
+
         '''Derive the adsorption energy'''
         e_ads = e_slab - (e_pristine + 0.5 * e_adsorbate)
         print(f"Using {model_size} model, the E_ads at {configuration['site']} site is {e_ads} eV")
 
+    ts = reactor.search_ts_neb(initial=neb_input[0],
+                               final=neb_input[1],
+                               fmax=0.05,
+                               n=7,
+                               interpolation="idpp",
+                               input_check=0.05,
+                               restart=True)
 
     '''Call relevant calculations'''
     '''The below has been previously calculated and data is retrieved from saved trajectories'''
@@ -97,7 +105,6 @@ def test_run_workflows_ReactMACE():
         '''The structure saved in React_Aims is not converged'''
     assert model_optimised == reactor.model_optimised, \
         '''The returned model and model stored in ReactMACE are not the same'''
-    """
 
     os.chdir(parent_dir)
 

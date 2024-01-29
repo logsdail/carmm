@@ -99,14 +99,23 @@ class CalculationHelper:
                 '''Initialize a list for starting configurations files in initial. The initial[0] and initial[1] 
                 correspond to converged and unconverged minimum_energy_paths, respectively.'''
                 initial = [None, None]
-                traj_name = f"{subdirectory_name_previous}/ML-NEB.traj"
-                if os.path.exists(traj_name):
-                    print("TS search already converged at", traj_name)
-                    minimum_energy_path = read(f"{traj_name}@:")
+                traj_mlneb_name = f"{subdirectory_name_previous}/ML-NEB.traj"
+                traj_mlneb_unconverged_name = f"{subdirectory_name_previous}/last_predicted_path.traj"
+                traj_neb_name = f"{subdirectory_name_previous}/{self.filename}_NEB.traj"
+
+                if os.path.exists(traj_mlneb_name):
+                    print("TS search already converged at", traj_mlneb_name)
+                    minimum_energy_path = read(f"{traj_mlneb_name}@:")
                     initial[0] = minimum_energy_path
                     restart_found = True
-                else:
-                    minimum_energy_path = read(f"{subdirectory_name_previous}/last_predicted_path.traj@:")
+                elif os.path.exists(traj_mlneb_unconverged_name):
+                    print("Restarting from", traj_mlneb_unconverged_name)
+                    minimum_energy_path = read(f"{traj_mlneb_unconverged_name}@:")
+                    initial[1] = minimum_energy_path
+                    restart_found = True
+                elif os.path.exists(traj_neb_name):
+                    print("Restarting from", traj_neb_name)
+                    minimum_energy_path = read(f"{traj_neb_name}@:")
                     initial[1] = minimum_energy_path
                     restart_found = True
 

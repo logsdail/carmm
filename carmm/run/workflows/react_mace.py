@@ -5,7 +5,7 @@ from ase.io import read
 from ase.optimize import BFGS
 from carmm.run.workflows.helper import CalculationHelper
 from carmm.analyse.forces import is_converged
-from mace.calculators import mace_mp as calculator
+from mace.calculators import mace_mp
 import os
 
 class ReactMACE:
@@ -100,7 +100,6 @@ class ReactMACE:
         Returns:None
 
         """
-        global calculator
         opt_restarts = 0
 
         if not is_converged(self.initial, fmax):
@@ -110,9 +109,9 @@ class ReactMACE:
                 calculator = EMT
 
             if not self.dry_run:
-                self.initial.calc = calculator(**self.params)
+                self.initial.calc = mace_mp(**self.params)
             else:
-                self.initial.calc = calculator()
+                self.initial.calc = EMT()
 
             while not is_converged(self.initial, fmax):
                 traj_name = f"{subdirectory_name}/{str(counter)}_{self.filename}_{str(opt_restarts)}.traj"
@@ -147,3 +146,128 @@ class ReactMACE:
         self.dimensions = sum(self.initial.pbc)
         if not self.filename:
             self.filename = self.initial.get_chemical_formula()
+
+
+    def search_ts_neb(self, initial, final, fmax, n, method="aseneb", interpolation="idpp", input_check=0.01,
+                               max_steps=100, restart=True):
+
+        '''
+        Args:
+            initial: Atoms object
+                Initial structure in the NEB band
+            final: Atoms object
+                Final structure in the NEB band
+            fmax: float
+                Convergence criterion of forces in eV/A
+            n: int
+                number of middle images, the following is recommended: n * npi = total_no_CPUs
+            method: str
+                NEB method for the CI-NEB as implemented in ASE, 'string' by default
+            interpolation: str or []
+                The "idpp" or "linear" interpolation types are supported in ASE. alternatively user can provide a custom
+                interpolation as a list of Atoms objects.
+            input_check: float or None
+                If float the calculators of the input structures will be checked if the structures are below
+                the requested fmax and an optimisation will be performed if not.
+            max_steps: int
+                Maximum number of iteration before stopping the optimizer
+            verbose: bool
+                Flag for turning off printouts in the code
+
+        Returns: Atoms object
+            Transition state geometry structure
+        '''
+
+        from ase.neb import NEB
+        from ase.optimize import FIRE
+
+        '''Retrieve common properties'''
+        global calculator
+        dimensions = sum(initial.pbc)
+        params = self.params
+        parent_dir = os.getcwd()
+
+        '''Read the geometry'''
+        if self.filename:
+            filename = self.filename
+        else:
+            filename = initial.get_chemical_formula()
+
+        '''Ensure input is converged'''
+        if input_check:
+            if not is_converged(initial, input_check):
+                self.filename = filename + "_initial"
+                initial = self.aims_optimise(initial, fmax=input_check, restart=True)[0]
+            if not is_converged(final, input_check):
+                self.filename = filename + "_final"
+                final = self.aims_optimise(final, fmax=input_check, restart=True)[0]
+
+            '''Revert to original name'''
+            self.filename = filename
+
+        '''Setup the TS calculation'''
+        helper = CalculationHelper(calc_type="TS",
+                                   parent_dir=os.getcwd(),
+                                   filename=self.filename,
+                                   restart=restart,
+                                   verbose=self.verbose)
+
+        counter, out, subdirectory_name, minimum_energy_path = helper.restart_setup()
+
+        if not minimum_energy_path:
+            minimum_energy_path = [None, None]
+
+        # TODO: if NEB confirmed as converged it will be stored at minimum_energy_path[0], otherwise path will be
+        #   in minimum_energy_path[1]
+
+        if not minimum_energy_path[0]:
+            """Create the calculators for all images"""
+
+            os.makedirs(subdirectory_name, exist_ok=True)
+            os.chdir(subdirectory_name)
+
+            if interpolation in ["idpp", "linear"]:
+                images = [initial]
+                for i in range(n):
+                    image = initial.copy()
+                    if not self.dry_run:
+                        image.calc = mace_mp(**self.params)
+                    else:
+                        image.calc = EMT()
+                    # image.calc.directory = f"./{str(i)}_{out[:-4]}"
+                    images.append(image)
+                images.append(final)
+
+            elif isinstance(interpolation, list):
+                assert [isinstance(i, Atoms) for i in interpolation], \
+                    "Interpolation must be a list of Atoms objects, 'idpp' or 'linear'!"
+                assert len(interpolation) - 2 == n, \
+                    "Number of middle images is fed interpolation must match specified n to ensure correct parallelisation"
+
+                images = interpolation
+                for i in range(1, len(interpolation) - 1):
+                    if not self.dry_run:
+                        images[i].calc = mace_mp(**self.params)
+                    else:
+                        images[i].calc = EMT()
+            else:
+                raise ValueError("Interpolation must be a list of Atoms objects, 'idpp' or 'linear'!")
+
+            neb = NEB(images,
+                      k=0.05,
+                      method=method,
+                      climb=True,
+                      parallel=True,
+                      allow_shared_calculator=False)
+
+            if interpolation in ["idpp", "linear"]:
+                neb.interpolate(method=interpolation, mic=True, apply_constraint=True)
+
+            qn = FIRE(neb, trajectory=f'{self.filename}_NEB.traj')
+            qn.run(fmax=fmax, steps=max_steps)
+
+        '''Find maximum energy, i.e. transition state to return it'''
+        self.ts = sorted(images, key=lambda k: k.get_potential_energy(), reverse=True)[0]
+        os.chdir(parent_dir)
+
+        return self.ts
