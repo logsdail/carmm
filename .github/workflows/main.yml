@@ -44,7 +44,7 @@ jobs:
         python -m pip install --upgrade ase-gpatom
         python -m pip install --upgrade pytest
         python -m pip install --upgrade pytest-cov
-        python -m pip install torch==2.0.1 torchvision==0.15.2 torchaudio==2.0.2
+        python -m pip install torch torchvision torchaudio
         python -m pip install --upgrade mace-torch
         
     
