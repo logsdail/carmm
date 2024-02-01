@@ -5,7 +5,7 @@ from ase.io import read
 from ase.optimize import BFGS
 from carmm.run.workflows.helper import CalculationHelper
 from carmm.analyse.forces import is_converged
-from mace.calculators import mace_mp
+from mace.calculators import mace_mp, mace_off, mace_anicc
 import os
 
 class ReactMACE:
@@ -22,12 +22,11 @@ class ReactMACE:
 
     If you want to make use of dispersion correction install also:
         > pip install torch-dftd
-
-    When installed, uncomment the import in line 8
     '''
 
     def __init__(self,
                  params: dict,
+                 force_field: str = "mace_mp",
                  filename: str = None,
                  dry_run: bool = False,
                  verbose: bool = True):
@@ -35,6 +34,8 @@ class ReactMACE:
         Args:
             params: dict
                 Dictionary containing keywords and parameters for running the MACE calculator
+            force_field: str
+                Available currently are pre-trained "mace_mp", "mace_off", "mace_anicc" machine-learned force fields.
             filename: str
                 Naming convention to follow for subsequent calculations and restarts.
                 If None the chemical formula is used.
@@ -49,6 +50,9 @@ class ReactMACE:
         """Define basic parameters"""
         self.data = {}
         self.params = params
+        self.force_field = force_field.lower()
+        assert self.force_field in ["mace_mp", "mace_off", "mace_anicc"], \
+            'Please use the supported MACE models -"mace_mp", "mace_off" or "mace_anicc".'
         self.filename = filename
         self.verbose = verbose
 
@@ -64,6 +68,22 @@ class ReactMACE:
 
         """ Set the test flag"""
         self.dry_run = dry_run
+
+
+    def __get_mace_calculator(self):
+        '''
+        This function returns one of the supported MACE calculators or the EMT calculator if the dry_run flag is enabled.
+        '''
+
+        force_fields = {"mace_mp": mace_mp,
+                        "mace_off": mace_off,
+                        "mace_anicc": mace_anicc}
+        if not self.dry_run:
+            return force_fields[self.force_field](**self.params)
+        else:
+            return EMT()
+
+
 
     def mace_optimise(self, atoms: Atoms, fmax=0.05, restart=True, relax_unit_cell=False):
 
@@ -84,7 +104,7 @@ class ReactMACE:
         return self.model_optimised
 
 
-    def _perform_optimization(self, subdirectory_name: str, out: str, counter: int, fmax: float,
+    def _perform_optimization(self, subdirectory_name: str, counter: int, fmax: float,
                               relax_unit_cell: bool):
         """
         An internal function used in mace_optimise to resolve the working directory and perform the optimisation
@@ -104,14 +124,7 @@ class ReactMACE:
 
         if not is_converged(self.initial, fmax):
             os.makedirs(subdirectory_name, exist_ok=True)
-
-            if self.dry_run:
-                calculator = EMT
-
-            if not self.dry_run:
-                self.initial.calc = mace_mp(**self.params)
-            else:
-                self.initial.calc = EMT()
+            self.initial.calc = self.__get_mace_calculator()
 
             while not is_converged(self.initial, fmax):
                 traj_name = f"{subdirectory_name}/{str(counter)}_{self.filename}_{str(opt_restarts)}.traj"
@@ -132,6 +145,7 @@ class ReactMACE:
                 print(f"Structure is converged.")
             self.model_optimised = self.initial
 
+
     def _initialize_parameters(self, atoms):
         """
         Internal function for obtaining periodic boundary conditions from the provided Atoms object and generating
@@ -150,7 +164,6 @@ class ReactMACE:
 
     def search_ts_neb(self, initial, final, fmax, n, k=0.05, method="aseneb", interpolation="idpp", input_check=0.01,
                                max_steps=100, restart=True):
-
         '''
         Args:
             initial: Atoms object
@@ -182,7 +195,6 @@ class ReactMACE:
 
         from ase.neb import NEB
         from ase.optimize import FIRE
-        import numpy as np
 
         '''Retrieve common properties'''
         parent_dir = os.getcwd()
@@ -245,11 +257,7 @@ class ReactMACE:
                 images = [initial]
                 for i in range(n):
                     image = initial.copy()
-                    if not self.dry_run:
-                        image.calc = mace_mp(**self.params)
-                    else:
-                        image.calc = EMT()
-                    # image.calc.directory = f"./{str(i)}_{out[:-4]}"
+                    image.calc = self.__get_mace_calculator()
                     images.append(image)
                 images.append(final)
 
@@ -258,10 +266,7 @@ class ReactMACE:
                     "Interpolation must be a list of Atoms objects, 'idpp' or 'linear'!"
                 images = interpolation
                 for i in range(1, len(interpolation) - 1):
-                    if not self.dry_run:
-                        images[i].calc = mace_mp(**self.params)
-                    else:
-                        images[i].calc = EMT()
+                    images[i].calc = self.__get_mace_calculator()
             else:
                 raise ValueError("Interpolation must be a list of Atoms objects, 'idpp' or 'linear'!")
 
@@ -286,3 +291,5 @@ class ReactMACE:
         os.chdir(parent_dir)
 
         return self.ts
+
+
