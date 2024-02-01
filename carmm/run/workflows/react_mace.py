@@ -70,7 +70,7 @@ class ReactMACE:
         self.dry_run = dry_run
 
 
-    def __get_mace_calculator(self):
+    def _get_mace_calculator(self):
         '''
         This function returns one of the supported MACE calculators or the EMT calculator if the dry_run flag is enabled.
         '''
@@ -99,12 +99,12 @@ class ReactMACE:
         if initial is not None:
             self.initial = initial
 
-        self._perform_optimization(subdirectory_name, out, counter, fmax, relax_unit_cell)
+        self._perform_optimisation(subdirectory_name, counter, fmax, relax_unit_cell)
 
         return self.model_optimised
 
 
-    def _perform_optimization(self, subdirectory_name: str, counter: int, fmax: float,
+    def _perform_optimisation(self, subdirectory_name: str, counter: int, fmax: float,
                               relax_unit_cell: bool):
         """
         An internal function used in mace_optimise to resolve the working directory and perform the optimisation
@@ -124,7 +124,7 @@ class ReactMACE:
 
         if not is_converged(self.initial, fmax):
             os.makedirs(subdirectory_name, exist_ok=True)
-            self.initial.calc = self.__get_mace_calculator()
+            self.initial.calc = self._get_mace_calculator()
 
             while not is_converged(self.initial, fmax):
                 traj_name = f"{subdirectory_name}/{str(counter)}_{self.filename}_{str(opt_restarts)}.traj"
@@ -257,7 +257,7 @@ class ReactMACE:
                 images = [initial]
                 for i in range(n):
                     image = initial.copy()
-                    image.calc = self.__get_mace_calculator()
+                    image.calc = self._get_mace_calculator()
                     images.append(image)
                 images.append(final)
 
@@ -266,7 +266,7 @@ class ReactMACE:
                     "Interpolation must be a list of Atoms objects, 'idpp' or 'linear'!"
                 images = interpolation
                 for i in range(1, len(interpolation) - 1):
-                    images[i].calc = self.__get_mace_calculator()
+                    images[i].calc = self._get_mace_calculator()
             else:
                 raise ValueError("Interpolation must be a list of Atoms objects, 'idpp' or 'linear'!")
 
