@@ -1,6 +1,6 @@
 '''
 This example shows how to use the work flow functionality with CARMM to optimise
-reactants/products and find transition states in an automated manner.
+reactants/products and find transition states in an automated manner using FHI-aims.
 @Igor: Can you update with any further information?
 '''
 
