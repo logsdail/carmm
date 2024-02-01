@@ -6,15 +6,6 @@ reactants/products and find transition states in an automated manner using the M
 
 
 def test_run_workflows_ReactMACE():
-    '''
-
-    Args:
-        model_size: str
-            small medium large - size of the mace-mp model to be used
-
-    Returns:
-
-    '''
     from carmm.run.workflows.react_mace import ReactMACE
     from ase.build import molecule, bulk
     from ase.build import surface, add_adsorbate
@@ -116,5 +107,6 @@ def test_run_workflows_ReactMACE():
         '''The structure saved in React_Aims is not converged'''
 
     os.chdir(parent_dir)
+
 
 test_run_workflows_ReactMACE()
