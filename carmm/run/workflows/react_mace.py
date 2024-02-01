@@ -2,8 +2,6 @@
 from ase import Atoms
 from ase.io import read
 from carmm.run.workflows.helper import CalculationHelper
-from carmm.analyse.forces import is_converged
-
 
 class ReactMACE:
     """
@@ -132,7 +130,9 @@ class ReactMACE:
 
         """
         from ase.optimize import BFGS
+        from carmm.analyse.forces import is_converged
         import os
+
 
         opt_restarts = 0
 
@@ -207,6 +207,7 @@ class ReactMACE:
 
         from ase.neb import NEB
         from ase.optimize import FIRE
+        from carmm.analyse.forces import is_converged
         import os
 
         '''Retrieve common properties'''
