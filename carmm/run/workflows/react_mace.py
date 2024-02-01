@@ -4,8 +4,9 @@ from ase.io import read
 from carmm.run.workflows.helper import CalculationHelper
 from carmm.analyse.forces import is_converged
 
+
 class ReactMACE:
-    '''
+    """
     Class for streamlining calculations in an ASE/MACE setup.
     This workflow uses MACE-MP: Materials Project Force Fields
 
@@ -18,7 +19,7 @@ class ReactMACE:
 
     If you want to make use of dispersion correction install also:
         > pip install torch-dftd
-    '''
+    """
 
     def __init__(self,
                  params: dict,
@@ -59,17 +60,17 @@ class ReactMACE:
         self.final = None  # input final image for NEB
         self.ts = None  # TS geometry from NEB
         self.prev_calcs = None  # for NEB restart
-        self.interpolation = None  # TODO: use this for NEBs
-        self.dimensions = None
+        self.interpolation = None  # For NEB interpolation
+        self.dimensions = None  # for
 
         """ Set the test flag"""
         self.dry_run = dry_run
 
-
     def _get_mace_calculator(self):
-        '''
-        This function returns one of the supported MACE calculators or the EMT calculator if the dry_run flag is enabled.
-        '''
+        """
+        This function returns one of the supported MACE calculators or the EMT calculator if the
+        dry_run flag is enabled.
+        """
         from ase.calculators.emt import EMT
         from mace.calculators import mace_mp, mace_off, mace_anicc
 
@@ -81,10 +82,8 @@ class ReactMACE:
         else:
             return EMT()
 
-
     def mace_optimise(self, atoms: Atoms, fmax=0.05, restart=True, relax_unit_cell=False):
-        '''
-
+        """
         Args:
             atoms: Atoms object
                 Molecular structure to be optimised
@@ -97,7 +96,7 @@ class ReactMACE:
 
         Returns: Atoms object
             Optimised structure
-        '''
+        """
 
         import os
 
@@ -117,7 +116,6 @@ class ReactMACE:
 
         return self.model_optimised
 
-
     def _perform_optimisation(self, subdirectory_name: str, counter: int, fmax: float,
                               relax_unit_cell: bool):
         """
@@ -126,7 +124,6 @@ class ReactMACE:
 
         Args:
             subdirectory_name: string
-            out: str
             counter: int
             fmax: float
             relax_unit_cell: bool
@@ -162,7 +159,6 @@ class ReactMACE:
                 print(f"Structure is converged.")
             self.model_optimised = self.initial
 
-
     def _initialize_parameters(self, atoms):
         """
         Internal function for obtaining periodic boundary conditions from the provided Atoms object and generating
@@ -178,10 +174,9 @@ class ReactMACE:
         if not self.filename:
             self.filename = self.initial.get_chemical_formula()
 
-
     def search_ts_neb(self, initial, final, fmax, n, k=0.05, method="aseneb", interpolation="idpp", input_check=0.01,
-                               max_steps=100, restart=True):
-        '''
+                      max_steps=100, restart=True):
+        """
         Args:
             initial: Atoms object
                 Initial structure in the NEB band
@@ -196,19 +191,19 @@ class ReactMACE:
             method: str
                 NEB method for the CI-NEB as implemented in ASE, 'string' by default
             interpolation: str or []
-                The "idpp" or "linear" interpolation types are supported in ASE. alternatively user can provide a custom
-                interpolation as a list of Atoms objects.
+                The "idpp" or "linear" interpolation types are supported in ASE. alternatively user can provide a
+                custom interpolation as a list of Atoms objects.
             input_check: float or None
                 If float the calculators of the input structures will be checked if the structures are below
                 the requested fmax and an optimisation will be performed if not.
             max_steps: int
                 Maximum number of iteration before stopping the optimizer
-            verbose: bool
-                Flag for turning off printouts in the code
+            restart: bool
+                If True, seeks previously converged calculations based on filename
 
         Returns: Atoms object
             Transition state geometry structure
-        '''
+        """
 
         from ase.neb import NEB
         from ase.optimize import FIRE
@@ -217,7 +212,7 @@ class ReactMACE:
         '''Retrieve common properties'''
         parent_dir = os.getcwd()
 
-        '''Read the geometry'''
+        '''Read the geometry and establish a naming convention'''
         if self.filename:
             filename = self.filename
         else:
@@ -236,26 +231,17 @@ class ReactMACE:
             self.filename = filename
 
         '''Setup the TS calculation'''
-        helper = CalculationHelper(calc_type="TS",
-                                   parent_dir=os.getcwd(),
-                                   filename=self.filename,
-                                   restart=restart,
+        helper = CalculationHelper(calc_type="TS", parent_dir=os.getcwd(), filename=self.filename, restart=restart,
                                    verbose=self.verbose)
-
         counter, out, subdirectory_name, minimum_energy_path = helper.restart_setup()
 
         if not minimum_energy_path:
             minimum_energy_path = [None, None]
         elif restart:
             mep = minimum_energy_path[1][-n:]
-            previous_neb = NEB(mep,
-                      k=k,
-                      method=method,
-                      climb=True,
-                      parallel=True,
-                      allow_shared_calculator=False)
+            previous_neb = NEB(mep, k=k, method=method, climb=True, parallel=True, allow_shared_calculator=False)
 
-            forces_array = previous_neb.get_forces()
+            previous_neb.get_forces()
             residual = previous_neb.get_residual()
 
             if residual <= fmax:
@@ -288,12 +274,7 @@ class ReactMACE:
             else:
                 raise ValueError("Interpolation must be a list of Atoms objects, 'idpp' or 'linear'!")
 
-            neb = NEB(images,
-                      k=k,
-                      method=method,
-                      climb=True,
-                      parallel=True,
-                      allow_shared_calculator=False)
+            neb = NEB(images, k=k, method=method, climb=True, parallel=True, allow_shared_calculator=False)
 
             if interpolation in ["idpp", "linear"]:
                 neb.interpolate(method=interpolation, mic=True, apply_constraint=True)
@@ -305,9 +286,7 @@ class ReactMACE:
             self.interpolation = minimum_energy_path[0]
 
         '''Find maximum energy, i.e. transition state to return it'''
-        self.ts = sorted(minimum_energy_path[0], key=lambda k: k.get_potential_energy(), reverse=True)[0]
+        self.ts = sorted(minimum_energy_path[0], key=lambda x: x.get_potential_energy(), reverse=True)[0]
         os.chdir(parent_dir)
 
         return self.ts
-
-
