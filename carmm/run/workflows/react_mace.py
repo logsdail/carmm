@@ -1,12 +1,8 @@
 # Author: Igor Kowalec
 from ase import Atoms
-from ase.calculators.emt import EMT
 from ase.io import read
-from ase.optimize import BFGS
 from carmm.run.workflows.helper import CalculationHelper
 from carmm.analyse.forces import is_converged
-from mace.calculators import mace_mp, mace_off, mace_anicc
-import os
 
 class ReactMACE:
     '''
@@ -74,6 +70,8 @@ class ReactMACE:
         '''
         This function returns one of the supported MACE calculators or the EMT calculator if the dry_run flag is enabled.
         '''
+        from ase.calculators.emt import EMT
+        from mace.calculators import mace_mp, mace_off, mace_anicc
 
         force_fields = {"mace_mp": mace_mp,
                         "mace_off": mace_off,
@@ -84,8 +82,24 @@ class ReactMACE:
             return EMT()
 
 
-
     def mace_optimise(self, atoms: Atoms, fmax=0.05, restart=True, relax_unit_cell=False):
+        '''
+
+        Args:
+            atoms: Atoms object
+                Molecular structure to be optimised
+            fmax: float
+                Force convergence criterion in eV/Å
+            restart: bool
+                If True, seeks previously converged calculations based on filename
+            relax_unit_cell: bool
+                Request unit cell relaxation for periodic bulk structures
+
+        Returns: Atoms object
+            Optimised structure
+        '''
+
+        import os
 
         self._initialize_parameters(atoms)
         helper = CalculationHelper(calc_type="Opt",
@@ -96,7 +110,7 @@ class ReactMACE:
 
         counter, out, subdirectory_name, initial = helper.restart_setup()
 
-        if initial is not None:
+        if initial:
             self.initial = initial
 
         self._perform_optimisation(subdirectory_name, counter, fmax, relax_unit_cell)
@@ -120,6 +134,9 @@ class ReactMACE:
         Returns:None
 
         """
+        from ase.optimize import BFGS
+        import os
+
         opt_restarts = 0
 
         if not is_converged(self.initial, fmax):
@@ -195,6 +212,7 @@ class ReactMACE:
 
         from ase.neb import NEB
         from ase.optimize import FIRE
+        import os
 
         '''Retrieve common properties'''
         parent_dir = os.getcwd()
