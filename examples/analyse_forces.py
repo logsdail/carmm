@@ -54,6 +54,8 @@ def test_analyse_forces():
     cell_relaxation = ExpCellFilter(crystal)
     opt = BFGSLineSearch(cell_relaxation)
     opt.run(fmax=fmax)
+    # Explicitly remove the forces from the results - some calculators (e.g. MACE) only store stress for bulk
+    crystal.calc.results.pop("forces")
     assert is_converged(crystal, fmax)
 
 
