@@ -1,106 +1,141 @@
-from ase.io import read, write
+from ase.io import read
 from ase.visualize import view
+from ase.io.trajectory import TrajectoryWriter
 import os
+from PIL import Image
+from carmm.analyse.povray_render import povray_render, atom_sub
 
-def traj_to_gif(filename, frames_per_second=30, pause_time=0.5, atom_subs=None, keep_temp_files=True, test=False):
 
-    '''
+def traj_to_gif(filename, automatic=False, generic_projection_settings=None, povray_settings=None, frames_per_second=30,
+                pause_time=0.5, atom_subs=None, gif_options=None, keep_temp_files=True, **kwargs):
+    """
     A function which takes a .traj file, visualises it in povray with your desired settings and outputs a .gif file.
-    When the function gives you the ase viewer, rotate to your desired view, go to Tools -> Render Scene, select the "Render all frames" option and deselect "Show output window".
-    MAKE SURE THAT THE OUTPUT BASENAME IS THE SAME AS THE INITIAL FILENAME (e.g. for 'atoms.traj' the output basename is 'atoms')
-    The rest of the settings can be changed at your discretion.
-    Then press "Render" and wait for it to finish before closing the window and pressing enter to continue.
-    The ImageMagick linux suite is required for this function.
-    :param filename: (str) Full name/directory of the .traj file to convert
-    :param frames_per_second: (float) Speed of switching images (Default is 30 fps)
-    :param pause_time: (float) Time to pause on the first and last images (Default is 0.5 seconds)
-    :param atom_subs: (list of lists of strings) Pairs of atomic symbols with the first being changed to the second in all
-    images for clearer visualisation
-    :param keep_temp_files: (boolean) If set to False, will delete the created povray .traj and .png files after use
-    :param test: (boolean) Do not change! A quick fix to stop the unittest from getting stuck waiting for a user input
-    :return: A .gif file of the .traj file, visualised in povray
-    '''
 
-    #Retrieve the file name and file extension from (potentially) a full directory path
-    if filename == None:
+    Parameters:
+
+    filename: String
+        Full name/directory of the .traj file to convert
+    automatic: Boolean
+        If True, automatically renders images using given settings
+        If False, opens ASE GUI to allow the user to manually render the images (**FOLLOW THE GIVEN INSTRUCTIONS**)
+    generic_projection_settings: Dictionary
+        Settings used by PlottingVariables for automatic rendering
+        (see https://gitlab.com/ase/ase/-/blob/master/ase/io/utils.py PlottingVariables/__init__ for settings options)
+    povray_settings: Dictionary
+        Settings used by Povray for automatic rendering
+        (see https://gitlab.com/ase/ase/-/blob/master/ase/io/pov.py POVRAY/__init__ for settings options)
+    frames_per_second: Float
+        Speed of switching images (Default is 30 fps)
+    pause_time: Float
+        Time (in seconds) to pause on the first and last images (Default is 0.5 seconds)
+    atom_subs: List of lists of strings
+        Pairs of atomic symbols with the first being changed to the second in
+        all images for clearer visualisation. An alternate solution to changing atom colours.
+        Tip: Find a second atom with a similar atomic radius to the first with a more distinctive colour
+    gif_options: Dictionary of strings
+        Settings for the Pillow.Image.save() function. For default setting, don't include
+        this parameter. Default options are: "save_all=True, optimize=False, loop=0"
+        (see https://pillow.readthedocs.io/en/latest/handbook/image-file-formats.html#gif-saving for full list of options)
+    keep_temp_files: Boolean
+        If False, will delete the created .png, .pov and .ini files after use. If True, will
+        keep these files and produce a .traj file if any atoms were substituted
+
+    Returns:
+
+    A .gif file of the .traj file, visualised in Povray with the desired settings
+    """
+
+    # Retrieve the file name and file extension from (potentially) a full directory path
+    if filename is None:
         filename = 'atoms.traj'
     file = filename.split('/')[-1]
-    file, ext = file.split('.')
+    ext = file.split('.')[-1]
+    file = file.split('.')[:-1]
+    file = '.'.join(file)
 
-    atoms = read(filename+'@:')
+    if ext != 'traj':
+        raise RuntimeError('Function only supports .traj files')
+
+    atoms = read(filename + '@:')
     steps = len(atoms)
 
-    if not test:
-        povray_render(atoms, steps, file, ext, atom_subs)
+    # Generate the list of povray image filenames
+    digits = len(str(steps - 1))
+    indices = [f'%0{digits}d' % i for i in range(steps)]
+    filenames = [f'{file}.{index}.png' for index in indices]
 
-    gifmaker(steps, file, ext, frames_per_second, pause_time, keep_temp_files, test)
+    if automatic:
+        for frame in range(steps):
+            frame_atoms = atoms[frame]
+            povray_render(frame_atoms, output=f'{file}.{indices[frame]}', view=False, atom_subs=atom_subs,
+                          generic_projection_settings=generic_projection_settings, povray_settings=povray_settings)
+    else:
+        if atom_subs is not None:
+            for frame in range(steps):
+                frame_atoms = atoms[frame]
+                atoms[frame] = atom_sub(frame_atoms, atom_subs)
+            if keep_temp_files:
+                writer = TrajectoryWriter(f'{file}_povray.traj', mode='w')
+                for frame in range(steps):
+                    writer.write(atoms[frame])
+        print(f'***Crucial Steps***\n'
+              f'1. In ASE GUI, navigate to Tools -> Render Scene\n'
+              f'2. Change "Output basename" to {file}\n'
+              f'3. Select "Render all frames"\n'
+              f'4. Deselect "Show output window"\n'
+              f'5. Change any other settings (e.g. Atomic texture set) as desired')
+        view(atoms)
+        input('***Press Enter to continue once Povray is finished visualising...***\n')
+
+    gifmaker(file, filenames, frames_per_second, pause_time, gif_options, indices, keep_temp_files)
 
     print("Happy cooking!")
 
     # For testing purposes
-    return file, ext, steps
+    return file, ext, steps, atoms, filenames
 
 
-def atom_sub(atoms, atom_subs, steps, file, ext):
+def gifmaker(file, filenames, frames_per_second, pause_time, gif_options, indices, keep_temp_files):
 
-    frame_atoms_list = []
+    duration = [(1 / frames_per_second) * 10**3] * len(filenames)  # Duration in milliseconds
 
-    #Replace atoms of one element with another for clearer visualisation
-    for frame in range(steps):
-        frame_atoms = atoms[frame]
-        if atom_subs != None:
-            for list in atom_subs:
-                for i in range(len(frame_atoms.symbols)):
-                    if frame_atoms.symbols[i] == list[0]:
-                        frame_atoms.symbols[i] = list[1]
-        frame_atoms_list.append(frame_atoms)
-        frame_atoms.write(f'{file}_povray.{ext}', append=True)
+    if pause_time is not None:
+        duration[0] = pause_time * 10**3
+        duration[-1] = pause_time * 10**3
 
-    # For testing purposes
-    return frame_atoms_list
+    # Default gif_options
+    if gif_options is None:
+        gif_options = {}
 
-def povray_render(atoms, steps, file, ext, atom_subs):
+    if 'save_all' not in gif_options:
+        gif_options['save_all'] = True
+    if 'optimize' not in gif_options:
+        gif_options['optimize'] = False
+    if 'loop' not in gif_options:
+        gif_options['loop'] = 0
 
-    atom_sub(atoms, atom_subs, steps, file, ext)
+    # Images
+    images = []
+    for i in range(len(filenames)):
+        try:
+            im = Image.open(filenames[i])
+            images.append(im)
+        except FileNotFoundError as err:
+            print(f'{err}')
+            break
 
-    #Allow the user to generate the povray images with reminders of the requirements
-    view(atoms)
-    print(f'***Remember to change output basename to {file}, select "Render all frames" and deselect "Show output window"***')
-    input('Press Enter to continue once Povray is finished visualising...')
+    try:
+        images[0].save(f'{file}.gif', append_images=images[1:], duration=duration, save_all=gif_options['save_all'],
+                       optimize=gif_options['optimize'], loop=gif_options['loop'])
+    except IndexError as err:
+        print(f'{err}: No images')
 
-
-def gifmaker(steps, file, ext, frames_per_second, pause_time, keep_png_files, test):
-
-    #Generate the list of povray image filenames
-    digits = len(str(steps-1))
-    indices = [f'%0{digits}d' % i for i in range(steps)]
-    filenames = [f'{file}.{index}.png' for index in indices]
-
-    #Get the frames_per_second into a format that ImageMagick accepts for the delay flag
-    if frames_per_second <= 1:
-        delay = str(1/frames_per_second)
-    elif frames_per_second > 1:
-        delay = f'1x{frames_per_second}'
-
-    #Add in extra first/last frames at the start/end to give a pause of the desired length
-    if pause_time != None:
-        pause_frames = int(pause_time * frames_per_second)
-        count = 1 # Already one frame in the list
-        while count in range(pause_frames):
-            filenames.insert(0, f'{file}.{indices[0]}.png')
-            filenames.insert(-1, f'{file}.{indices[-1]}.png')
-            count += 1
-
-    #Execute the ImageMagick convert command in the terminal
-    if not test:
-        command = (f'convert -verbose -dispose previous -delay {delay} %s -loop 0 {file}.gif' % ' '.join(filenames))
-        os.system(command)
-
-        #Delete the povray image files if requested
-        if not keep_png_files:
-            for index in indices:
-                os.system(f'rm {file}.{index}.png')
-            os.system(f'{file}_povray.{ext}')
+    # Delete the povray image files if requested
+    if not keep_temp_files:
+        for index in indices:
+            os.system(f'rm {file}.{index}.ini')
+            os.system(f'rm {file}.{index}.pov')
+            os.system(f'rm {file}.{index}.png')
 
     # For testing purposes
-    return filenames, delay
+    return filenames, duration, gif_options
