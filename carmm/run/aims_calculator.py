@@ -233,7 +233,7 @@ def get_k_grid(model, sampling_density, verbose=False, simple_reciprocal_space_p
 
     if simple_reciprocal_space_parameters:
         # Simplified reciprocal lattice parameters
-        simple_reciprocal_param = 2 * math.pi / lattice_param
+        reciprocal_param = 2 * math.pi / lattice_param
     else:
         # volume of the cell
         volume = np.dot(lattice_v[0], np.cross(lattice_v[1], lattice_v[2]))
