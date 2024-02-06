@@ -246,12 +246,9 @@ def get_k_grid(model, sampling_density, verbose=False, simple_reciprocal_space_p
     k_grid_density = 1 / (sampling_density * 2 * math.pi)
     k_grid = k_grid_density * reciprocal_param
     # Convert k_grid to integer
-    k_grid = [math.ceil(k) for k in k_grid]
+    k_grid = np.array([math.ceil(k) for k in k_grid])
     # Remove k-sampling if direction is not periodic in any dimension
-    if dimensions < 3:
-        k_grid[2] = 1
-    if dimensions < 2:
-        k_grid[1] = 1
+    k_grid[np.invert(model.pbc)] = 1
 
     if verbose:
         print("Based on lattice xyz dimensions", "x", round(lattice_param[0], 3), "y", round(lattice_param[1], 3),
