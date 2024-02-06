@@ -229,7 +229,7 @@ def get_k_grid(model, sampling_density, verbose=False, simple_reciprocal_space_p
     # These are lattice vectors
     lattice_v = np.array(model.get_cell())
     # These are lattice parameters
-    lattice_param = np.linalg.norm(lattice_v)
+    lattice_param = np.array([np.linalg.norm(v) for v in lattice_v])
 
     if simple_reciprocal_space_parameters:
         # Simplified reciprocal lattice parameters
@@ -241,11 +241,12 @@ def get_k_grid(model, sampling_density, verbose=False, simple_reciprocal_space_p
         reciprocal_v = [np.cross(lattice_v[(i + 1) % 3], lattice_v[(i + 2) % 3]) * 2 * math.pi / volume
                         for i in range(len(lattice_v))]
         # These are reciprocal lattice parameters
-        reciprocal_param = np.linalg.norm(reciprocal_v)
+        reciprocal_param = np.array([np.linalg.norm(r_v) for r_v in reciprocal_v])
 
     k_grid_density = 1 / (sampling_density * 2 * math.pi)
-    k_grid = math.ceil(k_grid_density * reciprocal_param)
-
+    k_grid = k_grid_density * reciprocal_param
+    # Convert k_grid to integer
+    k_grid = [math.ceil(k) for k in k_grid]
     # Remove k-sampling if direction is not periodic in any dimension
     if dimensions < 3:
         k_grid[2] = 1
@@ -263,4 +264,4 @@ def get_k_grid(model, sampling_density, verbose=False, simple_reciprocal_space_p
                   "This would generate a slightly denser k-grid than using simple reciprocal space parameters in "
                   "cases where a non-orthogonal cell is used as input.")
 
-    return k_grid
+    return tuple(k_grid)
