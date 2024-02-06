@@ -1,29 +1,7 @@
 
 # This functionality will help to generate a bulk model from a slab.
 
-from ase import Atoms
-
-
-def is_close_to_integer(arr, tolerance=1e-5):
-    """
-    Check if elements in the array are close to integers within a given tolerance. This will be used to check if the x-
-    and y-coordinate of an atom is a linear combination the 'a' and 'b' cell vector of the slab model
-
-    Args:
-    - arr: Numpy array
-    - tolerance: Tolerance for closeness to integers (default is 1e-5)
-
-    Returns:
-    - Boolean array indicating if elements are close to integers
-    """
-    import numpy as np
-
-    diff = np.abs(arr - np.round(arr))
-    close_to_integer = diff < tolerance
-    return close_to_integer
-
-
-def bulk_identifier(slab: Atoms, cutoff_distance=10.0):
+def bulk_identifier(slab, cutoff_distance=10.0):
     """
     This function helps to identify the repeating unit in the z-direction which ultimately represents the
     bulk atoms in a slab structure. This new bulk structure will be consistent with the slab model and the
@@ -49,11 +27,13 @@ def bulk_identifier(slab: Atoms, cutoff_distance=10.0):
     """
     from ase.build.tools import sort
     import numpy as np
+    from ase import Atoms
 
+    if type(slab) is not Atoms:
+        raise Exception('Invalid input. Please provide an Atoms object for your desired slab model')
     # Sort the slab based on z-coordinate
-    slab = sort(slab, np.array(slab.get_positions()[:, 2]).tolist())
+    slab = sort(slab.copy(), np.array(slab.get_positions()[:, 2]).tolist())
     a, b, c = slab.cell  # Extract cell vectors
-    slab_copy = slab.copy() # make a copy of the slab
 
     # Calculate all pairwise distances between atoms
     distances = slab.get_all_distances()
@@ -61,9 +41,7 @@ def bulk_identifier(slab: Atoms, cutoff_distance=10.0):
     cutoff_distance = cutoff_distance
 
     for atom_i in slab:
-        index_i = atom_i.index
-
-        for atom_j in slab_copy:
+        for atom_j in slab:
             if atom_i.symbol == atom_j.symbol and atom_i.index != atom_j.index:
                 diff_xy = np.array(atom_j.position[:2] - atom_i.position[:2])
                 cell_vec_xy = np.array(slab.cell[:2, :2])
@@ -72,11 +50,10 @@ def bulk_identifier(slab: Atoms, cutoff_distance=10.0):
                 if is_close_to_integer(int_vec).all():
                     # further check is done to see if the coordination environment of the atom j is similar ot atom i
                     # based on cutoff distance.
-                    index_j = atom_j.index
-                    cutoff_obeyed_i = [dist for ind, dist in enumerate(distances[index_i].tolist())
+                    cutoff_obeyed_i = [dist for ind, dist in enumerate(distances[atom_i.index].tolist())
                                        if
                                        dist <= cutoff_distance and slab[ind].position[2] / atom_i.position[2] >= 0.9999]
-                    cutoff_obeyed_j = [dist for ind, dist in enumerate(distances[index_j].tolist())
+                    cutoff_obeyed_j = [dist for ind, dist in enumerate(distances[atom_j.index].tolist())
                                        if
                                        dist <= cutoff_distance and slab[ind].position[2] / atom_j.position[2] >= 0.9999]
 
@@ -104,3 +81,23 @@ def bulk_identifier(slab: Atoms, cutoff_distance=10.0):
     new_bulk = slab[[i for i in range(len(slab)) if i not in atoms_to_del]]
 
     return new_bulk # return the new bulk model
+
+
+def is_close_to_integer(arr, tolerance=1e-5):
+    """
+    Check if elements in the array are close to integers within a given tolerance. This will be used to check if the x-
+    and y-coordinate of an atom is a linear combination the 'a' and 'b' cell vector of the slab model
+
+    Args:
+    - arr: Numpy array
+    - tolerance: Tolerance for closeness to integers (default is 1e-5)
+
+    Returns:
+    - Boolean array indicating if elements are close to integers
+    """
+    import numpy as np
+
+    diff = np.abs(arr - np.round(arr))
+    close_to_integer = diff < tolerance
+    return close_to_integer
+
