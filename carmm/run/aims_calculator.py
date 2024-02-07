@@ -237,7 +237,8 @@ def get_k_grid(model, sampling_density, verbose=False, simple_reciprocal_space_p
     else:
         # volume of the cell
         volume = np.dot(lattice_v[0], np.cross(lattice_v[1], lattice_v[2]))
-        # These are reciprocal lattice vectors
+        # These are reciprocal lattice vectors.
+        # For definition, see section 2.4 of https://www.physics-in-a-nutshell.com/article/15/the-reciprocal-lattice
         reciprocal_v = [np.cross(lattice_v[(i + 1) % 3], lattice_v[(i + 2) % 3]) * 2 * math.pi / volume
                         for i in range(len(lattice_v))]
         # These are reciprocal lattice parameters
