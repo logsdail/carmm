@@ -231,6 +231,15 @@ def get_k_grid(model, sampling_density, verbose=False, simple_reciprocal_space_p
     # These are lattice parameters
     lattice_param = np.array([np.linalg.norm(v) for v in lattice_v])
 
+    # Check if the model is periodic and with vacuum along a certain axis. There could be vacuum if
+    # the lattice parameter is 5 angstrom longer than the range of atomic positions along an axis,
+    check_vacuum_and_periodic = np.array((lattice_param - np.ptp(model.get_positions(), axis=0)) > 5) * model.pbc
+    if sum(check_vacuum_and_periodic):
+        print("There could be vacuum in these axes", np.array(['x', 'y', 'z'])[check_vacuum_and_periodic],
+              ", but they are also periodic."
+              "\nIf you don't want the model to be treated as periodic in these dimensions,",
+              "set pbc for these axes to false, or check if k point sampling is actually 1 in these dimensions")
+
     if simple_reciprocal_space_parameters:
         # Simplified reciprocal lattice parameters
         reciprocal_param = 2 * math.pi / lattice_param
