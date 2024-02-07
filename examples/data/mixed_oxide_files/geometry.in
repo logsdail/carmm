@@ -1,0 +1,164 @@
+lattice_vector 8.533400 0.000000 0.000000
+lattice_vector 0.000000 8.533400 0.000000
+lattice_vector 0.000000 0.000000 8.533400
+
+atom_frac 0.000000 0.000000 0.000000 Co
+    initial_moment -3
+    initial_charge +2
+atom_frac 0.250000 0.250000 0.250000 O
+    initial_charge -2
+atom_frac 0.250000 0.000000 0.000000 O
+    initial_charge -2
+atom_frac 0.000000 0.250000 0.000000 O
+    initial_charge -2
+atom_frac 0.000000 0.000000 0.250000 O
+    initial_charge -2
+atom_frac 0.000000 0.250000 0.750000 Co
+    initial_moment -3
+    initial_charge +2
+atom_frac 0.250000 0.000000 0.750000 Co
+    initial_moment -3
+    initial_charge +2
+atom_frac 0.250000 0.250000 0.500000 Co
+    initial_moment -3
+    initial_charge +2
+atom_frac 0.250000 0.250000 0.750000 O
+    initial_charge -2
+atom_frac 0.250000 0.000000 0.500000 O
+    initial_charge -2
+atom_frac 0.000000 0.250000 0.500000 O
+    initial_charge -2
+atom_frac 0.000000 0.000000 0.750000 O
+    initial_charge -2
+atom_frac 0.000000 0.750000 0.250000 Co
+    initial_moment -3
+    initial_charge +2
+atom_frac 0.250000 0.500000 0.250000 Co
+    initial_moment -3
+    initial_charge +2
+atom_frac 0.250000 0.750000 0.000000 Co
+    initial_moment -3
+    initial_charge +2
+atom_frac 0.250000 0.750000 0.250000 O
+    initial_charge -2
+atom_frac 0.250000 0.500000 0.000000 O
+    initial_charge -2
+atom_frac 0.000000 0.750000 0.000000 O
+    initial_charge -2
+atom_frac 0.000000 0.500000 0.250000 O
+    initial_charge -2
+atom_frac 0.000000 0.500000 0.500000 Co
+    initial_moment -3
+    initial_charge +2
+atom_frac 0.250000 0.750000 0.750000 O
+    initial_charge -2
+atom_frac 0.250000 0.500000 0.500000 O
+    initial_charge -2
+atom_frac 0.000000 0.750000 0.500000 O
+    initial_charge -2
+atom_frac 0.000000 0.500000 0.750000 O
+    initial_charge -2
+atom_frac 0.500000 0.250000 0.250000 Co
+    initial_moment -3
+    initial_charge +2
+atom_frac 0.750000 0.000000 0.250000 Co
+    initial_moment -3
+    initial_charge +2
+atom_frac 0.750000 0.250000 0.000000 Co
+    initial_moment -3
+    initial_charge +2
+atom_frac 0.750000 0.250000 0.250000 O
+    initial_charge -2
+atom_frac 0.750000 0.000000 0.000000 O
+    initial_charge -2
+atom_frac 0.500000 0.250000 0.000000 O
+    initial_charge -2
+atom_frac 0.500000 0.000000 0.250000 O
+    initial_charge -2
+atom_frac 0.500000 0.000000 0.500000 Co
+    initial_moment -3
+    initial_charge +2
+atom_frac 0.750000 0.250000 0.750000 O
+    initial_charge -2
+atom_frac 0.750000 0.000000 0.500000 O
+    initial_charge -2
+atom_frac 0.500000 0.250000 0.500000 O
+    initial_charge -2
+atom_frac 0.500000 0.000000 0.750000 O
+    initial_charge -2
+atom_frac 0.500000 0.500000 0.000000 Co
+    initial_moment -3
+    initial_charge +2
+atom_frac 0.750000 0.750000 0.250000 O
+    initial_charge -2
+atom_frac 0.750000 0.500000 0.000000 O
+    initial_charge -2
+atom_frac 0.500000 0.750000 0.000000 O
+    initial_charge -2
+atom_frac 0.500000 0.500000 0.250000 O
+    initial_charge -2
+atom_frac 0.500000 0.750000 0.750000 Co
+    initial_moment -3
+    initial_charge +2
+atom_frac 0.750000 0.500000 0.750000 Co
+    initial_moment -3
+    initial_charge +2
+atom_frac 0.750000 0.750000 0.500000 Co
+    initial_moment -3
+    initial_charge +2
+atom_frac 0.750000 0.750000 0.750000 O
+    initial_charge -2
+atom_frac 0.750000 0.500000 0.500000 O
+    initial_charge -2
+atom_frac 0.500000 0.750000 0.500000 O
+    initial_charge -2
+atom_frac 0.500000 0.500000 0.750000 O
+    initial_charge -2
+atom_frac 0.000000 0.250000 0.250000 Co
+    initial_moment +3
+    initial_charge +2
+atom_frac 0.250000 0.000000 0.250000 Co
+    initial_moment +3
+    initial_charge +2
+atom_frac 0.250000 0.250000 0.000000 Co
+    initial_moment +3
+    initial_charge +2
+atom_frac 0.000000 0.000000 0.500000 Co
+    initial_moment +3
+    initial_charge +2
+atom_frac 0.000000 0.500000 0.000000 Co
+    initial_moment +3
+    initial_charge +2
+atom_frac 0.000000 0.750000 0.750000 Co
+    initial_moment +3
+    initial_charge +2
+atom_frac 0.250000 0.500000 0.750000 Co
+    initial_moment +3
+    initial_charge +2
+atom_frac 0.250000 0.750000 0.500000 Co
+    initial_moment +3
+    initial_charge +2
+atom_frac 0.500000 0.000000 0.000000 Co
+    initial_moment +3
+    initial_charge +2
+atom_frac 0.500000 0.250000 0.750000 Co
+    initial_moment +3
+    initial_charge +2
+atom_frac 0.750000 0.000000 0.750000 Co
+    initial_moment +3
+    initial_charge +2
+atom_frac 0.750000 0.250000 0.500000 Co
+    initial_moment +3
+    initial_charge +2
+atom_frac 0.500000 0.750000 0.250000 Co
+    initial_moment +3
+    initial_charge +2
+atom_frac 0.750000 0.500000 0.250000 Co
+    initial_moment +3
+    initial_charge +2
+atom_frac 0.750000 0.750000 0.000000 Co
+    initial_moment +3
+    initial_charge +2
+atom_frac 0.500000 0.500000 0.500000 Co
+    initial_moment +3
+    initial_charge +2
