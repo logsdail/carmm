@@ -206,7 +206,8 @@ def get_k_grid(model, sampling_density, verbose=False, simple_reciprocal_space_p
         simple_reciprocal_space_parameters: bool
             Flag switching between the simplified definition of reciprocal lattice
             parameters, which is 2π/a (a is the real space lattice parameter), and
-            the strict definition (see code or textbook).
+            the strict definition (see p86 Neil W. Ashcroft Solid State Physics (1976) or
+            section 2.4 of https://www.physics-in-a-nutshell.com/article/15/the-reciprocal-lattice).
         verbose: bool
             Flag turning print statements on/off
 
@@ -233,7 +234,7 @@ def get_k_grid(model, sampling_density, verbose=False, simple_reciprocal_space_p
 
     # Check if the model is periodic and with vacuum along a certain axis. There could be vacuum if
     # the lattice parameter is 5 angstrom longer than the range of atomic positions along an axis,
-    check_vacuum_and_periodic = np.array((lattice_param - np.ptp(model.get_positions(), axis=0)) > 5) * model.pbc
+    check_vacuum_and_periodic = np.array((lattice_param - np.ptp(model.get_positions(), axis=0)) > 5) & model.pbc
     if sum(check_vacuum_and_periodic):
         print("There could be vacuum in these axes", np.array(['x', 'y', 'z'])[check_vacuum_and_periodic],
               ", but they are also periodic."
