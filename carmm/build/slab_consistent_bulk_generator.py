@@ -3,10 +3,24 @@
 
 def bulk_identifier(slab, cutoff_distance=10.0):
     """
+    Slab models can be generated using various libraries like ASE, pymatgen, atomman, etc. However, it becomes important
+    to check how these slab models are generated within various code bases.
+
+    Pymatgen for example generates desired surface facets by transforming the basis vectors of the conventional bulk
+    unit cell such that the c-vector of new bulk is normal to the desired surface plane. The basis transformation however
+    changes the convergence behavior of the slab models with respect to the thickness of the slab. Hence, a new bulk
+    unit cell is necessary, generated for each individual slab model, to make sure that the surface energies are
+    calculated using a correct bulk reference.
+
     This function helps to identify the repeating unit in the z-direction which ultimately represents the
     bulk atoms in a slab structure. This new bulk structure will be consistent with the slab model and the
-    computed bulk energy for this structure will help to obtain surface energies that are convergent with
-    increasing slab thickness. Further detailed information is available in the following literature article.
+    computed bulk energy for this structure will help us to obtain surface energies that are convergent with
+    increasing slab thickness.
+
+    NOTE: Please use this functionality only if you observe divergent surface energy behaviour using the already
+    available total energy of the conventional bulk unit cell.
+
+    Detailed information is available in the following literature article.
     Schultz, Peter A.
     "First-principles calculations of metal surfaces. I. Slab-consistent bulk reference for convergent surface
     properties." Physical Review B 103.19 (2021): 195426.
