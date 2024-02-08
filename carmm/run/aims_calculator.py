@@ -206,7 +206,8 @@ def get_k_grid(model, sampling_density, verbose=False, simple_reciprocal_space_p
         simple_reciprocal_space_parameters: bool
             Flag switching between the simplified definition of reciprocal lattice
             parameters, which is 2π/a (a is the real space lattice parameter), and
-            the strict definition (see code or textbook).
+            the strict definition (see p86 Neil W. Ashcroft Solid State Physics (1976) or
+            section 2.4 of https://www.physics-in-a-nutshell.com/article/15/the-reciprocal-lattice).
         verbose: bool
             Flag turning print statements on/off
 
@@ -227,47 +228,42 @@ def get_k_grid(model, sampling_density, verbose=False, simple_reciprocal_space_p
         return None
 
     # These are lattice vectors
-    x_v = model.get_cell()[0]
-    y_v = model.get_cell()[1]
-    z_v = model.get_cell()[2]
+    lattice_v = np.array(model.get_cell())
     # These are lattice parameters
-    x = np.linalg.norm(x_v)
-    y = np.linalg.norm(y_v)
-    z = np.linalg.norm(z_v)
+    lattice_param = np.array([np.linalg.norm(v) for v in lattice_v])
+
+    # Check if the model is periodic and with vacuum along a certain axis. There could be vacuum if
+    # the lattice parameter is 5 angstrom longer than the range of atomic positions along an axis,
+    check_vacuum_and_periodic = np.array((lattice_param - np.ptp(model.get_positions(), axis=0)) > 5) & model.pbc
+    if sum(check_vacuum_and_periodic):
+        print("There could be vacuum in these axes", np.array(['x', 'y', 'z'])[check_vacuum_and_periodic],
+              ", but they are also periodic."
+              "\nIf you don't want the model to be treated as periodic in these dimensions,",
+              "set pbc for these axes to false, or check if k point sampling is actually 1 in these dimensions")
 
     if simple_reciprocal_space_parameters:
         # Simplified reciprocal lattice parameters
-        l_v_x = 2 * math.pi / x
-        l_v_y = 2 * math.pi / y
-        l_v_z = 2 * math.pi / z
+        reciprocal_param = 2 * math.pi / lattice_param
     else:
         # volume of the cell
-        volume = np.dot(x_v, np.cross(y_v, z_v))
-        # These are reciprocal lattice vectors
-        v_x = np.cross(y_v, z_v) * 2 * math.pi / volume
-        v_y = np.cross(z_v, x_v) * 2 * math.pi / volume
-        v_z = np.cross(x_v, y_v) * 2 * math.pi / volume
+        volume = np.dot(lattice_v[0], np.cross(lattice_v[1], lattice_v[2]))
+        # These are reciprocal lattice vectors.
+        # For definition, see section 2.4 of https://www.physics-in-a-nutshell.com/article/15/the-reciprocal-lattice
+        reciprocal_v = [np.cross(lattice_v[(i + 1) % 3], lattice_v[(i + 2) % 3]) * 2 * math.pi / volume
+                        for i in range(len(lattice_v))]
         # These are reciprocal lattice parameters
-        l_v_x = np.linalg.norm(v_x)
-        l_v_y = np.linalg.norm(v_y)
-        l_v_z = np.linalg.norm(v_z)
+        reciprocal_param = np.array([np.linalg.norm(r_v) for r_v in reciprocal_v])
 
     k_grid_density = 1 / (sampling_density * 2 * math.pi)
-
-    k_x = math.ceil(k_grid_density * l_v_x)
-    k_y = math.ceil(k_grid_density * l_v_y)
-    k_z = math.ceil(k_grid_density * l_v_z)
-
+    k_grid = k_grid_density * reciprocal_param
+    # Convert k_grid to integer
+    k_grid = np.array([math.ceil(k) for k in k_grid])
     # Remove k-sampling if direction is not periodic in any dimension
-    if dimensions < 3:
-        k_z = 1
-    if dimensions < 2:
-        k_y = 1
-
-    k_grid = (k_x, k_y, k_z)
+    k_grid[np.invert(model.pbc)] = 1
 
     if verbose:
-        print("Based on lattice xyz dimensions", "x", round(x, 3), "y", round(y, 3), "z", round(z, 3))
+        print("Based on lattice xyz dimensions", "x", round(lattice_param[0], 3), "y", round(lattice_param[1], 3),
+              "z", round(lattice_param[2], 3))
         print("and", "one k-point per", str(sampling_density), "* 2π Å^-1",
               "sampling density, the k-grid chosen for periodic calculation is",
               str(k_grid) + ".")
@@ -276,4 +272,4 @@ def get_k_grid(model, sampling_density, verbose=False, simple_reciprocal_space_p
                   "This would generate a slightly denser k-grid than using simple reciprocal space parameters in "
                   "cases where a non-orthogonal cell is used as input.")
 
-    return k_grid
+    return tuple(k_grid)
