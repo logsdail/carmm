@@ -80,7 +80,7 @@ class ReactMACE:
         else:
             return EMT()
 
-    def mace_optimise(self, atoms: Atoms, fmax=0.05, restart=True, relax_unit_cell=False):
+    def mace_optimise(self, atoms: Atoms, fmax=0.05, restart=True, relax_unit_cell=False, optimiser=None, opt_kwargs={}):
         """
         Args:
             atoms: Atoms object
@@ -91,11 +91,14 @@ class ReactMACE:
                 If True, seeks previously converged calculations based on filename
             relax_unit_cell: bool
                 Request unit cell relaxation for periodic bulk structures
+            optimiser: optimiser class
+                If None - the ase.optimize.BFGS is used
+            opt_kwargs: dict
+                Dictionary of keyword arguments specific to the provided optimiser class
 
         Returns: Atoms object
             Optimised structure
         """
-
         import os
 
         self._initialize_parameters(atoms)
@@ -110,12 +113,12 @@ class ReactMACE:
         if initial:
             self.initial = initial
 
-        self._perform_optimisation(subdirectory_name, counter, fmax, relax_unit_cell)
+        self._perform_optimisation(subdirectory_name, counter, fmax, relax_unit_cell, optimiser, opt_kwargs)
 
         return self.model_optimised
 
     def _perform_optimisation(self, subdirectory_name: str, counter: int, fmax: float,
-                              relax_unit_cell: bool):
+                              relax_unit_cell: bool, optimiser, opt_kwargs: dict):
         """
         An internal function used in mace_optimise to resolve the working directory and perform the optimisation
         calculation of a given structure.
@@ -125,6 +128,8 @@ class ReactMACE:
             counter: int
             fmax: float
             relax_unit_cell: bool
+            optimiser: optimiser class
+            opt_kwargs: dict
 
         Returns:None
 
@@ -133,6 +138,8 @@ class ReactMACE:
         from carmm.analyse.forces import is_converged
         import os
 
+        if not optimiser:
+            optimiser = BFGS
 
         opt_restarts = 0
 
@@ -146,9 +153,9 @@ class ReactMACE:
                 if relax_unit_cell:
                     from ase.constraints import StrainFilter
                     unit_cell_relaxer = StrainFilter(self.initial)
-                    opt = BFGS(unit_cell_relaxer, trajectory=traj_name, alpha=70.0)
+                    opt = optimiser(unit_cell_relaxer, trajectory=traj_name, **opt_kwargs)
                 else:
-                    opt = BFGS(self.initial, trajectory=traj_name, alpha=70.0)
+                    opt = optimiser(self.initial, trajectory=traj_name, **opt_kwargs)
 
                 opt.run(fmax=fmax, steps=80)
                 opt_restarts += 1
