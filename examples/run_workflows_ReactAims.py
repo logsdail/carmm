@@ -10,6 +10,7 @@ def test_run_workflows_ReactAims():
     from carmm.analyse.forces import is_converged
     import os
     from ase import Atoms
+    from ase.optimize import FIRE
     from ase.build import surface, add_adsorbate
     from ase.constraints import FixAtoms
 
@@ -31,7 +32,7 @@ def test_run_workflows_ReactAims():
 
     '''Call relevant calculations'''
     '''The below has been previously calculated and data is retrieved from saved trajectories'''
-    model_optimised, model_postprocessed = reactor.aims_optimise(atoms, fmax=0.05, restart=True)
+    model_optimised, model_postprocessed = reactor.aims_optimise(atoms, fmax=0.05, restart=True, optimiser=FIRE)
 
     zero_point_energy = reactor.vibrate(atoms, indices =[atom.index for atom in atoms]).get_zero_point_energy()
     
