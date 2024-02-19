@@ -9,9 +9,10 @@ def test_run_workflows_ReactMACE():
     from carmm.run.workflows.react_mace import ReactMACE
     from ase.build import molecule, bulk
     from ase.build import surface, add_adsorbate
+    from ase.constraints import FixAtoms
+    from ase.optimize import LBFGS
     from carmm.analyse.forces import is_converged
     from carmm.build.neb.symmetry import sort_z
-    from ase.constraints import FixAtoms
     import os
     import math
 
@@ -36,7 +37,7 @@ def test_run_workflows_ReactMACE():
 
     reactor.filename = "H2"
     ref_adsorbate = molecule("H2")
-    ref_adsorbate = reactor.mace_optimise(ref_adsorbate, fmax=0.01, restart=False)
+    ref_adsorbate = reactor.mace_optimise(ref_adsorbate, fmax=0.01, restart=False, optimiser=LBFGS)
     e_adsorbate = ref_adsorbate.get_potential_energy()
 
     assert math.sqrt((e_adsorbate - (-6.557687))**2) < 1e-6, "H2 energy with a small dataset should produce -6.557687"
