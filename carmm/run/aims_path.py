@@ -29,9 +29,14 @@ def set_aims_command(hpc='hawk', basis_set='light', defaults=2010, nodes_per_ins
     hpc = hpc.lower()
 
     if hpc == "custom":
-
         assert "CARMM_AIMS_ROOT_DIRECTORY" in os.environ, \
             "hpc is 'custom' but environmental variable CARMM_AIMS_ROOT_DIRECTORY not specified."
+
+        custom_root_dir = os.environ["CARMM_AIMS_ROOT_DIRECTORY"]
+    else:
+        custom_root_dir = None
+
+
 
     species = "species_defaults/" + "defaults_" + str(defaults) + "/" + basis_set
 
@@ -54,7 +59,7 @@ def set_aims_command(hpc='hawk', basis_set='light', defaults=2010, nodes_per_ins
         "archer2": "/work/e05/e05-files-log/shared/software/fhi-aims/",
         "young": "/home/mmm0170/Software/fhi-aims/",
         "aws": "/shared/logsdail_group/sing/",
-        "custom": os.environ['CARMM_AIMS_ROOT_DIRECTORY']
+        "custom": custom_root_dir
     }
 
     executable_d = {"compiled": "bin/aims.$VERSION.scalapack.mpi.x",
