@@ -7,7 +7,12 @@ def set_aims_command(hpc='hawk', basis_set='light', defaults=2010, nodes_per_ins
     Parameters:
     hpc: String
         Name of the HPC facility where the jobs are being run
-        Options: 'hawk', 'hawk-amd', 'isambard', 'archer2', 'young', 'aws'
+        Options: 'hawk', 'hawk-amd', 'isambard', 'archer2', 'young', 'aws', 'custom'
+        NOTE 1: 'custom' requires the environmental variable "CARMM_AIMS_ROOT_DIRECTORY"
+        before running to allow logic of basis set selection, while maintaining
+        free choice of basis set folders.
+        NOTE 2: 'custom' requires environmental variable ASE_AIMS_COMMAND be set, with
+        the desired number of mpi processes and WITHOUT a default output file
     basis_set: String
         Name of basis set for FHI-aims
         Options: 'light', 'intermediate', 'tight', 'really_tight' etc.
@@ -23,6 +28,11 @@ def set_aims_command(hpc='hawk', basis_set='light', defaults=2010, nodes_per_ins
 
     hpc = hpc.lower()
 
+    if hpc == "custom":
+
+        assert "CARMM_AIMS_ROOT_DIRECTORY" in os.environ, \
+            "hpc is 'custom' but environmental variable CARMM_AIMS_ROOT_DIRECTORY not specified."
+
     species = "species_defaults/" + "defaults_" + str(defaults) + "/" + basis_set
 
     preamble = {
@@ -31,7 +41,8 @@ def set_aims_command(hpc='hawk', basis_set='light', defaults=2010, nodes_per_ins
         "isambard": "time aprun",
         "archer2": "srun --cpu-bind=cores --distribution=block:block --hint=nomultithread",
         "young": "gerun",
-        "aws": "time srun --mpi=pmi2 --hint=nomultithread --distribution=block:block"
+        "aws": "time srun --mpi=pmi2 --hint=nomultithread --distribution=block:block",
+        "custom": ""
     }
 
     assert hpc in preamble, "Inappropriate HPC facility: " + hpc + "is not recognised."
@@ -43,6 +54,7 @@ def set_aims_command(hpc='hawk', basis_set='light', defaults=2010, nodes_per_ins
         "archer2": "/work/e05/e05-files-log/shared/software/fhi-aims/",
         "young": "/home/mmm0170/Software/fhi-aims/",
         "aws": "/shared/logsdail_group/sing/",
+        "custom": os.environ['CARMM_AIMS_ROOT_DIRECTORY']
     }
 
     executable_d = {"compiled": "bin/aims.$VERSION.scalapack.mpi.x",
@@ -53,11 +65,11 @@ def set_aims_command(hpc='hawk', basis_set='light', defaults=2010, nodes_per_ins
     '''Handle compiled and containerized FHIaims versions'''
     if hpc == "aws":
         executable = executable_d["apptainer"]
-    else:
+    elif hpc != "custom":
         executable = fhi_aims_directory[hpc] + executable_d["compiled"]
 
     """Set the relevant environment variables based on HPC"""
-    os.environ["AIMS_SPECIES_DIR"] = fhi_aims_directory[hpc] + species     
+    os.environ["AIMS_SPECIES_DIR"] = fhi_aims_directory[hpc] + species
 
     # Define the executable command
     if nodes_per_instance:
@@ -69,11 +81,15 @@ def set_aims_command(hpc='hawk', basis_set='light', defaults=2010, nodes_per_ins
         if hpc == "aws":
             assert nodes_per_instance == 1, "FHI-aims does not run on more than one node on AWS at present."
 
-    # This has a helper function as we need to take different actions 
-    # if running single or task-farmed calculations
-    cpu_command = _get_cpu_command(hpc, nodes_per_instance)
+    if hpc == 'custom':
+        assert "ASE_AIMS_COMMAND" in os.environ, \
+            "set_aims_command: option hpc is 'custom', but ASE_AIMS_COMMAND not set."
+    else:
+        # This has a helper function as we need to take different actions
+        # if running single or task-farmed calculations
+        cpu_command = _get_cpu_command(hpc, nodes_per_instance)
 
-    os.environ["ASE_AIMS_COMMAND"] = f"{preamble[hpc]} {cpu_command} {executable}"
+        os.environ["ASE_AIMS_COMMAND"] = f"{preamble[hpc]} {cpu_command} {executable}"
 
 def _get_cpu_command(hpc, nodes_per_instance=None):
     """
