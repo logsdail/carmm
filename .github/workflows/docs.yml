@@ -33,4 +33,4 @@ jobs:
       run: |
         sphinx-apidoc -o docs/source carmm
         cd docs/
-        make html
+        make singlehtml
