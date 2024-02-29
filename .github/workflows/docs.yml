@@ -22,7 +22,7 @@ jobs:
     - name: Install Sphinx and necessary dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install sphinx sphinx-autodoc-typehints sphinx-rtd-theme
+        pip install sphinx sphinx-autodoc-typehints sphinx-rtd-theme sphinx-apidoc 
         # Setup Python environment
 
     - name: Setup Python environment
@@ -31,5 +31,6 @@ jobs:
 
     - name: Build Sphinx documentation
       run: |
+        sphinx-apidoc -o docs/source carmm
         cd docs/
         make html
