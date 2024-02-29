@@ -32,5 +32,4 @@ jobs:
     - name: Build Sphinx documentation
       run: |
         sphinx-apidoc -o docs/source carmm
-        cd docs/
-        make singlehtml
+        sphinx-build -b html docs/source docs/build
