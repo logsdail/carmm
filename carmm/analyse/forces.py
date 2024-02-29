@@ -18,15 +18,13 @@ def is_converged(atoms, fmax=0.01):
         if not atoms.calc.calculation_required(atoms, ['forces']):
             f = atoms.get_forces()
 
-            '''
-            List comprehension for:
-            - Retrieving forces from the calculator
-            - Taking their vector norm
-            - But only for atoms without constraints
-            '''
+            if np.amax([np.linalg.norm(f[x]) for x in range(len(atoms))]) <= fmax:
+                converged = True
 
-            if np.amax([np.linalg.norm(f[x]) \
-                    for x in range(len(atoms))]) <= fmax:
+        elif not atoms.calc.calculation_required(atoms, ['stress']):
+            s = atoms.get_stress()
+
+            if np.amax([np.linalg.norm(s[x]) for x in range(len(atoms))]) <= fmax:
                 converged = True
 
     return converged
