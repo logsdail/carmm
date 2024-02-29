@@ -27,9 +27,9 @@ jobs:
 
     - name: Setup Python environment
       run: | 
+        sphinx-apidoc -o docs/source carmm
         echo "PYTHONPATH=/home/runner/work/carmm/carmm:$PYTHONPATH" >> $GITHUB_ENV
 
     - name: Build Sphinx documentation
       run: |
-        sphinx-apidoc -o docs/source carmm
         sphinx-build -b html docs/source docs/build
