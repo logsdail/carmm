@@ -1,12 +1,12 @@
 #===============================================================================
-# FHI-aims file: Opt_C3H8_0\control.in
+# FHI-aims file: Opt_H2_initial_0\control.in
 # Created using the Atomic Simulation Environment (ASE)
-# Thu Aug 17 18:26:04 2023
+# Fri Aug 11 17:03:39 2023
 #===============================================================================
 spin                               none
 relativistic                       atomic_zora scalar
 compute_forces                     .true.
-use_pimd_wrapper                   LAPTOP-0TNNR1CT 19084
+use_pimd_wrapper                   LAPTOP-0TNNR1CT 48746
 override_warning_libxc             True
 xc                                 pbe
 #===============================================================================
