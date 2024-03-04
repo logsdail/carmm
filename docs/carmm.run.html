@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="./">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>carmm.run package &#8212; CARMM  documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=d1102ebc" />
+    <link rel="stylesheet" type="text/css" href="_static/alabaster.css?v=12dfc556" />
+    <script src="_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="_static/doctools.js?v=888ff710"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <section id="carmm-run-package">
+<h1>carmm.run package<a class="headerlink" href="#carmm-run-package" title="Link to this heading">¶</a></h1>
+<section id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Link to this heading">¶</a></h2>
+</section>
+<section id="module-carmm.run.aims_calculator">
+<span id="carmm-run-aims-calculator-module"></span><h2>carmm.run.aims_calculator module<a class="headerlink" href="#module-carmm.run.aims_calculator" title="Link to this heading">¶</a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="carmm.run.aims_calculator.get_aims_and_sockets_calculator">
+<span class="sig-prename descclassname"><span class="pre">carmm.run.aims_calculator.</span></span><span class="sig-name descname"><span class="pre">get_aims_and_sockets_calculator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dimensions</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">port</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">host</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logfile</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'socketio.log'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">check_socket</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">codata_warning</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#carmm.run.aims_calculator.get_aims_and_sockets_calculator" title="Link to this definition">¶</a></dt>
+<dd><p>Method to return a sockets calculator (for i-Pi based socket connectivity)
+and also an associated FHI-aims calculator for ASE</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>dimensions</strong> – Integer
+Dimensions is _not_ used in this routine, but we make it necessary so
+the passthrough isn’t problematic for inexperienced users. See get_aims_calculator()</p></li>
+<li><p><strong>port</strong> – None or Integer
+The port for connection between FHI-aims and ASE with i-Pi sockets.
+This is fairly arbitrary as long as it doesn’t clash with local settings.
+If None an integer between 12345 and 60000 will be picked at random.</p></li>
+<li><p><strong>host</strong> – String
+Name of host computer for ASE. Necessary for calculations where MPI runs on the compute nodes.
+This is now defaulted to None, and then will self-identify the host name if unidentified.
+Long-term, we should consider removing this variable to insulate the users from having to set it.</p></li>
+<li><p><strong>logfile</strong> – String
+Location of output from sockets communication.</p></li>
+<li><p><strong>check_socket</strong> – Boolean
+Whether we want the automatically identify and resolve port clashes.</p></li>
+<li><p><strong>verbose</strong> – Boolean
+For testing of the interface when searching for empty ports.</p></li>
+<li><p><strong>codata_warning</strong> – Boolean
+Warn the user about Hartree to eV conversion being performed in ASE rather than FHI-aims.
+ASE uses CODATA 2014 and FHI-aims uses CODATA 2002 which yields energy discrepancies.
+The warning message can be turned off if set to False.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="simple">
+<dt><a href="#id1"><span class="problematic" id="id2">**</span></a>kwargs:</dt><dd><p>Any other keyword arguments that a user wants to set. These are passed through.</p>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p><dl class="simple">
+<dt>Wrapper for ASE calculator</dt><dd><p>Used for i-Pi connectvity, and should be assigned to optimisation/dynamics Object</p>
+</dd>
+</dl>
+<p>FHI_calc: FHI-aims ASE calculator</p>
+</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>Socket_calc</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="carmm.run.aims_calculator.get_aims_calculator">
+<span class="sig-prename descclassname"><span class="pre">carmm.run.aims_calculator.</span></span><span class="sig-name descname"><span class="pre">get_aims_calculator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dimensions</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">k_grid</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">xc</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'pbe'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">compute_forces</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'true'</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#carmm.run.aims_calculator.get_aims_calculator" title="Link to this definition">¶</a></dt>
+<dd><p>Method to return a “default” FHI-aims calculator.
+Note: This file should not be changed without consultation,</p>
+<blockquote>
+<div><p>as changes could affect many users in the group.</p>
+</div></blockquote>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>dimensions</strong> – Integer
+Determines whether we have a “gas”-phase (0) or “periodic” structure (2 or 3)</p></li>
+<li><p><strong>k_grid</strong> – List of integers
+Gives the k-grid sampling in x-, y- and z- direction. e.g. [3, 3, 3]</p></li>
+<li><p><strong>xc</strong> – String
+XC of choice</p></li>
+<li><p><strong>compute_forces</strong> – String
+Determines whether forces are enabled (“true”) or not enabled (“false”).</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="simple">
+<dt><a href="#id3"><span class="problematic" id="id4">**</span></a>kwargs:</dt><dd><p>Any other keyword arguments that a user wants to set. These are passed through.</p>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>FHI-aims ASE calculator</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>FHI_calc</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="carmm.run.aims_calculator.get_k_grid">
+<span class="sig-prename descclassname"><span class="pre">carmm.run.aims_calculator.</span></span><span class="sig-name descname"><span class="pre">get_k_grid</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sampling_density</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">simple_reciprocal_space_parameters</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#carmm.run.aims_calculator.get_k_grid" title="Link to this definition">¶</a></dt>
+<dd><p>Based converged value of reciprocal space sampling provided,
+this function analyses the xyz-dimensions of the simulation cell
+and returns the minimum k-grid as a tuple that can be used
+as a value for the k_grid keyword in the Aims calculator.
+This function allows to maintain consistency in input
+for variable supercell sizes.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>model</strong> – Atoms object
+Periodic model that requires k-grid for calculation in FHI-aims.</p></li>
+<li><p><strong>sampling_density</strong> – <p>float
+In a simple approach, this is a value of minimum reciprocal space
+sampling required for accuracy of the periodic calculation. The
+value is a fraction between 0 and 1, unit is /Å.
+It is often reported as one k-point per (sampling_density) * 2π Å^-1
+in literature, representing the spacing of k-points along the vector of
+the reciprocal unit cell.</p>
+<p>In FHI-aims, there is a similar parameter called “k_grid_density”,
+which is float defining the density of k-point splits along the
+vector of the reciprocal unit cell, unit is nkpts/Å^-1.
+This FHI-aims specific parameter is inversely related to the
+definition above for sampling density as:
+k_grid_density = 1 / (sampling_density * 2 * math.pi)</p>
+<p>Ultimately the choice of definition is a matter of taste, and should be
+explained in any distribution of the outcomes</p>
+</p></li>
+<li><p><strong>simple_reciprocal_space_parameters</strong> – bool
+Flag switching between the simplified definition of reciprocal lattice
+parameters, which is 2π/a (a is the real space lattice parameter), and
+the strict definition (see p86 Neil W. Ashcroft Solid State Physics (1976) or
+section 2.4 of <a class="reference external" href="https://www.physics-in-a-nutshell.com/article/15/the-reciprocal-lattice">https://www.physics-in-a-nutshell.com/article/15/the-reciprocal-lattice</a>).</p></li>
+<li><p><strong>verbose</strong> – bool
+Flag turning print statements on/off</p></li>
+<li><p><strong>Returns</strong> – float containing 3 integers: (kx, ky, kz)
+or
+None if a non-periodic model is presented</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="module-carmm.run.aims_path">
+<span id="carmm-run-aims-path-module"></span><h2>carmm.run.aims_path module<a class="headerlink" href="#module-carmm.run.aims_path" title="Link to this heading">¶</a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="carmm.run.aims_path.set_aims_command">
+<span class="sig-prename descclassname"><span class="pre">carmm.run.aims_path.</span></span><span class="sig-name descname"><span class="pre">set_aims_command</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">hpc</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'hawk'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">basis_set</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'light'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">defaults</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2010</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nodes_per_instance</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#carmm.run.aims_path.set_aims_command" title="Link to this definition">¶</a></dt>
+<dd><p>Choose supercomputer and basis_set to obtain FHI-aims run command.
+Can be useful to e.g. perform a calculation with a larger basis set
+after a geometry optimisation.</p>
+<p>Parameters:
+hpc: String</p>
+<blockquote>
+<div><p>Name of the HPC facility where the jobs are being run
+Options: ‘hawk’, ‘hawk-amd’, ‘isambard’, ‘archer2’, ‘young’, ‘aws’</p>
+</div></blockquote>
+<dl>
+<dt>basis_set: String</dt><dd><p>Name of basis set for FHI-aims
+Options: ‘light’, ‘intermediate’, ‘tight’, ‘really_tight’ etc.</p>
+</dd>
+<dt>defaults: int</dt><dd><p>Either 2010 or 2020 referring to the default species basis sets
+that come with new FHI-aims release, which adhere to the year 2010</p>
+<blockquote>
+<div><p>or 2020 standard. Old 2010 value by default to avoid disruption
+for users.</p>
+</div></blockquote>
+</dd>
+<dt>nodes_per_instance: int, optional</dt><dd><p>Number of nodes per separate instance of FHI-aims, when running task-farmed</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="module-carmm.run">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-carmm.run" title="Link to this heading">¶</a></h2>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">CARMM</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;2024, Logsdail Group.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 7.2.6</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 0.7.16</a>
+      
+      |
+      <a href="_sources/carmm.run.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>
