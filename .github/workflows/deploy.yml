@@ -2,7 +2,7 @@ name: Deploy GitHub Pages
 
 on:
   workflow_run:
-      workflows: ["Sphinx Documentation Build"] # Trigger on the completion of Documentation Workflow
+      workflows: ["Sphinx"] # Trigger on the completion of Documentation Workflow
       types:
         - completed
 
