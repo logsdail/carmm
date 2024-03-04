@@ -53,6 +53,11 @@ jobs:
       run: |
         sphinx-build -b singlehtml carmm/docs/source docs
 
+    # tell GitHub not to use the Jekyll builder explicitly
+    - - name: Prevent using Jekyll to use static files properly
+          run: |
+            touch docs/.nojekyll 
+
     # Create an artifact of the html output.
     - name: Upload documentation artifacts
       uses: actions/upload-artifact@v1
