@@ -70,7 +70,7 @@ jobs:
       - name: Download artifact
         uses: actions/download-artifact@v2
         with:
-          name: sphinx-docs
+          name: DocumentationHTML
           path: docs/
       - name: Deploy to GitHub Pages
         uses: actions/deploy-pages@v4
