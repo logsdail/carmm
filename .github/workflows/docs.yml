@@ -41,7 +41,8 @@ jobs:
         sphinx-build -b singlehtml carmm/docs/source docs
 
     # Create an artifact of the html output.
-    - uses: actions/upload-artifact@v1
+    - name: Upload documentation artifacts
+      uses: actions/upload-artifact@v1
       with:
         name: DocumentationHTML
         path: docs/
