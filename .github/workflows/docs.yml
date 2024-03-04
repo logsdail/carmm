@@ -65,6 +65,11 @@ jobs:
         name: DocumentationHTML
         path: docs/
 
+  deploy:
+    needs: build_docs
+    runs-on: ubuntu-latest
+
+    steps:
     # Publish built docs to gh-pages branch.
     - name: Commit documentation changes
       run: |
