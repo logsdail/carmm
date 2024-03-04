@@ -3,7 +3,7 @@ name: Sphinx
 on:
   push:
     branches:
-      - ikowalec-docs
+      - main
 
 jobs:
   build_docs:
