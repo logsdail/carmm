@@ -3,14 +3,7 @@ name: Sphinx
 on:
   push:
     branches:
-      - main
-  pull_request:
-
-# Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
-permissions:
-  contents: read
-  pages: write
-  id-token: write
+      - ikowalec-docs
 
 jobs:
   build_docs:
@@ -47,26 +40,14 @@ jobs:
 
     # tell GitHub not to use the Jekyll builder explicitly
     - name: Prevent using Jekyll to use static files properly
-          run: |
-            touch docs/.nojekyll 
+      run: |
+        touch docs/.nojekyll 
 
-    # Create an artifact of the html output.
-    - name: Upload documentation artifacts
-      uses: actions/upload-artifact@v1
-      with:
-        name: DocumentationHTML
-        path: docs/
-
-  deploy:
-    needs: build_docs
-    runs-on: ubuntu-latest
-
-    steps:
     # Publish built docs to gh-pages branch.
     - name: Commit documentation changes
       run: |
         git clone https://github.com/logsdail/carmm.git --branch gh-pages --single-branch gh-pages
-        cp -r docs/ gh-pages/docs
+        cp -r docs/* gh-pages/docs
         cd gh-pages
         git config --local user.email "action@github.com"
         git config --local user.name "GitHub Action"
