@@ -59,21 +59,3 @@ jobs:
       with:
         name: DocumentationHTML
         path: docs/
-
-  deploy:
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    runs-on: ubuntu-latest
-    needs: build_docs
-    steps:
-      - name: Download artifact
-        uses: actions/download-artifact@v2
-        with:
-          name: DocumentationHTML
-          path: docs/
-      - name: Deploy to GitHub Pages
-        uses: actions/deploy-pages@v4
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          folder: docs/
