@@ -31,8 +31,9 @@ jobs:
 
     - name: Build Sphinx API documentation
       run: |
-        sphinx-apidoc -o carmm/docs/source carmm
+        sphinx-apidoc -o carmm/docs/source .
+
 
     - name: Build Sphinx HTML
       run: |
-        sphinx-build -b singlehtml carmm/docs/source docs/build
+        sphinx-build -b singlehtml carmm/docs/source docs
