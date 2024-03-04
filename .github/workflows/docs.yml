@@ -29,11 +29,10 @@ jobs:
       run: | 
         echo "PYTHONPATH=/home/runner/work/carmm/carmm:$PYTHONPATH" >> $GITHUB_ENV
 
-    - name: Build Sphinx api documentation
+    - name: Build Sphinx API documentation
       run: |
-        ls -ltR
-        sphinx-apidoc -o docs/source carmm
+        sphinx-apidoc -o carmm/docs/source carmm
 
     - name: Build Sphinx HTML
       run: |
-        sphinx-build -b singlehtml docs/source docs/build
+        sphinx-build -b singlehtml carmm/docs/source carmm/docs/build
