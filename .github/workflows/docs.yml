@@ -37,8 +37,3 @@ jobs:
     - name: Build Sphinx HTML
       run: |
         sphinx-build -b singlehtml carmm/docs/source docs
-
-    - name: Move the HTML into docs in the $GITHUB_WORKSPACE
-      run : |
-        mkdir -p $GITHUB_WORKSPACE/docs
-        mv docs/*.html $GITHUB_WORKSPACE/docs
