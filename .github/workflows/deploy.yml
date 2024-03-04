@@ -30,7 +30,7 @@ jobs:
 
       # Deploy the built site
       - name: Deploy to GitHub Pages
-        uses: actions/deploy-pages
+        uses: actions/deploy-pages@v4
         with:
           branch: gh-pages # Or the branch you want to deploy to
           folder: docs/
