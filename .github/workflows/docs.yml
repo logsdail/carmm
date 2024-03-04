@@ -25,15 +25,23 @@ jobs:
         pip install sphinx sphinx-autodoc-typehints sphinx-rtd-theme
         # Setup Python environment
 
+    # Ensure the Python environment setup is consistent with the main.yml
     - name: Setup Python environment
       run: | 
         echo "PYTHONPATH=/home/runner/work/carmm/carmm:$PYTHONPATH" >> $GITHUB_ENV
 
+    # Build the documentation dynamically from docstrings in the code
     - name: Build Sphinx API documentation
       run: |
         sphinx-apidoc -o carmm/docs/source .
 
-
+    # Build a website based on the retrieved docstrings
     - name: Build Sphinx HTML
       run: |
         sphinx-build -b singlehtml carmm/docs/source docs
+
+    # Create an artifact of the html output.
+    - uses: actions/upload-artifact@v1
+      with:
+        name: DocumentationHTML
+        path: docs/
