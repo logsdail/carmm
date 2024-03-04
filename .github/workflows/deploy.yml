@@ -1,0 +1,37 @@
+name: Deploy GitHub Pages
+
+on:
+  push:
+    branches:
+      - main
+    pull request:
+
+jobs:
+  build:
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      # Download artifact from another workflow (docs.yml)
+      - name: Download artifact
+        uses: actions/download-artifact@v2
+        with:
+          name: DocumentationHTML
+          path: $GITHUB_WORKSPACE
+
+  deploy:
+    # Add a dependency to the build job
+    needs: build
+    runs-on: ubuntu-latest
+
+    steps:
+
+      # Add any necessary steps to build your GitHub page
+
+      # Deploy the built site
+      - name: Deploy to GitHub Pages
+        uses: actions/deploy-pages
+        with:
+          branch: gh-pages # Or the branch you want to deploy to
+          folder: docs/
+          token: ${{ secrets.GITHUB_TOKEN }}
