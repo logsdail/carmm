@@ -36,4 +36,4 @@ jobs:
 
     - name: Build Sphinx HTML
       run: |
-        sphinx-build -b singlehtml carmm/docs/source docs
+        sphinx-build -b singlehtml carmm/docs/source carmm/docs
