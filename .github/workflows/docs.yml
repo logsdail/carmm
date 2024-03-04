@@ -40,8 +40,16 @@ jobs:
         sphinx-build -b singlehtml carmm/docs/source docs
 
     # Create an artifact of the html output.
-    - name: Upload documentation artifacts
-      uses: actions/upload-artifact@v1
+    #- name: Upload documentation artifacts
+    #  uses: actions/upload-artifact@v1
+    #  with:
+    #    name: DocumentationHTML
+    #    path: docs/
+
+    # Deploy the built site
+    - name: Deploy to GitHub Pages
+      uses: actions/deploy-pages@v4
       with:
-        name: DocumentationHTML
-        path: docs/
+        branch: gh-pages
+        folder: docs/
+        token: ${{ secrets.GITHUB_TOKEN }}
