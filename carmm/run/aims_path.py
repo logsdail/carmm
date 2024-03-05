@@ -28,6 +28,8 @@ def set_aims_command(hpc='hawk', basis_set='light', defaults=2010, nodes_per_ins
 
     hpc = hpc.lower()
 
+    #TODO: Handling of AIMs ASE calculator is due to change in ASE 3.23
+    #TODO: This method will need to be futureproof/backwards compatible
     if hpc == "custom":
         assert "CARMM_AIMS_ROOT_DIRECTORY" in os.environ, \
             "hpc is 'custom' but environmental variable CARMM_AIMS_ROOT_DIRECTORY not specified."
@@ -35,7 +37,6 @@ def set_aims_command(hpc='hawk', basis_set='light', defaults=2010, nodes_per_ins
         custom_root_dir = os.environ["CARMM_AIMS_ROOT_DIRECTORY"]
     else:
         custom_root_dir = None
-
 
 
     species = "species_defaults/" + "defaults_" + str(defaults) + "/" + basis_set
