@@ -87,7 +87,7 @@ class ReactAims:
             self.logger.debug(f"            output folder names.                                               ")
 
     def aims_optimise(self, atoms: Atoms, fmax: float = 0.01, post_process: str = None, relax_unit_cell: bool = False,
-                      restart: bool = True, optimiser=None, opt_kwargs: dict = {}):
+                      restart: bool = True, optimiser=None, opt_kwargs: dict = {}, mace_preopt=False):
 
         """
          The function needs information about structure geometry (model), name of hpc system
@@ -131,6 +131,13 @@ class ReactAims:
 
         if initial is not None:
             self.initial = initial
+
+        """GAB: Assuming that the user will not want to overwrite their geometries with a MACE
+                guess. If they need to restart the MACE guess, they have bigger problems."""
+        if mace_preopt and not restart:
+            assert self._MaceReactor is not None, "Please set MaceReact_Preoptimiser if mace_preopt is True"
+
+            self.initial = self._mace_preopitimise(self.initial, fmax, relax_unit_cell, optimiser, opt_kwargs)
 
         self._perform_optimization(subdirectory_name, out, counter, fmax, relax_unit_cell, optimiser, opt_kwargs)
         self._finalize_optimization(subdirectory_name, post_process)
@@ -323,11 +330,10 @@ class ReactAims:
 
         return self.initial
 
-
     def search_ts(self, initial: Atoms, final: Atoms,
                   fmax: float, unc: float, interpolation=None,
                   n=0.25, steps=40, restart=True, prev_calcs=None,
-                  input_check=0.01):
+                  input_check=0.01, mace_preopt=True):
         """
         This function allows calculation of the transition state using the CatLearn software package in an
         ASE/sockets/FHI-aims setup. The resulting converged band will be located in the MLNEB.traj file.
@@ -364,11 +370,15 @@ class ReactAims:
         """
 
         from catlearn.optimize.mlneb import MLNEB
+        from ase.io import write
 
         #TODO: calling mlneb.run() generates files in the current directory, reverting to os.chdir() necessary
         assert not self.nodes_per_instance, "ReactAims.nodes_per_instance is not None \n" \
                                             "Dependency on the catlearn.mlneb module cannot run TS " \
                                             "search concurrently without issues. "
+
+        if mace_preopt:
+            assert isinstance(n, int), "Integer number of images required for MACE TS preoptimiser"
 
         """Retrieve common properties"""
         basis_set = self.basis_set
@@ -382,9 +392,16 @@ class ReactAims:
 
         self._initialize_parameters(initial)
 
-
         """Set the environment parameters"""
         set_aims_command(hpc=hpc, basis_set=basis_set, defaults=2020, nodes_per_instance=self.nodes_per_instance)
+
+        if mace_preopt:
+            assert self._MaceReactor is not None, "Please set MaceReact_Preoptimiser if mace_preopt is True"
+            preopt_ts = self._mace_preopitimise_ts(initial, final, fmax, n, self.interpolation, input_check)
+
+            initial = preopt_ts[0]
+            final = preopt_ts[-1]
+            self.interpolation = preopt_ts[1:-1]
 
         if input_check:
             filename_copy = self.filename
@@ -407,12 +424,26 @@ class ReactAims:
                                    verbose=self.verbose)
 
         counter, out, subdirectory_name, minimum_energy_path = helper.restart_setup()
+
         if not minimum_energy_path:
             minimum_energy_path = [None, None]
 
+        os.makedirs(subdirectory_name, exist_ok=True)
         traj_name = f"{subdirectory_name}/ML-NEB.traj"
 
         if not minimum_energy_path[0]:
+            """GAB: ML-NEB misbehaves if a calculator is not provided for interpolated images"""
+            initial = self.attach_calculator(initial, params, out_fn=out, dimensions=self.dimensions, directory=".",
+                                             calc_e=True)
+            final = self.attach_calculator(final, params, out_fn=out, dimensions=self.dimensions, directory=".",
+                                           calc_e=True)
+
+            if isinstance(self.interpolation, list):
+                for idx, image in enumerate(self.interpolation):
+                    if (self.interpolation[idx].calc) is None:
+                        self.attach_calculator(self.interpolation[idx], params, out_fn=out, dimensions=self.dimensions,
+                                               directory=".", calc_e=True)
+
             """Create the sockets calculator - using a with statement means the object is closed at the end."""
             with _calc_generator(params,
                                  out_fn=out,
@@ -424,8 +455,6 @@ class ReactAims:
                     self.prev_calcs = prev_calcs
                 elif minimum_energy_path[1]:
                     self.prev_calcs = minimum_energy_path[1]
-
-                os.makedirs(subdirectory_name, exist_ok=True)
 
                 if self.dry_run:
                     calculator = EMT()
@@ -469,7 +498,6 @@ class ReactAims:
         self.ts = sorted(neb, key=lambda k: k.get_potential_energy(), reverse=True)[0]
 
         return self.ts
-
 
     def vibrate(self, atoms: Atoms, indices: list, read_only=False):
         """
@@ -544,6 +572,103 @@ class ReactAims:
             vib.write_mode()
             return vib
 
+    @property
+    def MaceReact_Preoptimiser(self):
+        """
+        Getter function for MaceReact.
+
+        MaceReact Obj:
+               Returns User-defined MaceReact.
+        """
+
+        return self._MaceReactor
+
+    @MaceReact_Preoptimiser.setter
+    def MaceReact_Preoptimiser(self, MaceReact):
+        """
+        Sets already user defined MaceReact object
+        Args:
+            MaceReact Obj:
+                User-defined MaceReact.
+        """
+
+        self._MaceReactor = MaceReact
+
+    def _mace_preopitimise(self, atoms: Atoms, fmax, relax_unit_cell, optimiser, opt_kwargs = {}):
+        """
+        Args:
+            ReactMace:
+
+        Returns:
+            atoms
+        """
+
+        filname = self._MaceReactor.filename
+        self._MaceReactor.filename = "MACE_PREOPT_" + self.filename
+
+        preopt_atoms = self._MaceReactor.mace_optimise(atoms, fmax, restart=False, relax_unit_cell=relax_unit_cell,
+                                                       optimiser = optimiser, opt_kwargs = opt_kwargs)
+
+        self._MaceReactor.filename = filname
+
+        # Clean calculator to prevent future problems
+        preopt_atoms.calc = None
+
+        return preopt_atoms
+
+    def _mace_preopitimise_ts(self, initial, final, fmax, n, interpolation, input_check):
+        """
+        Args:
+            ReactMace:
+
+        Returns:
+        """
+
+        filname = self._MaceReactor.filename
+        self._MaceReactor.filename = "MACE_PREOPT_" + self.filename
+
+        preopt_ts = self._MaceReactor.search_ts_neb(initial, final, fmax, n, k=0.1, method="improvedtangent",
+                                        interpolation=interpolation, input_check=input_check,
+                                        max_steps=1000, restart=False)
+
+        self._MaceReactor.filename = filname
+
+        new_interpolation = self._MaceReactor.interpolation.copy()
+        for idx, image in enumerate(new_interpolation):
+            new_interpolation[idx].calc = None
+
+        return new_interpolation
+
+    def attach_calculator(self, atoms, params,
+                    out_fn="aims.out",
+                    forces=True,
+                    dimensions=2,
+                    relax_unit_cell=False,
+                    directory=".",
+                    calc_e=False):
+        """
+        Potentially a redundant functionality, but condenses attaching and closing a socket
+        calculator to a given Atoms object
+
+        Args:
+            calc_e: Boolean, optional
+                Calculate total energy through Atoms.get_potential_energy().
+
+        Returns:
+            atoms: Atoms
+                Input atoms object with correctly closed socket.
+
+        """
+
+        with _calc_generator(params, out_fn=out_fn, forces=forces, dimensions=dimensions,
+                             relax_unit_cell=relax_unit_cell,directory=directory)[0] as calculator:
+
+            atoms.calc = calculator
+
+            if calc_e:
+                atoms.get_potential_energy()
+
+        return atoms
 
 def _calc_generator(params,
                     out_fn="aims.out",
