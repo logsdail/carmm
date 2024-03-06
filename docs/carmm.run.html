@@ -182,7 +182,12 @@ after a geometry optimisation.</p>
 hpc: String</p>
 <blockquote>
 <div><p>Name of the HPC facility where the jobs are being run
-Options: ‘hawk’, ‘hawk-amd’, ‘isambard’, ‘archer2’, ‘young’, ‘aws’</p>
+Options: ‘hawk’, ‘hawk-amd’, ‘isambard’, ‘archer2’, ‘young’, ‘aws’, ‘custom’
+NOTE 1: ‘custom’ requires the environmental variable “CARMM_AIMS_ROOT_DIRECTORY”
+before running to allow logic of basis set selection, while maintaining
+free choice of basis set folders.
+NOTE 2: ‘custom’ requires environmental variable ASE_AIMS_COMMAND be set, with
+the desired number of mpi processes and WITHOUT a default output file</p>
 </div></blockquote>
 <dl>
 <dt>basis_set: String</dt><dd><p>Name of basis set for FHI-aims
