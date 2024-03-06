@@ -61,7 +61,7 @@ class ReactAims:
         self.nodes_per_instance = nodes_per_instance
         self.verbose = verbose
 
-        self.logger = set_logger(warning_lvl)
+        self.logger = set_logger("react_logger", warning_lvl)
 
         """Define additional parameters"""
         self.initial = None  # input for optimisation or input for NEB initial image
