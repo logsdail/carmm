@@ -447,25 +447,9 @@ class ReactAims:
         if not minimum_energy_path:
             minimum_energy_path = [None, None]
 
-        os.makedirs(subdirectory_name, exist_ok=True)
         traj_name = f"{subdirectory_name}/ML-NEB.traj"
 
         if not minimum_energy_path[0]:
-
-            if mace_preopt:
-                """GAB: ML-NEB misbehaves if a calculator is not provided for interpolated images"""
-                """     following function ensure s correct calculators are attached with closed """
-                """     sockets.                                                                 """
-                initial = self.attach_calculator(initial, params, out_fn=out,
-                                           dimensions=self.dimensions, directory=".", calc_e=False)
-                final = self.attach_calculator(final, params, out_fn=out,
-                                           dimensions=self.dimensions, directory=".", calc_e=False)
-
-                if isinstance(self.interpolation, list):
-                    for idx, image in enumerate(self.interpolation):
-                        if (self.interpolation[idx].calc) is None:
-                            self.attach_calculator(self.interpolation[idx], params,
-                              out_fn=out, dimensions=self.dimensions, directory=".", calc_e=False)
 
             """Create the sockets calculator - using a with statement means the object is closed at the end."""
             with _calc_generator(params,
@@ -479,6 +463,8 @@ class ReactAims:
                 elif minimum_energy_path[1]:
                     self.prev_calcs = minimum_energy_path[1]
 
+                os.makedirs(subdirectory_name, exist_ok=True)
+
                 if self.dry_run:
                     calculator = EMT()
 
@@ -489,6 +475,23 @@ class ReactAims:
                         self.prev_calcs = read(f"{subdirectory_name}/last_predicted_path.traj@:")
 
                     os.chdir(subdirectory_name)
+
+                    if mace_preopt:
+                        """GAB: ML-NEB misbehaves if a calculator is not provided for interpolated images"""
+                        """     following function ensure s correct calculators are attached with closed """
+                        """     sockets.                                                                 """
+                        initial = self.attach_calculator(initial, params, out_fn=out,
+                                                         dimensions=self.dimensions, directory=".", calc_e=True)
+                        final = self.attach_calculator(final, params, out_fn=out,
+                                                       dimensions=self.dimensions, directory=".", calc_e=True)
+
+                        if isinstance(self.interpolation, list):
+                            for idx, image in enumerate(self.interpolation):
+                                if (self.interpolation[idx].calc) is None:
+                                    self.attach_calculator(self.interpolation[idx], params,
+                                                           out_fn=out, dimensions=self.dimensions, directory=".",
+                                                           calc_e=True)
+
                     """Setup the Catlearn object for MLNEB"""
                     neb_catlearn = MLNEB(start=initial,
                                          end=final,
