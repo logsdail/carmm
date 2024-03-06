@@ -451,17 +451,21 @@ class ReactAims:
         traj_name = f"{subdirectory_name}/ML-NEB.traj"
 
         if not minimum_energy_path[0]:
-            """GAB: ML-NEB misbehaves if a calculator is not provided for interpolated images"""
-            initial = self.attach_calculator(initial, params, out_fn=out, dimensions=self.dimensions, directory=".",
-                                             calc_e=True)
-            final = self.attach_calculator(final, params, out_fn=out, dimensions=self.dimensions, directory=".",
-                                           calc_e=True)
 
-            if isinstance(self.interpolation, list):
-                for idx, image in enumerate(self.interpolation):
-                    if (self.interpolation[idx].calc) is None:
-                        self.attach_calculator(self.interpolation[idx], params, out_fn=out, dimensions=self.dimensions,
-                                               directory=".", calc_e=False)
+            if mace_preopt:
+                """GAB: ML-NEB misbehaves if a calculator is not provided for interpolated images"""
+                """     following function ensure s correct calculators are attached with closed """
+                """     sockets.                                                                 """
+                initial = self.attach_calculator(initial, params, out_fn=out,
+                                           dimensions=self.dimensions, directory=".", calc_e=False)
+                final = self.attach_calculator(final, params, out_fn=out,
+                                           dimensions=self.dimensions, directory=".", calc_e=False)
+
+                if isinstance(self.interpolation, list):
+                    for idx, image in enumerate(self.interpolation):
+                        if (self.interpolation[idx].calc) is None:
+                            self.attach_calculator(self.interpolation[idx], params,
+                              out_fn=out, dimensions=self.dimensions, directory=".", calc_e=False)
 
             """Create the sockets calculator - using a with statement means the object is closed at the end."""
             with _calc_generator(params,
