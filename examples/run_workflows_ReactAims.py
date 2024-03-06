@@ -61,8 +61,9 @@ def test_run_workflows_ReactAims():
     os.environ['ASE_AIMS_COMMAND'] = "time srun" + \
                                      f"--nodes=$SLURM_NNODES --ntasks=$SLURM_NTASKS -d mpirun" + \
                                      "/apps/local/projects/scw1057/software/fhi-aims/bin/aims.$VERSION.scalapack.mpi.x"
-    reactor = ReactAims(params, basis_set, hpc="custom", dry_run=True, filename="H_custom")
-    reactor.aims_optimise(atoms, post_process="tight")
+
+    reactor = ReactAims(params, basis_set, hpc="custom", filename="H_custom")
+    model_optimised, model_postprocessed = reactor.aims_optimise(atoms, fmax=0.05, restart=True, optimiser=FIRE)
     zero_point_energy = reactor.vibrate(atoms, indices =[atom.index for atom in atoms]).get_zero_point_energy()
 
     assert is_converged(reactor.model_optimised, 0.01), \
