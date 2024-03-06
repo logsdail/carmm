@@ -660,7 +660,7 @@ class ReactAims:
 
         preopt_ts = self._MaceReactor.search_ts_neb(initial, final, fmax, n, k=0.1, method="improvedtangent",
                                         interpolation=interpolation, input_check=input_check,
-                                        max_steps=1000, restart=False)
+                                        max_steps=1000, restart=True)
 
         self._MaceReactor.filename = filname
 
