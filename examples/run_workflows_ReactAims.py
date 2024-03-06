@@ -55,6 +55,8 @@ def test_run_workflows_ReactAims():
 
 
     '''Test 'custom' HPC by replicationg the settings for HAWK'''
+    atoms = molecule("H2")
+
     os.environ['CARMM_AIMS_ROOT_DIRECTORY'] = "/apps/local/projects/scw1057/software/fhi-aims/"
     os.environ['ASE_AIMS_COMMAND'] = "time srun" + \
                                      f"--nodes=$SLURM_NNODES --ntasks=$SLURM_NTASKS -d mpirun" + \
