@@ -137,7 +137,7 @@ class ReactAims:
         if mace_preopt and not restart:
             assert self._MaceReactor is not None, "Please set MaceReact_Preoptimiser if mace_preopt is True"
 
-            self.initial = self._mace_preopitimise(self.initial, fmax, relax_unit_cell, optimiser, opt_kwargs)
+            self.initial = self._mace_preoptimise(self.initial, fmax, relax_unit_cell, optimiser, opt_kwargs)
 
         self._perform_optimization(subdirectory_name, out, counter, fmax, relax_unit_cell, optimiser, opt_kwargs)
         self._finalize_optimization(subdirectory_name, post_process)
@@ -333,7 +333,7 @@ class ReactAims:
     def search_ts(self, initial: Atoms, final: Atoms,
                   fmax: float, unc: float, interpolation=None,
                   n=0.25, steps=40, restart=True, prev_calcs=None,
-                  input_check=0.01, mace_preopt=True):
+                  input_check=0.01, mace_preopt=1):
         """
         This function allows calculation of the transition state using the CatLearn software package in an
         ASE/sockets/FHI-aims setup. The resulting converged band will be located in the MLNEB.traj file.
@@ -364,6 +364,14 @@ class ReactAims:
             input_check: float or None
                 If float the calculators of the input structures will be checked if the structures are below
                 the requested fmax and an optimisation will be performed if not.
+            mace_preopt: None or int
+                Controls whether to use a MACE preoptimised TS path, and the work flow used for preoptimisation
+                Requires a MACE calculator be attached to the React_AIMs object via the MaceReact_Preoptimiser
+                property.
+                None: Off      -  No MACE pre-optimisation
+                0: Full Preopt -  MACE preoptimises TS before FHI-aims - FHI-aims inherits all structures from MACE.
+                1: TS only     -  MACE preoptimises after FHI-aims check - MACE receives initial and reactant
+                                  structures from FHI-aims and does not optimise
 
         Returns: Atoms object
             Transition state geometry structure
@@ -395,9 +403,15 @@ class ReactAims:
         """Set the environment parameters"""
         set_aims_command(hpc=hpc, basis_set=basis_set, defaults=2020, nodes_per_instance=self.nodes_per_instance)
 
+        """Set MACE Pre-optimisation flavor"""
         if mace_preopt:
-            assert self._MaceReactor is not None, "Please set MaceReact_Preoptimiser if mace_preopt is True"
-            preopt_ts = self._mace_preopitimise_ts(initial, final, fmax, n, self.interpolation, input_check)
+            assert self._MaceReactor is not None, "Please set MaceReact_Preoptimiser if mace_preopt is True."
+            assert input_check, "Mace Preoptimisation workflow requires input be set to 'float'."
+            self.mace_preopt_flavour = mace_preopt
+
+        if mace_preopt == 0:
+
+            preopt_ts = self._mace_preoptimise_ts(initial, final, fmax, n, self.interpolation, input_check)
 
             initial = preopt_ts[0]
             final = preopt_ts[-1]
@@ -415,6 +429,11 @@ class ReactAims:
 
             """Set original name after input check is complete"""
             self.filename = filename_copy
+
+        if mace_preopt == 1:
+            preopt_ts = self._mace_preoptimise_ts(initial, final, fmax, n, self.interpolation, input_check)
+
+            self.interpolation = preopt_ts[1:-1]
 
         '''Setup the TS calculation'''
         helper = CalculationHelper(calc_type="TS",
@@ -442,7 +461,7 @@ class ReactAims:
                 for idx, image in enumerate(self.interpolation):
                     if (self.interpolation[idx].calc) is None:
                         self.attach_calculator(self.interpolation[idx], params, out_fn=out, dimensions=self.dimensions,
-                                               directory=".", calc_e=True)
+                                               directory=".", calc_e=False)
 
             """Create the sockets calculator - using a with statement means the object is closed at the end."""
             with _calc_generator(params,
@@ -594,7 +613,7 @@ class ReactAims:
 
         self._MaceReactor = MaceReact
 
-    def _mace_preopitimise(self, atoms: Atoms, fmax, relax_unit_cell, optimiser, opt_kwargs = {}):
+    def _mace_preoptimise(self, atoms: Atoms, fmax, relax_unit_cell, optimiser, opt_kwargs = {}):
         """
         Args:
             ReactMace:
@@ -616,7 +635,7 @@ class ReactAims:
 
         return preopt_atoms
 
-    def _mace_preopitimise_ts(self, initial, final, fmax, n, interpolation, input_check):
+    def _mace_preoptimise_ts(self, initial, final, fmax, n, interpolation, input_check):
         """
         Args:
             ReactMace:
@@ -626,6 +645,14 @@ class ReactAims:
 
         filname = self._MaceReactor.filename
         self._MaceReactor.filename = "MACE_PREOPT_" + self.filename
+
+        if not self.mace_preopt_flavour:
+            self.mace_preopt_flavour = 0
+            input_check = 0.01
+        elif self.mace_preopt_flavour == 0:
+            input_check = input_check
+        elif self.mace_preopt_flavour == 1:
+            input_check = None
 
         preopt_ts = self._MaceReactor.search_ts_neb(initial, final, fmax, n, k=0.1, method="improvedtangent",
                                         interpolation=interpolation, input_check=input_check,
