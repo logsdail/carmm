@@ -62,7 +62,7 @@ def test_run_workflows_ReactAims():
                                      f"--nodes=$SLURM_NNODES --ntasks=$SLURM_NTASKS -d mpirun" + \
                                      "/apps/local/projects/scw1057/software/fhi-aims/bin/aims.$VERSION.scalapack.mpi.x"
 
-    reactor = ReactAims(params, basis_set, hpc="custom", filename="H_custom")
+    reactor = ReactAims(params, basis_set, hpc="custom", filename="H2")
     model_optimised, model_postprocessed = reactor.aims_optimise(atoms, fmax=0.05, restart=True, optimiser=FIRE)
     zero_point_energy = reactor.vibrate(atoms, indices =[atom.index for atom in atoms]).get_zero_point_energy()
 
