@@ -9,6 +9,7 @@ from carmm.analyse.forces import is_converged
 from carmm.run.aims_path import set_aims_command
 from ase.io import Trajectory
 from carmm.run.workflows.helper import CalculationHelper
+from carmm.err_handler.logger_set import set_logger
 from ase.optimize import BFGS
 
 # TODO: Enable serialization with ASE db - save locations of converged files as well as all properties
@@ -25,7 +26,9 @@ class ReactAims:
                  filename: str = None,
                  nodes_per_instance: int = None,
                  dry_run: bool = False,
-                 verbose: bool = True):
+                 verbose: bool = True,
+                 warning_lvl: int = 1
+                 ):
         """
         Args:
             params: dict
@@ -58,6 +61,8 @@ class ReactAims:
         self.nodes_per_instance = nodes_per_instance
         self.verbose = verbose
 
+        self.logger = set_logger("react_logger", warning_lvl)
+
         """Define additional parameters"""
         self.initial = None  # input for optimisation or input for NEB initial image
         self.model_optimised = None  # optimised geometry with calculator attached
@@ -70,6 +75,16 @@ class ReactAims:
 
         """ Set the test flag"""
         self.dry_run = dry_run
+
+        if hpc == "custom":
+            self.logger.debug(f"WARNING: You have selected 'custom' as an option for HPC.                      ")
+            self.logger.debug(f"         This requires a couple of extra steps from the user side.             ")
+            self.logger.debug(f"         1) A new environmental variable - CARMM_AIMS_ROOT_DIRECTORY           ")
+            self.logger.debug(f"            - must be set. This helps find the folder containing the           ")
+            self.logger.debug(f"             default basis function.                                           ")
+            self.logger.debug(f"         2) ASE_AIMS_COMMAND must be set, with the correct number of           ")
+            self.logger.debug(f"            mpi tasks if desired. Avoid piping output, as React has its own    ")
+            self.logger.debug(f"            output folder names.                                               ")
 
     def aims_optimise(self, atoms: Atoms, fmax: float = 0.01, post_process: str = None, relax_unit_cell: bool = False,
                       restart: bool = True, optimiser=None, opt_kwargs: dict = {}):

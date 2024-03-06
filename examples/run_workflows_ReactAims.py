@@ -35,11 +35,10 @@ def test_run_workflows_ReactAims():
     model_optimised, model_postprocessed = reactor.aims_optimise(atoms, fmax=0.05, restart=True, optimiser=FIRE)
 
     zero_point_energy = reactor.vibrate(atoms, indices =[atom.index for atom in atoms]).get_zero_point_energy()
-    
+
     assert is_converged(reactor.model_optimised, 0.01), \
     '''The structure saved in React_Aims is not converged'''
     assert round(zero_point_energy, 3) == 0.275
-
 
     '''Create a reaction pathway'''
     atoms1 = atoms.copy()
@@ -54,6 +53,24 @@ def test_run_workflows_ReactAims():
     molecule_with_charges = reactor.get_mulliken_charges(model_optimised)
     assert molecule_with_charges[0].charge == 0.0
 
+
+    '''Test 'custom' HPC by replicationg the settings for HAWK'''
+    atoms = molecule("H2")
+
+    os.environ['CARMM_AIMS_ROOT_DIRECTORY'] = "/apps/local/projects/scw1057/software/fhi-aims/"
+    os.environ['ASE_AIMS_COMMAND'] = "time srun" + \
+                                     f"--nodes=$SLURM_NNODES --ntasks=$SLURM_NTASKS -d mpirun" + \
+                                     "/apps/local/projects/scw1057/software/fhi-aims/bin/aims.$VERSION.scalapack.mpi.x"
+
+    reactor = ReactAims(params, basis_set, hpc="custom", filename="H2")
+    model_optimised, model_postprocessed = reactor.aims_optimise(atoms, fmax=0.05, restart=True, optimiser=FIRE)
+    zero_point_energy = reactor.vibrate(atoms, indices =[atom.index for atom in atoms]).get_zero_point_energy()
+
+    assert is_converged(reactor.model_optimised, 0.01), \
+    '''The structure saved in React_Aims is not converged'''
+    assert round(zero_point_energy, 3) == 0.275
+
+
     '''The below uses the "dry_run" flag and uses an EMT calculator instead of FHI-aims to test code in CI'''
     reactor = ReactAims(params, basis_set, hpc, dry_run=True, filename="H")
     H_atom = Atoms("H", positions=[(0,0,0)])
@@ -62,6 +79,22 @@ def test_run_workflows_ReactAims():
     reactor.vibrate(H_atom, indices=[0])
     vib = reactor.vibrate(H_atom, indices=[0], read_only=True)
     
+    '''Optimise the bulk metal using stress tensor calculations and ExpCellFilter to later cut a surface model'''
+    reactor.filename = "Al"
+    reactor.params["k_grid"] = (8, 8, 8)
+    Al_bulk = bulk("Al")
+
+    '''Calculate the optimal unit cell and post process the calculation with a larger "tight" basis set'''
+    light, tight = reactor.aims_optimise(Al_bulk, 0.01, relax_unit_cell=True, post_process="tight")
+
+    '''The below uses the "dry_run" flag and uses'''
+    reactor = ReactAims(params, basis_set, hpc, dry_run=True, filename="H")
+    H_atom = Atoms("H", positions=[(0, 0, 0)])
+    reactor.aims_optimise(atoms, post_process="tight")
+    reactor.get_mulliken_charges(H_atom)
+    reactor.vibrate(H_atom, indices=[0])
+    vib = reactor.vibrate(H_atom, indices=[0], read_only=True)
+
     '''Optimise the bulk metal using stress tensor calculations and ExpCellFilter to later cut a surface model'''
     reactor.filename = "Al"
     reactor.params["k_grid"] = (8, 8, 8)
