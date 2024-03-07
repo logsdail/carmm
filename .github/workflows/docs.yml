@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+      - docs_update1
 
 jobs:
   build_docs:
@@ -31,7 +32,8 @@ jobs:
     # Build the documentation dynamically from docstrings in the code
     - name: Build Sphinx API documentation
       run: |
-        sphinx-apidoc -o carmm/docs/source .
+        sphinx-apidoc -o carmm/docs/source . -d 5 
+        sphinx-apidoc -o carmm/docs/source ../examples -d 5
 
     # Build a website based on the retrieved docstrings
     - name: Build Sphinx HTML
