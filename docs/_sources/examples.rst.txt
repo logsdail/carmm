@@ -1,0 +1,317 @@
+examples package
+================
+
+Subpackages
+-----------
+
+.. toctree::
+   :maxdepth: 5
+
+   examples.data
+
+Submodules
+----------
+
+examples.analyse\_angles module
+-------------------------------
+
+.. automodule:: examples.analyse_angles
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+examples.analyse\_bonds module
+------------------------------
+
+.. automodule:: examples.analyse_bonds
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+examples.analyse\_center\_of\_masses\_ module
+---------------------------------------------
+
+.. automodule:: examples.analyse_center_of_masses_
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+examples.analyse\_csv module
+----------------------------
+
+.. automodule:: examples.analyse_csv
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+examples.analyse\_distribution\_functions module
+------------------------------------------------
+
+.. automodule:: examples.analyse_distribution_functions
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+examples.analyse\_forces module
+-------------------------------
+
+.. automodule:: examples.analyse_forces
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+examples.analyse\_graphs\_plot\_energy\_profile module
+------------------------------------------------------
+
+.. automodule:: examples.analyse_graphs_plot_energy_profile
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+examples.analyse\_meshgrid\_voidanalysis\_MFI module
+----------------------------------------------------
+
+.. automodule:: examples.analyse_meshgrid_voidanalysis_MFI
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+examples.analyse\_molecules module
+----------------------------------
+
+.. automodule:: examples.analyse_molecules
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+examples.analyse\_mulliken\_atomic\_angular module
+--------------------------------------------------
+
+.. automodule:: examples.analyse_mulliken_atomic_angular
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+examples.analyse\_mulliken\_atomic\_comparison module
+-----------------------------------------------------
+
+.. automodule:: examples.analyse_mulliken_atomic_comparison
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+examples.analyse\_mulliken\_charge module
+-----------------------------------------
+
+.. automodule:: examples.analyse_mulliken_charge
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+examples.analyse\_mulliken\_outline module
+------------------------------------------
+
+.. automodule:: examples.analyse_mulliken_outline
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+examples.analyse\_mulliken\_spin module
+---------------------------------------
+
+.. automodule:: examples.analyse_mulliken_spin
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+examples.analyse\_neb\_tools\_pathway module
+--------------------------------------------
+
+.. automodule:: examples.analyse_neb_tools_pathway
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+examples.analyse\_neighbours module
+-----------------------------------
+
+.. automodule:: examples.analyse_neighbours
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+examples.analyse\_neighbours\_surface\_coordination module
+----------------------------------------------------------
+
+.. automodule:: examples.analyse_neighbours_surface_coordination
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+examples.analyse\_planes module
+-------------------------------
+
+.. automodule:: examples.analyse_planes
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+examples.analyse\_povray\_render module
+---------------------------------------
+
+.. automodule:: examples.analyse_povray_render
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+examples.analyse\_surface\_area module
+--------------------------------------
+
+.. automodule:: examples.analyse_surface_area
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+examples.analyse\_traj\_to\_gif module
+--------------------------------------
+
+.. automodule:: examples.analyse_traj_to_gif
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+examples.analyse\_vib\_analysis module
+--------------------------------------
+
+.. automodule:: examples.analyse_vib_analysis
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+examples.build\_NEB module
+--------------------------
+
+.. automodule:: examples.build_NEB
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+examples.build\_adsorbate\_place\_and\_rotate module
+----------------------------------------------------
+
+.. automodule:: examples.build_adsorbate_place_and_rotate
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+examples.build\_alloy module
+----------------------------
+
+.. automodule:: examples.build_alloy
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+examples.build\_cutout module
+-----------------------------
+
+.. automodule:: examples.build_cutout
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+examples.build\_dissociation module
+-----------------------------------
+
+.. automodule:: examples.build_dissociation
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+examples.build\_surface module
+------------------------------
+
+.. automodule:: examples.build_surface
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+examples.build\_symmetry\_mirror module
+---------------------------------------
+
+.. automodule:: examples.build_symmetry_mirror
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+examples.build\_unwrap module
+-----------------------------
+
+.. automodule:: examples.build_unwrap
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+examples.err\_handler\_testoutput module
+----------------------------------------
+
+.. automodule:: examples.err_handler_testoutput
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+examples.run\_aims module
+-------------------------
+
+.. automodule:: examples.run_aims
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+examples.run\_k\_grid module
+----------------------------
+
+.. automodule:: examples.run_k_grid
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+examples.run\_workflows\_ReactAims module
+-----------------------------------------
+
+.. automodule:: examples.run_workflows_ReactAims
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+examples.run\_workflows\_ReactAims\_parallel module
+---------------------------------------------------
+
+.. automodule:: examples.run_workflows_ReactAims_parallel
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+examples.run\_workflows\_ReactMACE module
+-----------------------------------------
+
+.. automodule:: examples.run_workflows_ReactMACE
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+examples.test\_counterpoise module
+----------------------------------
+
+.. automodule:: examples.test_counterpoise
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+Module contents
+---------------
+
+.. automodule:: examples
+   :members:
+   :undoc-members:
+   :show-inheritance:

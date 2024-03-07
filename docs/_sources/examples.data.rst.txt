@@ -1,0 +1,21 @@
+examples.data package
+=====================
+
+Submodules
+----------
+
+examples.data.model\_gen module
+-------------------------------
+
+.. automodule:: examples.data.model_gen
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+Module contents
+---------------
+
+.. automodule:: examples.data
+   :members:
+   :undoc-members:
+   :show-inheritance:

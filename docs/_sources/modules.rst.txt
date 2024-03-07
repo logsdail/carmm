@@ -5,3 +5,4 @@ carmm
    :maxdepth: 5
 
    carmm
+   examples
