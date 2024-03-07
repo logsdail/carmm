@@ -28,6 +28,7 @@ jobs:
     - name: Setup Python environment
       run: | 
         echo "PYTHONPATH=/home/runner/work/carmm/carmm:$PYTHONPATH" >> $GITHUB_ENV
+        echo "PYTHONPATH=/home/runner/work/carmm/examples:$PYTHONPATH" >> $GITHUB_ENV
 
     # Build the documentation dynamically from docstrings in the code
     - name: Build Sphinx API documentation
