@@ -32,7 +32,7 @@ jobs:
     # Build the documentation dynamically from docstrings in the code
     - name: Build Sphinx API documentation
       run: |
-        echo $(ls)
+        echo $(ls ..)
         sphinx-apidoc -o carmm/docs/source . -d 5 
         sphinx-apidoc -o carmm/docs/source ../examples -d 5
 
