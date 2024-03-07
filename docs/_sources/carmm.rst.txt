@@ -11,17 +11,6 @@ Subpackages
    carmm.build
    carmm.run
 
-Submodules
-----------
-
-carmm.get\_func module
-----------------------
-
-.. automodule:: carmm.get_func
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
 Module contents
 ---------------
 
