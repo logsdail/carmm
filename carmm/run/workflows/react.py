@@ -9,6 +9,7 @@ from carmm.analyse.forces import is_converged
 from carmm.run.aims_path import set_aims_command
 from ase.io import Trajectory
 from carmm.run.workflows.helper import CalculationHelper
+from carmm.err_handler.logger_set import set_logger
 from ase.optimize import BFGS
 
 # TODO: Enable serialization with ASE db - save locations of converged files as well as all properties
@@ -25,7 +26,9 @@ class ReactAims:
                  filename: str = None,
                  nodes_per_instance: int = None,
                  dry_run: bool = False,
-                 verbose: bool = True):
+                 verbose: bool = True,
+                 warning_lvl: int = 1
+                 ):
         """
         Args:
             params: dict
@@ -58,6 +61,8 @@ class ReactAims:
         self.nodes_per_instance = nodes_per_instance
         self.verbose = verbose
 
+        self.logger = set_logger("react_logger", warning_lvl)
+
         """Define additional parameters"""
         self.initial = None  # input for optimisation or input for NEB initial image
         self.model_optimised = None  # optimised geometry with calculator attached
@@ -71,8 +76,18 @@ class ReactAims:
         """ Set the test flag"""
         self.dry_run = dry_run
 
+        if hpc == "custom":
+            self.logger.debug(f"WARNING: You have selected 'custom' as an option for HPC.                      ")
+            self.logger.debug(f"         This requires a couple of extra steps from the user side.             ")
+            self.logger.debug(f"         1) A new environmental variable - CARMM_AIMS_ROOT_DIRECTORY           ")
+            self.logger.debug(f"            - must be set. This helps find the folder containing the           ")
+            self.logger.debug(f"             default basis function.                                           ")
+            self.logger.debug(f"         2) ASE_AIMS_COMMAND must be set, with the correct number of           ")
+            self.logger.debug(f"            mpi tasks if desired. Avoid piping output, as React has its own    ")
+            self.logger.debug(f"            output folder names.                                               ")
+
     def aims_optimise(self, atoms: Atoms, fmax: float = 0.01, post_process: str = None, relax_unit_cell: bool = False,
-                      restart: bool = True):
+                      restart: bool = True, optimiser=None, opt_kwargs: dict = {}):
 
         """
          The function needs information about structure geometry (model), name of hpc system
@@ -95,6 +110,10 @@ class ReactAims:
              True requests a strain filter unit cell relaxation
          restart: bool
              Request restart from previous geometry if True (True by default)
+         optimiser: optimiser class
+            If None - the ase.optimize.BFGS is used
+         opt_kwargs: dict
+            Dictionary of keyword arguments specific to the provided optimiser class
 
          Returns a list containing the model with data calculated using your choice of settings
          [model_optimised, model_postprocessed]
@@ -113,7 +132,7 @@ class ReactAims:
         if initial is not None:
             self.initial = initial
 
-        self._perform_optimization(subdirectory_name, out, counter, fmax, relax_unit_cell)
+        self._perform_optimization(subdirectory_name, out, counter, fmax, relax_unit_cell, optimiser, opt_kwargs)
         self._finalize_optimization(subdirectory_name, post_process)
 
         return self.model_optimised, self.model_post_processed
@@ -133,7 +152,8 @@ class ReactAims:
         if not self.filename:
             self.filename = self.initial.get_chemical_formula()
 
-    def _perform_optimization(self, subdirectory_name: str, out: str, counter: int, fmax: float, relax_unit_cell: bool):
+    def _perform_optimization(self, subdirectory_name: str, out: str, counter: int, fmax: float, relax_unit_cell: bool,
+                              optimiser, opt_kwargs: dict):
         """
         An internal function used in aims_optimise to resolve the working directory and perform the optimisation
         calculation of a given structure.
@@ -144,11 +164,15 @@ class ReactAims:
             counter: int
             fmax: float
             relax_unit_cell: bool
+            optimiser: bool or optimiser class
+            opt_kwargs: dict
 
         Returns:None
 
         """
         opt_restarts = 0
+        if not optimiser:
+            optimiser = BFGS
 
         if not is_converged(self.initial, fmax):
             os.makedirs(subdirectory_name, exist_ok=True)
@@ -170,9 +194,9 @@ class ReactAims:
                     if relax_unit_cell:
                         from ase.constraints import StrainFilter
                         unit_cell_relaxer = StrainFilter(self.initial)
-                        opt = BFGS(unit_cell_relaxer, trajectory=traj_name, alpha=70.0)
+                        opt = optimiser(unit_cell_relaxer, trajectory=traj_name, **opt_kwargs)
                     else:
-                        opt = BFGS(self.initial, trajectory=traj_name, alpha=70.0)
+                        opt = optimiser(self.initial, trajectory=traj_name, **opt_kwargs)
 
                     opt.run(fmax=fmax, steps=80)
                     opt_restarts += 1
@@ -441,7 +465,7 @@ class ReactAims:
         if minimum_energy_path[0]:
             neb = minimum_energy_path[0]
         else:
-            neb = read(traj_name)
+            neb = read(f"{traj_name}@:")
         self.ts = sorted(neb, key=lambda k: k.get_potential_energy(), reverse=True)[0]
 
         return self.ts
