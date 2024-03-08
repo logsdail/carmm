@@ -46,6 +46,7 @@ jobs:
         python -m pip install --upgrade pytest-cov
         python -m pip install torch torchvision torchaudio
         python -m pip install --upgrade mace-torch
+        python -m pip install pymatgen
         
     
     # Setup Python environment
