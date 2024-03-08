@@ -5,11 +5,22 @@ Subpackages
 -----------
 
 .. toctree::
-   :maxdepth: 5
+   :maxdepth: 4
 
    carmm.analyse
    carmm.build
    carmm.run
+
+Submodules
+----------
+
+carmm.get\_func module
+----------------------
+
+.. automodule:: carmm.get_func
+   :members:
+   :undoc-members:
+   :show-inheritance:
 
 Module contents
 ---------------
