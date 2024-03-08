@@ -52,6 +52,14 @@ carmm.build.facets module
    :undoc-members:
    :show-inheritance:
 
+carmm.build.slab\_consistent\_bulk\_generator module
+----------------------------------------------------
+
+.. automodule:: carmm.build.slab_consistent_bulk_generator
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 carmm.build.unwrap module
 -------------------------
 

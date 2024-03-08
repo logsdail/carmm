@@ -511,6 +511,56 @@ periodic: Atoms object</p>
 </dd></dl>
 
 </section>
+<section id="module-carmm.build.slab_consistent_bulk_generator">
+<span id="carmm-build-slab-consistent-bulk-generator-module"></span><h2>carmm.build.slab_consistent_bulk_generator module<a class="headerlink" href="#module-carmm.build.slab_consistent_bulk_generator" title="Link to this heading">¶</a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="carmm.build.slab_consistent_bulk_generator.bulk_identifier">
+<span class="sig-prename descclassname"><span class="pre">carmm.build.slab_consistent_bulk_generator.</span></span><span class="sig-name descname"><span class="pre">bulk_identifier</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">slab</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cutoff_distance</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10.0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#carmm.build.slab_consistent_bulk_generator.bulk_identifier" title="Link to this definition">¶</a></dt>
+<dd><p>Slab models can be generated using various libraries like ASE, pymatgen, atomman, etc. However, it becomes important
+to check how these slab models are generated within various code bases.</p>
+<p>Pymatgen for example generates desired surface facets by transforming the basis vectors of the conventional bulk
+unit cell such that the c-vector of new bulk is normal to the desired surface plane. The basis transformation however
+changes the convergence behavior of the slab models with respect to the thickness of the slab. Hence, a new bulk
+unit cell is necessary, generated for each individual slab model, to make sure that the surface energies are
+calculated using a correct bulk reference.</p>
+<p>This function helps to identify the repeating unit in the z-direction which ultimately represents the
+bulk atoms in a slab structure. This new bulk structure will be consistent with the slab model and the
+computed bulk energy for this structure will help us to obtain surface energies that are convergent with
+increasing slab thickness.</p>
+<p>NOTE: Please use this functionality only if you observe divergent surface energy behaviour using the already
+available total energy of the conventional bulk unit cell.</p>
+<p>Detailed information is available in the following literature article.
+Schultz, Peter A.
+“First-principles calculations of metal surfaces. I. Slab-consistent bulk reference for convergent surface
+properties.” Physical Review B 103.19 (2021): 195426.</p>
+<p>How this functionality works:
+1. the difference between the x,y and z coordinates of an atom and its corresponding periodic image will be a linear
+combination of the cell vectors a,b and c.
+2. This idea is extended here in case of a slab model where the linear combination check
+is considered only w.r.t to the a and b vectors</p>
+<p>Args:
+- slab: ASE Atoms object representing the slab structure
+- cutoff_distance: Cutoff distance for identifying neighboring atoms (default is 10.0). This will be used to</p>
+<blockquote>
+<div><p>perform further checks on atoms which satisfy the condition of linear combination.</p>
+</div></blockquote>
+<p>Returns:
+- ASE Atoms object representing the new bulk structure</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="carmm.build.slab_consistent_bulk_generator.is_close_to_integer">
+<span class="sig-prename descclassname"><span class="pre">carmm.build.slab_consistent_bulk_generator.</span></span><span class="sig-name descname"><span class="pre">is_close_to_integer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">arr</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tolerance</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1e-05</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#carmm.build.slab_consistent_bulk_generator.is_close_to_integer" title="Link to this definition">¶</a></dt>
+<dd><p>Check if elements in the array are close to integers within a given tolerance. This will be used to check if the x-
+and y-coordinate of an atom is a linear combination the ‘a’ and ‘b’ cell vector of the slab model</p>
+<p>Args:
+- arr: Numpy array
+- tolerance: Tolerance for closeness to integers (default is 1e-5)</p>
+<p>Returns:
+- Boolean array indicating if elements are close to integers</p>
+</dd></dl>
+
+</section>
 <section id="carmm-build-unwrap-module">
 <h2>carmm.build.unwrap module<a class="headerlink" href="#carmm-build-unwrap-module" title="Link to this heading">¶</a></h2>
 </section>
