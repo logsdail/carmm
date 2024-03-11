@@ -420,7 +420,7 @@ class ReactAims:
             assert input_check, "Mace Preoptimisation workflow requires input be set to 'float'."
             self.mace_preopt_flavour = mace_preopt
             
-            if not minimum_energy_path:
+            if minimum_energy_path:
                 """Turns off MACE preoptimisation if a restart file is found - does not make
                    sense to risk continuing an unconverged MACE NEB run or read from said   
                    interpolation."""
@@ -525,6 +525,9 @@ class ReactAims:
 
                         iterations += 1
                         os.chdir(parent_dir)
+                    elif mace_preopt > 0:
+                        self.ts = sorted(self.interpolation, key=lambda k: k.get_potential_energy(), reverse=True)[0]
+                        return self.ts
                     else:
                         return None
 
@@ -718,6 +721,9 @@ class ReactAims:
 
         with _calc_generator(params, out_fn=out_fn, forces=forces, dimensions=dimensions,
                              relax_unit_cell=relax_unit_cell,directory=directory)[0] as calculator:
+
+            if self.dry_run:
+                calculator = EMT()
 
             atoms.calc = calculator
 
