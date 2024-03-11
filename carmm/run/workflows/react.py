@@ -132,9 +132,7 @@ class ReactAims:
         if initial is not None:
             self.initial = initial
 
-        """GAB: Assuming that the user will not want to overwrite their geometries with a MACE
-                guess. If they need to restart the MACE guess, they have bigger problems."""
-        if mace_preopt and not restart:
+        if mace_preopt:
             assert self._MaceReactor is not None, "Please set MaceReact_Preoptimiser if mace_preopt is True"
 
             self.initial = self._mace_preoptimise(self.initial, fmax, relax_unit_cell, optimiser, opt_kwargs)
@@ -333,7 +331,7 @@ class ReactAims:
     def search_ts(self, initial: Atoms, final: Atoms,
                   fmax: float, unc: float, interpolation=None,
                   n=0.25, steps=40, restart=True, prev_calcs=None,
-                  input_check=0.01, mace_preopt=1):
+                  input_check=0.01, mace_preopt=0):
         """
         This function allows calculation of the transition state using the CatLearn software package in an
         ASE/sockets/FHI-aims setup. The resulting converged band will be located in the MLNEB.traj file.
@@ -368,9 +366,9 @@ class ReactAims:
                 Controls whether to use a MACE preoptimised TS path, and the work flow used for preoptimisation
                 Requires a MACE calculator be attached to the React_AIMs object via the MaceReact_Preoptimiser
                 property.
-                None: Off      -  No MACE pre-optimisation
-                0: Full Preopt -  MACE preoptimises TS before FHI-aims - FHI-aims inherits all structures from MACE.
-                1: TS only     -  MACE preoptimises after FHI-aims check - MACE receives initial and reactant
+                0: Off      -  No MACE pre-optimisation
+                1: Full Preopt -  MACE preoptimises TS before FHI-aims - FHI-aims inherits all structures from MACE.
+                2: TS only     -  MACE preoptimises after FHI-aims check - MACE receives initial and reactant
                                   structures from FHI-aims and does not optimise
 
         Returns: Atoms object
@@ -385,7 +383,7 @@ class ReactAims:
                                             "Dependency on the catlearn.mlneb module cannot run TS " \
                                             "search concurrently without issues. "
 
-        if mace_preopt:
+        if mace_preopt > 0:
             assert isinstance(n, int), "Integer number of images required for MACE TS preoptimiser"
 
         """Retrieve common properties"""
@@ -403,13 +401,22 @@ class ReactAims:
         """Set the environment parameters"""
         set_aims_command(hpc=hpc, basis_set=basis_set, defaults=2020, nodes_per_instance=self.nodes_per_instance)
 
+        '''Setup the TS calculation'''
+        helper = CalculationHelper(calc_type="TS",
+                                   parent_dir=os.getcwd(),
+                                   filename=self.filename,
+                                   restart=restart,
+                                   verbose=self.verbose)
+
+        counter, out, subdirectory_name, minimum_energy_path = helper.restart_setup()
+
         """Set MACE Pre-optimisation flavor"""
-        if mace_preopt:
+        if mace_preopt > 0:
             assert self._MaceReactor is not None, "Please set MaceReact_Preoptimiser if mace_preopt is True."
             assert input_check, "Mace Preoptimisation workflow requires input be set to 'float'."
             self.mace_preopt_flavour = mace_preopt
 
-        if mace_preopt == 0:
+        if mace_preopt == 1:
 
             preopt_ts = self._mace_preoptimise_ts(initial, final, fmax, n, self.interpolation, input_check)
 
@@ -430,19 +437,11 @@ class ReactAims:
             """Set original name after input check is complete"""
             self.filename = filename_copy
 
-        if mace_preopt == 1:
+        if mace_preopt == 2:
+
             preopt_ts = self._mace_preoptimise_ts(initial, final, fmax, n, self.interpolation, input_check)
 
             self.interpolation = preopt_ts[1:-1]
-
-        '''Setup the TS calculation'''
-        helper = CalculationHelper(calc_type="TS",
-                                   parent_dir=os.getcwd(),
-                                   filename=self.filename,
-                                   restart=restart,
-                                   verbose=self.verbose)
-
-        counter, out, subdirectory_name, minimum_energy_path = helper.restart_setup()
 
         if not minimum_energy_path:
             minimum_energy_path = [None, None]
@@ -470,27 +469,27 @@ class ReactAims:
 
                 iterations = 0
 
+                if mace_preopt > 0 and not os.path.exists(traj_name):
+                    """GAB: ML-NEB misbehaves if a calculator is not provided for interpolated images"""
+                    """     following function ensure s correct calculators are attached with closed """
+                    """     sockets.                                                                 """
+                    initial = self.attach_calculator(initial, params, out_fn=out,
+                                                     dimensions=self.dimensions, directory=".", calc_e=True)
+                    final = self.attach_calculator(final, params, out_fn=out,
+                                                dimensions=self.dimensions, directory=".", calc_e=True)
+                
+                    if isinstance(self.interpolation, list):
+                        for idx, image in enumerate(self.interpolation):
+                            if (self.interpolation[idx].calc) is None:
+                                self.attach_calculator(self.interpolation[idx], params,
+                                                   out_fn=out, dimensions=self.dimensions, directory=".",
+                                                   calc_e=True)
+
                 while not os.path.exists(traj_name):
                     if iterations > 0:
                         self.prev_calcs = read(f"{subdirectory_name}/last_predicted_path.traj@:")
 
                     os.chdir(subdirectory_name)
-
-                    if mace_preopt:
-                        """GAB: ML-NEB misbehaves if a calculator is not provided for interpolated images"""
-                        """     following function ensure s correct calculators are attached with closed """
-                        """     sockets.                                                                 """
-                        initial = self.attach_calculator(initial, params, out_fn=out,
-                                                         dimensions=self.dimensions, directory=".", calc_e=True)
-                        final = self.attach_calculator(final, params, out_fn=out,
-                                                       dimensions=self.dimensions, directory=".", calc_e=True)
-
-                        if isinstance(self.interpolation, list):
-                            for idx, image in enumerate(self.interpolation):
-                                if (self.interpolation[idx].calc) is None:
-                                    self.attach_calculator(self.interpolation[idx], params,
-                                                           out_fn=out, dimensions=self.dimensions, directory=".",
-                                                           calc_e=True)
 
                     """Setup the Catlearn object for MLNEB"""
                     neb_catlearn = MLNEB(start=initial,
@@ -653,17 +652,14 @@ class ReactAims:
         filname = self._MaceReactor.filename
         self._MaceReactor.filename = "MACE_PREOPT_" + self.filename
 
-        if not self.mace_preopt_flavour:
-            self.mace_preopt_flavour = 0
-            input_check = 0.01
-        elif self.mace_preopt_flavour == 0:
+        if self.mace_preopt_flavour == 1:
             input_check = input_check
-        elif self.mace_preopt_flavour == 1:
+        elif self.mace_preopt_flavour == 2:
             input_check = None
 
-        preopt_ts = self._MaceReactor.search_ts_neb(initial, final, fmax, n, k=0.1, method="improvedtangent",
+        preopt_ts = self._MaceReactor.search_ts_neb(initial, final, fmax, n, k=0.05, method="improvedtangent",
                                         interpolation=interpolation, input_check=input_check,
-                                        max_steps=1000, restart=True)
+                                        max_steps=200, restart=False)
 
         self._MaceReactor.filename = filname
 
