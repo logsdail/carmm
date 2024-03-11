@@ -366,7 +366,7 @@ class ReactAims:
                 Controls whether to use a MACE preoptimised TS path, and the work flow used for preoptimisation
                 Requires a MACE calculator be attached to the React_AIMs object via the MaceReact_Preoptimiser
                 property.
-                0: Off      -  No MACE pre-optimisation
+                0: Off      -     No MACE pre-optimisation
                 1: Full Preopt -  MACE preoptimises TS before FHI-aims - FHI-aims inherits all structures from MACE.
                 2: TS only     -  MACE preoptimises after FHI-aims check - MACE receives initial and reactant
                                   structures from FHI-aims and does not optimise
@@ -471,18 +471,18 @@ class ReactAims:
 
                 if mace_preopt > 0 and not os.path.exists(traj_name):
                     """GAB: ML-NEB misbehaves if a calculator is not provided for interpolated images"""
-                    """     following function ensure s correct calculators are attached with closed """
+                    """     following function ensures correct calculators are attached with closed  """
                     """     sockets.                                                                 """
                     initial = self.attach_calculator(initial, params, out_fn=out,
-                                                     dimensions=self.dimensions, directory=".", calc_e=True)
+                                                     dimensions=self.dimensions, directory=subdirectory_name, calc_e=True)
                     final = self.attach_calculator(final, params, out_fn=out,
-                                                dimensions=self.dimensions, directory=".", calc_e=True)
+                                                dimensions=self.dimensions, directory=subdirectory_name, calc_e=True)
                 
                     if isinstance(self.interpolation, list):
                         for idx, image in enumerate(self.interpolation):
                             if (self.interpolation[idx].calc) is None:
                                 self.attach_calculator(self.interpolation[idx], params,
-                                                   out_fn=out, dimensions=self.dimensions, directory=".",
+                                                   out_fn=out, dimensions=self.dimensions, directory=subdirectory_name,
                                                    calc_e=True)
 
                 while not os.path.exists(traj_name):
@@ -600,32 +600,37 @@ class ReactAims:
     @property
     def MaceReact_Preoptimiser(self):
         """
-        Getter function for MaceReact.
+        Get or set the MACE preoptimiser used in aims_optimise or ts_search with setting
 
-        MaceReact Obj:
-               Returns User-defined MaceReact.
+        Args:
+             MaceReact MaceReact Obj:
+               User-defined MaceReact.
+
+        Returns:
+             self._MaceReactor MaceReact Obj:
+               User-defined MaceReact.
         """
 
         return self._MaceReactor
 
     @MaceReact_Preoptimiser.setter
     def MaceReact_Preoptimiser(self, MaceReact):
-        """
-        Sets already user defined MaceReact object
-        Args:
-            MaceReact Obj:
-                User-defined MaceReact.
-        """
 
         self._MaceReactor = MaceReact
 
     def _mace_preoptimise(self, atoms: Atoms, fmax, relax_unit_cell, optimiser, opt_kwargs = {}):
         """
-        Args:
-            ReactMace:
+        Internal function for preoptimisation of structures with a pre-set MACE calculator
 
-        Returns:
-            atoms
+        Args:
+            atoms: Atoms object
+            fmax: flaot
+            relax_unit_cell: bool
+            optimiser: bool or optimiser class
+            opt_kwargs: dict
+        Return:
+           preopt_atoms: Atoms object
+              Atoms object with the calculator object removed
         """
 
         filname = self._MaceReactor.filename
@@ -643,10 +648,18 @@ class ReactAims:
 
     def _mace_preoptimise_ts(self, initial, final, fmax, n, interpolation, input_check):
         """
+        Internal function for preoptimisation of NEB with a pre-set MACE calculator
+
         Args:
-            ReactMace:
+            initial: Atoms object
+            final: Atoms object
+            fmax: float
+            n: int
+            interpolation: string, list of n Atoms objects 
+            input_check: None or float
 
         Returns:
+           
         """
 
         filname = self._MaceReactor.filename
