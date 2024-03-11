@@ -132,7 +132,8 @@ class ReactAims:
         if initial is not None:
             self.initial = initial
 
-        if mace_preopt:
+        if mace_preopt and not initial:
+            """Make sure to skip preoptimisations if AIMs restart information is available."""
             assert self._MaceReactor is not None, "Please set MaceReact_Preoptimiser if mace_preopt is True"
 
             self.initial = self._mace_preoptimise(self.initial, fmax, relax_unit_cell, optimiser, opt_kwargs)
@@ -331,7 +332,7 @@ class ReactAims:
     def search_ts(self, initial: Atoms, final: Atoms,
                   fmax: float, unc: float, interpolation=None,
                   n=0.25, steps=40, restart=True, prev_calcs=None,
-                  input_check=0.01, mace_preopt=0):
+                  input_check=0.01, mace_preopt=0, preopt_maxstep=200):
         """
         This function allows calculation of the transition state using the CatLearn software package in an
         ASE/sockets/FHI-aims setup. The resulting converged band will be located in the MLNEB.traj file.
@@ -370,6 +371,9 @@ class ReactAims:
                 1: Full Preopt -  MACE preoptimises TS before FHI-aims - FHI-aims inherits all structures from MACE.
                 2: TS only     -  MACE preoptimises after FHI-aims check - MACE receives initial and reactant
                                   structures from FHI-aims and does not optimise
+            preopt_maxstep: int
+                Controls the maximum number of steps used in the preoptimiser before giving up and passing the 
+                calculation onto MLNEB with FHI-aims.
 
         Returns: Atoms object
             Transition state geometry structure
@@ -415,7 +419,15 @@ class ReactAims:
             assert self._MaceReactor is not None, "Please set MaceReact_Preoptimiser if mace_preopt is True."
             assert input_check, "Mace Preoptimisation workflow requires input be set to 'float'."
             self.mace_preopt_flavour = mace_preopt
+            
+            if not minimum_energy_path:
+                """Turns off MACE preoptimisation if a restart file is found - does not make
+                   sense to risk continuing an unconverged MACE NEB run or read from said   
+                   interpolation."""
+                self.mace_preopt_flavour = 0
+                mace_preopt = 0
 
+        """Run preoptimisation flavour 1"""
         if mace_preopt == 1:
 
             preopt_ts = self._mace_preoptimise_ts(initial, final, fmax, n, self.interpolation, input_check)
@@ -437,6 +449,7 @@ class ReactAims:
             """Set original name after input check is complete"""
             self.filename = filename_copy
 
+        """Run preotimisation flavour 2"""
         if mace_preopt == 2:
 
             preopt_ts = self._mace_preoptimise_ts(initial, final, fmax, n, self.interpolation, input_check)
@@ -672,7 +685,7 @@ class ReactAims:
 
         preopt_ts = self._MaceReactor.search_ts_neb(initial, final, fmax, n, k=0.05, method="improvedtangent",
                                         interpolation=interpolation, input_check=input_check,
-                                        max_steps=200, restart=False)
+                                        max_steps=200, restart=True)
 
         self._MaceReactor.filename = filname
 
