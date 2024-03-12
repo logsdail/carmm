@@ -40,7 +40,7 @@ def test_run_workflows_ReactAims_MACE_preopt():
 
     '''Call relevant calculations'''
     '''The below has been previously calculated and data is retrieved from saved trajectories'''
-    model_optimised, _ = reactor.aims_optimise(atoms, fmax=0.01, restart=True, optimiser=FIRE, mace_preopt=2)
+    model_optimised, _ = reactor.aims_optimise(atoms, fmax=0.01, restart=True, optimiser=FIRE, mace_preopt=True)
     '''I do not like this test - it tests EMT more than it does the workflow'''
     assert is_converged(reactor.model_optimised, 0.01), \
         "Model is not optimised after preoptimisation"
@@ -49,11 +49,17 @@ def test_run_workflows_ReactAims_MACE_preopt():
     atoms1 = atoms.copy()
     atoms1[1].x += 8
     atoms2 = atoms.copy()
-    transition_state = reactor.search_ts(atoms1, atoms2, 0.05, 0.03, n=6, input_check=0.01, mace_preopt=2)
-    
-    activation_energy = transition_state.get_potential_energy()-model_optimised.get_potential_energy()
-
-    assert 5.34946 == round(activation_energy, 5)
+    '''Tests each flavour of ML-NEB'''
+    transition_state = reactor.search_ts(atoms1, atoms2, 0.05, 0.03, n=6, input_check=0.01, mace_preopt=2, restart=False)
+    print(len(reactor.mace_interpolation))
+    assert is_converged(reactor.mace_interpolation[3], 0.03), \
+        "MACE pre-optimised NEB flavour 2 is not converged"
+    transition_state = reactor.search_ts(atoms1, atoms2, 0.05, 0.03, n=6, input_check=0.01, mace_preopt=1, restart=False)
+    assert is_converged(reactor.mace_interpolation[3], 0.03), \
+        "MACE pre-optimised NEB flavour 1 is not converged"
+    transition_state = reactor.search_ts(atoms1, atoms2, 0.05, 0.03, n=6, input_check=0.01, mace_preopt=0, restart=False)
+    assert isinstance(reactor.interpolation, str), \
+        "ML-NEB is somehow running even though not requested"
 
     '''Return to parent directory'''
     os.chdir(parent_dir)

@@ -332,7 +332,7 @@ class ReactAims:
     def search_ts(self, initial: Atoms, final: Atoms,
                   fmax: float, unc: float, interpolation=None,
                   n=0.25, steps=40, restart=True, prev_calcs=None,
-                  input_check=0.01, mace_preopt=0, preopt_maxstep=200):
+                  input_check=0.01, mace_preopt=0, preopt_maxsteps=200):
         """
         This function allows calculation of the transition state using the CatLearn software package in an
         ASE/sockets/FHI-aims setup. The resulting converged band will be located in the MLNEB.traj file.
@@ -371,7 +371,7 @@ class ReactAims:
                 1: Full Preopt -  MACE preoptimises TS before FHI-aims - FHI-aims inherits all structures from MACE.
                 2: TS only     -  MACE preoptimises after FHI-aims check - MACE receives initial and reactant
                                   structures from FHI-aims and does not optimise
-            preopt_maxstep: int
+            preopt_maxsteps: int
                 Controls the maximum number of steps used in the preoptimiser before giving up and passing the 
                 calculation onto MLNEB with FHI-aims.
 
@@ -422,11 +422,12 @@ class ReactAims:
         """Run preoptimisation flavour 1"""
         if self.mace_preopt_flavour == 1:
 
-            preopt_ts = self._mace_preoptimise_ts(initial, final, fmax, n, self.interpolation, input_check)
+            preopt_ts = self._mace_preoptimise_ts(initial, final, fmax, n, self.interpolation,
+                                                  input_check, max_steps=preopt_maxsteps)
 
             initial = preopt_ts[0]
             final = preopt_ts[-1]
-            self.interpolation = preopt_ts[1:-1]
+            self.mace_interpolation = preopt_ts
 
         if input_check:
             filename_copy = self.filename
@@ -444,9 +445,10 @@ class ReactAims:
         """Run preotimisation flavour 2"""
         if self.mace_preopt_flavour == 2:
 
-            preopt_ts = self._mace_preoptimise_ts(initial, final, fmax, n, self.interpolation, input_check)
+            preopt_ts = self._mace_preoptimise_ts(initial, final, fmax, n, self.interpolation,
+                                                  input_check, max_steps=preopt_maxsteps)
 
-            self.interpolation = preopt_ts[1:-1]
+            self.mace_interpolation = preopt_ts
 
         if not minimum_energy_path:
             minimum_energy_path = [None, None]
@@ -478,17 +480,16 @@ class ReactAims:
                     """GAB: ML-NEB misbehaves if a calculator is not provided for interpolated images"""
                     """     following function ensures correct calculators are attached with closed  """
                     """     sockets.                                                                 """
-                    initial = self.attach_calculator(initial, params, out_fn=out,
-                                                     dimensions=self.dimensions, directory=subdirectory_name, calc_e=True)
-                    final = self.attach_calculator(final, params, out_fn=out,
-                                                dimensions=self.dimensions, directory=subdirectory_name, calc_e=True)
-                
-                    if isinstance(self.interpolation, list):
-                        for idx, image in enumerate(self.interpolation):
-                            if (self.interpolation[idx].calc) is None:
-                                self.attach_calculator(self.interpolation[idx], params,
-                                                   out_fn=out, dimensions=self.dimensions, directory=subdirectory_name,
-                                                   calc_e=True)
+                    self.interpolation = [ image.copy() for image in self.mace_interpolation[1:-1] ]
+                    self.interpolation = [initial] + self.interpolation + [final]
+
+                    for idx, image in enumerate(self.interpolation):
+                        self.attach_calculator(self.interpolation[idx], params,
+                                           out_fn=out, dimensions=self.dimensions, directory=subdirectory_name,
+                                           calc_e=True)
+
+                    initial = self.interpolation[0]
+                    final   = self.interpolation[-1]
 
                 while not os.path.exists(traj_name):
                     if iterations > 0:
@@ -517,10 +518,9 @@ class ReactAims:
 
                         iterations += 1
                         os.chdir(parent_dir)
-                    elif self.mace_preopt_flavour > 0:
-                        self.ts = sorted(self.interpolation, key=lambda k: k.get_potential_energy(), reverse=True)[0]
-                        return self.ts
                     else:
+
+                        os.chdir(parent_dir)
                         return None
 
         """Find maximum energy, i.e. transition state to return it"""
@@ -654,7 +654,7 @@ class ReactAims:
 
         return preopt_atoms
 
-    def _mace_preoptimise_ts(self, initial, final, fmax, n, interpolation, input_check):
+    def _mace_preoptimise_ts(self, initial, final, fmax, n, interpolation, input_check, max_steps=200):
         """
         Internal function for preoptimisation of NEB with a pre-set MACE calculator
 
@@ -680,15 +680,11 @@ class ReactAims:
 
         preopt_ts = self._MaceReactor.search_ts_neb(initial, final, fmax, n, k=0.05, method="improvedtangent",
                                         interpolation=interpolation, input_check=input_check,
-                                        max_steps=200, restart=True)
+                                        max_steps=max_steps, restart=True)
 
         self._MaceReactor.filename = filname
 
-        new_interpolation = self._MaceReactor.interpolation.copy()
-        for idx, image in enumerate(new_interpolation):
-            new_interpolation[idx].calc = None
-
-        return new_interpolation
+        return self._MaceReactor.interpolation.copy()
 
     def attach_calculator(self, atoms, params,
                     out_fn="aims.out",
