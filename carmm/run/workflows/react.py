@@ -387,9 +387,6 @@ class ReactAims:
                                             "Dependency on the catlearn.mlneb module cannot run TS " \
                                             "search concurrently without issues. "
 
-        if mace_preopt > 0:
-            assert isinstance(n, int), "Integer number of images required for MACE TS preoptimiser"
-
         """Retrieve common properties"""
         basis_set = self.basis_set
         hpc = self.hpc
@@ -415,20 +412,15 @@ class ReactAims:
         counter, out, subdirectory_name, minimum_energy_path = helper.restart_setup()
 
         """Set MACE Pre-optimisation flavor"""
-        if mace_preopt > 0:
+        self.mace_preopt_flavour = 0
+        if mace_preopt > 0 and not minimum_energy_path:
+            assert isinstance(n, int), "Integer number of images required for MACE TS preoptimiser"
             assert self._MaceReactor is not None, "Please set MaceReact_Preoptimiser if mace_preopt is True."
             assert input_check, "Mace Preoptimisation workflow requires input be set to 'float'."
             self.mace_preopt_flavour = mace_preopt
-            
-            if minimum_energy_path:
-                """Turns off MACE preoptimisation if a restart file is found - does not make
-                   sense to risk continuing an unconverged MACE NEB run or read from said   
-                   interpolation."""
-                self.mace_preopt_flavour = 0
-                mace_preopt = 0
 
         """Run preoptimisation flavour 1"""
-        if mace_preopt == 1:
+        if self.mace_preopt_flavour == 1:
 
             preopt_ts = self._mace_preoptimise_ts(initial, final, fmax, n, self.interpolation, input_check)
 
@@ -450,7 +442,7 @@ class ReactAims:
             self.filename = filename_copy
 
         """Run preotimisation flavour 2"""
-        if mace_preopt == 2:
+        if self.mace_preopt_flavour == 2:
 
             preopt_ts = self._mace_preoptimise_ts(initial, final, fmax, n, self.interpolation, input_check)
 
@@ -482,7 +474,7 @@ class ReactAims:
 
                 iterations = 0
 
-                if mace_preopt > 0 and not os.path.exists(traj_name):
+                if self.mace_preopt_flavour > 0 and not os.path.exists(traj_name):
                     """GAB: ML-NEB misbehaves if a calculator is not provided for interpolated images"""
                     """     following function ensures correct calculators are attached with closed  """
                     """     sockets.                                                                 """
@@ -525,7 +517,7 @@ class ReactAims:
 
                         iterations += 1
                         os.chdir(parent_dir)
-                    elif mace_preopt > 0:
+                    elif self.mace_preopt_flavour > 0:
                         self.ts = sorted(self.interpolation, key=lambda k: k.get_potential_energy(), reverse=True)[0]
                         return self.ts
                     else:
