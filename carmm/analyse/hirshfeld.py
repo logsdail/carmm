@@ -1,6 +1,17 @@
 # Much recycled from mulliken.py, this should get Hirshfeld charges from aims.out
 
 def extract_hirshfeld(fname, natoms, data):
+    """
+
+    Args:
+        fname: Input file name, usually aims.out. str
+        natoms: number of atoms to extract charge from. int
+        data: type of output requested. str
+              Can be 'charge', 'volume', 'volume f', 'dipole vector', 'dipole moment' or 'second'
+
+    Returns: label. List of requested data
+
+    """
 
     # Extracts data from an aims.out and writes it to a new file.
 
@@ -43,7 +54,6 @@ def extract_hirshfeld(fname, natoms, data):
 
         for line in range(len(data_lines)):
             if identifier in data_lines[line]:
-                # print(data_lines[line])
                 hirsh_label = data_lines[line][32:-1].strip()
                 label.append(hirsh_label)
 
