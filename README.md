@@ -3,7 +3,9 @@
 
 # Cardiff Molecular Modelling
 
-General scripts and software for everyday computational chemistry. Folder names are designed to be self explanatory but just in case we have:
+General scripts and software for everyday computational chemistry. Documentation of functionality is available at: https://logsdail.github.io/carmm/.
+
+Folder names are designed to be self explanatory:
 
 **carmm/build** - contains functions to build stuff
 
