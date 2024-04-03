@@ -43,7 +43,7 @@ def analyse_angles(model, A, B, C, verbose=True, multirow=False):
 
     Parameters:
     model: Atoms object
-        XXX
+        The ASE atoms object that needs to be considered 
     A: string, chemical symbol, e.g. "O"
     B: string, chemical symbol, e.g. "C"
     C: string, chemical symbol, e.g. "O"
