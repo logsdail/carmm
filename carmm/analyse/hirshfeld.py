@@ -69,7 +69,7 @@ def get_hirshfeld_line(text):
 
 def write_hirshfeld(text, natoms, start, outname='hirshfeld.txt'):
 
-    # Internal function to write out hirshfled data into a new file
+    # Internal function to write out hirshfeld data into a new file
 
     with open(outname, 'w') as h:
 
