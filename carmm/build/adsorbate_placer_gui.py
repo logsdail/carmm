@@ -86,8 +86,4 @@ def print_position():
 
 def get_rotations():
 
-    x_rot = _x.get()
-    y_rot = _y.get()
-    z_rot = _z.get()
-
-    return x_rot, y_rot, z_rot
+    return _x.get(), _y.get(), _z.get()
