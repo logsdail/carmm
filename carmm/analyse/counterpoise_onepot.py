@@ -35,6 +35,7 @@ def counterpoise_calc(complex_struc, a_id, b_id, fhi_calc=None, a_name=None, b_n
 
     Returns: float. counterpoise correction value for basis set superposition error
     """
+    print("Use version 230612 or newer ones, or empty sites won't work with PBC\n")
     # Check if a_id and b_id are mapped correctly and convert symbols to indices
     a_id, b_id = check_and_convert_id(complex_struc, a_id, b_id)
 
@@ -98,7 +99,7 @@ def check_and_convert_id(complex_struc, a_id, b_id):
             raise RuntimeError("a_id and b_id should be either lists of indices or lists of strings")
 
     if id_type is str:
-        if len(a_id + b_id) != len(complex_struc.symbols):
+        if len(a_id + b_id) != len(set(complex_struc.symbols)):
             raise RuntimeError("The number of symbols are not the same as in the complex")
         # Convert symbols to indices
         a_id = [atom.index for atom in complex_struc if atom.symbol in a_id]
@@ -176,3 +177,4 @@ def calculate_energy_ghost_compatible(calc, atoms=None, properties=['energy'],
         command = 'ls'
     subprocess.check_call(command, shell=True, cwd=calc.directory)
     calc.read_results()
+

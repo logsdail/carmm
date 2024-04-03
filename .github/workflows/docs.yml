@@ -1,0 +1,64 @@
+name: Sphinx
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build_docs:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+
+    - name: Install Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: '3.9'
+
+    - name: Install Sphinx and necessary dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install sphinx sphinx-autodoc-typehints sphinx-rtd-theme
+
+    # Ensure the Python environment setup is consistent with the main.yml
+    - name: Setup Python environment
+      run: | 
+        echo "PYTHONPATH=/home/runner/work/carmm/carmm:$PYTHONPATH" >> $GITHUB_ENV
+
+    # Build the documentation dynamically from docstrings in the code
+    - name: Build Sphinx API documentation
+      run: |
+        sphinx-apidoc -o carmm/docs/source .
+
+    # Build a website based on the retrieved docstrings
+    - name: Build Sphinx HTML
+      run: |
+        sphinx-build -b html carmm/docs/source docs
+
+    # tell GitHub not to use the Jekyll builder explicitly
+    - name: Prevent using Jekyll to use static files properly
+      run: |
+        touch docs/.nojekyll 
+
+    # Publish built docs to gh-pages branch.
+    - name: Commit documentation changes
+      run: |
+        git clone https://github.com/logsdail/carmm.git --branch gh-pages --single-branch gh-pages
+        cp -r docs/* gh-pages/docs
+        cd gh-pages
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Action"
+        git add .
+        git commit -m "Update documentation" -a || true
+        # The above command will fail if no changes were present, so we ignore
+        # that.
+
+    - name: Push changes
+      uses: ad-m/github-push-action@master
+      with:
+        branch: gh-pages
+        directory: gh-pages
+        github_token: ${{ secrets.GITHUB_TOKEN }}
