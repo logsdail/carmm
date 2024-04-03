@@ -27,7 +27,7 @@ def test_adsorbate_placer_gui():
         mth_placed.place_adsorbate()
 
     try:
-        rotationbox_gui()
+        rotationbox_gui(mth_placed)
     except Exception as error:
         print(f"Error in rotation box GUI test, {type(error).__name__}")
 
