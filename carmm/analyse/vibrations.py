@@ -5,10 +5,12 @@ from ase.io import read
 
 
 def vib_analysis(model):
-    ''' Returns a list displacemet of bonds/atoms in a trajectory.
+    '''
+    Returns a list displacement of bonds/atoms in a trajectory.
+
     Parameters:
-        model: Atoms object
-               e.g trajectory file to calculate bond displacement
+        model: Trajectory File
+
     TODO: - Resolve for periodic systems - functionally currently doesn't work
 
 
@@ -21,20 +23,22 @@ def vib_analysis(model):
         for j in range(i + 1, len(atot)):
             distances = []
             for atoms in traj:
-                dist = atoms.get_distances(i, j)
+                dist = atoms.get_distances(i, j, mic=True)
                 distances.append(float(dist))
             dist_list = distances
             return dist_list
 
 
 class plot_vibration_data:
-    ''' Returns a graph showing displacement of bonds/atoms in a vibration trajectory from ASE.
-    #     Parameters:
-    #         x_axis: length of data returned from vib_analysis()
-              y_xis: data returned by vib_analysis()
-             title: title for plot
+    '''
+    Returns a graph showing displacement of bonds/atoms in a vibration trajectory from ASE.
 
-             TODO: would be nice to able to plot atomic/elemental information on plot i.e which atoms are being displaced
+    Parameters:
+        x_axis: length of data returned from vib_analysis()
+        y_axis: data returned by vib_analysis()
+        title: title for plot
+
+    TODO: would be nice to able to plot atomic/elemental information on plot i.e which atoms are being displaced
     '''
 
 
