@@ -188,14 +188,18 @@ bond.</p></li>
 <dt class="sig sig-object py" id="carmm.build.neb.ilm.multiple_local_extrema">
 <span class="sig-prename descclassname"><span class="pre">carmm.build.neb.ilm.</span></span><span class="sig-name descname"><span class="pre">multiple_local_extrema</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'last_predicted_path.traj'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#carmm.build.neb.ilm.multiple_local_extrema" title="Link to this definition">¶</a></dt>
 <dd><p>This function will detect local maxima in the trajectory file of a NEB
-calculation and will return False for single maximum or True for multiple
-maxima.</p>
+calculation.</p>
 <p>Parameters:
 filename: str</p>
 <blockquote>
 <div><p>Name of the file containing latest Minimum Energy Path, default
 is “last_predicted_path.traj” as in MLNEB by CatLearn.</p>
 </div></blockquote>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>False for single maximum; True for multiple maxima.</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py function">
