@@ -12,10 +12,54 @@ def test_analyse_hirshfeld():
     charge = hirshfeld.extract_hirshfeld(fname='data/mgo/mgo_hirsh_aims.out',
                                          natoms=4,
                                          data='charge',
-                                         write=False
+                                         write=True,
+                                         outname='data/mgo/hirshfeld.txt'
                                          )
 
     assert(charge == [0.34094559, -0.34020775, 0.34094559, -0.34020775])
+
+    vol = hirshfeld.extract_hirshfeld(fname='data/mgo/mgo_hirsh_aims.out',
+                                         natoms=4,
+                                         data='volume',
+                                         write=False
+                                         )
+
+    assert(vol == [84.98662789, 22.60472263, 84.98662789, 22.60472263])
+
+    volf = hirshfeld.extract_hirshfeld(fname='data/mgo/mgo_hirsh_aims.out',
+                                         natoms=4,
+                                         data='volume f',
+                                         write=False
+                                         )
+
+    assert(volf == [93.92897117, 23.60491416, 93.92897117, 23.60491416])
+
+    dipv = hirshfeld.extract_hirshfeld(fname='data/mgo/mgo_hirsh_aims.out',
+                                         natoms=4,
+                                         data='dipole vector',
+                                         write=False
+                                         )
+
+    assert(dipv == [[0.0, 0.0, -0.0], [0.0, 0.0, -0.0], [-0.0, -0.0, 0.0], [-0.0, -0.0, 0.0]])
+
+    dipm = hirshfeld.extract_hirshfeld(fname='data/mgo/mgo_hirsh_aims.out',
+                                         natoms=4,
+                                         data='dipole moment',
+                                         write=False
+                                         )
+
+    assert(dipm == [0.0, 0.0, 0.0, 0.0])
+
+    secn = hirshfeld.extract_hirshfeld(fname='data/mgo/mgo_hirsh_aims.out',
+                                         natoms=4,
+                                         data='second',
+                                         write=False
+                                         )
+
+    assert(secn == [[0.22597625, 0.0, 0.0, 0.0, 0.22597621, 0.0, 0.0, 0.0, 0.2249063],
+                    [-0.00625081, 0.0, -0.0, 0.0, -0.00625081, -0.0, -0.0, -0.0, -0.00618102],
+                    [0.22597625, 0.0, 0.0, 0.0, 0.22597621, 0.0, 0.0, 0.0, 0.2249063],
+                    [-0.00625081, 0.0, -0.0, 0.0, -0.00625081, -0.0, -0.0, -0.0, -0.00618102]])
 
 
 test_analyse_hirshfeld()

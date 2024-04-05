@@ -1,6 +1,6 @@
 # Much recycled from mulliken.py, this should get Hirshfeld charges from aims.out
 
-def extract_hirshfeld(fname, natoms, data, write=True):
+def extract_hirshfeld(fname, natoms, data, write=True, outname='hirshfeld.txt'):
     """
 
     Args:
@@ -41,9 +41,9 @@ def extract_hirshfeld(fname, natoms, data, write=True):
 
     if write is True:
 
-        write_hirshfeld(output, natoms, hirshfeld_line)
+        write_hirshfeld(output, natoms, hirshfeld_line, outname)
 
-        hirsh = read_hirshfeld('hirshfeld.txt', identifier)
+        hirsh = read_hirshfeld(outname, identifier)
 
     else:
         hirsh = read_hirshfeld(fname, identifier)
@@ -67,7 +67,7 @@ def get_hirshfeld_line(text):
     return hirshfeld_line
 
 
-def write_hirshfeld(text, natoms, start, outname='hirshfeld.txt'):
+def write_hirshfeld(text, natoms, start, outname):
 
     # Internal function to write out hirshfeld data into a new file
 
@@ -102,8 +102,20 @@ def read_hirshfeld(fname, identifier):
 
         for line in range(len(data_lines)):
             if identifier in data_lines[line]:
-                hirsh_label = data_lines[line][32:-1].strip()
-                label.append(float(hirsh_label))
+                if identifier == 'Hirshfeld second moments:':
+                    hirsh_label = data_lines[line][32:-1].strip() + ' '
+                    hirsh_label += data_lines[line+1][32:-1].strip() + ' '
+                    hirsh_label += data_lines[line+2][32:-1].strip() + ' '
+                else:
+                    hirsh_label = data_lines[line][32:-1].strip()
+
+                if identifier == 'Hirshfeld dipole vector :' or identifier == 'Hirshfeld second moments:':
+                    internal = hirsh_label.split()
+                    for i in range(len(internal)):
+                        internal[i] = float(internal[i])
+                    label.append(internal)
+                else:
+                    label.append(float(hirsh_label))
 
     return label
 
