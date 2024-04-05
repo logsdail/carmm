@@ -11,7 +11,7 @@ def test_analyse_hirshfeld():
     # set the filename, no. of atoms, data name and writing an output file flag
     charge = hirshfeld.extract_hirshfeld(fname='data/mgo/mgo_hirsh_aims.out',
                                          natoms=4,
-                                         data=charge,
+                                         data='charge',
                                          write=False
                                          )
 
