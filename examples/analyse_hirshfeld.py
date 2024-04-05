@@ -15,7 +15,7 @@ def test_analyse_hirshfeld():
                                          write=False
                                          )
 
-    assert(charge == (0.34094559, -0.34020775, 0.34094559, -0.34020775))
+    assert(charge == [0.34094559, -0.34020775, 0.34094559, -0.34020775])
 
 
 test_analyse_hirshfeld()
