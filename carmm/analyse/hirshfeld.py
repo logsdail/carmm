@@ -71,6 +71,10 @@ def get_hirshfeld_line(text):
 def write_hirshfeld(text, natoms, start, outname):
 
     # Internal function to write out hirshfeld data into a new file
+    # Text: list of lines from file
+    # natoms: no. of atoms
+    # start: line within file to start from
+    # outname: name of file to write
 
     with open(outname, 'w') as h:
 
