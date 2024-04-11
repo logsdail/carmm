@@ -18,21 +18,22 @@ def extract_hirshfeld(fname, natoms, data, write=True, outname='hirshfeld.txt'):
     # Extracts data from an aims.out and writes it to a new file.
     import sys
 
-    if data == 'charge':
-        identifier = 'Hirshfeld charge        :'
-    elif data == 'volume':
-        identifier = 'Hirshfeld volume        :'
-    elif data == 'volume f':
-        identifier = 'Free atom volume        :'
-    elif data == 'dipole vector':
-        identifier = 'Hirshfeld dipole vector :'
-    elif data == 'dipole moment':
-        identifier = 'Hirshfeld dipole moment :'
-    elif data == 'second':
-        identifier = 'Hirshfeld second moments:'
+    ids = {
+        'charge':'Hirshfeld charge        :',
+        'volume':'Hirshfeld volume        :',
+        'volume f':'Free atom volume        :',
+        'dipole vector':'Hirshfeld dipole vector :',
+        'dipole moment':'Hirshfeld dipole moment :',
+        'second':'Hirshfeld second moments:'
+    }
+
+    if data in ids:
+        identifier = ids.get(data)
+
     else:
         print('Requested data not recognised')
         sys.exit()
+
         
     with open(fname, 'r') as f:
         output = f.readlines()

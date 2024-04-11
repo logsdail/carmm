@@ -61,6 +61,14 @@ def test_analyse_hirshfeld():
                     [0.22597625, 0.0, 0.0, 0.0, 0.22597621, 0.0, 0.0, 0.0, 0.2249063],
                     [-0.00625081, 0.0, -0.0, 0.0, -0.00625081, -0.0, -0.0, -0.0, -0.00618102]])
 
+    # Test for VMD output
+
+    import numpy as np
+
+    hirshfeld.vmd_out(np.array(charges, fname='data/mgo/vmd_chrgs.txt'))
+    with open('data/mgo/vmd_chrgs.txt','r') as vmd:
+        lines = vmd.readlines()
+    assert(lines == ['0.34094559\n', '-0.34020775\n', '0.34094559\n', '-0.34020775\n'])
 
 test_analyse_hirshfeld()
 
