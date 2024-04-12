@@ -1,7 +1,7 @@
 def extract_mulliken_charge(fn, natoms):
     '''
     Function to extract and return the Mulliken charges from an FHI-aims output.
-    A list of relative charges is returned, with +q meaning charg depletion and -q meaning charge accummulation
+    A list of relative charges is returned, with +q meaning charge depletion and -q meaning charge accummulation
 
     Parameters:
 
@@ -9,6 +9,9 @@ def extract_mulliken_charge(fn, natoms):
         Filename from which the Mulliken data should be extracted
     natoms: int
         Number of atoms in the calculation
+
+    Returns:
+        List of charges.
 
     '''
 
@@ -26,6 +29,8 @@ def extract_mulliken_charge(fn, natoms):
 def extract_mulliken_spin(fn, natoms):
     '''
     Function to extract and return the Mulliken spin from an FHI-aims output.
+    A list of spin moments on is returned. The value at each index corresponds to the spin moment of each the atom at
+    that particular index
 
     Parameters:
 
@@ -33,6 +38,9 @@ def extract_mulliken_spin(fn, natoms):
         Filename from which the Mulliken data should be extracted
     natoms: int
         Number of atoms in the calculation
+
+    Returns:
+        List of spin moments.
 
     '''
 
@@ -59,6 +67,9 @@ def _get_mulliken_data_line(text, data_identifier):
         Content of the output file
     data_identifier: string
         Text that precedes the data desired
+
+    Returns:
+        An integer value of the line number corresponding to the mulliken block in the output file.
     '''
 
     # Focus on just the Mulliken data
@@ -77,6 +88,9 @@ def _get_mulliken_data_line(text, data_identifier):
 def write_dos_to_csv(fname, x, y):
     '''
     Description
+    Function to write the density of states (dos) data to a csv file.
+    In case of spin-unpolarised calculations, there will be only two columns in the csv file corresponding to the
+    x and y values whereas in case of a spin-polarised calculation, we will have 3 columns viz x, y(spin-up) and y(spin-down).
 
     Parameters:
     fname: String
@@ -105,11 +119,18 @@ def parse_mulliken_file(fname):
     '''
 
     Description
+    Extracting data from a Mulliken.out file. Iterates through each atom, spin-channel, k-points and eigenstates to
+    extract the values of eigenvalues (energies), occupancies (occupation number), total angular momenta.
 
     Parameters:
 
     fname: String
         Filename of the Mulliken.out file we are reading in and parsing.
+
+    Returns:
+        A MullikenData object containing the values of eigenvalues (energies), occupancies (occupation number),
+        total angular momenta for each atom, spin-channel, k-point and eigenstate.
+
     '''
 
     # Read in the Mulliken data
@@ -191,6 +212,8 @@ def parse_mulliken_file(fname):
 class Kpt:
     '''
     Description
+    Class to represent data for a particular k-point. Data includes the number eigenstates for a given k-point, spin channel
+    and atom.
     '''
     def __init__(self, nstates):
         '''
@@ -201,6 +224,8 @@ class Kpt:
         nstates: Integer
             Number of electronic states to be stored in the data object
         '''
+        # initialize each of the list with some number currently which will be modified with true numbers from
+        # the mulliken file obtained while parsing the data using parse_mulliken_file() function defined above
         self.weight = 1.0
         self.energies = [ 0.0 for i in range(nstates) ]
         self.occupancies = [ 0.0 for i in range(nstates) ]
@@ -210,6 +235,8 @@ class Kpt:
 class Spin:
     '''
     Description
+    Class to represent data for a spin channel. Data includes the number of k-points and eigenstates for a given spin channel
+    and atom.
     '''
     def __init__(self, nkpts, nstates):
         '''
@@ -222,11 +249,15 @@ class Spin:
         nstates: Integer
             Number of electronic states to be stored in the data object
         '''
+        # create a nested list of objects of the Kpt class (defined above)
         self.kpts = [ Kpt(nstates) for i in range(nkpts) ]
+
 
 class Atom:
     '''
     Description
+    # TODO: Needs changing the name of the class as it might interfere with the 'Atom' class of ASE
+    Class to represent data for a each atom. Data includes the number of spin-channel, k-points and eigenstates for each atom
     '''
     def __init__(self, nspin, nkpts, nstates):
         '''
@@ -241,16 +272,28 @@ class Atom:
         nstates: Integer
             Number of electronic states to be stored in the data object
         '''
+        # create a nested list of objects of the Spin class (defined above)
         self.spin = [ Spin(nkpts, nstates) for i in range(nspin) ]
 
 class MullikenData:
     '''
     Description
+    Class representing the Mulliken data and store information pertinent to eigenvalues, occupation numbers, and angular
+    momentas for each atom, spin-channel, k-point and eigenstate
+
+    Parameters:
+
+        natoms: Integer
+            Number of atoms in the Mulliken data object
+        nspin: Integer
+            Number of spin channels in the data object
+        nkpts: Integer
+            Number of k-points in the model
+        nstates: Integer
+            Number of electronic states to be stored in the data object
     '''
     def __init__(self, natoms, nspin, nkpts, nstates):
         '''
-        Description
-
         Parameters:
 
         natoms: Integer
@@ -262,30 +305,36 @@ class MullikenData:
         nstates: Integer
             Number of electronic states to be stored in the data object
         '''
+        # create a nested list of objects of the Atom class (defined above and not to be confused with ASE Atom class)
+        # TODO: Needs changing the name of the class as it might interfere with the 'Atom' class of ASE
         self.atoms = [ Atom(nspin, nkpts, nstates) for i in range(natoms) ]
         self.homo = None
 
     def get_natoms(self):
         '''
         Description
+        Computes the number of atoms
         '''
         return len(self.atoms)
 
     def get_nspin(self):
         '''
         Description
+        Computes the number of spin channels. For spin paired the value is 1 whereas for spin polarised the value is 2
         '''
         return len(self.atoms[0].spin)
 
     def get_nkpts(self):
         '''
         Description
+        Computes the number of k-points
         '''
         return len(self.atoms[0].spin[0].kpts)
 
     def get_nstates(self):
         '''
         Description
+        Computes the number of eigenstates
         '''
         return len(self.atoms[0].spin[0].kpts[0].energies)
 
@@ -319,18 +368,36 @@ class MullikenData:
     def get_all_plot_data(self):
         '''
         Description
+        Obtains the arrays of data (x --> energy and y --> density) for plotting the total density of states (dos).
+        Basically uses the get_plot_data() function with angular='all'.
+
+        Returns:
+            1D array of x (energy) and 2D array of y (density). The density data is 2D to account for both spin-up and
+            spin-down channels
+
         '''
-        return self.get_plot_data(atoms=range(self.get_natoms()),
+
+        return self.get_plot_data(atom_ind=range(self.get_natoms()),
                                   spin=range(self.get_nspin()),
                                   kpts=range(self.get_nkpts()),
                                   angular='all')
 
-    def get_s_plot_data(self, atoms=None, spin=None, kpts=None):
+    def get_orbital_plot_data(self, orbital, atoms=None, spin=None, kpts=None):
+
         '''
         Description
+        Obtains the arrays of data (x --> energy and y --> density) for plotting the individual density of states (dos)
+        for a desired orbital
+        Basically uses the get_plot_data() function with orbital ('s','p','d','f') of user's choice.
+
+        Returns:
+            1D array of x (energy) and 2D array of y (density). The density data is 2D to account for both spin-up and
+            spin-down channels
 
         Parameters:
 
+        orbital: String
+            Choices are 's','p','d','f','g' for obtaining the corresponding plots for a desired orbital.
         atoms: List of Integers
             Indices of atoms that are to be included in the data acquisition
         spin: List of Integers
@@ -344,78 +411,19 @@ class MullikenData:
             spin = range(self.get_nspin())
         if kpts is None:
             kpts = range(self.get_nkpts())
-        return self.get_plot_data(atoms, spin, kpts, 's')
+        return self.get_plot_data(atoms, spin, kpts, angular=orbital)
 
-    def get_p_plot_data(self, atoms=None, spin=None, kpts=None):
+
+    def get_plot_data(self, atom_ind, spin, kpts, angular, xmin=-20, xmax=+20, npoints=1000, variance=0.02):
         '''
         Description
+        Obtains the arrays of data (x --> energy and y --> density) for plotting the density of states (dos).
+        Can obtain data for total and individual contribution from the 's', 'p', 'd', and 'f' orbitals using the
+        'angular' keyword.
 
         Parameters:
 
-        atoms: List of Integers
-            Indices of atoms that are to be included in the data acquisition
-        spin: List of Integers
-            Indices of spins that are to be included - either [0] or [0,1] for none or collinear
-        kpts: List of Integers
-            Indices of kpts to be included
-        '''
-        if atoms is None:
-            atoms = range(self.get_natoms())
-        if spin is None:
-            spin = range(self.get_nspin())
-        if kpts is None:
-            kpts = range(self.get_nkpts())
-        return self.get_plot_data(atoms, spin, kpts, 'p')
-
-    def get_d_plot_data(self, atoms=None, spin=None, kpts=None):
-        '''
-        Description
-
-        Parameters:
-
-        atoms: List of Integers
-            Indices of atoms that are to be included in the data acquisition
-        spin: List of Integers
-            Indices of spins that are to be included - either [0] or [0,1] for none or collinear
-        kpts: List of Integers
-            Indices of kpts to be included
-        '''
-        if atoms is None:
-            atoms = range(self.get_natoms())
-        if spin is None:
-            spin = range(self.get_nspin())
-        if kpts is None:
-            kpts = range(self.get_nkpts())
-        return self.get_plot_data(atoms, spin, kpts, 'd')
-
-    def get_f_plot_data(self, atoms=None, spin=None, kpts=None):
-        '''
-        Description
-
-        Parameters:
-
-        atoms: List of Integers
-            Indices of atoms that are to be included in the data acquisition
-        spin: List of Integers
-            Indices of spins that are to be included - either [0] or [0,1] for none or collinear
-        kpts: List of Integers
-            Indices of kpts to be included
-        '''
-        if atoms is None:
-            atoms = range(self.get_natoms())
-        if spin is None:
-            spin = range(self.get_nspin())
-        if kpts is None:
-            kpts = range(self.get_nkpts())
-        return self.get_plot_data(atoms, spin, kpts, 'f')
-
-    def get_plot_data(self, atoms, spin, kpts, angular, xmin=-20, xmax=+20, npoints=1000, variance=0.02):
-        '''
-        Description
-
-        Parameters:
-
-        atoms: List of Integers
+        atom_ind: List of Integers
             Indices of atoms that are to be included in the data acquisition
         spin: List of Integers
             Indices of spins that are to be included - either [0] or [0,1] for none or collinear
@@ -431,6 +439,10 @@ class MullikenData:
             Number of 'bins' on the x-axis when expanding Gaussians on the eigenvalues
         variance: Float
             Variance for the Gaussian when added to each eigenfunction
+
+        Returns:
+            1D array of x (energy) and 2D array of y (density). The density data is 2D to account for both spin-up and
+            spin-down channels
         '''
 
         import numpy as np
@@ -454,7 +466,7 @@ class MullikenData:
             homo = self.get_homo()
 
         # Collect information in data object. Note two sets of results, for spin up and down.
-        for atom in atoms:
+        for atom in atom_ind:
             for sp in spin:
                 for kpt in kpts:
                     for e in range(self.get_nstates()):

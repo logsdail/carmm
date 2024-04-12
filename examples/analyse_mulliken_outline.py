@@ -28,10 +28,10 @@ def test_mulliken_outline():
     # Collect all the density of states data to plot
     x, data = mulliken_data.get_all_plot_data()
     # Get the angular contributions so we can see these too
-    x, s = mulliken_data.get_s_plot_data()
-    x, p = mulliken_data.get_p_plot_data()
-    x, d = mulliken_data.get_d_plot_data()
-    x, f = mulliken_data.get_f_plot_data()
+    x, s = mulliken_data.get_orbital_plot_data(orbital='s')
+    x, p = mulliken_data.get_orbital_plot_data(orbital='p')
+    x, d = mulliken_data.get_orbital_plot_data(orbital='d')
+    x, f = mulliken_data.get_orbital_plot_data(orbital='f')
 
     # The returned array has either one entries if spin-collinear, or two entries for spin up and down.
     for spin in range(mulliken_data.get_nspin()):
