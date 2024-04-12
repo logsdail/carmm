@@ -9,6 +9,7 @@ from carmm.analyse.forces import is_converged
 from carmm.run.aims_path import set_aims_command
 from ase.io import Trajectory
 from carmm.run.workflows.helper import CalculationHelper
+from carmm.err_handler.logger_set import set_logger
 from ase.optimize import BFGS
 
 # TODO: Enable serialization with ASE db - save locations of converged files as well as all properties
@@ -25,7 +26,9 @@ class ReactAims:
                  filename: str = None,
                  nodes_per_instance: int = None,
                  dry_run: bool = False,
-                 verbose: bool = True):
+                 verbose: bool = True,
+                 warning_lvl: int = 1
+                 ):
         """
         Args:
             params: dict
@@ -44,7 +47,7 @@ class ReactAims:
             dry_run: bool
                 A dry run flag for CI-test
             verbose: bool
-                Enables the the verbosity of the performed operations
+                Enables the verbosity of the performed operations
 
         Returns ReactAims object
         """
@@ -57,6 +60,8 @@ class ReactAims:
         self.filename = filename
         self.nodes_per_instance = nodes_per_instance
         self.verbose = verbose
+
+        self.logger = set_logger("react_logger", warning_lvl)
 
         """Define additional parameters"""
         self.initial = None  # input for optimisation or input for NEB initial image
@@ -71,8 +76,18 @@ class ReactAims:
         """ Set the test flag"""
         self.dry_run = dry_run
 
+        if hpc == "custom":
+            self.logger.debug(f"WARNING: You have selected 'custom' as an option for HPC.                      ")
+            self.logger.debug(f"         This requires a couple of extra steps from the user side.             ")
+            self.logger.debug(f"         1) A new environmental variable - CARMM_AIMS_ROOT_DIRECTORY           ")
+            self.logger.debug(f"            - must be set. This helps find the folder containing the           ")
+            self.logger.debug(f"             default basis function.                                           ")
+            self.logger.debug(f"         2) ASE_AIMS_COMMAND must be set, with the correct number of           ")
+            self.logger.debug(f"            mpi tasks if desired. Avoid piping output, as React has its own    ")
+            self.logger.debug(f"            output folder names.                                               ")
+
     def aims_optimise(self, atoms: Atoms, fmax: float = 0.01, post_process: str = None, relax_unit_cell: bool = False,
-                      restart: bool = True):
+                      restart: bool = True, optimiser=None, opt_kwargs: dict = {}):
 
         """
          The function needs information about structure geometry (model), name of hpc system
@@ -95,6 +110,10 @@ class ReactAims:
              True requests a strain filter unit cell relaxation
          restart: bool
              Request restart from previous geometry if True (True by default)
+         optimiser: optimiser class
+            If None - the ase.optimize.BFGS is used
+         opt_kwargs: dict
+            Dictionary of keyword arguments specific to the provided optimiser class
 
          Returns a list containing the model with data calculated using your choice of settings
          [model_optimised, model_postprocessed]
@@ -113,14 +132,14 @@ class ReactAims:
         if initial is not None:
             self.initial = initial
 
-        self._perform_optimization(subdirectory_name, out, counter, fmax, relax_unit_cell)
+        self._perform_optimization(subdirectory_name, out, counter, fmax, relax_unit_cell, optimiser, opt_kwargs)
         self._finalize_optimization(subdirectory_name, post_process)
 
         return self.model_optimised, self.model_post_processed
 
     def _initialize_parameters(self, atoms):
         """
-        Internal function for obtainining periodic boundary conditions from the provided Atoms object and generating
+        Internal function for obtaining periodic boundary conditions from the provided Atoms object and generating
          a filename if necessary. Values are then assigned to self.
 
         Args:
@@ -133,9 +152,10 @@ class ReactAims:
         if not self.filename:
             self.filename = self.initial.get_chemical_formula()
 
-    def _perform_optimization(self, subdirectory_name: str, out: str, counter: int, fmax: float, relax_unit_cell: bool):
+    def _perform_optimization(self, subdirectory_name: str, out: str, counter: int, fmax: float, relax_unit_cell: bool,
+                              optimiser, opt_kwargs: dict):
         """
-        An internal function used in aims_optimise to resolve the working directoryand perform the optimisation
+        An internal function used in aims_optimise to resolve the working directory and perform the optimisation
         calculation of a given structure.
 
         Args:
@@ -144,11 +164,15 @@ class ReactAims:
             counter: int
             fmax: float
             relax_unit_cell: bool
+            optimiser: bool or optimiser class
+            opt_kwargs: dict
 
         Returns:None
 
         """
         opt_restarts = 0
+        if not optimiser:
+            optimiser = BFGS
 
         if not is_converged(self.initial, fmax):
             os.makedirs(subdirectory_name, exist_ok=True)
@@ -170,9 +194,9 @@ class ReactAims:
                     if relax_unit_cell:
                         from ase.constraints import StrainFilter
                         unit_cell_relaxer = StrainFilter(self.initial)
-                        opt = BFGS(unit_cell_relaxer, trajectory=traj_name, alpha=70.0)
+                        opt = optimiser(unit_cell_relaxer, trajectory=traj_name, **opt_kwargs)
                     else:
-                        opt = BFGS(self.initial, trajectory=traj_name, alpha=70.0)
+                        opt = optimiser(self.initial, trajectory=traj_name, **opt_kwargs)
 
                     opt.run(fmax=fmax, steps=80)
                     opt_restarts += 1
@@ -441,269 +465,11 @@ class ReactAims:
         if minimum_energy_path[0]:
             neb = minimum_energy_path[0]
         else:
-            neb = read(traj_name)
+            neb = read(f"{traj_name}@:")
         self.ts = sorted(neb, key=lambda k: k.get_potential_energy(), reverse=True)[0]
 
         return self.ts
 
-
-    """
-    def search_ts_aidneb(self, initial, final, fmax, unc, interpolation=None, n=15,
-                         restart=True, prev_calcs=None, input_check=0.01, verbose=True):
-        '''
-        This function allows calculation of the transition state using the GPAtom software package in an
-        ASE/sockets/FHI-aims setup. The resulting converged band will be located in the AIDNEB.traj file.
-
-        Args:
-            initial: Atoms object
-                Initial structure in the NEB band
-            final: Atoms object
-                Final structure in the NEB band
-            fmax: float
-                Convergence criterion of forces in eV/A
-            unc: float
-                Uncertainty in the fit of the NEB according to the Gaussian Progress Regression model, a secondary
-                convergence criterion.
-            n: int
-                number of middle images, the following is recommended: n * npi = total_no_CPUs
-            interpolation: str or []
-                The "idpp" or "linear" interpolation types are supported in ASE. alternatively user can provide a custom
-                interpolation as a list of Atoms objects.
-            n: int or flot
-                Desired number of middle images excluding start and end pointpo. If float the number of images is based on
-                displacement of atoms. Dense sampling aids convergence but does not increase complexity as significantly
-                as for classic NEB.
-            restart: bool
-                Use previous calculations contained in folders if True, start from scratch if False
-            prev_calcs: list of Atoms objects
-                Manually provide the training set
-            input_check: float or None
-                If float the calculators of the input structures will be checked if the structures are below
-                the requested fmax and an optimisation will be performed if not.
-            verbose: bool
-                Flag for turning off printouts in the code
-
-        Returns: Atoms object
-            Transition state geometry structure
-        '''
-
-        from gpatom.aidneb import AIDNEB
-
-        '''Retrieve common properties'''
-        basis_set = self.basis_set
-        hpc = self.hpc
-        dimensions = sum(initial.pbc)
-        params = self.params
-        parent_dir = os.getcwd()
-        self.interpolation = interpolation
-
-        '''Set the environment parameters'''
-        set_aims_command(hpc=hpc, basis_set=basis_set, defaults=2020, nodes_per_instance=self.nodes_per_instance)
-
-        if not self.interpolation:
-            self.interpolation = "idpp"
-
-        '''Read the geometry'''
-        if self.filename:
-            filename = self.filename
-        else:
-            filename = initial.get_chemical_formula()
-            self.filename = filename
-
-        '''Check for previous calculations'''
-        counter, subdirectory_name = self._restart_setup("TS", filename, restart=restart, verbose=verbose)
-
-        '''Let the user restart from alternative file or Atoms object'''
-        if prev_calcs:
-            self.prev_calcs = prev_calcs
-            if verbose:
-                print("User provided a list of structures manually, training set substituted.")
-
-        elif input_check:
-            if not is_converged(initial, input_check):
-                self.filename += "_initial"
-                initial = self.aims_optimise(initial, input_check, restart=False, verbose=verbose)[0]
-                self.initial = self.model_optimised
-                '''Set original name after input check is complete'''
-                self.filename = filename
-
-            if not is_converged(final, input_check):
-                self.filename = filename + "_final"
-                final = self.aims_optimise(final, input_check, restart=False, verbose=verbose)[0]
-                self.final = self.model_optimised
-                '''Set original name after input check is complete'''
-                self.filename = filename
-
-        out = str(counter) + "_" + str(filename) + ".out"
-
-        os.makedirs(subdirectory_name, exist_ok=True)
-        os.chdir(subdirectory_name)
-
-        # TODO: calculating initial and final structure if possible within the GPAtom code
-
-        '''Sockets setup'''
-        with _calc_generator(params, out_fn=out, dimensions=dimensions)[0] as calculator:
-
-            if self.dry_run:
-                calculator = EMT()
-
-            '''Training set functionality does not work correctly when reading a list.'''
-            '''Instead we save all geometries to a file the GPATOM can use'''
-            training_set_dump = Trajectory("AIDNEB_observations.traj", 'w')
-            for atoms in self.prev_calcs:
-                training_set_dump.write(atoms)
-            training_set_dump.close()
-
-            '''Setup the input for AIDNEB'''
-            aidneb = AIDNEB(start=initial,
-                            end=final,
-                            interpolation=self.interpolation,
-                            # "idpp" can in some cases (e.g. H2) result in geometry coordinates returned as NaN
-                            calculator=calculator,
-                            n_images=n+2,
-                            max_train_data=40,
-                            trainingset="AIDNEB_observations.traj",
-                            use_previous_observations=True,
-                            neb_method='improvedtangent',
-                            mic=True)
-
-            '''Run the NEB optimisation. Adjust fmax to desired convergence criteria, usually 0.01 ev/A'''
-            if not self.dry_run:
-                aidneb.run(fmax=fmax,
-                           unc_convergence=unc,
-                           ml_steps=40)
-            else:
-                os.chdir(parent_dir)
-                return None
-
-        '''Find maximum energy, i.e. transition state to return it'''
-
-        neb = read("AIDNEB.traj@" + str(-len(read("initial_path.traj@:")) - 1) + ":") # read last predicted trajectory
-        self.ts = sorted(neb, key=lambda k: k.get_potential_energy(), reverse=True)[0]
-        os.chdir(parent_dir)
-
-        return self.ts
-
-    def search_ts_taskfarm(self, initial, final, fmax, n, method="string", interpolation="idpp", input_check=0.01,
-                           max_steps=100, verbose=True):
-
-        '''
-        Args:
-            initial: Atoms object
-                Initial structure in the NEB band
-            final: Atoms object
-                Final structure in the NEB band
-            fmax: float
-                Convergence criterion of forces in eV/A
-            n: int
-                number of middle images, the following is recommended: n * npi = total_no_CPUs
-            method: str
-                NEB method for the CI-NEB as implemented in ASE, 'string' by default
-            interpolation: str or []
-                The "idpp" or "linear" interpolation types are supported in ASE. alternatively user can provide a custom
-                interpolation as a list of Atoms objects.
-            input_check: float or None
-                If float the calculators of the input structures will be checked if the structures are below
-                the requested fmax and an optimisation will be performed if not.
-            max_steps: int
-                Maximum number of iteration before stopping the optimizer
-            verbose: bool
-                Flag for turning off printouts in the code
-
-        Returns: Atoms object
-            Transition state geometry structure
-        '''
-
-        from ase.neb import NEB
-        from ase.optimize import FIRE
-
-        '''Retrieve common properties'''
-        basis_set = self.basis_set
-        hpc = self.hpc
-        dimensions = sum(initial.pbc)
-        params = self.params
-        parent_dir = os.getcwd()
-
-        '''Set the environment parameters'''
-        set_aims_command(hpc=hpc, basis_set=basis_set, defaults=2020, nodes_per_instance=self.nodes_per_instance)
-
-        '''Read the geometry'''
-        if self.filename:
-            filename = self.filename
-        else:
-            filename = initial.get_chemical_formula()
-
-        counter, subdirectory_name = self._restart_setup("TS", filename, restart=False, verbose=verbose)
-
-        '''Ensure input is converged'''
-        if input_check:
-            npi = self.nodes_per_instance
-            self.nodes_per_instance = None
-
-            if not is_converged(initial, input_check):
-                self.filename = filename + "_initial"
-                initial = self.aims_optimise(initial, input_check, restart=False, verbose=False)[0]
-            if not is_converged(final, input_check):
-                self.filename = filename + "_final"
-                final = self.aims_optimise(final, input_check, restart=False, verbose=False)[0]
-
-            '''Set original name after input check is complete'''
-            self.nodes_per_instance = npi
-            self.filename = filename
-
-        out = str(counter) + "_" + str(filename) + ".out"
-
-        os.makedirs(subdirectory_name, exist_ok=True)
-        os.chdir(subdirectory_name)
-
-        if interpolation in ["idpp", "linear"]:
-            images = [initial]
-            for i in range(n):
-                image = initial.copy()
-                if not self.dry_run:
-                    image.calc = _calc_generator(params, out_fn=str(i)+"_"+out, dimensions=dimensions)[0]
-                    image.calc.launch_client.calc.directory = "./" + str(i) + "_" + out[:-4]
-                else:
-                    image.calc = EMT()
-                    image.calc.directory = "./" + str(i) + "_" + out[:-4]
-
-                images.append(image)
-
-            images.append(final)
-        elif isinstance(interpolation, list):
-            assert [isinstance(i, Atoms) for i in interpolation], \
-                "Interpolation must be a list of Atoms objects, 'idpp' or 'linear'!"
-            assert len(interpolation)-2 == n, \
-                "Number of middle images is fed interpolation must match specified n to ensure correct parallelisation"
-
-            images = interpolation
-            for i in range(1, len(interpolation)-1):
-                # use i-1 for name to retain folder naming as per "idpp"
-                if not self.dry_run:
-                    images[i].calc = _calc_generator(params, out_fn=str(i-1)+"_"+out, dimensions=dimensions)[0]
-                else:
-                    images[i].calc = EMT()
-                images[i].calc.launch_client.calc.directory = "./"+str(i-1)+"_"+out[:-4]
-        else:
-            raise ValueError("Interpolation must be a list of Atoms objects, 'idpp' or 'linear'!")
-
-        neb = NEB(images, k=0.05, method=method, climb=True, parallel=True, allow_shared_calculator=False)
-        if interpolation in ["idpp", "linear"]:
-            neb.interpolate(method=interpolation, mic=True, apply_constraint=True)
-
-        qn = FIRE(neb, trajectory='neb.traj')
-        qn.run(fmax=fmax, steps=max_steps)
-
-        for image in images[1:-1]:
-            if not self.dry_run:
-                image.calc.close()
-
-        '''Find maximum energy, i.e. transition state to return it'''
-        self.ts = sorted(images, key=lambda k: k.get_potential_energy(), reverse=True)[0]
-        os.chdir(parent_dir)
-
-        return self.ts
-    """
 
     def vibrate(self, atoms: Atoms, indices: list, read_only=False):
         """
@@ -786,7 +552,7 @@ def _calc_generator(params,
                     relax_unit_cell=False,
                     directory="."):
     """
-    This is an internal function for generation of an FHi-aims sockets calculator ensuring that keywords
+    This is an internal function for generation of an FHI-aims sockets calculator ensuring that keywords
     required for supported calculation types are added.
 
     Args:
@@ -827,8 +593,7 @@ def _calc_generator(params,
 
     """Add analytical stress keyword for unit cell relaxation"""
     if relax_unit_cell:
-        assert dimensions == 3, "Strain Filter calculation requested, but the system is not periodic in all directions."
-
+        assert dimensions == 3, "Strain Filter calculation requested, but the system is not periodic in 3 dimensions."
         fhi_calc.set(compute_analytical_stress='True')
 
     """Set a unique .out output name"""
