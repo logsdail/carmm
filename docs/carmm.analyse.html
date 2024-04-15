@@ -625,6 +625,55 @@ TODO: Consult what is useful, write them out</p></li>
 </dd></dl>
 
 </section>
+<section id="module-carmm.analyse.hirshfeld">
+<span id="carmm-analyse-hirshfeld-module"></span><h2>carmm.analyse.hirshfeld module<a class="headerlink" href="#module-carmm.analyse.hirshfeld" title="Link to this heading">¶</a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="carmm.analyse.hirshfeld.extract_hirshfeld">
+<span class="sig-prename descclassname"><span class="pre">carmm.analyse.hirshfeld.</span></span><span class="sig-name descname"><span class="pre">extract_hirshfeld</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fname</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">natoms</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">write</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">outname</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'hirshfeld.txt'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#carmm.analyse.hirshfeld.extract_hirshfeld" title="Link to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>fname</strong> – Input file name, usually aims.out. str</p></li>
+<li><p><strong>natoms</strong> – number of atoms to extract charge from. int</p></li>
+<li><p><strong>data</strong> – type of output requested. str
+Can be ‘charge’, ‘volume’, ‘volume f’, ‘dipole vector’, ‘dipole moment’ or ‘second’</p></li>
+<li><p><strong>write</strong> – bool of whether to write the hirshfeld data to a new file called hirshfeld.txt</p></li>
+</ul>
+</dd>
+</dl>
+<p>Returns: hirsh. List of requested data</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="carmm.analyse.hirshfeld.get_hirshfeld_line">
+<span class="sig-prename descclassname"><span class="pre">carmm.analyse.hirshfeld.</span></span><span class="sig-name descname"><span class="pre">get_hirshfeld_line</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">text</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#carmm.analyse.hirshfeld.get_hirshfeld_line" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="carmm.analyse.hirshfeld.read_hirshfeld">
+<span class="sig-prename descclassname"><span class="pre">carmm.analyse.hirshfeld.</span></span><span class="sig-name descname"><span class="pre">read_hirshfeld</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fname</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">identifier</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#carmm.analyse.hirshfeld.read_hirshfeld" title="Link to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>fname</strong> – Input filename. str</p></li>
+<li><p><strong>identifier</strong> – regex to pull data from file. str</p></li>
+</ul>
+</dd>
+</dl>
+<p>Returns: label. list of data</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="carmm.analyse.hirshfeld.vmd_out">
+<span class="sig-prename descclassname"><span class="pre">carmm.analyse.hirshfeld.</span></span><span class="sig-name descname"><span class="pre">vmd_out</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">array</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fname</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'vmd_chrgs.txt'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#carmm.analyse.hirshfeld.vmd_out" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="carmm.analyse.hirshfeld.write_hirshfeld">
+<span class="sig-prename descclassname"><span class="pre">carmm.analyse.hirshfeld.</span></span><span class="sig-name descname"><span class="pre">write_hirshfeld</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">text</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">natoms</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">outname</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#carmm.analyse.hirshfeld.write_hirshfeld" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</section>
 <section id="module-carmm.analyse.images">
 <span id="carmm-analyse-images-module"></span><h2>carmm.analyse.images module<a class="headerlink" href="#module-carmm.analyse.images" title="Link to this heading">¶</a></h2>
 <dl class="py function">

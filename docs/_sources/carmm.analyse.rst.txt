@@ -68,6 +68,14 @@ carmm.analyse.graphs module
    :undoc-members:
    :show-inheritance:
 
+carmm.analyse.hirshfeld module
+------------------------------
+
+.. automodule:: carmm.analyse.hirshfeld
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 carmm.analyse.images module
 ---------------------------
 
