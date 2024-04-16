@@ -90,7 +90,7 @@ class GeodesicInterpolator:
 
         bonds_im1 = self.get_atoms_bonds(image1)
         bonds_im2 = self.get_atoms_bonds(image2)
-        morse = Morse(alpha=0.7, re=1.5, beta=0.001)
+        morse = Morse(alpha=1.6, re=1.5, beta=0.001)
         friction = 0.1 / np.sqrt(len(image1))
 
         comb_bonds = list(set(bonds_im1) | set(bonds_im2))
