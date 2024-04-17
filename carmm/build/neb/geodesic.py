@@ -42,7 +42,7 @@ class GeodesicInterpolator:
             self.images.insert(mid_idx + 1, new_mid)
 
             minimize_rotation_and_translation(self.images[mid_idx], self.images[mid_idx + 1])
-            for im in range(len(self.images) - 1):
+            for im in range(len(self.images) - 2):
                 minimize_rotation_and_translation(self.images[im], self.images[im + 1])
 
         # Sequentially remove images until correct number found

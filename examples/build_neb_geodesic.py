@@ -22,5 +22,6 @@ def test_geodesic_interpolator():
 
     assert np.all(np.array(rmsd) < 0.01), "Geodesic test failed - difference in geometry greater than 0.01 compared to reference."
 
+
 test_geodesic_interpolator()
 
