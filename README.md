@@ -1,7 +1,7 @@
 [![github](https://github.com/logsdail/carmm/actions/workflows/main.yml/badge.svg)](https://github.com/logsdail/carmm/actions)
 [![codecov.io](https://codecov.io/gh/logsdail/carmm/coverage.svg)](https://codecov.io/gh/logsdail/carmm)
 
-# Cardiff Molecular Modelling
+# Cardiff Multiscalar Modelling
 
 General scripts and software for everyday computational chemistry. Documentation of functionality is available at: https://logsdail.github.io/carmm/.
 
