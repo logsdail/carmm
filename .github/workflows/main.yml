@@ -5,9 +5,8 @@ name: ci-tests
 # events but only for the master branch
 on:
   push:
-    # This is no longer needed as we don't allow direct merges
-    # Disabling means it runs on _all_ branches
-    # branches: [ main ]
+    # Just run on main to maintain code quality control
+    branches: [ main ]
   pull_request:
     # Run on all pull requests when updated.
 
