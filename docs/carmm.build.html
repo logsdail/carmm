@@ -516,7 +516,8 @@ periodic: Atoms object</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="carmm.build.slab_consistent_bulk_generator.bulk_identifier">
 <span class="sig-prename descclassname"><span class="pre">carmm.build.slab_consistent_bulk_generator.</span></span><span class="sig-name descname"><span class="pre">bulk_identifier</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">slab</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cutoff_distance</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10.0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#carmm.build.slab_consistent_bulk_generator.bulk_identifier" title="Link to this definition">¶</a></dt>
-<dd><p>Slab models can be generated using various libraries like ASE, pymatgen, atomman, etc. However, it becomes important
+<dd><blockquote>
+<div><p>Slab models can be generated using various libraries like ASE, pymatgen, atomman, etc. However, it becomes important
 to check how these slab models are generated within various code bases.</p>
 <p>Pymatgen for example generates desired surface facets by transforming the basis vectors of the conventional bulk
 unit cell such that the c-vector of new bulk is normal to the desired surface plane. The basis transformation however
@@ -533,19 +534,27 @@ available total energy of the conventional bulk unit cell.</p>
 Schultz, Peter A.
 “First-principles calculations of metal surfaces. I. Slab-consistent bulk reference for convergent surface
 properties.” Physical Review B 103.19 (2021): 195426.</p>
-<p>How this functionality works:
-1. the difference between the x,y and z coordinates of an atom and its corresponding periodic image will be a linear
-combination of the cell vectors a,b and c.
-2. This idea is extended here in case of a slab model where the linear combination check
+<p>How this functionality works:</p>
+<p>1. the difference between the x,y and z coordinates of an atom and its corresponding periodic image will be a linear
+combination of the cell vectors a,b and c.</p>
+<p>2. This idea is extended here in case of a slab model where the linear combination check
 is considered only w.r.t to the a and b vectors</p>
-<p>Args:
-- slab: ASE Atoms object representing the slab structure
-- cutoff_distance: Cutoff distance for identifying neighboring atoms (default is 10.0). This will be used to</p>
-<blockquote>
+<p>Args:</p>
+<ul class="simple">
+<li><p>slab: ASE Atoms object representing the slab structure</p></li>
+<li><p>cutoff_distance: Cutoff distance for identifying neighboring atoms (default is 10.0).</p></li>
+</ul>
+</div></blockquote>
+<dl>
+<dt>This will be used to</dt><dd><blockquote>
 <div><p>perform further checks on atoms which satisfy the condition of linear combination.</p>
 </div></blockquote>
-<p>Returns:
-- ASE Atoms object representing the new bulk structure</p>
+<p>Returns:</p>
+<ul class="simple">
+<li><p>ASE Atoms object representing the new bulk structure</p></li>
+</ul>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py function">
