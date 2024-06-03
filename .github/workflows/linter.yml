@@ -5,10 +5,8 @@ name: linter-check
 # events but only for the master branch
 on:
   push:
-    # This is no longer needed as we do not allow direct merges
-    # Only running on main in case there are direct merges
-    # branches: [ main ]
-
+    # Only invoke for push to main.
+    branches: [ main ]   
   pull_request:
     # Run on all pull requests when updated.
 
