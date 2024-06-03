@@ -32,7 +32,7 @@ jobs:
       with:
         # Issues with bdist_wheel on v3.9
         #python-version: '3.x'
-        python-version: '3.7'
+        python-version: '3.8'
     
     # Install ASE so we can run our tests 
     - name: Install dependencies
