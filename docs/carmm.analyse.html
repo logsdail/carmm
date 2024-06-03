@@ -736,38 +736,51 @@ can view individual molecules via atoms[molecules[0]] ect</p>
 <dt class="sig sig-object py" id="carmm.analyse.mulliken.Atom">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">carmm.analyse.mulliken.</span></span><span class="sig-name descname"><span class="pre">Atom</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">nspin</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nkpts</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nstates</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#carmm.analyse.mulliken.Atom" title="Link to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
-<p>Description</p>
+<p>Description
+# TODO: Needs changing the name of the class as it might interfere with the ‘Atom’ class of ASE
+Class to represent data for a each atom. Data includes the number of spin-channel, k-points and eigenstates for each atom</p>
 </dd></dl>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="carmm.analyse.mulliken.Kpt">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">carmm.analyse.mulliken.</span></span><span class="sig-name descname"><span class="pre">Kpt</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">nstates</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#carmm.analyse.mulliken.Kpt" title="Link to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
-<p>Description</p>
+<p>Description
+Class to represent data for a particular k-point. Data includes the number eigenstates for a given k-point, spin channel
+and atom.</p>
 </dd></dl>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="carmm.analyse.mulliken.MullikenData">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">carmm.analyse.mulliken.</span></span><span class="sig-name descname"><span class="pre">MullikenData</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">natoms</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nspin</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nkpts</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nstates</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#carmm.analyse.mulliken.MullikenData" title="Link to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
-<p>Description</p>
+<p>Description
+Class representing the Mulliken data and store information pertinent to eigenvalues, occupation numbers, and angular
+momentas for each atom, spin-channel, k-point and eigenstate</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>natoms</strong> – Integer
+Number of atoms in the Mulliken data object</p></li>
+<li><p><strong>nspin</strong> – Integer
+Number of spin channels in the data object</p></li>
+<li><p><strong>nkpts</strong> – Integer
+Number of k-points in the model</p></li>
+<li><p><strong>nstates</strong> – Integer
+Number of electronic states to be stored in the data object</p></li>
+</ul>
+</dd>
+</dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="carmm.analyse.mulliken.MullikenData.get_all_plot_data">
 <span class="sig-name descname"><span class="pre">get_all_plot_data</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#carmm.analyse.mulliken.MullikenData.get_all_plot_data" title="Link to this definition">¶</a></dt>
-<dd><p>Description</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="carmm.analyse.mulliken.MullikenData.get_d_plot_data">
-<span class="sig-name descname"><span class="pre">get_d_plot_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">atoms</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">spin</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kpts</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#carmm.analyse.mulliken.MullikenData.get_d_plot_data" title="Link to this definition">¶</a></dt>
-<dd><p>Description</p>
-<p>Parameters:</p>
-<dl class="simple">
-<dt>atoms: List of Integers</dt><dd><p>Indices of atoms that are to be included in the data acquisition</p>
-</dd>
-<dt>spin: List of Integers</dt><dd><p>Indices of spins that are to be included - either [0] or [0,1] for none or collinear</p>
-</dd>
-<dt>kpts: List of Integers</dt><dd><p>Indices of kpts to be included</p>
+<dd><p>Description
+Obtains the arrays of data (x –&gt; energy and y –&gt; density) for plotting the total density of states (dos).
+Basically uses the get_plot_data() function with angular=’all’.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>1D array of x (energy) and 2D array of y (density). The density data is 2D to account for both spin-up and
+spin-down channels</p>
 </dd>
 </dl>
 </dd></dl>
@@ -776,21 +789,6 @@ can view individual molecules via atoms[molecules[0]] ect</p>
 <dt class="sig sig-object py" id="carmm.analyse.mulliken.MullikenData.get_data_integrity">
 <span class="sig-name descname"><span class="pre">get_data_integrity</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#carmm.analyse.mulliken.MullikenData.get_data_integrity" title="Link to this definition">¶</a></dt>
 <dd><p>Description</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="carmm.analyse.mulliken.MullikenData.get_f_plot_data">
-<span class="sig-name descname"><span class="pre">get_f_plot_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">atoms</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">spin</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kpts</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#carmm.analyse.mulliken.MullikenData.get_f_plot_data" title="Link to this definition">¶</a></dt>
-<dd><p>Description</p>
-<p>Parameters:</p>
-<dl class="simple">
-<dt>atoms: List of Integers</dt><dd><p>Indices of atoms that are to be included in the data acquisition</p>
-</dd>
-<dt>spin: List of Integers</dt><dd><p>Indices of spins that are to be included - either [0] or [0,1] for none or collinear</p>
-</dd>
-<dt>kpts: List of Integers</dt><dd><p>Indices of kpts to be included</p>
-</dd>
-</dl>
 </dd></dl>
 
 <dl class="py method">
@@ -808,33 +806,48 @@ can view individual molecules via atoms[molecules[0]] ect</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="carmm.analyse.mulliken.MullikenData.get_natoms">
 <span class="sig-name descname"><span class="pre">get_natoms</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#carmm.analyse.mulliken.MullikenData.get_natoms" title="Link to this definition">¶</a></dt>
-<dd><p>Description</p>
+<dd><p>Description
+Computes the number of atoms</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="carmm.analyse.mulliken.MullikenData.get_nkpts">
 <span class="sig-name descname"><span class="pre">get_nkpts</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#carmm.analyse.mulliken.MullikenData.get_nkpts" title="Link to this definition">¶</a></dt>
-<dd><p>Description</p>
+<dd><p>Description
+Computes the number of k-points</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="carmm.analyse.mulliken.MullikenData.get_nspin">
 <span class="sig-name descname"><span class="pre">get_nspin</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#carmm.analyse.mulliken.MullikenData.get_nspin" title="Link to this definition">¶</a></dt>
-<dd><p>Description</p>
+<dd><p>Description
+Computes the number of spin channels. For spin paired the value is 1 whereas for spin polarised the value is 2</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="carmm.analyse.mulliken.MullikenData.get_nstates">
 <span class="sig-name descname"><span class="pre">get_nstates</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#carmm.analyse.mulliken.MullikenData.get_nstates" title="Link to this definition">¶</a></dt>
-<dd><p>Description</p>
+<dd><p>Description
+Computes the number of eigenstates</p>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="carmm.analyse.mulliken.MullikenData.get_p_plot_data">
-<span class="sig-name descname"><span class="pre">get_p_plot_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">atoms</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">spin</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kpts</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#carmm.analyse.mulliken.MullikenData.get_p_plot_data" title="Link to this definition">¶</a></dt>
-<dd><p>Description</p>
+<dt class="sig sig-object py" id="carmm.analyse.mulliken.MullikenData.get_orbital_plot_data">
+<span class="sig-name descname"><span class="pre">get_orbital_plot_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">orbital</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">atoms</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">spin</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kpts</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#carmm.analyse.mulliken.MullikenData.get_orbital_plot_data" title="Link to this definition">¶</a></dt>
+<dd><p>Description
+Obtains the arrays of data (x –&gt; energy and y –&gt; density) for plotting the individual density of states (dos)
+for a desired orbital
+Basically uses the get_plot_data() function with orbital (‘s’,’p’,’d’,’f’) of user’s choice.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>1D array of x (energy) and 2D array of y (density). The density data is 2D to account for both spin-up and
+spin-down channels</p>
+</dd>
+</dl>
 <p>Parameters:</p>
 <dl class="simple">
+<dt>orbital: String</dt><dd><p>Choices are ‘s’,’p’,’d’,’f’,’g’ for obtaining the corresponding plots for a desired orbital.</p>
+</dd>
 <dt>atoms: List of Integers</dt><dd><p>Indices of atoms that are to be included in the data acquisition</p>
 </dd>
 <dt>spin: List of Integers</dt><dd><p>Indices of spins that are to be included - either [0] or [0,1] for none or collinear</p>
@@ -846,11 +859,14 @@ can view individual molecules via atoms[molecules[0]] ect</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="carmm.analyse.mulliken.MullikenData.get_plot_data">
-<span class="sig-name descname"><span class="pre">get_plot_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">atoms</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">spin</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kpts</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">angular</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">xmin</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">-20</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">xmax</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">20</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">npoints</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">variance</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.02</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#carmm.analyse.mulliken.MullikenData.get_plot_data" title="Link to this definition">¶</a></dt>
-<dd><p>Description</p>
+<span class="sig-name descname"><span class="pre">get_plot_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">atom_ind</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">spin</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kpts</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">angular</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">xmin</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">-20</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">xmax</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">20</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">npoints</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">variance</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.02</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#carmm.analyse.mulliken.MullikenData.get_plot_data" title="Link to this definition">¶</a></dt>
+<dd><p>Description
+Obtains the arrays of data (x –&gt; energy and y –&gt; density) for plotting the density of states (dos).
+Can obtain data for total and individual contribution from the ‘s’, ‘p’, ‘d’, and ‘f’ orbitals using the
+‘angular’ keyword.</p>
 <p>Parameters:</p>
 <dl class="simple">
-<dt>atoms: List of Integers</dt><dd><p>Indices of atoms that are to be included in the data acquisition</p>
+<dt>atom_ind: List of Integers</dt><dd><p>Indices of atoms that are to be included in the data acquisition</p>
 </dd>
 <dt>spin: List of Integers</dt><dd><p>Indices of spins that are to be included - either [0] or [0,1] for none or collinear</p>
 </dd>
@@ -867,19 +883,10 @@ can view individual molecules via atoms[molecules[0]] ect</p>
 <dt>variance: Float</dt><dd><p>Variance for the Gaussian when added to each eigenfunction</p>
 </dd>
 </dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="carmm.analyse.mulliken.MullikenData.get_s_plot_data">
-<span class="sig-name descname"><span class="pre">get_s_plot_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">atoms</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">spin</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kpts</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#carmm.analyse.mulliken.MullikenData.get_s_plot_data" title="Link to this definition">¶</a></dt>
-<dd><p>Description</p>
-<p>Parameters:</p>
-<dl class="simple">
-<dt>atoms: List of Integers</dt><dd><p>Indices of atoms that are to be included in the data acquisition</p>
-</dd>
-<dt>spin: List of Integers</dt><dd><p>Indices of spins that are to be included - either [0] or [0,1] for none or collinear</p>
-</dd>
-<dt>kpts: List of Integers</dt><dd><p>Indices of kpts to be included</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>1D array of x (energy) and 2D array of y (density). The density data is 2D to account for both spin-up and
+spin-down channels</p>
 </dd>
 </dl>
 </dd></dl>
@@ -890,19 +897,26 @@ can view individual molecules via atoms[molecules[0]] ect</p>
 <dt class="sig sig-object py" id="carmm.analyse.mulliken.Spin">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">carmm.analyse.mulliken.</span></span><span class="sig-name descname"><span class="pre">Spin</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">nkpts</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nstates</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#carmm.analyse.mulliken.Spin" title="Link to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
-<p>Description</p>
+<p>Description
+Class to represent data for a spin channel. Data includes the number of k-points and eigenstates for a given spin channel
+and atom.</p>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="carmm.analyse.mulliken.extract_mulliken_charge">
 <span class="sig-prename descclassname"><span class="pre">carmm.analyse.mulliken.</span></span><span class="sig-name descname"><span class="pre">extract_mulliken_charge</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fn</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">natoms</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#carmm.analyse.mulliken.extract_mulliken_charge" title="Link to this definition">¶</a></dt>
 <dd><p>Function to extract and return the Mulliken charges from an FHI-aims output.
-A list of relative charges is returned, with +q meaning charg depletion and -q meaning charge accummulation</p>
+A list of relative charges is returned, with +q meaning charge depletion and -q meaning charge accummulation</p>
 <p>Parameters:</p>
 <dl class="simple">
 <dt>fn: string</dt><dd><p>Filename from which the Mulliken data should be extracted</p>
 </dd>
 <dt>natoms: int</dt><dd><p>Number of atoms in the calculation</p>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>List of charges.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -910,7 +924,9 @@ A list of relative charges is returned, with +q meaning charg depletion and -q m
 <dl class="py function">
 <dt class="sig sig-object py" id="carmm.analyse.mulliken.extract_mulliken_spin">
 <span class="sig-prename descclassname"><span class="pre">carmm.analyse.mulliken.</span></span><span class="sig-name descname"><span class="pre">extract_mulliken_spin</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fn</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">natoms</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#carmm.analyse.mulliken.extract_mulliken_spin" title="Link to this definition">¶</a></dt>
-<dd><p>Function to extract and return the Mulliken spin from an FHI-aims output.</p>
+<dd><p>Function to extract and return the Mulliken spin from an FHI-aims output.
+A list of spin moments on is returned. The value at each index corresponds to the spin moment of each the atom at
+that particular index</p>
 <p>Parameters:</p>
 <dl class="simple">
 <dt>fn: string</dt><dd><p>Filename from which the Mulliken data should be extracted</p>
@@ -918,15 +934,28 @@ A list of relative charges is returned, with +q meaning charg depletion and -q m
 <dt>natoms: int</dt><dd><p>Number of atoms in the calculation</p>
 </dd>
 </dl>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>List of spin moments.</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="carmm.analyse.mulliken.parse_mulliken_file">
 <span class="sig-prename descclassname"><span class="pre">carmm.analyse.mulliken.</span></span><span class="sig-name descname"><span class="pre">parse_mulliken_file</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fname</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#carmm.analyse.mulliken.parse_mulliken_file" title="Link to this definition">¶</a></dt>
-<dd><p>Description</p>
+<dd><p>Description
+Extracting data from a Mulliken.out file. Iterates through each atom, spin-channel, k-points and eigenstates to
+extract the values of eigenvalues (energies), occupancies (occupation number), total angular momenta.</p>
 <p>Parameters:</p>
 <dl class="simple">
 <dt>fname: String</dt><dd><p>Filename of the Mulliken.out file we are reading in and parsing.</p>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>A MullikenData object containing the values of eigenvalues (energies), occupancies (occupation number),
+total angular momenta for each atom, spin-channel, k-point and eigenstate.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -934,7 +963,10 @@ A list of relative charges is returned, with +q meaning charg depletion and -q m
 <dl class="py function">
 <dt class="sig sig-object py" id="carmm.analyse.mulliken.write_dos_to_csv">
 <span class="sig-prename descclassname"><span class="pre">carmm.analyse.mulliken.</span></span><span class="sig-name descname"><span class="pre">write_dos_to_csv</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fname</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#carmm.analyse.mulliken.write_dos_to_csv" title="Link to this definition">¶</a></dt>
-<dd><p>Description</p>
+<dd><p>Description
+Function to write the density of states (dos) data to a csv file.
+In case of spin-unpolarised calculations, there will be only two columns in the csv file corresponding to the
+x and y values whereas in case of a spin-polarised calculation, we will have 3 columns viz x, y(spin-up) and y(spin-down).</p>
 <p>Parameters:
 fname: String</p>
 <blockquote>
