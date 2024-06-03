@@ -1,4 +1,4 @@
-def color_bar(width, height, bottom, vmin, vmax, orientation, label, cmapcolour, resolution):
+def color_bar(width, height, bottom, top, vmin, vmax, orientation, label, cmapcolour, resolution):
     """Basic Colour Bar
     figsize= y axis how tall
     bottom = <0.8 - size of bar (cannot be bigger than top)
@@ -36,7 +36,7 @@ def color_bar(width, height, bottom, vmin, vmax, orientation, label, cmapcolour,
     from matplotlib import cm
 
     fig, ax = plt.subplots(figsize=(width, height))
-    fig.subplots_adjust(bottom=bottom)
+    fig.subplots_adjust(bottom=bottom, top=top)
     colour = cm.get_cmap(cmapcolour, resolution)
     norm = mpl.colors.Normalize(vmin=vmin, vmax=vmax)
 
