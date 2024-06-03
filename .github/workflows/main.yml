@@ -5,9 +5,9 @@ name: ci-tests
 # events but only for the master branch
 on:
   push:
-    # Only running on master in case there are direct merges
-    branches: [ main ]
-    #branches: [ master, ReactAims_documentation, harry_branch, cube_file_read, jack_molecules, ob ]
+    # This is no longer needed as we don't allow direct merges
+    # Disabling means it runs on _all_ branches
+    # branches: [ main ]
   pull_request:
     # Run on all pull requests when updated.
 
