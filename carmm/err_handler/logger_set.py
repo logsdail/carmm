@@ -16,7 +16,7 @@ def set_logger(logger_name, warning_level = 1):
         carmm_logger: logger
             Logger object to be used by other modules for error handling
 
-    """
+    """ 
 
     # Create dictionary for easy access debugs
     warning_lvls = {0: logging.DEBUG, 1: logging.INFO, 2: logging.WARNING,

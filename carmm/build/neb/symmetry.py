@@ -220,18 +220,18 @@ def sort_by_xyz(model, surface):
     model = copy.deepcopy(model)
 
     # Sorting mechanism for Y tags
+    # TODO: This should be a separate function, not embedded in a function.
     def sort_y_tag(xyz, surface):
-        import numpy as np
         # TODO: shortest_AB could be extracted from bottom fixed layer for
         #    consistency, but poses problems if layers are not the same
         if surface in ["111", "0001"]:
-            y_tag = np.int(np.round((2*xyz[1])/(
+            y_tag = int(np.round((2*xyz[1])/(
                         np.sin(np.radians(60))*np.amin(shortest_ABs))))
         if surface == "110":
-            y_tag = np.int(np.round((2*xyz[1])/(np.amin(shortest_ABs))))
+            y_tag = int(np.round((2*xyz[1])/(np.amin(shortest_ABs))))
 
         if surface == "100":
-            y_tag = np.int(np.round((2*xyz[1])/(np.amin(shortest_ABs))))
+            y_tag = int(np.round((2*xyz[1])/(np.amin(shortest_ABs))))
         return y_tag
 
     # sort z direction by tags
@@ -324,8 +324,8 @@ def mirror(model, center_index, plane="y", surf="111", m_m_dist=None):
     zero_y = (model[zero_index].position[1])
 
     for i in reversed([atom.index for atom in model]):
-        model.positions[i][0] = (model.positions[i][0] - zero_x - model.get_cell_lengths_and_angles()[0])
-        model.positions[i][1] = (model.positions[i][1] - zero_y - model.get_cell_lengths_and_angles()[1])
+        model.positions[i][0] = (model.positions[i][0] - zero_x - model.cell.cellpar()[0])
+        model.positions[i][1] = (model.positions[i][1] - zero_y - model.cell.cellpar()[1])
 
     model = sort_by_xyz(model, surf)
     model = wrap_fcc(model, surf)
