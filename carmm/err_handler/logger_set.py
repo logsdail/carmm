@@ -1,5 +1,3 @@
-import logging
-import sys
 def set_logger(logger_name, warning_level = 1):
 
     """
@@ -18,6 +16,9 @@ def set_logger(logger_name, warning_level = 1):
 
     """ 
 
+    import logging
+    from sys import stdout
+
     # Create dictionary for easy access debugs
     warning_lvls = {0: logging.DEBUG, 1: logging.INFO, 2: logging.WARNING,
                     3: logging.ERROR, 4: logging.CRITICAL}
@@ -27,7 +28,7 @@ def set_logger(logger_name, warning_level = 1):
     logger.setLevel(warning_lvls[warning_level])
 
     # create console handler and set level to debug
-    ch = logging.StreamHandler(sys.stdout)
+    ch = logging.StreamHandler(stdout)
     ch.setLevel(warning_lvls[warning_level])
 
     # create formatter
