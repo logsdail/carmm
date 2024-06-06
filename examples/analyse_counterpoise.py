@@ -1,8 +1,8 @@
-''''
+'''
 
 TODO: Needs high level description
 
-''''
+'''
 def test_analyse_counterpoise():
 
     import os
