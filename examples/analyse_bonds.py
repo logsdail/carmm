@@ -76,7 +76,6 @@ def test_analyse_chelation():
     ligands = analyse_chelation(atoms=atoms, metal='Mn', ligand_atoms=['O'], mult=1.5)
     ## assertion check to verify results
     assert(ligands.get("complex") == "Mn(κ1-H2O)6")
-    return ligands
 
 test_analyse_bonds()
 test_analyse_get_sorted_distances()
