@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 '''
 
 TODO: Needs high level description
@@ -5,9 +6,7 @@ TODO: Needs high level description
 '''
 def test_analyse_counterpoise():
 
-    import os
-    import subprocess
-
+    from os import getcwd, chdir
     from ase.io import read
 
     from carmm.analyse.counterpoise_onepot import counterpoise_calc
@@ -18,10 +17,12 @@ def test_analyse_counterpoise():
     # files in data/CO_BSSE are fake ones and default species settings are also deleted from aims.out.
 
     CO = read('data/CO_BSSE/C_monoxide_pbe.traj')
-    examples_directory = os.getcwd()
+    examples_directory = getcwd()
+    print("Directory 1:", examples_directory, getcwd())
 
     # Switch to the directory with output files, so results can be read directly without doing any actual calculation
-    os.chdir(path='data/CO_BSSE')  # This line is only for CI-test purpose and should be deleted in actual calculation.
+    chdir(path='data/CO_BSSE')  # This line is only for CI-test purpose and should be deleted in actual calculation.
+    print("Directory 2:", examples_directory, getcwd())
 
     # Construct the calculator
     toy_calc = get_aims_calculator(dimensions=0, xc='pbe')
@@ -56,7 +57,8 @@ def test_analyse_counterpoise():
     assert lines[6] == "empty -0.0000000000000000 0.0000000000000000 -0.6536947973321450 C\n"
 
     # Return to examples directory
-    os.chdir(path=examples_directory)  # This line is only for CI-test purpose and should be deleted in actual calculation.
+    chdir(path=examples_directory)  # This line is only for CI-test purpose and should be deleted in actual calculation.
+    print("Directory 3:", examples_directory, getcwd())
 
 test_analyse_counterpoise()
 
