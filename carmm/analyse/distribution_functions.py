@@ -23,7 +23,7 @@ def radial_distribution_function(model, radius, position, verbose=False):
     from math import ceil
 
     # Create a super cell of the model big enough to get all interactions within radius
-    lattice_vectors = model.get_cell_lengths_and_angles()[:3]
+    lattice_vectors = model.cell.cellpar()[:3]
     super_cell_repeat = [int(ceil((radius/lattice_vectors[0])*2)),
                          int(ceil((radius/lattice_vectors[1])*2)),
                          int(ceil((radius/lattice_vectors[2])*2))]
@@ -75,7 +75,7 @@ def element_radial_distribution_function(model, radius, element,position=None, v
         position = 0
 
     # Create a super cell of the model big enough to get all interactions within radius
-    lattice_vectors = model.get_cell_lengths_and_angles()[:3]
+    lattice_vectors = model.cell.cellpar()[:3]
     super_cell_repeat = [int(ceil((radius/lattice_vectors[0])*2)),
                          int(ceil((radius/lattice_vectors[1])*2)),
                          int(ceil((radius/lattice_vectors[2])*2))]
