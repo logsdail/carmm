@@ -18,11 +18,9 @@ def test_analyse_counterpoise():
 
     CO = read('data/CO_BSSE/C_monoxide_pbe.traj')
     examples_directory = getcwd()
-    print("Directory 1:", examples_directory, getcwd())
 
     # Switch to the directory with output files, so results can be read directly without doing any actual calculation
     chdir(path='data/CO_BSSE')  # This line is only for CI-test purpose and should be deleted in actual calculation.
-    print("Directory 2:", examples_directory, getcwd())
 
     # Construct the calculator
     toy_calc = get_aims_calculator(dimensions=0, xc='pbe')
@@ -58,7 +56,6 @@ def test_analyse_counterpoise():
 
     # Return to examples directory
     chdir(path=examples_directory)  # This line is only for CI-test purpose and should be deleted in actual calculation.
-    print("Directory 3:", examples_directory, getcwd())
 
 test_analyse_counterpoise()
 
