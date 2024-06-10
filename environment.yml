@@ -9,5 +9,6 @@ dependencies:
   - numpy
   - pip
   - pip:
+    - ase
     - scipy
     - matplotlib
