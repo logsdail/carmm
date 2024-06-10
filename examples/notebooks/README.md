@@ -11,3 +11,10 @@ Be sure to set the `JUPYTER_PATH` variable in a similar way that `PYTHONPATH` is
 *Example: export JUPYTER_PATH=/path/to/carmm/folder:$JUPYTER_PATH*
 
 Alternatively, clicking on the binder link above will take you to a web platform where you can play with the notebooks without installing anything!
+
+In case you are still struggling to access and run this notebook, please do the following at the start of the notebook. 
+```
+import sys
+sys.path.append(r'C:\path\to\your\carmm\folder\on\your\system')
+import carmm
+```
