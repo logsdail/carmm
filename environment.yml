@@ -7,4 +7,5 @@ name: notebooks
 dependencies:
   - python
   - numpy
+  - scipy
   - matplotlib
