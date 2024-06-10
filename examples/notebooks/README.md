@@ -12,7 +12,7 @@ On Linux: set `JUPYTER_PATH` variable in a similar way that `PYTHONPATH` is defi
 
 **Example:** `export JUPYTER_PATH=/path/to/carmm/folder:$JUPYTER_PATH`
 
-On Windows: Add the appropriate path to the environment in the first cell of the notebook
+On Windows (also works on Linux): Add the appropriate path to the environment in the first cell of the notebook
 
 **Example:** `import sys; sys.path.append(r'DriveLetter:\path\to\carmm\')`
 
