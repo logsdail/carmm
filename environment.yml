@@ -1,10 +1,14 @@
 # This is a basic file to enable use of binder with the Jupyer notebooks
 # embedded in examples/notebooks
-
 name: notebooks
-
+channels:
+  - conda-forge
 # Load dependencies - add modules here if you need them
 dependencies:
   - python
   - numpy
-  - matplotlib
+  - pip
+  - pip:
+    - ase
+    - scipy
+    - matplotlib
