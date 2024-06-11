@@ -31,7 +31,7 @@ jobs:
     # Build the documentation dynamically from docstrings in the code
     - name: Build Sphinx API documentation
       run: |
-        sphinx-apidoc -o carmm/docs/source . -d 5 
+        sphinx-apidoc -o carmm/docs/source .
 
     # Build a website based on the retrieved docstrings
     - name: Build Sphinx HTML
