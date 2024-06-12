@@ -44,7 +44,7 @@ def set_graph_axes_mulliken(axis, x, y, homo, xlabel='$\\epsilon$ (eV)', ylabel=
     '''
 
     # Determine if this is a plot instance, and if so extract axes
-    from matplotlib.axes._subplots import Axes
+    from matplotlib.axes import Axes
     if(not isinstance(axis,Axes)):
         axis = axis.gca()
     # Set all the axes limits and labels

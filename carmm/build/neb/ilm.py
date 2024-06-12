@@ -1,13 +1,14 @@
 def multiple_local_extrema(filename="last_predicted_path.traj"):
     '''
     This function will detect local maxima in the trajectory file of a NEB
-    calculation and will return False for single maximum or True for multiple
-    maxima.
+    calculation.
 
     Parameters:
     filename: str
         Name of the file containing latest Minimum Energy Path, default
         is "last_predicted_path.traj" as in MLNEB by CatLearn.
+    Return:
+        False for single maximum; True for multiple maxima.
     '''
 
     import numpy as np
@@ -34,7 +35,7 @@ def multiple_local_extrema(filename="last_predicted_path.traj"):
         list_to_1d_array.append(e)
         mep += [atoms]
 
-    # Find and identify local minima in array of energies
+    # Find and identify local maxima in array of energies
     list_to_1d_array = np.array(list_to_1d_array)
     indices = argrelextrema(list_to_1d_array, np.greater)
     indices = [x for x in indices[0]]
