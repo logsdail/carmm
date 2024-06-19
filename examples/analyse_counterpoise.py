@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 '''
 
 TODO: Needs high level description
@@ -5,9 +6,7 @@ TODO: Needs high level description
 '''
 def test_analyse_counterpoise():
 
-    import os
-    import subprocess
-
+    from os import getcwd, chdir
     from ase.io import read
 
     from carmm.analyse.counterpoise_onepot import counterpoise_calc
@@ -18,7 +17,7 @@ def test_analyse_counterpoise():
     # files in data/CO_BSSE are fake ones and default species settings are also deleted from aims.out.
 
     CO = read('data/CO_BSSE/C_monoxide_pbe.traj')
-    examples_directory = os.getcwd()
+    examples_directory = getcwd()
 
     # Construct the calculator
     toy_calc = get_aims_calculator(dimensions=0, xc='pbe', directory=examples_directory+'/data/CO_BSSE')
@@ -51,7 +50,6 @@ def test_analyse_counterpoise():
     f = open(toy_calc.directory+'/'+"geometry.in", 'r')
     lines = f.readlines()
     assert lines[6] == "empty -0.0000000000000000 0.0000000000000000 -0.6536947973321450 C\n"
-
 
 test_analyse_counterpoise()
 
