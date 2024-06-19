@@ -19,15 +19,12 @@ def test_analyse_counterpoise():
     CO = read('data/CO_BSSE/C_monoxide_pbe.traj')
     examples_directory = getcwd()
 
-    # Switch to the directory with output files, so results can be read directly without doing any actual calculation
-    chdir(path='data/CO_BSSE')  # This line is only for CI-test purpose and should be deleted in actual calculation.
-
     # Construct the calculator
-    toy_calc = get_aims_calculator(dimensions=0, xc='pbe')
+    toy_calc = get_aims_calculator(dimensions=0, xc='pbe', directory=examples_directory+'/data/CO_BSSE')
     toy_calc.set(xc='pbe', spin='collinear', default_initial_moment=0.5, relativistic='atomic_zora scalar')
 
     # Change the species directory to current directory with fake species files
-    toy_calc.set(species_dir='.')  # This line is only for CI-test purpose and should be deleted in actual calculation.
+    toy_calc.set(species_dir=examples_directory+'/data/CO_BSSE')  # This line is only for CI-test purpose and should be deleted in actual calculation.
 
     # This function can work with lists of indices or symbols of the two parts in a binding complex for CP correction.
     # This does not work with socket calculator for now.
@@ -50,12 +47,9 @@ def test_analyse_counterpoise():
 
     # Check the last created geometry.in file during the calculation.
     # These three lines below are only for CI-test purpose and should be deleted in actual calculation.
-    f = open("geometry.in", 'r')
+    f = open(toy_calc.directory+'/'+"geometry.in", 'r')
     lines = f.readlines()
     assert lines[6] == "empty -0.0000000000000000 0.0000000000000000 -0.6536947973321450 C\n"
-
-    # Return to examples directory
-    chdir(path=examples_directory)  # This line is only for CI-test purpose and should be deleted in actual calculation.
 
 test_analyse_counterpoise()
 
