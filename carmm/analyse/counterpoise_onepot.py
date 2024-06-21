@@ -35,6 +35,7 @@ def counterpoise_calc(complex_struc, a_id, b_id, fhi_calc=None, a_name=None, b_n
 
     Returns: float. counterpoise correction value for basis set superposition error
     """
+    import ase
     print("Use version 230612 or newer ones, or empty sites won't work with PBC\n")
     # Check if a_id and b_id are mapped correctly and convert symbols to indices
     a_id, b_id = check_and_convert_id(complex_struc, a_id, b_id)
@@ -57,11 +58,20 @@ def counterpoise_calc(complex_struc, a_id, b_id, fhi_calc=None, a_name=None, b_n
     # Create an empty list to store energies for postprocessing.
     energies = []
     for index in range(4):
-        fhi_calc.outfilename = species_list[index] + '.out'
-        structures_cp[index].calc = fhi_calc
-        # Run the calculation. A workaround. Default calculate function doesn't work with ghost atoms.
-        calculate_energy_ghost_compatible(calc=structures_cp[index].calc, atoms=structures_cp[index],
-                                          ghosts=ghosts_lists_cp[index], dry_run=dry_run)
+        if ase.__version__ <= '3.22.1':
+            fhi_calc.outfilename = species_list[index] + '.out'
+            # Run the calculation. A workaround. Default calculate function doesn't work with ghost atoms.
+            structures_cp[index].calc = fhi_calc
+            calculate_energy_ghost_compatible(calc=structures_cp[index].calc, atoms=structures_cp[index],
+                                              ghosts=ghosts_lists_cp[index], dry_run=dry_run)
+
+        else:
+            fhi_calc.outputname = species_list[index] + '.out'
+            fhi_calc.set(ghosts=ghosts_lists_cp[index])
+            structures_cp[index].calc = fhi_calc
+            if dry_run:
+                structures_cp[index].calc.read_results()
+
         # Get the energy from the converged output.
         energy_i = structures_cp[index].get_potential_energy()
         energies.append(energy_i)
@@ -77,7 +87,7 @@ def counterpoise_calc(complex_struc, a_id, b_id, fhi_calc=None, a_name=None, b_n
 
 def check_and_convert_id(complex_struc, a_id, b_id):
     """
-    This function checks if a_id and b_id are supplied correctly (lists of indices or lists of strings),
+    This function checks if a_id and b_id are supplied correctly (lists of indices or lists of symbols),
     and convert symbols to indices.
     Args:
         complex_struc: see counterpoise_calc
@@ -155,9 +165,8 @@ def calculate_energy_ghost_compatible(calc, atoms=None, properties=['energy'],
     This is a modified version of ase.calculators.calculator.FileIOCalculator.calculate to make ghost atoms work
     Do the calculation and read the results.
 
-    This is a workaround. The same could be done easily if we were using the same version of ASE on Gitlab.
-    The Aims calculator were rewritten where ghosts can be specified while constructing the calculator
-    (not available in current release)
+    This is a workaround for version older than 3.22.1.
+    The Aims calculator were rewritten where ghosts can be specified while constructing the calculator in version 3.23
 
     Args:
         calc: fhi_aims calculator constructed by ASE
@@ -168,6 +177,8 @@ def calculate_energy_ghost_compatible(calc, atoms=None, properties=['energy'],
         dry_run: flag for CI-test.
 
     """
+    import ase
+    from ase.io import read
     from ase.calculators.calculator import Calculator
     import subprocess
     Calculator.calculate(calc, atoms, properties, system_changes)
