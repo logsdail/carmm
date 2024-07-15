@@ -28,7 +28,7 @@ def test_analyse_forces():
     opt = BFGSLineSearch(atoms)
     print(is_converged(atoms, fmax))
     assert not is_converged(atoms, fmax)
-    print(atoms.calc.forces)
+    print(atoms.get_forces())
 
     # Returns False if optimisation has not reached to/below fmax
     opt.run(fmax=fmax*30)
@@ -57,6 +57,5 @@ def test_analyse_forces():
     # Explicitly remove the forces from the results - some calculators (e.g. MACE) only store stress for bulk
     crystal.calc.results.pop("forces")
     assert is_converged(crystal, fmax)
-
 
 test_analyse_forces()
