@@ -45,5 +45,3 @@ def set_logger(logger_name, warning_level = 1):
 
     return logger
 
-
-
