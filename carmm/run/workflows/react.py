@@ -9,7 +9,7 @@ from carmm.analyse.forces import is_converged
 from carmm.run.aims_path import set_aims_command
 from ase.io import Trajectory
 from carmm.run.workflows.helper import CalculationHelper
-from carmm.err_handler.logger_set import set_logger
+from carmm.utils.logger_set import set_logger
 from ase.optimize import BFGS
 
 # TODO: Enable serialization with ASE db - save locations of converged files as well as all properties
