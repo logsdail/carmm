@@ -87,7 +87,7 @@ class RotationBox():
         """
 
         # Zeroes and rotates the molecule along the site normal
-        junk, self.zeroed_adsorbate = self.place_adsorbate()
+        self.place_adsorbate()
 
         self.zeroed_adsorbate.rotate(rotation[0], self.x_axis, center=self.zeroed_adsorbate.positions[self.ads_idx])
         self.zeroed_adsorbate.rotate(rotation[1], self.y_axis, center=self.zeroed_adsorbate.positions[self.ads_idx])
