@@ -174,7 +174,7 @@ def calculate_energy_ghost_compatible(calc, atoms=None, properties=['energy'],
     calc.write_input(calc.atoms, properties, system_changes, ghosts=ghosts)
     command = calc.command
     if dry_run:  # Only for CI tests
-        command = 'ls'
+        command = ''
     subprocess.check_call(command, shell=True, cwd=calc.directory)
     calc.read_results()
 
