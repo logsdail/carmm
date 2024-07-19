@@ -49,7 +49,7 @@ jobs:
         # Restricted MACE as > 0.3.4 fails on Python 3.7
         python -m pip install mace-torch==0.3.4 
         python -m pip install pymatgen
-        python -m pip install catlearn
+        python -m pip install https://github.com/SUNCAT-Center/CatLearn/archive/refs/heads/master.zip
         
     
     # Setup Python environment
