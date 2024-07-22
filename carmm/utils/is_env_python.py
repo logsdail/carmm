@@ -11,6 +11,7 @@ import warnings
 
 
 def depreciation(message):
+    # sub-function of python_env_check()
    warnings.warn(message, DeprecationWarning, stacklevel=2)
 
 
@@ -25,6 +26,7 @@ def python_env_check():
 
 
 def is_env_python_minor(version):
+    #sub-function of is_env_python()
     if sys.version_info.minor == version:
         print("1")
     else:
@@ -32,6 +34,7 @@ def is_env_python_minor(version):
 
 
 def is_env_python_major_and_minor(version):
+    # sub-function of is_env_python()
     if sys.version_info.major == version[0] and sys.version_info.minor == version[1]:
         print("1")
     else:
