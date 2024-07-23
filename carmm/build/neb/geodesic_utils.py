@@ -119,15 +119,10 @@ def get_scaled_bond_dist_and_deriv(atoms, bond_list, morse=None, input_pos=None,
     dist_func = np.frompyfunc(morse.potential_en, 2, 1)
     deriv_func = np.frompyfunc(morse.potential_der, 2, 1)
 
-    #scaled_distance_arr = dist_func(distance_arr, morse.re_list, where=distance_arr > 0, out=np.zeros(distance_arr.shape),
-    #                                casting='unsafe')
     scaled_distance_arr = dist_func(distance_arr, morse.re_list, out=np.zeros(distance_arr.shape), casting='unsafe')
-    #scale_deriv = deriv_func(distance_arr, morse.re_list, where=distance_arr > 0, out=np.zeros(distance_arr.shape), casting='unsafe')
     scale_deriv = deriv_func(distance_arr, morse.re_list, out=np.zeros(distance_arr.shape), casting='unsafe')
 
     scaled_derivative_arr = np.einsum('ijk, i -> ijk', derivative_arr, scale_deriv)
-    #for idx, grad in enumerate(scale_deriv):
-    #    derivative_arr[idx] *= grad
 
     return scaled_distance_arr, scaled_derivative_arr.reshape(len(bond_list), -1)
 
@@ -230,16 +225,8 @@ def cost_func_der(flat_positions, atoms, bond_list, av_wij, friction, morse, con
     """
 
     wij, dwij = get_scaled_bond_dist_and_deriv(atoms, bond_list, input_pos=flat_positions, morse=morse, constraints=constraints)
-    # Return as relevant bond list - otherwise least-squares problem blows up to natomsxnatomsxnatomsx3
-    # for the Jacobian
-    #output_dwij = np.zeros((len(bond_list), len(atoms), 3))
-
-    #for idx, (i, j) in enumerate(bond_list):
-    #    output_dwij[idx, i] = dwij[i, j]
-    #    output_dwij[idx, j] = -dwij[i, j]
 
     friction_scale = np.identity(flat_positions.size) * friction
 
     return np.vstack([dwij, friction_scale])
-    #return np.vstack([dwij.reshape((len(bond_list), 3 * len(atoms))), friction_scale])
 
