@@ -1,4 +1,4 @@
-def get_aims_calculator(dimensions, k_grid=None, xc="pbe", compute_forces="true", **kwargs):
+def get_aims_calculator(dimensions, spin=None, relativistic=None, k_grid=None, xc="pbe", compute_forces="true", directory='./', **kwargs):
     '''
     Method to return a "default" FHI-aims calculator.
     Note: This file should not be changed without consultation,
@@ -22,28 +22,38 @@ def get_aims_calculator(dimensions, k_grid=None, xc="pbe", compute_forces="true"
        
     '''
 
-    from ase.calculators.aims import Aims
+    from ase.calculators.aims import Aims, AimsProfile
 
     # Default is suitable for molecular calculations
-    fhi_calc = Aims(
-        spin='none',
-        relativistic=('atomic_zora', 'scalar'),
-        compute_forces=compute_forces,
-        **kwargs
-    )
 
     # Set the XC for the calculation. For LibXC, override_warning_libxc *needs*
     # to be set first, otherwise we get a termination.
+
+    # Created dictionary to store argumets
+    parameter_dict = {}
     if "libxc" in xc:
-        fhi_calc.set(override_warning_libxc="true")
-    fhi_calc.set(xc=xc)
+        parameters_dict['override_warning_libxc'] = 'true'
+    parameter_dict['xc'] = xc
 
     if dimensions == 2:
-        fhi_calc.set(use_dipole_correction='true')
+        parameter_dict['use_dipole_correction'] = 'true'
 
     if dimensions >= 2:
-        fhi_calc.set(k_grid=k_grid)
+        parameter_dict['k_grid'] = k_grid
 
+    if spin is not None:
+        parameter_dict['spin'] = 'none'
+
+    if relativistic is None:
+        parameter_dict['relativistic'] = ('atomic_zora', 'scalar')
+
+    fhi_calc = Aims(
+        profile=AimsProfile(command='xc'),
+        compute_forces=compute_forces,
+        # Merged **parameter_dict with **kwargs
+        **{**parameter_dict, **kwargs}
+    )
+    fhi_calc._directory=directory
     return fhi_calc
 
 

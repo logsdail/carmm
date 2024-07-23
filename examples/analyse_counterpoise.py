@@ -20,11 +20,15 @@ def test_analyse_counterpoise():
     examples_directory = getcwd()
 
     # Construct the calculator
-    toy_calc = get_aims_calculator(dimensions=0, xc='pbe', directory=examples_directory+'/data/CO_BSSE')
-    toy_calc.set(xc='pbe', spin='collinear', default_initial_moment=0.5, relativistic='atomic_zora scalar')
+    # toy_calc.set(xc='pbe', spin='collinear', default_initial_moment=0.5, relativistic='atomic_zora scalar')
+    # toy_calc = get_aims_calculator(dimensions=0, xc='pbe', directory=examples_directory+'/data/CO_BSSE')
+
+    toy_calc = get_aims_calculator(dimensions=0, xc='pbe', directory=examples_directory+'/data/CO_BSSE',\
+                                   spin='collinear', default_initial_moment=0.5, relativistic='atomic_zora scalar')
 
     # Change the species directory to current directory with fake species files
-    toy_calc.set(species_dir=examples_directory+'/data/CO_BSSE')  # This line is only for CI-test purpose and should be deleted in actual calculation.
+    toy_calc = get_aims_calculator(dimensions=0, xc='pbe', directory=examples_directory+'/data/CO_BSSE',\
+                                   species_dir=examples_directory+'/data/CO_BSSE')   #This line is only for CI-test purpose and should be deleted in actual calculation.
 
     # This function can work with lists of indices or symbols of the two parts in a binding complex for CP correction.
     # This does not work with socket calculator for now.

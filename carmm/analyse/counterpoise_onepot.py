@@ -171,7 +171,8 @@ def calculate_energy_ghost_compatible(calc, atoms=None, properties=['energy'],
     from ase.calculators.calculator import Calculator
     import subprocess
     Calculator.calculate(calc, atoms, properties, system_changes)
-    calc.write_input(calc.atoms, properties, system_changes, ghosts=ghosts)
+    #calc.write_input(calc.atoms, properties, system_changes, ghosts=ghosts)
+    calc.template.write_input(atoms, calc.atoms, properties, system_changes)
     command = calc.command
     if dry_run:  # Only for CI tests
         command = ''
