@@ -3,6 +3,44 @@ from carmm.build.neb.geodesic_utils import get_scaled_bond_dist_and_deriv, Morse
 from ase.geometry import get_distances
 
 class GeodesicInterpolator:
+    """
+    Method for producing NEB pathways using the geodesic interpolation method of
+    Zhu et al. [1]. Adapted to ASE objects, and operates with periodic boundary
+    conditions and FixedAtom constraints of ASE.
+
+    Example
+    -------
+    from ase.io import read
+    from carmm.build.neb.geodesic import GeodesicInterpolator
+    from ase.constraints import FixAtoms
+    from ase.mep import NEB
+
+    # Example below produces a pathway with 6 interpolating images
+    initial = read("initial.xyz")
+    final = read("final.xyz")
+
+    # If constraints are desired, specify as normal
+    constraints = Fixatoms([0, 1])
+    initial.set_constraints(constraints)
+    final.set_constraints(constraints)
+
+    # Interpolate images by iteratively generating images between the midpoint
+    # images along the pathway
+    geodesic = GeodesicInterpolator(initial, final, path_len=8)
+    geodesic.init_path()
+
+    # Smooth the pathway by performing a sweeping algorithm which reduces the
+    # overall geodesic length of the pathway
+    geodesic.sweep_iterative(sweeperiter=20)
+
+    # Define the NEB pathway as normal
+    neb = NEB(geodesic.images)
+
+    Citations
+    ---------
+    [1] Xiaolei Zhu et al.; Geodesic interpolation for reaction pathways. J. Chem. Phys.
+        28 April 2019; 150 (16): 164103.
+    """
     def __init__(self, initial, final, path_len):
 
         from ase.constraints import FixAtoms
@@ -34,6 +72,16 @@ class GeodesicInterpolator:
         self.initialized_internals = False
 
     def init_path(self):
+        """
+        Initialises the pathway by iteratively adding images at the midpoint between two
+        existing images, such that the geodesic length between the resulting three
+        points is minimized.
+
+        Algorithm structured as follows:
+        1) For 18 given iterations, find the maximum RMSD distance between two images
+        2) Select two said images and find the mid-point image
+        3) Align images using a Kabsch algorithm to minimise rotations and translations
+        """
 
         from ase.build.rotate import minimize_rotation_and_translation
         from ase.visualize import view
@@ -137,8 +185,6 @@ class GeodesicInterpolator:
 
     def update_bond_list(self):
 
-        from geodesic_interpolate.coord_utils import get_bond_list
-
         for idx in range(len(self.images)):
             bonds = self.get_atoms_bonds(self.images[idx], scale_cutoffs=3.0)
             #bonds = get_bond_list(self.images[idx].positions.ravel(), threshold=3)[0]
@@ -183,10 +229,25 @@ class GeodesicInterpolator:
             self.mid_wij_list[idx, :] = wij
             self.mid_dwij_list[idx, :] = dwij
 
-    def sweep_iterative(self, tol, sweeperiter=20):
+    def sweep_iterative(self, sweeperiter=20):
+        """
+        Adjusts the iterpolating images to minimize the geodesic length over a
+        given segment in the pathway. Sweeps are alternatively performed from
+        reactant to product and product to reactant
+
+        Parameters
+        ----------
+        sweeperiter : int
+            Number of sweeping iterations performed
+        -------
+        """
 
         from ase.build.rotate import minimize_rotation_and_translation
         from ase.visualize import view
+
+        ''' Ensures that the path is correctly oriented on exit '''
+        if sweeperiter%2 == 1:
+            sweeperiter = 1
 
         for iter in range(sweeperiter):
 
@@ -215,7 +276,6 @@ class GeodesicInterpolator:
         from ase.build.rotate import minimize_rotation_and_translation
         from scipy.optimize import least_squares
         from ase.visualize import view
-        from geodesic_interpolate.coord_utils import get_bond_list
 
         morse = Morse(alpha=0.7, beta=0.01)
         friction = 0.1 / np.sqrt(len(image1))

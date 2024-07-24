@@ -5,6 +5,16 @@ from time import time
 
 def timing(f):
     """
+    Decorator function used for timing information during code optimisation.
+    Could be moved to a more general location if timing information is desired,
+    but I suspect many operations in CARMM are relatively quick/trivial anyway
+
+    Examples
+    --------
+    @timing
+    def func(x):
+        return x
+
 
     Parameters
     ----------
