@@ -247,7 +247,7 @@ class GeodesicInterpolator:
 
         ''' Ensures that the path is correctly oriented on exit '''
         if sweeperiter%2 == 1:
-            sweeperiter = 1
+            sweeperiter = sweeperiter + 1
 
         for iter in range(sweeperiter):
 
