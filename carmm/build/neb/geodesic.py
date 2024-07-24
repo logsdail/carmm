@@ -342,7 +342,7 @@ class GeodesicInterpolator:
 
                 old_images = self.images
                 self.images = [image1, trial_atoms, image2]
-                self.sweep_iterative(0.5, 1)
+                self.sweep_iterative(sweeperiter=1)
                 trial_atoms = self.images[1]
                 self.images = old_images
 
