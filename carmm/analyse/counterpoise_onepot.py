@@ -35,6 +35,8 @@ def counterpoise_calc(complex_struc, a_id, b_id, fhi_calc=None, a_name=None, b_n
 
     Returns: float. counterpoise correction value for basis set superposition error
     """
+    from ase import __version__ as aseVersion
+    from ase.calculators.aims import Aims
     print("Use version 230612 or newer ones, or empty sites won't work with PBC\n")
     # Check if a_id and b_id are mapped correctly and convert symbols to indices
     a_id, b_id = check_and_convert_id(complex_struc, a_id, b_id)
@@ -57,15 +59,31 @@ def counterpoise_calc(complex_struc, a_id, b_id, fhi_calc=None, a_name=None, b_n
     # Create an empty list to store energies for postprocessing.
     energies = []
     for index in range(4):
-        fhi_calc.outfilename = species_list[index] + '.out'
-        structures_cp[index].calc = fhi_calc
-        # Run the calculation. A workaround. Default calculate function doesn't work with ghost atoms.
-        calculate_energy_ghost_compatible(calc=structures_cp[index].calc, atoms=structures_cp[index],
-                                          ghosts=ghosts_lists_cp[index], dry_run=dry_run)
-        # Get the energy from the converged output.
-        energy_i = structures_cp[index].get_potential_energy()
-        energies.append(energy_i)
+        if aseVersion < '3.23.0':
+            fhi_calc.outfilename = species_list[index] + '.out'
+            structures_cp[index].calc = fhi_calc
+            # Run the calculation. A workaround. Default calculate function doesn't work with ghost atoms.
+            calculate_energy_ghost_compatible(calc=structures_cp[index].calc, atoms=structures_cp[index],
+                                              ghosts=ghosts_lists_cp[index], dry_run=dry_run)
+            # Get the energy from the converged output.
+            energy_i = structures_cp[index].get_potential_energy()
+            energies.append(energy_i)
+        else:
+            fhi_calc.template.outputname = species_list[index] + '.out'
+            properties = fhi_calc.implemented_properties
+            parameters = fhi_calc.parameters
+            parameters['ghosts'] = ghosts_lists_cp[index]
+            fhi_calc.template.update_parameters(properties, parameters)
+            structures_cp[index].calc = fhi_calc
+            if dry_run:
+                structures_cp[index].calc.results['energy'] = get_energy_dryrun(fhi_calc.directory,
+                                                                                fhi_calc.template.outputname)
+                structures_cp[index].calc.atoms = structures_cp[index]
 
+            # Get the energy from the converged output.
+            energy_i = structures_cp[index].get_potential_energy()
+            print(energy_i)
+            energies.append(energy_i)
     # Counterpoise correction for basis set superposition error. See docstring for the formula.
     cp_corr = energies[0] + energies[2] - energies[1] - energies[3]
 
@@ -174,7 +192,19 @@ def calculate_energy_ghost_compatible(calc, atoms=None, properties=['energy'],
     calc.write_input(calc.atoms, properties, system_changes, ghosts=ghosts)
     command = calc.command
     if dry_run:  # Only for CI tests
-        command = 'ls'
+        command = ''
     subprocess.check_call(command, shell=True, cwd=calc.directory)
     calc.read_results()
 
+
+# Lazy work around
+def get_energy_dryrun(dir, outputname):
+    """Parse the energy from the aims.out file"""
+    import numpy as np
+    f = open(dir / outputname, 'r')
+    fd = f.readlines()
+    for line in fd:
+        if 'Total energy corrected' in line:
+            energy_line = line
+
+    return float(energy_line.split()[5])
