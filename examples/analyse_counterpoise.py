@@ -59,7 +59,7 @@ def test_analyse_counterpoise():
 
     # Check the last created geometry.in file during the calculation.
     # These three lines below are only for CI-test purpose and should be deleted in actual calculation.
-    f = open(toy_calc.directory / "geometry.in", 'r')
+    f = open(str(toy_calc.directory) + '/' + "geometry.in", 'r')
     lines = f.readlines()
     assert lines[6] == "empty -0.0000000000000000 0.0000000000000000 -0.6536947973321450 C\n"
 
