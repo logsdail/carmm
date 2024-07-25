@@ -76,6 +76,9 @@ def counterpoise_calc(complex_struc, a_id, b_id, fhi_calc=None, a_name=None, b_n
             fhi_calc.template.update_parameters(properties, parameters)
             structures_cp[index].calc = fhi_calc
             if dry_run:
+                structures_cp[index].calc.template.write_input(fhi_calc.profile, fhi_calc.directory,
+                                                               structures_cp[index], fhi_calc.parameters,
+                                                               fhi_calc.implemented_properties)
                 structures_cp[index].calc.results['energy'] = get_energy_dryrun(fhi_calc.directory,
                                                                                 fhi_calc.template.outputname)
                 structures_cp[index].calc.atoms = structures_cp[index]
