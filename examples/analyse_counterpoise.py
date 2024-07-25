@@ -19,12 +19,13 @@ def test_analyse_counterpoise():
     CO = read('data/CO_BSSE/C_monoxide_pbe.traj')
     examples_directory = getcwd()
 
+    # Old calculator:
     # Construct the calculator
     # toy_calc.set(xc='pbe', spin='collinear', default_initial_moment=0.5, relativistic='atomic_zora scalar')
     # toy_calc = get_aims_calculator(dimensions=0, xc='pbe', directory=examples_directory+'/data/CO_BSSE')
 
-    toy_calc = get_aims_calculator(dimensions=0, xc='pbe', directory=examples_directory+'/data/CO_BSSE',\
-                                   spin='collinear', default_initial_moment=0.5, relativistic='atomic_zora scalar')
+    #toy_calc = get_aims_calculator(dimensions=0, xc='pbe', directory=examples_directory+'/data/CO_BSSE',\
+    #                               spin='collinear', default_initial_moment=0.5, relativistic='atomic_zora scalar')
 
     # Change the species directory to current directory with fake species files
     toy_calc = get_aims_calculator(dimensions=0, xc='pbe', directory=examples_directory+'/data/CO_BSSE',\

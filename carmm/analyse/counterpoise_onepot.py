@@ -1,3 +1,5 @@
+import ase
+
 def counterpoise_calc(complex_struc, a_id, b_id, fhi_calc=None, a_name=None, b_name=None,
                       verbose=False, dry_run=False):
     """
@@ -57,11 +59,19 @@ def counterpoise_calc(complex_struc, a_id, b_id, fhi_calc=None, a_name=None, b_n
     # Create an empty list to store energies for postprocessing.
     energies = []
     for index in range(4):
-        fhi_calc.outfilename = species_list[index] + '.out'
-        structures_cp[index].calc = fhi_calc
         # Run the calculation. A workaround. Default calculate function doesn't work with ghost atoms.
-        calculate_energy_ghost_compatible(calc=structures_cp[index].calc, atoms=structures_cp[index],
-                                          ghosts=ghosts_lists_cp[index], dry_run=dry_run)
+        if ase.__version__ < '3.23.0':
+            fhi_calc.outfilename = species_list[index] + '.out'
+            structures_cp[index].calc = fhi_calc
+            calculate_energy_ghost_compatible_old(calc=structures_cp[index].calc, atoms=structures_cp[index],
+                                              ghosts=ghosts_lists_cp[index], dry_run=dry_run)
+        else:
+            assert ase.__version__ > '3.23.0'
+            # This function bellow doesn't work in ASE v3.23.0; tag: @GaryLZW
+            fhi_calc.template.outputname = species_list[index] + '.out'
+            structures_cp[index].calc = fhi_calc
+            calculate_energy_ghost_compatible(calc=structures_cp[index].calc, atoms=structures_cp[index],
+                                              ghosts=ghosts_lists_cp[index], dry_run=dry_run)
         # Get the energy from the converged output.
         energy_i = structures_cp[index].get_potential_energy()
         energies.append(energy_i)
@@ -146,8 +156,7 @@ def gather_info_for_write_input(complex_struc, a_id, b_id):
 
     return ghosts_cp, structures_cp
 
-
-def calculate_energy_ghost_compatible(calc, atoms=None, properties=['energy'],
+def calculate_energy_ghost_compatible_old(calc, atoms=None, properties=['energy'],
                                       system_changes=['positions', 'numbers', 'cell', 'pbc',
                                                       'initial_charges', 'initial_magmoms'],
                                       ghosts=None, dry_run=False):
@@ -171,11 +180,24 @@ def calculate_energy_ghost_compatible(calc, atoms=None, properties=['energy'],
     from ase.calculators.calculator import Calculator
     import subprocess
     Calculator.calculate(calc, atoms, properties, system_changes)
-    #calc.write_input(calc.atoms, properties, system_changes, ghosts=ghosts)
-    calc.template.write_input(atoms, calc.atoms, properties, system_changes)
+    calc.write_input(calc.atoms, properties, system_changes, ghosts=ghosts)
     command = calc.command
     if dry_run:  # Only for CI tests
-        command = ''
+        command = ''  # Used to be 'ls'
     subprocess.check_call(command, shell=True, cwd=calc.directory)
     calc.read_results()
 
+
+def calculate_energy_ghost_compatible(calc, atoms=None, properties=['energy'],
+                                      system_changes=['positions', 'numbers', 'cell', 'pbc',
+                                                      'initial_charges', 'initial_magmoms'],
+                                      ghosts=None, dry_run=False):
+    parameters = calc.parameters
+    parameters['ghosts'] = ghosts
+    calc.template.update_parameters(properties, parameters)
+    atoms.calc = calc
+    print(calc.directory)
+    if not dry_run:
+        atoms.get_potential_energy()
+    else:
+        calc.template.read_results(directory=calc.directory)
