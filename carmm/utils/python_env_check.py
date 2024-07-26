@@ -22,6 +22,7 @@ def python_env_check(version=None):
         else:
             return False
     else:
+        print('\n' + sys.version)
         if sys.version_info.minor == 7:
            deprecation("Warning! Python Interpreter is too old, will be deprecated soon.")
         elif sys.version_info.minor > 7:
