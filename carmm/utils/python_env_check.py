@@ -3,7 +3,12 @@ Created on Fri 12/07/24
 
 @author Firas Assa
 
-This function checks if the environment version entered as an argument is true.
+python_env_check() function has an optional argument version, which when is entered outputs True boolean value if python
+interpreter version is >= current version. When no argument is entered, it checks whether python version > 3.7.
+
+deprecation() is a sub function of python_env_check() that outputs a DeprecationWarning
+
+is_env_python() function checks if the environment version entered as an argument is true, by printing 1 or 0
 """
 
 import sys
