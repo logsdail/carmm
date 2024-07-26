@@ -10,19 +10,24 @@ import sys
 import warnings
 
 
-def depreciation(message):
+def deprecation(message):
     # sub-function of python_env_check()
    warnings.warn(message, DeprecationWarning, stacklevel=2)
 
 
-def python_env_check():
-   print('\n' + sys.version)
-   if sys.version_info.minor == 7:
-       depreciation("Warning! Python Interpreter is too old, will be deprecated soon.")
-   elif sys.version_info.minor > 7:
-       print("Python Interpreter version is up-to-date.")
-   else:
-       assert sys.version_info >= (3, 7)
+def python_env_check(version=None):
+    while version is not None:
+        if sys.version_info.minor >= version:
+            return True
+        else:
+            return False
+    else:
+        if sys.version_info.minor == 7:
+           deprecation("Warning! Python Interpreter is too old, will be deprecated soon.")
+        elif sys.version_info.minor > 7:
+           print("Python Interpreter version is up-to-date.")
+        else:
+           assert sys.version_info >= (3, 6)
 
 
 def is_env_python_minor(version):
@@ -39,6 +44,8 @@ def is_env_python_major_and_minor(version):
         print("1")
     else:
         print("0")
+
+
 def is_env_python(version):
     if isinstance(version, str):
         version = int(version)

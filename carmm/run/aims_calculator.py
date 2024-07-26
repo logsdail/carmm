@@ -21,8 +21,12 @@ def get_aims_calculator(dimensions, spin=None, relativistic=None, k_grid=None, x
             FHI_calc: FHI-aims ASE calculator
        
     '''
-
-    from ase.calculators.aims import Aims, AimsProfile
+    #Warning! This is a temporary solution and will be changed soon
+    from carmm.utils.python_env_check import python_env_check
+    if python_env_check(8) == True:
+        from ase.calculators.aims import Aims, AimsProfile
+    else:
+        from ase.calculators.aims import Aims, Aims as AimsProfile
 
     # Default is suitable for molecular calculations
 
@@ -50,10 +54,11 @@ def get_aims_calculator(dimensions, spin=None, relativistic=None, k_grid=None, x
     fhi_calc = Aims(
         profile=AimsProfile(command='xc'),
         compute_forces=compute_forces,
+        directory=directory,
         # Merged **parameter_dict with **kwargs
         **{**parameter_dict, **kwargs}
     )
-    fhi_calc._directory=directory
+    #fhi_calc._directory=directory
     return fhi_calc
 
 
