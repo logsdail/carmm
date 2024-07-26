@@ -36,7 +36,7 @@ def get_aims_calculator(dimensions, spin=None, relativistic=None, k_grid=None, x
     # Created dictionary to store argumets
     parameter_dict = {}
     if "libxc" in xc:
-        parameters_dict['override_warning_libxc'] = 'true'
+        parameter_dict['override_warning_libxc'] = 'true'
     parameter_dict['xc'] = xc
 
     if dimensions == 2:
