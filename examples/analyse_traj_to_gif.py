@@ -7,7 +7,7 @@ into a gif visualised in povray.
 import os
 
 def test_traj_to_gif():
-    from carmm.analyse.traj_to_gif import traj_to_gif, gifmaker
+    from carmm.utils.traj_to_gif import traj_to_gif, gifmaker
 
     # Usage example:
     # Call the overall function like this, the rest of the script just tests the functions individually

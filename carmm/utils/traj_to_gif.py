@@ -3,7 +3,7 @@ from ase.visualize import view
 from ase.io.trajectory import TrajectoryWriter
 import os
 from PIL import Image
-from carmm.analyse.povray_render import povray_render, atom_sub
+from carmm.utils.povray_render import povray_render, atom_sub
 
 
 def traj_to_gif(filename, automatic=False, generic_projection_settings=None, povray_settings=None, frames_per_second=30,
