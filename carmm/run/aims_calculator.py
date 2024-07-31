@@ -21,9 +21,6 @@ def get_aims_calculator(dimensions, spin=None, relativistic=None, k_grid=None, x
             FHI_calc: FHI-aims ASE calculator
        
     '''
-    #Warning! This is a temporary solution and will be changed soon
-    from carmm.utils.python_env_check import python_env_check
-
     # Changing to check ASE version, as this determines behaviour of calculator
     from carmm.utils.python_env_check import ase_env_check
     if ase_env_check('3.23.0'):
@@ -129,21 +126,6 @@ def get_aims_and_sockets_calculator(dimensions,
     # **kwargs is a passthrough of keyword arguments
     fhi_calc = get_aims_calculator(dimensions, **kwargs)
     # Add in PIMD command to get sockets working
-    #from carmm.utils.python_env_check import ase_env_check
-    #if ase_env_check('3.23.0'):
-    ## The set() doesn't work as of ASE v3.23, so instead here we create a new calculator with settings copied across
-    ## and we add in the sockets flag. This is a bit of a hack but it works.
-    #    from ase.calculators.aims import Aims
-    #    fhi_calc = Aims(
-    #        template=fhi_calc.template,
-    #        profile=fhi_calc.profile,
-    #        directory=fhi_calc.directory,
-    #        parameters=fhi_calc.parameters,
-    #        use_pimd_wrapper=[host, port])
-    #else: # Old method
-    #    fhi_calc.set(use_pimd_wrapper=[host, port])
-
-    # Turns out the above isn't needed if this works. Thanks @ikowalec
     fhi_calc.parameters['use_pimd_wrapper']=[host, port]
 
     # Setup sockets calculator that "wraps" FHI-aims

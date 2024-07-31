@@ -57,7 +57,7 @@ def test_analyse_forces():
     # Returns True if optimised to or below desired fmax without constraints
     crystal = bulk("Cu")
     crystal.calc = EMT()
-    if python_env_check(8) == True:
+    if ase_env_check('3.23.0'):
         cell_relaxation = FrechetCellFilter(crystal)
     else:
         cell_relaxation = ExpCellFilter(crystal)
