@@ -26,7 +26,7 @@ def ase_env_check(version=None):
     if ase.__version__ >= version:
         return True
     else:
-        depreciation("Warning! Your current ASE version is: " + ase.__version__ + ", and depreciated. v3.23 or higher is recommended.")
+        deprecation("Warning! Your current ASE version is: " + ase.__version__ + ", and depreciated. v3.23 or higher is recommended.")
         return False
 
 def python_env_check(minorversion=None):
