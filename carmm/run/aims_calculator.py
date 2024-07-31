@@ -23,10 +23,14 @@ def get_aims_calculator(dimensions, spin=None, relativistic=None, k_grid=None, x
     '''
     #Warning! This is a temporary solution and will be changed soon
     from carmm.utils.python_env_check import python_env_check
-    if python_env_check(8) == True:
-        from ase.calculators.aims import Aims, AimsProfile
-    else:
+
+    # Changing to check ASE version, as this determines behaviour of calculator
+    #if python_env_check(8) == True:
+    import ase
+    if ase.__version__ < '3.23.0' 
         from ase.calculators.aims import Aims, Aims as AimsProfile
+    else:
+        from ase.calculators.aims import Aims, AimsProfile
 
     # Default is suitable for molecular calculations
 

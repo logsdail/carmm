@@ -1,5 +1,3 @@
-import ase
-
 def counterpoise_calc(complex_struc, a_id, b_id, fhi_calc=None, a_name=None, b_name=None,
                       verbose=False, dry_run=False):
     """
@@ -37,6 +35,8 @@ def counterpoise_calc(complex_struc, a_id, b_id, fhi_calc=None, a_name=None, b_n
 
     Returns: float. counterpoise correction value for basis set superposition error
     """
+    import ase
+
     print("Use version 230612 or newer ones, or empty sites won't work with PBC\n")
     # Check if a_id and b_id are mapped correctly and convert symbols to indices
     a_id, b_id = check_and_convert_id(complex_struc, a_id, b_id)
