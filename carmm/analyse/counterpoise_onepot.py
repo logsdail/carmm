@@ -60,17 +60,14 @@ def counterpoise_calc(complex_struc, a_id, b_id, fhi_calc=None, a_name=None, b_n
     energies = []
     for index in range(4):
         # Run the calculation. A workaround. Default calculate function doesn't work with ghost atoms.
-        #if ase_env_check('3.23.0'):
-        #    assert False # Raises error as this doesn't work with ASE v3.23, tag @GaryLZW
-        #    fhi_calc.template.outputname = species_list[index] + '.out'
-        #    structures_cp[index].calc = fhi_calc
-        #    calculate_energy_ghost_compatible(calc=structures_cp[index].calc, atoms=structures_cp[index],
-        #                                      ghosts=ghosts_lists_cp[index], dry_run=dry_run)
-        #else:
         fhi_calc.outfilename = species_list[index] + '.out'
         structures_cp[index].calc = fhi_calc
-        calculate_energy_ghost_compatible_old(calc=structures_cp[index].calc, atoms=structures_cp[index],
-                                              ghosts=ghosts_lists_cp[index], dry_run=dry_run)
+        if ase_env_check('3.23.0'):
+            calculate_energy_ghost_compatible(calc=structures_cp[index].calc, atoms=structures_cp[index],
+                                                  ghosts=ghosts_lists_cp[index], dry_run=dry_run)
+        else:
+            calculate_energy_ghost_compatible_old(calc=structures_cp[index].calc, atoms=structures_cp[index],
+                                                  ghosts=ghosts_lists_cp[index], dry_run=dry_run)
 
         # Get the energy from the converged output.
         energy_i = structures_cp[index].get_potential_energy()
