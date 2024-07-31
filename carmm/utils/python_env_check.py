@@ -33,7 +33,7 @@ def python_env_check(minorversion=None):
     import sys
 
     if minorversion is None:
-        minorversion = '7'
+        minorversion = 7
 
     if sys.version_info.minor >= minorversion:
         return True
@@ -46,26 +46,26 @@ def is_env_python_minor(version):
 
     #sub-function of is_env_python()
     if sys.version_info.minor == version:
-        print("1")
+        return True
     else:
-        print("0")
+        return False
 
 def is_env_python_major_and_minor(version):
     import sys
 
     # sub-function of is_env_python()
     if sys.version_info.major == version[0] and sys.version_info.minor == version[1]:
-        print("1")
+        return True
     else:
-        print("0")
+        return False
 
 def is_env_python(version):
     if isinstance(version, str):
         version = int(version)
-        is_env_python_minor(version)
+        return is_env_python_minor(version)
     elif isinstance(version, int):
-        is_env_python_minor(version)
+        return is_env_python_minor(version)
     elif isinstance(version, tuple):
-        is_env_python_major_and_minor(version)
+        return is_env_python_major_and_minor(version)
     else:
         raise TypeError('Invalid data type: enter only str, int or tuple')

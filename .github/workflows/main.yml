@@ -21,8 +21,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        #python-version: ['3.7', '3.8', '3.9']
-        python-version: ['3.7', '3.8']
+        python-version: ['3.7', '3.8', '3.9']
 
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
@@ -46,10 +45,11 @@ jobs:
         python -m pip install --upgrade ase-gpatom
         python -m pip install --upgrade pytest
         python -m pip install --upgrade pytest-cov
-        python -m pip install torch torchvision torchaudio
+        # Removing as presumably MACE will automatically install dependencies
+        # python -m pip install torch torchvision torchaudio
         # Restricted MACE as > 0.3.4 fails on Python 3.7
         python -m pip install mace-torch==0.3.4 
-        python -m pip install pymatgen
+        python -m pip install --upgrade pymatgen
         
         # Debug
         python -m pip freeze
