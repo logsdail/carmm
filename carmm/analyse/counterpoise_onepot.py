@@ -67,7 +67,7 @@ def counterpoise_calc(complex_struc, a_id, b_id, fhi_calc=None, a_name=None, b_n
                                               ghosts=ghosts_lists_cp[index], dry_run=dry_run)
         else:
             assert ase.__version__ > '3.23.0'
-            # This function bellow doesn't work in ASE v3.23.0; tag: @GaryLZW
+            # This function below doesn't work in ASE v3.23.0; tag: @GaryLZW
             fhi_calc.template.outputname = species_list[index] + '.out'
             structures_cp[index].calc = fhi_calc
             calculate_energy_ghost_compatible(calc=structures_cp[index].calc, atoms=structures_cp[index],
