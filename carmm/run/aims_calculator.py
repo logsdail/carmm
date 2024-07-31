@@ -126,7 +126,16 @@ def get_aims_and_sockets_calculator(dimensions,
     # **kwargs is a passthrough of keyword arguments
     fhi_calc = get_aims_calculator(dimensions, **kwargs)
     # Add in PIMD command to get sockets working
-    fhi_calc.set(use_pimd_wrapper=[host, port])
+    # This doesn't work as of ASE v3.23, so instead here we create a new calculator with settings copied across
+    # and we add in the sockets flag. This is a bit of a hack but it works.
+
+    # fhi_calc.set(use_pimd_wrapper=[host, port])
+    fhi_calc = Aims(
+        template=fhi_calc.template
+        profile=fhi_calc.profile,
+        directory=fhi_calc.directory,
+        fhi_calc.parameters,
+        use_pimd_wrapper=[host, port]
 
     # Setup sockets calculator that "wraps" FHI-aims
     from ase.calculators.socketio import SocketIOCalculator
