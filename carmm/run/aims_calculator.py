@@ -27,7 +27,7 @@ def get_aims_calculator(dimensions, spin=None, relativistic=None, k_grid=None, x
     # Changing to check ASE version, as this determines behaviour of calculator
     #if python_env_check(8) == True:
     import ase
-    if ase.__version__ < '3.23.0' 
+    if ase.__version__ < '3.23.0': 
         from ase.calculators.aims import Aims, Aims as AimsProfile
     else:
         from ase.calculators.aims import Aims, AimsProfile
