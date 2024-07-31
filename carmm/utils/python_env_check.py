@@ -3,10 +3,10 @@ Created on Fri 12/07/24
 
 @author Firas Assa
 
+deprecation() is a sub function of python_env_check() that outputs a DeprecationWarning
+
 python_env_check() function has an optional argument version, which when is entered outputs True boolean value if python
 interpreter version is >= current version. When no argument is entered, it checks whether python version > 3.7.
-
-deprecation() is a sub function of python_env_check() that outputs a DeprecationWarning
 
 is_env_python() function checks if the environment version entered as an argument is true, by printing 1 or 0
 """
@@ -17,25 +17,29 @@ def deprecation(message):
     # sub-function of python_env_check()
     warnings.warn(message, DeprecationWarning, stacklevel=2)
 
+def ase_env_check(version=None):
+    import ase
 
-def python_env_check(version=None):
+    if version is None:
+        version = '3.23.0' # Base requirement for functionality
+
+    if ase.__version__ >= version:
+        return True
+    else:
+        depreciation("Warning! Your current ASE version is: " + ase.__version__ + ", and depreciated. v3.23 or higher is recommended.")
+        return False
+
+def python_env_check(minorversion=None):
     import sys
 
-    if version is not None:
-        if sys.version_info.minor >= version:
-            return True
-        else:
-            return False
-    # Default, check version is at minimum Python 3.7
-    else:
-        print('\n' + sys.version)
-        if sys.version_info.minor == 7:
-           deprecation("Warning! Python Interpreter is too old, will be deprecated soon.")
-        elif sys.version_info.minor > 7:
-           print("Python Interpreter version is up-to-date.")
-        else:
-           assert sys.version_info >= (3, 6)
+    if minorversion is None:
+        minorversion = '7'
 
+    if sys.version_info.minor >= minorversion:
+        return True
+    else:
+        deprecation("Warning! Your current Python Interpreter is: " + sys.version + ", and will be deprecated soon.")
+        return False
 
 def is_env_python_minor(version):
     import sys
@@ -46,7 +50,6 @@ def is_env_python_minor(version):
     else:
         print("0")
 
-
 def is_env_python_major_and_minor(version):
     import sys
 
@@ -55,7 +58,6 @@ def is_env_python_major_and_minor(version):
         print("1")
     else:
         print("0")
-
 
 def is_env_python(version):
     if isinstance(version, str):

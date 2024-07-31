@@ -35,7 +35,7 @@ def counterpoise_calc(complex_struc, a_id, b_id, fhi_calc=None, a_name=None, b_n
 
     Returns: float. counterpoise correction value for basis set superposition error
     """
-    import ase
+    from carmm.utils.python_env_check import ase_env_check
 
     print("Use version 230612 or newer ones, or empty sites won't work with PBC\n")
     # Check if a_id and b_id are mapped correctly and convert symbols to indices
@@ -60,17 +60,16 @@ def counterpoise_calc(complex_struc, a_id, b_id, fhi_calc=None, a_name=None, b_n
     energies = []
     for index in range(4):
         # Run the calculation. A workaround. Default calculate function doesn't work with ghost atoms.
-        if ase.__version__ < '3.23.0':
-            fhi_calc.outfilename = species_list[index] + '.out'
-            structures_cp[index].calc = fhi_calc
-            calculate_energy_ghost_compatible_old(calc=structures_cp[index].calc, atoms=structures_cp[index],
-                                              ghosts=ghosts_lists_cp[index], dry_run=dry_run)
-        else:
-            assert ase.__version__ > '3.23.0'
-            # This function below doesn't work in ASE v3.23.0; tag: @GaryLZW
+        if ase_env_check('3.23.0'):
+            assert False # Raises error as this doesn't work with ASE v3.23, tag @GaryLZW
             fhi_calc.template.outputname = species_list[index] + '.out'
             structures_cp[index].calc = fhi_calc
             calculate_energy_ghost_compatible(calc=structures_cp[index].calc, atoms=structures_cp[index],
+                                              ghosts=ghosts_lists_cp[index], dry_run=dry_run)
+        else:
+            fhi_calc.outfilename = species_list[index] + '.out'
+            structures_cp[index].calc = fhi_calc
+            calculate_energy_ghost_compatible_old(calc=structures_cp[index].calc, atoms=structures_cp[index],
                                               ghosts=ghosts_lists_cp[index], dry_run=dry_run)
         # Get the energy from the converged output.
         energy_i = structures_cp[index].get_potential_energy()
