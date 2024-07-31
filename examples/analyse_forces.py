@@ -18,8 +18,10 @@ def test_analyse_forces():
     from ase.build import bulk
     from carmm.analyse.forces import is_converged
     from ase.constraints import FixAtoms
-    from carmm.utils.python_env_check import python_env_check
-    if python_env_check(8) == True:
+
+    # Ensures correct import
+    from carmm.utils.python_env_check import ase_env_check
+    if ase_env_check('3.23.0'):
         from ase.filters import FrechetCellFilter
     else:
         from ase.constraints import ExpCellFilter
