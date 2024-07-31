@@ -130,16 +130,16 @@ def get_aims_and_sockets_calculator(dimensions,
     # and we add in the sockets flag. This is a bit of a hack but it works.
 
     # fhi_calc.set(use_pimd_wrapper=[host, port])
-    fhi_calc_with_sockets = Aims(
+    fhi_calc = Aims(
         template=fhi_calc.template,
         profile=fhi_calc.profile,
         directory=fhi_calc.directory,
-        fhi_calc.parameters,
+        parameters=fhi_calc.parameters,
         use_pimd_wrapper=[host, port])
 
     # Setup sockets calculator that "wraps" FHI-aims
     from ase.calculators.socketio import SocketIOCalculator
-    socket_calc = SocketIOCalculator(fhi_calc_with_sockets, log=logfile, port=port)
+    socket_calc = SocketIOCalculator(fhi_calc, log=logfile, port=port)
 
     if codata_warning:
         print("You are using i-Pi based socket connectivity between ASE and FHI-aims.")
@@ -160,8 +160,7 @@ def get_aims_and_sockets_calculator(dimensions,
             "If you have previous results from the non-sockets calculator, the energy conversion is approximately [Sockets] = [Non-sockets] * 1.00000005204439.")
         print("You can turn off this message by setting 'codata_warning' keyword to False.")
 
-    return socket_calc, fhi_calc_with_sockets
-
+    return socket_calc, fhi_calc
 
 def _check_socket(host, port, verbose=False):
     '''
