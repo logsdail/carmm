@@ -25,12 +25,11 @@ def get_aims_calculator(dimensions, spin=None, relativistic=None, k_grid=None, x
     from carmm.utils.python_env_check import python_env_check
 
     # Changing to check ASE version, as this determines behaviour of calculator
-    #if python_env_check(8):
-    import ase
-    if ase.__version__ < '3.23.0': 
-        from ase.calculators.aims import Aims, Aims as AimsProfile
-    else:
+    from carmm.utils.python_env_check import ase_env_check
+    if ase_env_check('3.23.0'):
         from ase.calculators.aims import Aims, AimsProfile
+    else:
+        from ase.calculators.aims import Aims, Aims as AimsProfile
 
     # Default is suitable for molecular calculations
 
@@ -130,17 +129,19 @@ def get_aims_and_sockets_calculator(dimensions,
     # **kwargs is a passthrough of keyword arguments
     fhi_calc = get_aims_calculator(dimensions, **kwargs)
     # Add in PIMD command to get sockets working
-    # This doesn't work as of ASE v3.23, so instead here we create a new calculator with settings copied across
+    from carmm.utils.python_env_check import ase_env_check
+    if ase_env_check('3.23.0'):
+    # The set() doesn't work as of ASE v3.23, so instead here we create a new calculator with settings copied across
     # and we add in the sockets flag. This is a bit of a hack but it works.
-    # fhi_calc.set(use_pimd_wrapper=[host, port])
-
-    from ase.calculators.aims import Aims
-    fhi_calc = Aims(
-        template=fhi_calc.template,
-        profile=fhi_calc.profile,
-        directory=fhi_calc.directory,
-        parameters=fhi_calc.parameters,
-        use_pimd_wrapper=[host, port])
+        from ase.calculators.aims import Aims
+        fhi_calc = Aims(
+            template=fhi_calc.template,
+            profile=fhi_calc.profile,
+            directory=fhi_calc.directory,
+            parameters=fhi_calc.parameters,
+            use_pimd_wrapper=[host, port])
+    else: # Old method
+        fhi_calc.set(use_pimd_wrapper=[host, port])
 
     # Setup sockets calculator that "wraps" FHI-aims
     from ase.calculators.socketio import SocketIOCalculator
