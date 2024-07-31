@@ -25,7 +25,7 @@ def get_aims_calculator(dimensions, spin=None, relativistic=None, k_grid=None, x
     from carmm.utils.python_env_check import python_env_check
 
     # Changing to check ASE version, as this determines behaviour of calculator
-    #if python_env_check(8) == True:
+    #if python_env_check(8):
     import ase
     if ase.__version__ < '3.23.0': 
         from ase.calculators.aims import Aims, Aims as AimsProfile
@@ -37,7 +37,7 @@ def get_aims_calculator(dimensions, spin=None, relativistic=None, k_grid=None, x
     # Set the XC for the calculation. For LibXC, override_warning_libxc *needs*
     # to be set first, otherwise we get a termination.
 
-    # Created dictionary to store argumets
+    # Created dictionary to store arguments
     parameter_dict = {}
     if "libxc" in xc:
         parameter_dict['override_warning_libxc'] = 'true'
