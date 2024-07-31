@@ -51,6 +51,8 @@ jobs:
         python -m pip install mace-torch==0.3.4 
         python -m pip install pymatgen
         
+        # Debug
+        python -m pip freeze
     
     # Setup Python environment
     - name: Setup Python environment
