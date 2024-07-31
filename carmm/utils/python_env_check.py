@@ -11,21 +11,22 @@ deprecation() is a sub function of python_env_check() that outputs a Deprecation
 is_env_python() function checks if the environment version entered as an argument is true, by printing 1 or 0
 """
 
-import sys
-import warnings
-
-
 def deprecation(message):
+    import warnings
+
     # sub-function of python_env_check()
-   warnings.warn(message, DeprecationWarning, stacklevel=2)
+    warnings.warn(message, DeprecationWarning, stacklevel=2)
 
 
 def python_env_check(version=None):
-    while version is not None:
+    import sys
+
+    if version is not None:
         if sys.version_info.minor >= version:
             return True
         else:
             return False
+    # Default, check version is at minimum Python 3.7
     else:
         print('\n' + sys.version)
         if sys.version_info.minor == 7:
@@ -37,6 +38,8 @@ def python_env_check(version=None):
 
 
 def is_env_python_minor(version):
+    import sys
+
     #sub-function of is_env_python()
     if sys.version_info.minor == version:
         print("1")
@@ -45,6 +48,8 @@ def is_env_python_minor(version):
 
 
 def is_env_python_major_and_minor(version):
+    import sys
+
     # sub-function of is_env_python()
     if sys.version_info.major == version[0] and sys.version_info.minor == version[1]:
         print("1")
