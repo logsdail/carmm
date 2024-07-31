@@ -1,16 +1,16 @@
 # Author: Igor Kowalec
 import os
-import numpy as np
+#import numpy as np
 from ase.calculators.emt import EMT
 from ase import Atoms
 from ase.io import read
-from ase.vibrations import Vibrations
+#from ase.vibrations import Vibrations
 from carmm.analyse.forces import is_converged
 from carmm.run.aims_path import set_aims_command
 from ase.io import Trajectory
 from carmm.run.workflows.helper import CalculationHelper
 from carmm.utils.logger_set import set_logger
-from ase.optimize import BFGS
+#from ase.optimize import BFGS
 
 # TODO: Enable serialization with ASE db - save locations of converged files as well as all properties
 
@@ -172,6 +172,7 @@ class ReactAims:
         """
         opt_restarts = 0
         if not optimiser:
+            from ase.optimize import BFGS 
             optimiser = BFGS
 
         if not is_converged(self.initial, fmax):
@@ -492,6 +493,8 @@ class ReactAims:
         Returns:
             Vibrations object
         """
+        from ase.vibrations import Vibrations
+        import numpy as np
 
         """Retrieve common properties"""
         basis_set = self.basis_set
