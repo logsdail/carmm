@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 '''
 
 TODO: Needs high level description
@@ -5,25 +6,25 @@ TODO: Needs high level description
 '''
 def test_analyse_counterpoise():
 
-    import os
-    import subprocess
-
+    from os import getcwd, chdir
     from ase.io import read
 
     from carmm.analyse.counterpoise_onepot import counterpoise_calc
     from carmm.run.aims_calculator import get_aims_calculator
     from carmm.run.aims_path import set_aims_command
-    from ase import __version__ as aseVersion
+    from carmm.utils.python_env_check import ase_env_check
 
 
     # This is an example script for using counterpoise_calc for counterpoise (CP) correction. Please note the species
     # files in data/CO_BSSE are fake ones and default species settings are also deleted from aims.out.
 
     CO = read('data/CO_BSSE/C_monoxide_pbe.traj')
-    examples_directory = os.getcwd()
+    examples_directory = getcwd()
 
+    # Old calculator:
     # Construct the calculator
-    if aseVersion < '3.23.0':
+
+    if not ase_env_check('3.23.0'):
         toy_calc = get_aims_calculator(dimensions=0, xc='pbe', default_initial_moment=0.5,
                                        directory=examples_directory+'/data/CO_BSSE',
                                        species_dir=examples_directory+'/data/CO_BSSE')
@@ -62,7 +63,6 @@ def test_analyse_counterpoise():
     f = open(str(toy_calc.directory) + '/' + "geometry.in", 'r')
     lines = f.readlines()
     assert lines[-1] == "empty -0.0000000000000000 0.0000000000000000 -0.6536947973321450 C\n"
-
 
 test_analyse_counterpoise()
 

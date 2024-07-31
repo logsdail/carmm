@@ -15,10 +15,14 @@ def test_analyse_forces():
     from ase.build import molecule
     from ase.calculators.emt import EMT
     from ase.optimize import BFGSLineSearch
-    from ase.constraints import ExpCellFilter
     from ase.build import bulk
     from carmm.analyse.forces import is_converged
     from ase.constraints import FixAtoms
+    from carmm.utils.python_env_check import python_env_check
+    if python_env_check(8) == True:
+        from ase.filters import FrechetCellFilter
+    else:
+        from ase.constraints import ExpCellFilter
 
     fmax = 0.01 # eV/Angstrom
     atoms = molecule("CO2")
@@ -28,7 +32,7 @@ def test_analyse_forces():
     opt = BFGSLineSearch(atoms)
     print(is_converged(atoms, fmax))
     assert not is_converged(atoms, fmax)
-    print(atoms.calc.forces)
+    print(atoms.get_forces())
 
     # Returns False if optimisation has not reached to/below fmax
     opt.run(fmax=fmax*30)
@@ -51,12 +55,14 @@ def test_analyse_forces():
     # Returns True if optimised to or below desired fmax without constraints
     crystal = bulk("Cu")
     crystal.calc = EMT()
-    cell_relaxation = ExpCellFilter(crystal)
+    if python_env_check(8) == True:
+        cell_relaxation = FrechetCellFilter(crystal)
+    else:
+        cell_relaxation = ExpCellFilter(crystal)
     opt = BFGSLineSearch(cell_relaxation)
     opt.run(fmax=fmax)
     # Explicitly remove the forces from the results - some calculators (e.g. MACE) only store stress for bulk
     crystal.calc.results.pop("forces")
     assert is_converged(crystal, fmax)
-
 
 test_analyse_forces()

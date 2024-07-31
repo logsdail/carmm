@@ -1,6 +1,6 @@
 
 def test_set_logger():
-    from carmm.err_handler.logger_set import set_logger
+    from carmm.utils.logger_set import set_logger
 
     #TODO: MAKE THIS TEST ACTUALLY TEST CAPTURED OUTPUT
 

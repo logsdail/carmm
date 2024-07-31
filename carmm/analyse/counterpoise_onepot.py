@@ -35,8 +35,9 @@ def counterpoise_calc(complex_struc, a_id, b_id, fhi_calc=None, a_name=None, b_n
 
     Returns: float. counterpoise correction value for basis set superposition error
     """
-    from ase import __version__ as aseVersion
-    from ase.calculators.aims import Aims
+
+    from carmm.utils.python_env_check import ase_env_check
+
     print("Use version 230612 or newer ones, or empty sites won't work with PBC\n")
     # Check if a_id and b_id are mapped correctly and convert symbols to indices
     a_id, b_id = check_and_convert_id(complex_struc, a_id, b_id)
@@ -59,7 +60,8 @@ def counterpoise_calc(complex_struc, a_id, b_id, fhi_calc=None, a_name=None, b_n
     # Create an empty list to store energies for postprocessing.
     energies = []
     for index in range(4):
-        if aseVersion < '3.23.0':
+
+        if not ase_env_check('3.23.0'):
             fhi_calc.outfilename = species_list[index] + '.out'
             structures_cp[index].calc = fhi_calc
             # Run the calculation. A workaround. Default calculate function doesn't work with ghost atoms.
@@ -86,6 +88,7 @@ def counterpoise_calc(complex_struc, a_id, b_id, fhi_calc=None, a_name=None, b_n
             # Get the energy from the converged output.
             energy_i = structures_cp[index].get_potential_energy()
             energies.append(energy_i)
+
     # Counterpoise correction for basis set superposition error. See docstring for the formula.
     cp_corr = energies[0] + energies[2] - energies[1] - energies[3]
 
@@ -93,7 +96,6 @@ def counterpoise_calc(complex_struc, a_id, b_id, fhi_calc=None, a_name=None, b_n
         print(species_list, '\n', energies, '\n', cp_corr)
 
     return cp_corr
-
 
 def check_and_convert_id(complex_struc, a_id, b_id):
     """
@@ -166,7 +168,6 @@ def gather_info_for_write_input(complex_struc, a_id, b_id):
 
     return ghosts_cp, structures_cp
 
-
 def calculate_energy_ghost_compatible(calc, atoms=None, properties=['energy'],
                                       system_changes=['positions', 'numbers', 'cell', 'pbc',
                                                       'initial_charges', 'initial_magmoms'],
@@ -193,11 +194,12 @@ def calculate_energy_ghost_compatible(calc, atoms=None, properties=['energy'],
     Calculator.calculate(calc, atoms, properties, system_changes)
     calc.write_input(calc.atoms, properties, system_changes, ghosts=ghosts)
     command = calc.command
+    
     if dry_run:  # Only for CI tests
-        command = ''
+        command = ''  # Used to be 'ls'
+        
     subprocess.check_call(command, shell=True, cwd=calc.directory)
     calc.read_results()
-
 
 # Lazy work around
 def get_energy_dryrun(dir, outputname):
