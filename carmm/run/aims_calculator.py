@@ -131,11 +131,11 @@ def get_aims_and_sockets_calculator(dimensions,
 
     # fhi_calc.set(use_pimd_wrapper=[host, port])
     fhi_calc = Aims(
-        template=fhi_calc.template
+        template=fhi_calc.template,
         profile=fhi_calc.profile,
         directory=fhi_calc.directory,
         fhi_calc.parameters,
-        use_pimd_wrapper=[host, port]
+        use_pimd_wrapper=[host, port])
 
     # Setup sockets calculator that "wraps" FHI-aims
     from ase.calculators.socketio import SocketIOCalculator
