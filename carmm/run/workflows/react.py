@@ -288,8 +288,6 @@ class ReactAims:
 
         counter, out, subdirectory_name, initial = helper.restart_setup()
 
-        print(out)
-
         if initial is not None:
             self.initial = initial
             return self.initial

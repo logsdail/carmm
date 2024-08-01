@@ -32,26 +32,25 @@ def test_analyse_forces():
 
     # Returns False prior to optimisation (no forces in calculator)
     opt = BFGSLineSearch(atoms)
-    print(is_converged(atoms, fmax))
+    # print(is_converged(atoms, fmax))
     assert not is_converged(atoms, fmax)
-    print(atoms.get_forces())
 
     # Returns False if optimisation has not reached to/below fmax
     opt.run(fmax=fmax*30)
-    print(is_converged(atoms, fmax))
+    # print(is_converged(atoms, fmax))
     assert not is_converged(atoms, fmax)
 
     # Returns True if optimised to or below desired fmax with constraints
     c = FixAtoms(indices=[0,1])
     atoms.set_constraint(c)
     opt.run(fmax=fmax)
-    print(is_converged(atoms, fmax))
+    # print(is_converged(atoms, fmax))
     assert is_converged(atoms, fmax)
 
     # Returns True if optimised to or below desired fmax without constraints
     atoms.set_constraint()
     opt.run(fmax=fmax)
-    print(is_converged(atoms, fmax))
+    # print(is_converged(atoms, fmax))
     assert is_converged(atoms, fmax)
 
     # Returns True if optimised to or below desired fmax without constraints
