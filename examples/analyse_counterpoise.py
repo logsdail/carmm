@@ -46,7 +46,7 @@ def test_analyse_counterpoise():
 #        #                               species_dir=examples_directory+'/data/CO_BSSE', profile=fake_profile)
 
     toy_calc = get_aims_calculator(dimensions=0, xc='pbe', default_initial_moment=0.5,
-                                   spin='collinear'
+                                   spin='collinear',
                                    directory=examples_directory+'/data/CO_BSSE',
                                    species_dir=examples_directory+'/data/CO_BSSE')
 
