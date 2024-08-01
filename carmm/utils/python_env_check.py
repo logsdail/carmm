@@ -2,8 +2,6 @@
 Created on Fri 12/07/24
 
 @author Firas Assa
-
-is_env_python() function checks if the environment version entered as an argument is true, by printing 1 or 0
 """
 
 def deprecation(message, stacklevel=2):
