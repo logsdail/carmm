@@ -1,4 +1,4 @@
-# This is a basic workflow to help you get started with Actions
+# This is a basic workflow
 name: ci-tests
 
 # Controls when the action will run. Triggers the workflow on push or pull request
@@ -15,38 +15,45 @@ jobs:
   # This workflow contains a single job called "build"
   build:
     # This allows us to find the workflow in checks
-    name: ci-test-build
+    name: ci-test
     
     # The type of runner that the job will run on
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        # python-version: ['3.7', '3.8', '3.9']
+        python-version: ['3.7', '3.8']
 
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
     
     # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v4
     
     # Ensure we are running Python v3.x
-    - name: Set up Python
-      uses: actions/setup-python@v1
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v5
       with:
-        # Issues with bdist_wheel on v3.9
-        #python-version: '3.x'
-        python-version: '3.7'
+        python-version: ${{ matrix.python-version }}
     
     # Install ASE so we can run our tests 
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        python -m pip install --upgrade ase==3.22.1
-        python -m pip install --upgrade catlearn
+        python -m pip install --upgrade ase
+        #Upgrading Catlearn to the most recent version 
+        python -m pip install https://github.com/SUNCAT-Center/CatLearn/archive/refs/heads/master.zip
         python -m pip install --upgrade ase-gpatom
         python -m pip install --upgrade pytest
         python -m pip install --upgrade pytest-cov
-        python -m pip install torch torchvision torchaudio
-        python -m pip install --upgrade mace-torch
-        python -m pip install pymatgen
+        # Removing as presumably MACE will automatically install dependencies
+        # python -m pip install torch torchvision torchaudio
+        # Restricted MACE as > 0.3.4 fails on Python 3.7
+        python -m pip install mace-torch==0.3.4 
+        python -m pip install --upgrade pymatgen
         
+        # Debug
+        python -m pip freeze
     
     # Setup Python environment
     - name: Setup Python environment
@@ -62,15 +69,6 @@ jobs:
         #
         # Example new implementation from: https://docs.github.com/en/free-pro-team@latest/actions/reference/workflow-commands-for-github-actions#environment-files
         echo "PYTHONPATH=/home/runner/work/carmm/carmm:$PYTHONPATH" >> $GITHUB_ENV
-
-#    # Look for codebreaking syntax errors and highlight style errors
-#    - name: Lint with flake8
-#      run: |
-#        pip install flake8
-#        # stop the build if there are Python syntax errors or undefined names
-#        flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
-#        # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
-#        flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
 
     # Runs a set of commands using the runners shell
     # Updated to run on pytest so we might be able to export data
