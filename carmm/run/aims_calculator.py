@@ -57,7 +57,7 @@ def get_aims_calculator(dimensions, spin=None, relativistic=None, k_grid=None, x
         from ase.calculators.aims import AimsProfile
 
         fhi_calc = Aims(
-            profile=AimsProfile(),
+            profile=AimsProfile(command=''), # Dummy argument, as command is set to environment variable
             compute_forces=compute_forces,
             directory=directory,
             # Merged **parameter_dict with **kwargs
