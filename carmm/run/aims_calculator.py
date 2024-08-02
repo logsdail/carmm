@@ -8,33 +8,32 @@ def get_aims_calculator(dimensions, spin=None, relativistic=None, k_grid=None, x
 
         dimensions: Integer
             Determines whether we have a "gas"-phase (0) or "periodic" structure (2 or 3)
+        spin: String
+            Determines if spin is to be invoked for the calculation
+        relativistic: String
+            Determines what setting for relativity is to be used
         k_grid: List of integers
             Gives the k-grid sampling in x-, y- and z- direction. e.g. [3, 3, 3]
         xc: String
             XC of choice
         compute_forces: String
             Determines whether forces are enabled ("true") or not enabled ("false").
-    **kwargs:
-        Any other keyword arguments that a user wants to set. These are passed through.
+        directory: String
+            ???
+        **kwargs:
+            Any other keyword arguments that a user wants to set. These are passed through.
         
     Returns:
             FHI_calc: FHI-aims ASE calculator
        
     '''
-    # Changing to check ASE version, as this determines behaviour of calculator
-    from carmm.utils.python_env_check import ase_env_check
-    if ase_env_check('3.23.0'):
-        from ase.calculators.aims import Aims, AimsProfile
-    else:
-        from ase.calculators.aims import Aims, Aims as AimsProfile
-
-    # Default is suitable for molecular calculations
-
-    # Set the XC for the calculation. For LibXC, override_warning_libxc *needs*
-    # to be set first, otherwise we get a termination.
+    from ase.calculators.aims import Aims    
 
     # Created dictionary to store arguments
     parameter_dict = {}
+    
+    # Set the XC for the calculation. For LibXC, override_warning_libxc *needs*
+    # to be set first, otherwise we get a termination.
     if "libxc" in xc:
         parameter_dict['override_warning_libxc'] = 'true'
     parameter_dict['xc'] = xc
@@ -51,14 +50,27 @@ def get_aims_calculator(dimensions, spin=None, relativistic=None, k_grid=None, x
     if relativistic is None:
         parameter_dict['relativistic'] = ('atomic_zora', 'scalar')
 
-    fhi_calc = Aims(
-        profile=AimsProfile(command='xc'),
-        compute_forces=compute_forces,
-        directory=directory,
-        # Merged **parameter_dict with **kwargs
-        **{**parameter_dict, **kwargs}
-    )
-    #fhi_calc._directory=directory
+    # Changing to check ASE version, as this determines behaviour of calculator
+    from carmm.utils.python_env_check import ase_env_check
+    if ase_env_check('3.23.0'):
+        # Need a profile for the calculator
+        from ase.calculators.aims import AimsProfile
+
+        fhi_calc = Aims(
+            profile=AimsProfile(),
+            compute_forces=compute_forces,
+            directory=directory,
+            # Merged **parameter_dict with **kwargs
+            **{**parameter_dict, **kwargs}
+        )
+    else:
+        fhi_calc = Aims(
+            compute_forces=compute_forces,
+            directory=directory,
+            # Merged **parameter_dict with **kwargs
+            **{**parameter_dict, **kwargs}
+        )
+
     return fhi_calc
 
 
