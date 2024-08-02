@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 '''
-This example shows usage of symmetry operation tools for FCC lattice.
+This example shows usage of symmetry operation analysis for FCC lattice.
 So far, functionality is implemented only for low index surfaces:
 (111), (110) and (100)
 

@@ -38,23 +38,18 @@ def test_run_aims():
             assert os.environ['ASE_AIMS_COMMAND'] == expected_paths_taskfarm[hpc], f"Path incorrect on {hpc}: {expected_paths_taskfarm[hpc]}\n" \
                                                                                    f"Currently: {os.environ['ASE_AIMS_COMMAND']}"
 
-    import ase # Necessary to check the code version, as socket functionality has changed
-    ase_major_version = int(ase.__version__.split(".")[0])
-    ase_minor_version = int(ase.__version__.split(".")[1])
-
     from ase.calculators.aims import Aims
     from carmm.run.aims_calculator import get_aims_and_sockets_calculator
+    from carmm.utils.python_env_check import ase_env_check
 
     for state in range(4):
         #fhi_calc = get_aims_calculator(state)
         sockets_calc, fhi_calc = get_aims_and_sockets_calculator(state, verbose=True)
 
         # Assertion test that the correct calculators are being set
-        # ASE version 3.21 or earlier
-        if ase_major_version <= 3 and ase_minor_version <= 21:
-            assert (type(sockets_calc.calc) == Aims)
-        else:
-        # ASE Version 3.22 or later
+        if ase_env_check('3.22.0'):
             assert(type(sockets_calc.launch_client.calc) == Aims)
+        else:
+            assert (type(sockets_calc.calc) == Aims)
 
 test_run_aims()
