@@ -90,7 +90,7 @@ The warning message can be turned off if set to False.</p></li>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="carmm.run.aims_calculator.get_aims_calculator">
-<span class="sig-prename descclassname"><span class="pre">carmm.run.aims_calculator.</span></span><span class="sig-name descname"><span class="pre">get_aims_calculator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dimensions</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">k_grid</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">xc</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'pbe'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">compute_forces</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'true'</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#carmm.run.aims_calculator.get_aims_calculator" title="Link to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">carmm.run.aims_calculator.</span></span><span class="sig-name descname"><span class="pre">get_aims_calculator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dimensions</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">spin</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">relativistic</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">k_grid</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">xc</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'pbe'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">compute_forces</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'true'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">directory</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'./'</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#carmm.run.aims_calculator.get_aims_calculator" title="Link to this definition">¶</a></dt>
 <dd><p>Method to return a “default” FHI-aims calculator.
 Note: This file should not be changed without consultation,</p>
 <blockquote>
@@ -101,25 +101,26 @@ Note: This file should not be changed without consultation,</p>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>dimensions</strong> – Integer
 Determines whether we have a “gas”-phase (0) or “periodic” structure (2 or 3)</p></li>
+<li><p><strong>spin</strong> – String
+Determines if spin is to be invoked for the calculation</p></li>
+<li><p><strong>relativistic</strong> – String
+Determines what setting for relativity is to be used</p></li>
 <li><p><strong>k_grid</strong> – List of integers
 Gives the k-grid sampling in x-, y- and z- direction. e.g. [3, 3, 3]</p></li>
 <li><p><strong>xc</strong> – String
 XC of choice</p></li>
 <li><p><strong>compute_forces</strong> – String
 Determines whether forces are enabled (“true”) or not enabled (“false”).</p></li>
+<li><p><strong>directory</strong> – String
+???</p></li>
+<li><p><strong>**kwargs</strong> – Any other keyword arguments that a user wants to set. These are passed through.</p></li>
 </ul>
 </dd>
-</dl>
-<dl class="simple">
-<dt><a href="#id3"><span class="problematic" id="id4">**</span></a>kwargs:</dt><dd><p>Any other keyword arguments that a user wants to set. These are passed through.</p>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>FHI-aims ASE calculator</p>
 </dd>
-</dl>
-<dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>FHI-aims ASE calculator</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>FHI_calc</p>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>FHI_calc</p>
 </dd>
 </dl>
 </dd></dl>
@@ -216,7 +217,7 @@ for users.</p>
           
         </div>
       </div>
-      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
         <div class="sphinxsidebarwrapper">
 <h1 class="logo"><a href="index.html">CARMM</a></h1>
 
@@ -262,7 +263,7 @@ for users.</p>
       &#169;2024, Logsdail Group.
       
       |
-      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 7.3.7</a>
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 7.4.7</a>
       &amp; <a href="https://alabaster.readthedocs.io">Alabaster 0.7.16</a>
       
       |

@@ -124,26 +124,10 @@ carmm.analyse.planes module
    :undoc-members:
    :show-inheritance:
 
-carmm.analyse.povray\_render module
------------------------------------
-
-.. automodule:: carmm.analyse.povray_render
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
 carmm.analyse.surface\_area module
 ----------------------------------
 
 .. automodule:: carmm.analyse.surface_area
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-carmm.analyse.traj\_to\_gif module
-----------------------------------
-
-.. automodule:: carmm.analyse.traj_to_gif
    :members:
    :undoc-members:
    :show-inheritance:
