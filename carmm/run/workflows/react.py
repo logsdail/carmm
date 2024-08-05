@@ -10,6 +10,7 @@ from carmm.run.aims_path import set_aims_command
 from ase.io import Trajectory
 from carmm.run.workflows.helper import CalculationHelper
 from carmm.utils.logger_set import set_logger
+from carmm.utils.python_env_check import ase_env_check
 #from ase.optimize import BFGS
 
 # TODO: Enable serialization with ASE db - save locations of converged files as well as all properties
@@ -579,32 +580,37 @@ def _calc_generator(params,
     from carmm.run.aims_calculator import get_aims_and_sockets_calculator
     """On machines where ASE and FHI-aims are run separately (e.g. ASE on login node, FHI-aims on compute nodes)
     we need to specifically state what the name of the login node is so the two packages can communicate"""
+    
+    """Remove previous xc argument to ensure libxc warning override is first"""
+    parameters = dict(**params)
+    xc = parameters['xc']
+    del parameters['xc']
+    if "libxc" in xc:
+        parameters['override_warning_libxc'] ='True'
+    parameters['xc'] = xc
+
+    """Forces required for optimisation"""
+    if not forces:
+        del parameters['compute_forces']
+
+    """Add analytical stress keyword for unit cell relaxation"""
+    if relax_unit_cell:
+        assert dimensions == 3, "Strain Filter calculation requested, but the system is not periodic in 3 dimensions."
+        parameters['compute_analytical_stress'] = 'True'
+
     sockets_calc, fhi_calc = get_aims_and_sockets_calculator(dimensions=dimensions,
                                                              logfile=f"{directory}/socketio.log",
                                                              verbose=True,
                                                              codata_warning=False,
                                                              directory=directory
-                                                             )
-
-    """Remove previous xc argument to ensure libxc warning override is first"""
-    fhi_calc.parameters = {k: v for k, v in fhi_calc.parameters.items() if k != 'xc'}
-    fhi_calc.parameters['override_warning_libxc'] ='True'
-
-    """Forces required for optimisation"""
-    if not forces:
-        fhi_calc.parameters = {k: v for k, v in fhi_calc.parameters.items() if k != 'compute_forces'}
-
-    """Add analytical stress keyword for unit cell relaxation"""
-    if relax_unit_cell:
-        assert dimensions == 3, "Strain Filter calculation requested, but the system is not periodic in 3 dimensions."
-        fhi_calc.parameters['compute_analytical_stress'] = 'True'
+                                                             **parameters)
 
     """Set a unique .out output name"""
-    fhi_calc.outfilename = out_fn
-
-    """FHI-aims settings set up"""
-    for k, v in params.items():
-        fhi_calc.parameters[k] = v
+    from carmm.utils.python_env_check import ase_env_check
+        if not ase_env_check('3.23.0'):
+            fhi_calc.outfilename = out_fn
+        else:
+            fhi_calc.template.outputname = out_fn
 
     return sockets_calc, fhi_calc
 
