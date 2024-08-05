@@ -1,38 +1,5 @@
 from ase.geometry import get_distances, get_distances_derivatives
 import numpy as np
-from functools import wraps
-from time import time
-
-def timing(f):
-    """
-    Decorator function used for timing information during code optimisation.
-    Could be moved to a more general location if timing information is desired,
-    but I suspect many operations in CARMM are relatively quick/trivial anyway
-
-    Examples
-    --------
-    @timing
-    def func(x):
-        return x
-
-
-    Parameters
-    ----------
-    f
-
-    Returns
-    -------
-
-    """
-    @wraps(f)
-    def wrap(*args, **kw):
-        ts = time()
-        result = f(*args, **kw)
-        te = time()
-        print('func:%r took: %2.4f sec' % \
-          (f.__name__, te-ts))
-        return result
-    return wrap
 
 def get_bond_dist_and_deriv(atoms, bond_list, input_pos=None, deriv_only=False, constraints=None):
     """
