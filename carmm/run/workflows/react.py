@@ -590,7 +590,7 @@ def _calc_generator(params,
     parameters['xc'] = xc
 
     """Forces required for optimisation"""
-    if not forces:
+    if not forces and ('compute_forces' in parameters):
         del parameters['compute_forces']
 
     """Add analytical stress keyword for unit cell relaxation"""
