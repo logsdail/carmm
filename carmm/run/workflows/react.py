@@ -602,7 +602,7 @@ def _calc_generator(params,
                                                              logfile=f"{directory}/socketio.log",
                                                              verbose=True,
                                                              codata_warning=False,
-                                                             directory=directory
+                                                             directory=directory,
                                                              **parameters)
 
     """Set a unique .out output name"""
