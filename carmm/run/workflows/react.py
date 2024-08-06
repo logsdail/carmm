@@ -173,7 +173,7 @@ class ReactAims:
         """
         opt_restarts = 0
         if not optimiser:
-            from ase.optimize import BFGS 
+            from ase.optimize import BFGS
             optimiser = BFGS
 
         if not is_converged(self.initial, fmax):
@@ -580,9 +580,9 @@ def _calc_generator(params,
     from carmm.run.aims_calculator import get_aims_and_sockets_calculator
     """On machines where ASE and FHI-aims are run separately (e.g. ASE on login node, FHI-aims on compute nodes)
     we need to specifically state what the name of the login node is so the two packages can communicate"""
-    
+
     """Remove previous xc argument to ensure libxc warning override is first"""
-    parameters = dict(**params)
+    parameters = dict(params)
     xc = parameters['xc']
     del parameters['xc']
     if "libxc" in xc:
@@ -606,11 +606,10 @@ def _calc_generator(params,
                                                              **parameters)
 
     """Set a unique .out output name"""
-    from carmm.utils.python_env_check import ase_env_check
-        if not ase_env_check('3.23.0'):
-            fhi_calc.outfilename = out_fn
-        else:
-            fhi_calc.template.outputname = out_fn
+    if not ase_env_check('3.23.0'):
+        fhi_calc.outfilename = out_fn
+    else:
+        fhi_calc.template.outputname = out_fn
 
     return sockets_calc, fhi_calc
 
