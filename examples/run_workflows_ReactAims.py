@@ -20,7 +20,7 @@ def test_run_workflows_ReactAims():
     os.chdir("data/react")
 
     '''Determine calculation input settings'''
-    params = {"xc":"pbe"}
+    params = {"xc":"libxc MGGA_X_MBEEF+GGA_C_PBE_SOL", "compute_forces": '.true.'}
     basis_set = "light"
     hpc = "hawk"
 
