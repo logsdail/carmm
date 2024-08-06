@@ -1,3 +1,6 @@
+import os
+
+
 def get_aims_calculator(dimensions, spin=None, relativistic=None, k_grid=None, xc="pbe", compute_forces="true", directory='./', **kwargs):
     '''
     Method to return a "default" FHI-aims calculator.
@@ -57,7 +60,8 @@ def get_aims_calculator(dimensions, spin=None, relativistic=None, k_grid=None, x
         from ase.calculators.aims import AimsProfile
 
         fhi_calc = Aims(
-            profile=AimsProfile(command=''), # Dummy argument, as command is set to environment variable
+            profile=AimsProfile(command=os.environ["ASE_AIMS_COMMAND"],
+                                default_species_directory=os.environ["AIMS_SPECIES_DIR"]), # Dummy argument, as command is set to environment variable
             compute_forces=compute_forces,
             directory=directory,
             # Merged **parameter_dict with **kwargs
