@@ -582,28 +582,26 @@ def _calc_generator(params,
     we need to specifically state what the name of the login node is so the two packages can communicate"""
 
     """Remove previous xc argument to ensure libxc warning override is first"""
-    parameters = dict(params)
-    xc = parameters['xc']
-    del parameters['xc']
-    if "libxc" in xc:
-        parameters['override_warning_libxc'] ='True'
-    parameters['xc'] = xc
+    xc = params['xc']
+    fhi_params = {k: v for k, v in params.items() if k != 'xc'}
+    fhi_params['override_warning_libxc'] = 'True'
+    fhi_params['xc'] = xc
 
     """Forces required for optimisation"""
-    if not forces and ('compute_forces' in parameters):
-        del parameters['compute_forces']
+    if not forces:
+        fhi_params = {k: v for k, v in fhi_params.items() if k != 'compute_forces'}
 
     """Add analytical stress keyword for unit cell relaxation"""
     if relax_unit_cell:
         assert dimensions == 3, "Strain Filter calculation requested, but the system is not periodic in 3 dimensions."
-        parameters['compute_analytical_stress'] = 'True'
+        fhi_params['compute_analytical_stress'] = 'True'
 
     sockets_calc, fhi_calc = get_aims_and_sockets_calculator(dimensions=dimensions,
                                                              logfile=f"{directory}/socketio.log",
                                                              verbose=True,
                                                              codata_warning=False,
                                                              directory=directory,
-                                                             **parameters)
+                                                             **fhi_params)
 
     """Set a unique .out output name"""
     if not ase_env_check('3.23.0'):
