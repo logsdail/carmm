@@ -52,5 +52,9 @@ def test_run_aims():
         else:
             assert (type(sockets_calc.calc) == Aims)
 
+    del os.environ['ASE_AIMS_COMMAND']
+    err_return = get_aims_and_sockets_calculator(0, verbose=True)
+    assert err_return is None
+
 
 test_run_aims()

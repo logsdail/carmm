@@ -65,6 +65,7 @@ def get_aims_calculator(dimensions, spin=None, relativistic=None, k_grid=None, x
                 raise KeyError
         except KeyError:
             print('Environment variables $ASE_AIMS_COMMAND and $AIMS_SPECIES_DIR are not set')
+            return None
         fhi_calc = Aims(
             # Load profile from environment variables
             profile=AimsProfile(command=os.environ["ASE_AIMS_COMMAND"],
