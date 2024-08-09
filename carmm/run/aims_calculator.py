@@ -58,14 +58,11 @@ def get_aims_calculator(dimensions, spin=None, relativistic=None, k_grid=None, x
     if ase_env_check('3.23.0'):
         # Need a profile for the calculator
         from ase.calculators.aims import AimsProfile
-        try:
-            ase_aims_command = os.environ.get("ASE_AIMS_COMMAND")
-            aims_species_dir = os.environ.get("AIMS_SPECIES_DIR")
-            if ase_aims_command is None or aims_species_dir is None:
-                raise KeyError
-        except KeyError:
-            print('Environment variables $ASE_AIMS_COMMAND and $AIMS_SPECIES_DIR are not set')
-            return None
+        ase_aims_command = os.environ.get("ASE_AIMS_COMMAND")
+        aims_species_dir = os.environ.get("AIMS_SPECIES_DIR")
+        if ase_aims_command is None or aims_species_dir is None:
+            raise KeyError('Environment variables $ASE_AIMS_COMMAND and $AIMS_SPECIES_DIR are not set')
+
         fhi_calc = Aims(
             # Load profile from environment variables
             profile=AimsProfile(command=os.environ["ASE_AIMS_COMMAND"],
