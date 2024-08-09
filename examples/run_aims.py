@@ -52,7 +52,7 @@ def test_run_aims():
         else:
             assert (type(sockets_calc.calc) == Aims)
 
-    os.environ['ASE_AIMS_COMMAND'] = None
+    del os.environ['ASE_AIMS_COMMAND']
     error_message = get_aims_and_sockets_calculator(0, verbose=True)
     assert error_message == KeyError('Environment variables $ASE_AIMS_COMMAND and $AIMS_SPECIES_DIR are not set')
 
