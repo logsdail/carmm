@@ -68,6 +68,7 @@ def test_run_aims():
             assert (type(sockets_calc.calc) == Aims)
 
     exception_test = TestEnvVarCheck()
+    exception_test.test_check_env_var()
 
 test_run_aims()
 
