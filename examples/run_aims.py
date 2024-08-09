@@ -57,9 +57,9 @@ def test_run_aims():
     # Test to make sure that we correctly handle scenario when environment variable isn't
     # set in ASE 3.23. This presents issues downstream, so environment must be set 
     # i.e. executable and species directory.
-    from unittest import assertRaises
-    with assertRaises(KeyError):
+    from unittest import TestCase
+    with TestCase.assertRaises(KeyError):
                 del os.environ['ASE_AIMS_COMMAND']
-                fhi_calc = get_aims_calculator() 
+                fhi_calc = get_aims_calculator(dimensions=0) 
 
 test_run_aims()
