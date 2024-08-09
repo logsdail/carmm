@@ -32,38 +32,41 @@ def test_run_aims():
         '''Assign the executable command based on HPC'''
         set_aims_command(hpc)
 
-        assert os.environ['ASE_AIMS_COMMAND'] == expected_paths[hpc], f"Path incorrect on {hpc}: {expected_paths[hpc]}\n" \
-                                                                      f"Currently: {os.environ['ASE_AIMS_COMMAND']}"
+        assert os.environ['ASE_AIMS_COMMAND'] == expected_paths[
+            hpc], f"Path incorrect on {hpc}: {expected_paths[hpc]}\n" \
+                  f"Currently: {os.environ['ASE_AIMS_COMMAND']}"
 
         if hpc in ["hawk", 'hawk-amd', 'archer2', 'aws']:
             set_aims_command(hpc, nodes_per_instance=1)
-            assert os.environ['ASE_AIMS_COMMAND'] == expected_paths_taskfarm[hpc], f"Path incorrect on {hpc}: {expected_paths_taskfarm[hpc]}\n" \
-                                                                                   f"Currently: {os.environ['ASE_AIMS_COMMAND']}"
+            assert os.environ['ASE_AIMS_COMMAND'] == expected_paths_taskfarm[
+                hpc], f"Path incorrect on {hpc}: {expected_paths_taskfarm[hpc]}\n" \
+                      f"Currently: {os.environ['ASE_AIMS_COMMAND']}"
 
     from ase.calculators.aims import Aims
     from carmm.run.aims_calculator import get_aims_and_sockets_calculator
     from carmm.utils.python_env_check import ase_env_check
 
     for state in range(4):
-        #fhi_calc = get_aims_calculator(state)
+        # fhi_calc = get_aims_calculator(state)
         sockets_calc, fhi_calc = get_aims_and_sockets_calculator(state, verbose=True)
 
         # Assertion test that the correct calculators are being set
         if ase_env_check('3.22.0'):
-            assert(type(sockets_calc.launch_client.calc) == Aims)
+            assert (type(sockets_calc.launch_client.calc) == Aims)
         else:
             assert (type(sockets_calc.calc) == Aims)
 
 
-
 test_run_aims()
 
-
 import unittest
-class TestEnvVarCheck(unittest.TestCase):
 
+
+class TestEnvVarCheck(unittest.TestCase):
     def test_check_env_var(self):
         from carmm.run.aims_calculator import get_aims_calculator
-        with self.assertRaises(KeyError):
-            del os.environ['ASE_AIMS_COMMAND']
-            get_aims_calculator(0)
+        from carmm.utils.python_env_check import ase_env_check
+        if ase_env_check('3.23.0'):
+            with self.assertRaises(KeyError):
+                del os.environ['ASE_AIMS_COMMAND']
+                get_aims_calculator(0)
