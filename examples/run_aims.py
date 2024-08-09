@@ -3,8 +3,6 @@
 '''
 This modules tests aims calculator on different machines
 '''
-import os
-
 
 def test_run_aims():
     from carmm.run.aims_path import set_aims_command
@@ -56,17 +54,11 @@ def test_run_aims():
         else:
             assert (type(sockets_calc.calc) == Aims)
 
+    # Test to make sure that we correctly handle scenario when environment variable isn't
+    # set in ASE 3.23. This presents issues downstream, so environment must be set 
+    # i.e. executable and species directory.
+    with self.assertRaises(KeyError):
+                del os.environ['ASE_AIMS_COMMAND']
+                get_aims_calculator(0) 
 
 test_run_aims()
-
-import unittest
-
-
-class TestEnvVarCheck(unittest.TestCase):
-    def test_check_env_var(self):
-        from carmm.run.aims_calculator import get_aims_calculator
-        from carmm.utils.python_env_check import ase_env_check
-        if ase_env_check('3.23.0'):
-            with self.assertRaises(KeyError):
-                del os.environ['ASE_AIMS_COMMAND']
-                get_aims_calculator(0)
