@@ -46,7 +46,7 @@ def test_run_aims():
 
     for state in range(4):
         # fhi_calc = get_aims_calculator(state)
-        sockets_calc, fhi_calc = get_aims_and_sockets_calculator(state, verbose=True)
+        sockets_calc, fhi_calc = get_aims_and_sockets_calculator(dimensions=state, verbose=True)
 
         # Assertion test that the correct calculators are being set
         if ase_env_check('3.22.0'):
@@ -60,6 +60,6 @@ def test_run_aims():
     from unittest import TestCase
     with TestCase.assertRaises(KeyError):
                 del os.environ['ASE_AIMS_COMMAND']
-                fhi_calc = get_aims_calculator(dimensions=0) 
+                sockets_calc, fhi_calc = get_aims_and_sockets_calculator(dimensions=0) 
 
 test_run_aims()
