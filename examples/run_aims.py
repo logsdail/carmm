@@ -3,6 +3,8 @@
 '''
 This modules tests aims calculator on different machines
 '''
+import os
+
 
 def test_run_aims():
     from carmm.run.aims_path import set_aims_command
@@ -62,5 +64,6 @@ class TestEnvVarCheck(unittest.TestCase):
 
     def test_check_env_var(self):
         from carmm.run.aims_calculator import get_aims_calculator
-        with self.assertRaises(self, KeyError):
+        with self.assertRaises(KeyError):
+            del os.environ['ASE_AIMS_COMMAND']
             get_aims_calculator(0)
