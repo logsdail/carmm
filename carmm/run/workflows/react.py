@@ -589,7 +589,7 @@ def _calc_generator(params,
                                                              **params)
 
     """Remove previous xc argument to ensure libxc warning override is first"""
-    fhi_calc.parameters = {k: v for k, v in fhi_calc.paramsmeters.items() if k != 'xc'}
+    fhi_calc.parameters = {k: v for k, v in fhi_calc.parameters.items() if k != 'xc'}
     fhi_calc.parameters['override_warning_libxc'] = 'True'
 
     """Forces required for optimisation"""
