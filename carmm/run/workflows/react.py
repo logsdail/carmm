@@ -578,30 +578,34 @@ def _calc_generator(params,
     """New method that gives a default calculator"""
 
     from carmm.run.aims_calculator import get_aims_and_sockets_calculator
+    from ase.calculators.calculator import Parameters
     """On machines where ASE and FHI-aims are run separately (e.g. ASE on login node, FHI-aims on compute nodes)
     we need to specifically state what the name of the login node is so the two packages can communicate"""
-
-    """Remove previous xc argument to ensure libxc warning override is first"""
-    xc = params['xc']
-    fhi_params = {k: v for k, v in params.items() if k != 'xc'}
-    fhi_params['override_warning_libxc'] = 'True'
-    fhi_params['xc'] = xc
-
-    """Forces required for optimisation"""
-    if not forces:
-        fhi_params = {k: v for k, v in fhi_params.items() if k != 'compute_forces'}
-
-    """Add analytical stress keyword for unit cell relaxation"""
-    if relax_unit_cell:
-        assert dimensions == 3, "Strain Filter calculation requested, but the system is not periodic in 3 dimensions."
-        fhi_params['compute_analytical_stress'] = 'True'
-
     sockets_calc, fhi_calc = get_aims_and_sockets_calculator(dimensions=dimensions,
                                                              logfile=f"{directory}/socketio.log",
                                                              verbose=True,
                                                              codata_warning=False,
                                                              directory=directory,
-                                                             **fhi_params)
+                                                             **params)
+
+    """Remove previous xc argument to ensure libxc warning override is first"""
+    fhi_calc.parameters = {k: v for k, v in fhi_calc.paramsmeters.items() if k != 'xc'}
+    fhi_calc.parameters['override_warning_libxc'] = 'True'
+
+    """Forces required for optimisation"""
+    if not forces:
+        fhi_calc.parameters = {k: v for k, v in fhi_calc.parameters.items() if k != 'compute_forces'}
+
+    """Add analytical stress keyword for unit cell relaxation"""
+    if relax_unit_cell:
+        assert dimensions == 3, "Strain Filter calculation requested, but the system is not periodic in 3 dimensions."
+        fhi_calc.parameters['compute_analytical_stress'] = 'True'
+
+    """FHI-aims settings set up"""
+    for k, v in params.items():
+        fhi_calc.parameters[k] = v
+
+    fhi_calc.parameters = Parameters(**fhi_calc.parameters)
 
     """Set a unique .out output name"""
     if not ase_env_check('3.23.0'):
