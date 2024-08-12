@@ -63,7 +63,5 @@ def test_run_aims():
         with test_get_aims_exception.assertRaises(KeyError):
             del os.environ['ASE_AIMS_COMMAND']
             get_aims_calculator(dimensions=0)
-            print('exception caught')
-
 
 test_run_aims()
