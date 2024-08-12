@@ -41,7 +41,7 @@ def test_run_aims():
                       f"Currently: {os.environ['ASE_AIMS_COMMAND']}"
 
     from ase.calculators.aims import Aims
-    from carmm.run.aims_calculator import get_aims_and_sockets_calculator
+    from carmm.run.aims_calculator import get_aims_and_sockets_calculator, get_aims_calculator
     from carmm.utils.python_env_check import ase_env_check
 
     for state in range(4):
@@ -58,8 +58,12 @@ def test_run_aims():
     # set in ASE 3.23. This presents issues downstream, so environment must be set 
     # i.e. executable and species directory.
     from unittest import TestCase
-    with TestCase.assertRaises(KeyError):
-                del os.environ['ASE_AIMS_COMMAND']
-                sockets_calc, fhi_calc = get_aims_and_sockets_calculator(dimensions=0) 
+    test_get_aims_exception = TestCase()
+    if ase_env_check('3.23.0'):
+        with test_get_aims_exception.assertRaises(KeyError):
+            del os.environ['ASE_AIMS_COMMAND']
+            get_aims_calculator(dimensions=0)
+            print('exception caught')
+
 
 test_run_aims()
