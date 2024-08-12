@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 '''
 
-TODO: Needs high level description
+This is a test case for counterpoise_onepot.py. This also gives an example on how to calculate counterpoise correction
+for BSSE with the counterpoise_calc function.
 
 '''
 
@@ -20,30 +21,6 @@ def test_analyse_counterpoise():
     set_aims_command(hpc='hawk', basis_set='light', defaults=2020)
     CO = read('data/CO_BSSE/C_monoxide_pbe.traj')
     examples_directory = getcwd()
-
-    #    # This is now all managed inside get_aims_calculator, so not needed here
-    #    # Keeping in case needed for legacy purposes
-    #    # Old calculator:
-    #    # Construct the calculator
-    #
-    #    if not ase_env_check('3.23.0'):
-    #        toy_calc = get_aims_calculator(dimensions=0, xc='pbe', default_initial_moment=0.5,
-    #                                       spin='collinear'
-    #                                       directory=examples_directory+'/data/CO_BSSE',
-    #                                       species_dir=examples_directory+'/data/CO_BSSE')
-    #        toy_calc.set(spin='collinear', relativistic='atomic_zora scalar')
-    #    else:
-    #        from ase.calculators.aims import AimsProfile, Aims
-    #        fake_profile = AimsProfile(command='', default_species_directory=examples_directory + '/data/CO_BSSE')
-    #        toy_calc = get_aims_calculator(dimensions=0, xc='pbe', spin='collinear',
-    #                                       default_initial_moment=0.5,
-    #                                       directory=examples_directory+'/data/CO_BSSE',
-    #                                       profile=fake_profile,
-    #                                       species_dir=examples_directory+'/data/CO_BSSE')
-    #        # Reverted this so we still use the get_aims_calculator - means we use one process only for definition
-    #        #toy_calc = Aims(xc='pbe', spin='collinear', default_initial_moment=0.5,
-    #        #                               relativistic='atomic_zora scalar', directory=examples_directory+'/data/CO_BSSE',
-    #        #                               species_dir=examples_directory+'/data/CO_BSSE', profile=fake_profile)
 
     toy_calc = get_aims_calculator(dimensions=0, xc='pbe', default_initial_moment=0.5,
                                    spin='collinear',

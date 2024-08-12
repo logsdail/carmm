@@ -589,7 +589,6 @@ def _calc_generator(params,
                                                              **params)
 
     """Remove previous xc argument to ensure libxc warning override is first"""
-    fhi_calc.parameters = {k: v for k, v in fhi_calc.parameters.items() if k != 'xc'}
     fhi_calc.parameters['override_warning_libxc'] = 'True'
 
     """Forces required for optimisation"""
@@ -601,9 +600,10 @@ def _calc_generator(params,
         assert dimensions == 3, "Strain Filter calculation requested, but the system is not periodic in 3 dimensions."
         fhi_calc.parameters['compute_analytical_stress'] = 'True'
 
-    """FHI-aims settings set up"""
-    for k, v in params.items():
-        fhi_calc.parameters[k] = v
+    """Sort FHI-aims settings"""
+    keys = list(fhi_calc.parameters.keys())
+    keys.sort()
+    fhi_calc.parameters = {key: fhi_calc.parameters[key] for key in keys}
 
     fhi_calc.parameters = Parameters(**fhi_calc.parameters)
 
