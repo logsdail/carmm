@@ -97,6 +97,7 @@ def counterpoise_calc(complex_struc, a_id, b_id, fhi_calc=None, a_name=None, b_n
 
     return cp_corr
 
+
 def check_and_convert_id(complex_struc, a_id, b_id):
     """
     This function checks if a_id and b_id are supplied correctly (lists of indices or lists of strings),
@@ -168,6 +169,7 @@ def gather_info_for_write_input(complex_struc, a_id, b_id):
 
     return ghosts_cp, structures_cp
 
+
 def calculate_energy_ghost_compatible(calc, atoms=None, properties=['energy'],
                                       system_changes=['positions', 'numbers', 'cell', 'pbc',
                                                       'initial_charges', 'initial_magmoms'],
@@ -194,12 +196,14 @@ def calculate_energy_ghost_compatible(calc, atoms=None, properties=['energy'],
     Calculator.calculate(calc, atoms, properties, system_changes)
     calc.write_input(calc.atoms, properties, system_changes, ghosts=ghosts)
     command = calc.command
-    
+
     if dry_run:  # Only for CI tests
         command = ''  # Used to be 'ls'
-        
-    subprocess.check_call(command, shell=True, cwd=calc.directory)
+    converged = calc.read_convergence()
+    if not converged:
+        subprocess.check_call(command, shell=True, cwd=calc.directory)
     calc.read_results()
+
 
 # Lazy work around
 def get_energy_dryrun(dir, outputname):
