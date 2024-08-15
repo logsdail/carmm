@@ -59,8 +59,11 @@ def counterpoise_calc(complex_struc, a_id, b_id, fhi_calc=None, a_name=None, b_n
         if not ase_env_check('3.23.0'):
             fhi_calc.set(compute_forces=False)
         else:
-            fhi_calc.parameters['compute_forces']=False
-            fhi_calc.template.update_parameters(fhi_calc.implemented_properties, fhi_calc.parameters)
+            fhi_calc.parameters['compute_forces'] = False
+    if 'sc_accuracy_forces' in fhi_calc.parameters:
+        print('Stop calculation as there is a convergence criterion regarding force.', '\n',
+              'Empty sites does not work with forces. Remove and check how it affects your results.')
+        return None
     # Create an empty list to store energies for postprocessing.
     energies = []
     for index in range(4):
@@ -77,7 +80,8 @@ def counterpoise_calc(complex_struc, a_id, b_id, fhi_calc=None, a_name=None, b_n
         else:
             fhi_calc.template.outputname = species_list[index] + '.out'
             fhi_calc.parameters['ghosts'] = ghosts_lists_cp[index]
-            fhi_calc.template.update_parameters(fhi_calc.implemented_properties, fhi_calc.parameters)
+            # Scaled positions does not with empty sites.
+            fhi_calc.parameters['scaled'] = False
             structures_cp[index].calc = fhi_calc
             if dry_run:
                 structures_cp[index].calc.template.write_input(fhi_calc.profile, fhi_calc.directory,
@@ -196,7 +200,7 @@ def calculate_energy_ghost_compatible(calc, atoms=None, properties=['energy'],
     from ase.calculators.calculator import Calculator
     import subprocess
     Calculator.calculate(calc, atoms, properties, system_changes)
-    #Write inputfiles. Scaled positions does not with empty sites.
+    # Write inputfiles. Scaled positions does not with empty sites.
     calc.write_input(calc.atoms, properties, system_changes, ghosts=ghosts, scaled=False)
     command = calc.command
 

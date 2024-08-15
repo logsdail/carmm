@@ -39,12 +39,16 @@ def test_analyse_counterpoise():
                                  verbose=True, dry_run=True)
     cp_symbol = counterpoise_calc(CO, a_id=['C'], b_id=['O'], fhi_calc=toy_calc, dry_run=True)
 
+    toy_calc.parameters['sc_accuracy_forces'] = 0.0001
+    cp_force_error = counterpoise_calc(CO, a_id=['C'], b_id=['O'], fhi_calc=toy_calc, dry_run=True)
+
     # CP correction = A_only + B_only - A_plus_ghost - B_plus_ghost
     # This value should be added to the energy change of interest, such as adsorption energy.
 
     # CI-test
     assert cp_index == -8.707358006176946e-05
     assert cp_symbol == -8.707358006176946e-05
+    assert cp_force_error is None
 
     # Check the last created geometry.in file during the calculation.
     # These three lines below are only for CI-test purpose and should be deleted in actual calculation.
