@@ -77,7 +77,7 @@ def counterpoise_calc(complex_struc, a_id, b_id, fhi_calc=None, a_name=None, b_n
         else:
             fhi_calc.template.outputname = species_list[index] + '.out'
             fhi_calc.parameters['ghosts'] = ghosts_lists_cp[index]
-            # Scaled positions does not with empty sites.
+            # Scaled positions does not work with empty sites.
             fhi_calc.parameters['scaled'] = False
             structures_cp[index].calc = fhi_calc
             if dry_run:
@@ -197,7 +197,7 @@ def calculate_energy_ghost_compatible(calc, atoms=None, properties=['energy'],
     from ase.calculators.calculator import Calculator
     import subprocess
     Calculator.calculate(calc, atoms, properties, system_changes)
-    # Write inputfiles. Scaled positions does not with empty sites.
+    # Write inputfiles. Scaled positions does not work with empty sites.
     calc.write_input(calc.atoms, properties, system_changes, ghosts=ghosts, scaled=False)
     command = calc.command
 
