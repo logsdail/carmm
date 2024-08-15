@@ -56,7 +56,11 @@ def counterpoise_calc(complex_struc, a_id, b_id, fhi_calc=None, a_name=None, b_n
 
     # Empty sites does not work with forces. Remove compute_forces.
     if 'compute_forces' in fhi_calc.parameters:
-        fhi_calc.parameters.pop('compute_forces')
+        if not ase_env_check('3.23.0'):
+            fhi_calc.set(compute_forces=False)
+        else:
+            fhi_calc.parameters['compute_forces']=False
+            fhi_calc.template.update_parameters(fhi_calc.implemented_properties, fhi_calc.parameters)
     # Create an empty list to store energies for postprocessing.
     energies = []
     for index in range(4):
@@ -72,10 +76,8 @@ def counterpoise_calc(complex_struc, a_id, b_id, fhi_calc=None, a_name=None, b_n
             energies.append(energy_i)
         else:
             fhi_calc.template.outputname = species_list[index] + '.out'
-            properties = fhi_calc.implemented_properties
-            parameters = fhi_calc.parameters
-            parameters['ghosts'] = ghosts_lists_cp[index]
-            fhi_calc.template.update_parameters(properties, parameters)
+            fhi_calc.parameters['ghosts'] = ghosts_lists_cp[index]
+            fhi_calc.template.update_parameters(fhi_calc.implemented_properties, fhi_calc.parameters)
             structures_cp[index].calc = fhi_calc
             if dry_run:
                 structures_cp[index].calc.template.write_input(fhi_calc.profile, fhi_calc.directory,
@@ -194,7 +196,8 @@ def calculate_energy_ghost_compatible(calc, atoms=None, properties=['energy'],
     from ase.calculators.calculator import Calculator
     import subprocess
     Calculator.calculate(calc, atoms, properties, system_changes)
-    calc.write_input(calc.atoms, properties, system_changes, ghosts=ghosts)
+    #Write inputfiles. Scaled positions does not with empty sites.
+    calc.write_input(calc.atoms, properties, system_changes, ghosts=ghosts, scaled=False)
     command = calc.command
 
     if dry_run:  # Only for CI tests
