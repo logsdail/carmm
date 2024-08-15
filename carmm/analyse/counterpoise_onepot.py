@@ -56,10 +56,7 @@ def counterpoise_calc(complex_struc, a_id, b_id, fhi_calc=None, a_name=None, b_n
 
     # Empty sites does not work with forces. Remove compute_forces.
     if 'compute_forces' in fhi_calc.parameters:
-        if not ase_env_check('3.23.0'):
-            fhi_calc.set(compute_forces=False)
-        else:
-            fhi_calc.parameters['compute_forces'] = False
+        fhi_calc.parameters.pop('compute_forces')
     if 'sc_accuracy_forces' in fhi_calc.parameters:
         print('Stop calculation as there is a convergence criterion regarding force.', '\n',
               'Empty sites does not work with forces. Remove and check how it affects your results.')
