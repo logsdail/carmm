@@ -58,9 +58,10 @@ def counterpoise_calc(complex_struc, a_id, b_id, fhi_calc=None, a_name=None, b_n
     if 'compute_forces' in fhi_calc.parameters:
         fhi_calc.parameters.pop('compute_forces')
     if 'sc_accuracy_forces' in fhi_calc.parameters:
-        print('Stop calculation as there is a convergence criterion regarding force.', '\n',
-              'Empty sites does not work with forces. Remove and check how it affects your results.')
-        return None
+        if verbose:
+            print('Stop calculation as there is a convergence criterion regarding force.', '\n',
+                  'Empty sites does not work with forces. Remove and check how it affects your results.')
+        raise KeyError('Found sc_accuracy_forces in parameters! FHI-aims can not calculate forces on empty sites.')
     # Create an empty list to store energies for postprocessing.
     energies = []
     for index in range(4):
