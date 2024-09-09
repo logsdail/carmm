@@ -44,7 +44,7 @@ def test_analyse_counterpoise():
     toy_calc.parameters['sc_accuracy_forces'] = 0.0001
     forces_check = TestCase()
     with forces_check.assertRaises(KeyError):
-        counterpoise_calc(CO, a_id=['C'], b_id=['O'], fhi_calc=toy_calc, dry_run=True)
+        counterpoise_calc(CO, a_id=['C'], b_id=['O'], fhi_calc=toy_calc, dry_run=True, verbose=True)
 
     # CP correction = A_only + B_only - A_plus_ghost - B_plus_ghost
     # This value should be added to the energy change of interest, such as adsorption energy.
