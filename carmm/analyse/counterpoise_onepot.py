@@ -196,7 +196,7 @@ def calculate_energy_ghost_compatible(calc, atoms=None, properties=['energy'],
 
     """
     from ase.calculators.calculator import Calculator
-    import subprocess
+    import subprocess, os
     Calculator.calculate(calc, atoms, properties, system_changes)
     # Write inputfiles. Scaled positions does not work with empty sites.
     calc.write_input(calc.atoms, properties, system_changes, ghosts=ghosts, scaled=False)
@@ -204,6 +204,9 @@ def calculate_energy_ghost_compatible(calc, atoms=None, properties=['energy'],
 
     if dry_run:  # Only for CI tests
         command = ''  # Used to be 'ls'
+    converged = False
+    if os.path.exists(calc.outfilename):
+        converged = calc.read_convergence()
     converged = calc.read_convergence()
     if (not converged) or dry_run:
         subprocess.check_call(command, shell=True, cwd=calc.directory)
