@@ -207,7 +207,6 @@ def calculate_energy_ghost_compatible(calc, atoms=None, properties=['energy'],
     converged = False
     if os.path.exists(calc.outfilename):
         converged = calc.read_convergence()
-    converged = calc.read_convergence()
     if (not converged) or dry_run:
         subprocess.check_call(command, shell=True, cwd=calc.directory)
 
