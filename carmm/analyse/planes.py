@@ -2,7 +2,7 @@ def get_interplane_distances(atoms):
     '''
     A function that combines the molecules script and get_lowest distances to separate molecules out in a system and measure the distances inbetween.
 
-    Returns:
+    Returns: interplane distance
 
     '''
 
@@ -52,8 +52,8 @@ def get_close_contacts(A_mol, B_mol):
 def distance_between_centers_of_mass(A_mol, B_mol):
     '''
     TODO: @Jack Warren 
-    :param A_mol:
-    :param B_mol:
+    :param A_mol: molecule A
+    :param B_mol: molecule B
     :return:  distance between 2 centers of mass
     '''
     import numpy as np
