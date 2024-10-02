@@ -52,8 +52,8 @@ def get_close_contacts(A_mol, B_mol):
 def distance_between_centers_of_mass(A_mol, B_mol):
     '''
     TODO: @Jack Warren 
-    :param A_mol:
-    :param B_mol:
+    :param A_mol: molecule A
+    :param B_mol: molecule B
     :return:  distance between 2 centers of mass
     '''
     import numpy as np
