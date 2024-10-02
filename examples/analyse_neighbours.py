@@ -8,7 +8,7 @@ def test_neighbours():
     slab = slab(adsorbate=True)
 
     # Calculate neighbours
-    all_neighbour_atoms, shell_list = neighbours(slab, [13], 1, verbose=True)
+    all_neighbour_atoms, shell_list, selection = neighbours(slab, [13], 1, verbose=True)
 
     # Verify results
     assert(all_neighbour_atoms == [1, 2, 4, 10, 11, 12, 13, 14, 15, 16])
