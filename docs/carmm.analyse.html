@@ -568,8 +568,7 @@ fmax: float</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="carmm.analyse.graphs.plot_energy_profile">
 <span class="sig-prename descclassname"><span class="pre">carmm.analyse.graphs.</span></span><span class="sig-name descname"><span class="pre">plot_energy_profile</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x_labels</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#carmm.analyse.graphs.plot_energy_profile" title="Link to this definition">¶</a></dt>
-<dd><p>Author: Igor Kowalec
-This function is used for plotting solid+dashed line style reaction energy profiles, which often require manual
+<dd><p>This function is used for plotting solid+dashed line style reaction energy profiles, which often require manual
 tweaking using other software.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -580,7 +579,10 @@ lists of floats to be plotted on the y-axis.</p></li>
 <li><p><strong>x_labels</strong> – list
 A list of strings containing x-axis labels - intermediates, reaction steps etc.</p></li>
 <li><p><strong>**kwargs</strong> – dict
-TODO: Consult what is useful, write them out</p></li>
+%% These variables should be optional in the function call. Then the defaults are clear.
+This is passthrough for all other variables. The following are pulled from
+if they exist (otherwise defaults are used):
+font_size; figsize; colours; linestyles; linestyle; x_labels_rotation; x_axis_title; y_axis_title; legend_xy_offset</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
