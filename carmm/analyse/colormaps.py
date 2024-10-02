@@ -1,10 +1,11 @@
 def color_bar(width, height, bottom, vmin, vmax, orientation, label, cmapcolour, resolution):
-    """Basic Colour Bar
-    figsize= y axis how tall
-    bottom = <0.8 - size of bar (cannot be bigger than top)
-    vmin/vmax = x axis values
-    orientation = horizontal,vertical
+    """Basic Colour Bar\
+    figsize= y axis how tall\  
+    bottom = <0.8 - size of bar (cannot be bigger than top)\  
+    vmin/vmax = x axis values\  
+    orientation = horizontal,vertical\  
     label = units
+    
     cmapcolour = [('Perceptually Uniform Sequential', [
             'viridis', 'plasma', 'inferno', 'magma', 'cividis']),
          ('Sequential', [
