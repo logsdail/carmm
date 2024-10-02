@@ -1,7 +1,6 @@
 def neighbour_cutout_sphere(atoms, centre, distance_cutoff=5.0):
     '''
     Returns a spherical cutout of a structure
-    TODO: This doesn't work with periodic boundary conditions.
     TODO:Could probably integrate this with the neighbor function bellow
 
     Parameters:
@@ -27,7 +26,7 @@ def neighbour_cutout_sphere(atoms, centre, distance_cutoff=5.0):
 
 
         #################### Edit atom tag ###############################
-        distance_ab = np.linalg.norm((atoms.positions[centre] - atoms.positions[i]))
+        distance_ab = atoms.get_distance(centre, i, mic=True)
 
         ################ Edit distance in Angstrom here ###################
         if distance_ab < distance_cutoff:
@@ -93,7 +92,11 @@ def neighbours(atoms, centre, shell, cutoff=None, verbose=False):
             for shell in range(len(shell_list)):
                 print("Shell", shell, "contains atoms with indices:", shell_list[shell])
 
-    return list(all_neighbours), shell_list
+        all_neighbours = list(all_neighbours)
+        atoms_copy = atoms.copy()
+        selection = atoms_copy[all_neighbours]
+
+    return all_neighbours, shell_list, selection
 
 
 # Authors: Igor Kowalec, Lara Kabalan, Jack Warren
