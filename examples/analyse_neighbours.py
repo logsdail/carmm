@@ -13,5 +13,6 @@ def test_neighbours():
     # Verify results
     assert(all_neighbour_atoms == [1, 2, 4, 10, 11, 12, 13, 14, 15, 16])
     assert(shell_list == [[13], [1, 2, 4, 10, 11, 12, 14, 15, 16]])
+    assert((selection[-1].symbol, selection[-1].position) == (slab[16].symbol, slab[16).position)
 
 test_neighbours()
