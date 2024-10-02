@@ -36,7 +36,7 @@ def neighbours(atoms, centre, shell, cutoff=None, verbose=False):
 
     # Creates an empty list an appends atom indices whose distances are
     # x amount nearest neighbours away from centre
-    for neighbors in range(shell):
+    for this_shell in range(shell):
         # keep new neighbor indices in a set to avoid duplicates
         new_neighbors = set()
         for index in all_neighbours:
