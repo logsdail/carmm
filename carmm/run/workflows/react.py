@@ -365,14 +365,14 @@ class ReactAims:
             input_check: float or None
                 If float the calculators of the input structures will be checked if the structures are below
                 the requested fmax and an optimisation will be performed if not.
-            mace_preopt: None or int
+            mace_preopt: None or str
                 Controls whether to use a MACE preoptimised TS path, and the work flow used for preoptimisation
                 Requires a MACE calculator be attached to the React_AIMs object via the MaceReact_Preoptimiser
                 property.
-                0: Off      -     No MACE pre-optimisation
-                1: Full Preopt -  MACE preoptimises TS before FHI-aims - FHI-aims inherits all structures from MACE.
-                2: TS only     -  MACE preoptimises after FHI-aims check - MACE receives initial and reactant
-                                  structures from FHI-aims and does not optimise
+                None       -     No MACE pre-optimisation
+                fullpath   -     MACE preoptimises TS before FHI-aims - FHI-aims inherits all structures from MACE.
+                tspath     -     MACE preoptimises after FHI-aims check - MACE receives initial and reactant
+                                 structures from FHI-aims and does not optimise
             preopt_maxsteps: int
                 Controls the maximum number of steps used in the preoptimiser before giving up and passing the 
                 calculation onto MLNEB with FHI-aims.
@@ -414,15 +414,15 @@ class ReactAims:
         counter, out, subdirectory_name, minimum_energy_path = helper.restart_setup()
 
         """Set MACE Pre-optimisation flavor"""
-        self.mace_preopt_flavour = 0
-        if mace_preopt > 0 and not minimum_energy_path:
+        self.mace_preopt_flavour = None
+        if mace_preopt is None and not minimum_energy_path:
             assert isinstance(n, int), "Integer number of images required for MACE TS preoptimiser"
             assert self._MaceReactor is not None, "Please set MaceReact_Preoptimiser if mace_preopt is True."
             assert input_check, "Mace Preoptimisation workflow requires input be set to 'float'."
             self.mace_preopt_flavour = mace_preopt
 
         """Run preoptimisation flavour 1"""
-        if self.mace_preopt_flavour == 1:
+        if self.mace_preopt_flavour == "fullpath":
 
             preopt_ts = self._mace_preoptimise_ts(initial, final, fmax, n, self.interpolation,
                                                   input_check, max_steps=preopt_maxsteps)
@@ -445,7 +445,7 @@ class ReactAims:
             self.filename = filename_copy
 
         """Run preotimisation flavour 2"""
-        if self.mace_preopt_flavour == 2:
+        if self.mace_preopt_flavour == "tspath":
 
             preopt_ts = self._mace_preoptimise_ts(initial, final, fmax, n, self.interpolation,
                                                   input_check, max_steps=preopt_maxsteps)
@@ -478,7 +478,7 @@ class ReactAims:
 
                 iterations = 0
 
-                if self.mace_preopt_flavour > 0 and not os.path.exists(traj_name):
+                if (self.mace_preopt_flavour is not None) and (not os.path.exists(traj_name)):
                     """GAB: ML-NEB misbehaves if a calculator is not provided for interpolated images"""
                     """     following function ensures correct calculators are attached with closed  """
                     """     sockets.                                                                 """
@@ -677,9 +677,9 @@ class ReactAims:
         filname = self._MaceReactor.filename
         self._MaceReactor.filename = "MACE_PREOPT_" + self.filename
 
-        if self.mace_preopt_flavour == 1:
+        if self.mace_preopt_flavour == "fullpath":
             input_check = input_check
-        elif self.mace_preopt_flavour == 2:
+        elif self.mace_preopt_flavour == "tspath":
             input_check = None
 
         preopt_ts = self._MaceReactor.search_ts_neb(initial, final, fmax, n, k=0.05, method="improvedtangent",
