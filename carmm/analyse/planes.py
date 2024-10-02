@@ -2,7 +2,7 @@ def get_interplane_distances(atoms):
     '''
     A function that combines the molecules script and get_lowest distances to separate molecules out in a system and measure the distances inbetween.
 
-    Returns:
+    Returns: interplane distance
 
     '''
 
