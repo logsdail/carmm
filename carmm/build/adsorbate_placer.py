@@ -182,7 +182,7 @@ class RotationBox():
         assert len(self.atoms_site) != 0, "Adsorbate site should have at least one other atom attached."
 
         cutoff = natural_cutoffs(atoms, cutoff_mult)
-        neighbour_atoms, shell_list = neighbours(atoms, [index], 1, cutoff)
+        neighbour_atoms, shell_list, _ = neighbours(atoms, [index], 1, cutoff)
 
         vectors = atoms.positions[neighbour_atoms] - atoms.positions[index]
 
@@ -193,7 +193,7 @@ class RotationBox():
         # Code and logic is sloppy and will be improved.
         if self.lps > 1:
 
-            neighb_list, shell_list = neighbours(self.atoms_site, [self.site_idx], 1, cutoff)
+            neighb_list, shell_list, _ = neighbours(self.atoms_site, [self.site_idx], 1, cutoff)
 
             assert 1 < len(shell_list[1]) < 5, "Site either has too few or too many neighbours VSEPR."
             #        assert len(shell_list[1]) > 2, "Not implemented LPs above 2."
@@ -307,7 +307,7 @@ class RotationBox():
         # Rotations performed on a RHS axis, with rotations about site normal z, x out plane wrt.
         # bond vector of another neighbour to the shell site and z, and y perpendicular to x and z.
         cutoff = natural_cutoffs(self.atoms_site, self.cutoff_mult)
-        neighbour_atoms, shell_list = neighbours(self.atoms_site, [self.site_idx], 1, cutoff)
+        neighbour_atoms, shell_list, _ = neighbours(self.atoms_site, [self.site_idx], 1, cutoff)
 
         # Clean up list for clarity.
         neighbour_atoms.remove(self.site_idx)
@@ -317,7 +317,7 @@ class RotationBox():
         # Next site is used to find an appropriate x and y rotation axis.
         if len(neighbour_atoms) == 1:
             new_site_idx = neighbour_atoms[0]
-            neighbour_atoms, shell_list = neighbours(self.atoms_site, [new_site_idx], 1, cutoff)
+            neighbour_atoms, shell_list, _ = neighbours(self.atoms_site, [new_site_idx], 1, cutoff)
 
             # Remove item of list with name of original, one neighbour atom.
             shell_list[1].remove(self.site_idx)
