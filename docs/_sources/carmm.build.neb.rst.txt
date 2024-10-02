@@ -20,6 +20,22 @@ carmm.build.neb.bond\_length\_scan module
    :undoc-members:
    :show-inheritance:
 
+carmm.build.neb.geodesic module
+-------------------------------
+
+.. automodule:: carmm.build.neb.geodesic
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+carmm.build.neb.geodesic\_utils module
+--------------------------------------
+
+.. automodule:: carmm.build.neb.geodesic_utils
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 carmm.build.neb.ilm module
 --------------------------
 
