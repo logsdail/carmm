@@ -1,16 +1,17 @@
 # Author: Igor Kowalec
 import os
-import numpy as np
+#import numpy as np
 from ase.calculators.emt import EMT
 from ase import Atoms
 from ase.io import read
-from ase.vibrations import Vibrations
+#from ase.vibrations import Vibrations
 from carmm.analyse.forces import is_converged
 from carmm.run.aims_path import set_aims_command
 from ase.io import Trajectory
 from carmm.run.workflows.helper import CalculationHelper
-from carmm.err_handler.logger_set import set_logger
-from ase.optimize import BFGS
+from carmm.utils.logger_set import set_logger
+from carmm.utils.python_env_check import ase_env_check
+#from ase.optimize import BFGS
 
 # TODO: Enable serialization with ASE db - save locations of converged files as well as all properties
 
@@ -178,6 +179,7 @@ class ReactAims:
         """
         opt_restarts = 0
         if not optimiser:
+            from ase.optimize import BFGS
             optimiser = BFGS
 
         if not is_converged(self.initial, fmax):
@@ -553,6 +555,8 @@ class ReactAims:
         Returns:
             Vibrations object
         """
+        from ase.vibrations import Vibrations
+        import numpy as np
 
         """Retrieve common properties"""
         basis_set = self.basis_set
@@ -749,33 +753,39 @@ def _calc_generator(params,
     """New method that gives a default calculator"""
 
     from carmm.run.aims_calculator import get_aims_and_sockets_calculator
+    from ase.calculators.calculator import Parameters
     """On machines where ASE and FHI-aims are run separately (e.g. ASE on login node, FHI-aims on compute nodes)
     we need to specifically state what the name of the login node is so the two packages can communicate"""
     sockets_calc, fhi_calc = get_aims_and_sockets_calculator(dimensions=dimensions,
                                                              logfile=f"{directory}/socketio.log",
                                                              verbose=True,
                                                              codata_warning=False,
-                                                             directory=directory
-                                                             )
+                                                             directory=directory,
+                                                             **params)
 
-    """Remove previous xc argument to ensure libxc warning override is first"""
-    fhi_calc.parameters.pop("xc")
-    fhi_calc.set(override_warning_libxc='True')
+    fhi_calc.parameters['override_warning_libxc'] = 'True'
 
     """Forces required for optimisation"""
     if not forces:
-        fhi_calc.parameters.pop("compute_forces")
+        fhi_calc.parameters = {k: v for k, v in fhi_calc.parameters.items() if k != 'compute_forces'}
 
     """Add analytical stress keyword for unit cell relaxation"""
     if relax_unit_cell:
         assert dimensions == 3, "Strain Filter calculation requested, but the system is not periodic in 3 dimensions."
-        fhi_calc.set(compute_analytical_stress='True')
+        fhi_calc.parameters['compute_analytical_stress'] = 'True'
+
+    """Sort FHI-aims settings to ensure libxc warning override is prior to xc"""
+    keys = list(fhi_calc.parameters.keys())
+    keys.sort()
+    fhi_calc.parameters = {key: fhi_calc.parameters[key] for key in keys}
+
+    fhi_calc.parameters = Parameters(**fhi_calc.parameters)
 
     """Set a unique .out output name"""
-    fhi_calc.outfilename = out_fn
-
-    """FHI-aims settings set up"""
-    fhi_calc.set(**params)
+    if not ase_env_check('3.23.0'):
+        fhi_calc.outfilename = out_fn
+    else:
+        fhi_calc.template.outputname = out_fn
 
     return sockets_calc, fhi_calc
 

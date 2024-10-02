@@ -1,4 +1,7 @@
-def get_aims_calculator(dimensions, k_grid=None, xc="pbe", compute_forces="true", **kwargs):
+import os
+
+
+def get_aims_calculator(dimensions, spin=None, relativistic=None, k_grid=None, xc="pbe", compute_forces="true", directory='./', **kwargs):
     '''
     Method to return a "default" FHI-aims calculator.
     Note: This file should not be changed without consultation,
@@ -8,41 +11,74 @@ def get_aims_calculator(dimensions, k_grid=None, xc="pbe", compute_forces="true"
 
         dimensions: Integer
             Determines whether we have a "gas"-phase (0) or "periodic" structure (2 or 3)
+        spin: String
+            Determines if spin is to be invoked for the calculation
+        relativistic: String
+            Determines what setting for relativity is to be used
         k_grid: List of integers
             Gives the k-grid sampling in x-, y- and z- direction. e.g. [3, 3, 3]
         xc: String
             XC of choice
         compute_forces: String
             Determines whether forces are enabled ("true") or not enabled ("false").
-    **kwargs:
-        Any other keyword arguments that a user wants to set. These are passed through.
+        directory: String
+            ???
+        **kwargs:
+            Any other keyword arguments that a user wants to set. These are passed through.
         
     Returns:
             FHI_calc: FHI-aims ASE calculator
        
     '''
+    from ase.calculators.aims import Aims    
 
-    from ase.calculators.aims import Aims
-
-    # Default is suitable for molecular calculations
-    fhi_calc = Aims(
-        spin='none',
-        relativistic=('atomic_zora', 'scalar'),
-        compute_forces=compute_forces,
-        **kwargs
-    )
-
+    # Created dictionary to store arguments
+    parameter_dict = {}
+    
     # Set the XC for the calculation. For LibXC, override_warning_libxc *needs*
     # to be set first, otherwise we get a termination.
     if "libxc" in xc:
-        fhi_calc.set(override_warning_libxc="true")
-    fhi_calc.set(xc=xc)
+        parameter_dict['override_warning_libxc'] = 'true'
+    parameter_dict['xc'] = xc
 
     if dimensions == 2:
-        fhi_calc.set(use_dipole_correction='true')
+        parameter_dict['use_dipole_correction'] = 'true'
 
     if dimensions >= 2:
-        fhi_calc.set(k_grid=k_grid)
+        parameter_dict['k_grid'] = k_grid
+
+    if spin is not None:
+        parameter_dict['spin'] = 'none'
+
+    if relativistic is None:
+        parameter_dict['relativistic'] = ('atomic_zora', 'scalar')
+
+    # Changing to check ASE version, as this determines behaviour of calculator
+    from carmm.utils.python_env_check import ase_env_check
+    if ase_env_check('3.23.0'):
+        # Need a profile for the calculator
+        from ase.calculators.aims import AimsProfile
+        ase_aims_command = os.environ.get("ASE_AIMS_COMMAND")
+        aims_species_dir = os.environ.get("AIMS_SPECIES_DIR")
+        if ase_aims_command is None or aims_species_dir is None:
+            raise KeyError('Environment variables $ASE_AIMS_COMMAND and $AIMS_SPECIES_DIR are not set')
+
+        fhi_calc = Aims(
+            # Load profile from environment variables
+            profile=AimsProfile(command=os.environ["ASE_AIMS_COMMAND"],
+                                default_species_directory=os.environ["AIMS_SPECIES_DIR"]),
+            compute_forces=compute_forces,
+            directory=directory,
+            # Merged **parameter_dict with **kwargs
+            **{**parameter_dict, **kwargs}
+        )
+    else:
+        fhi_calc = Aims(
+            compute_forces=compute_forces,
+            directory=directory,
+            # Merged **parameter_dict with **kwargs
+            **{**parameter_dict, **kwargs}
+        )
 
     return fhi_calc
 
@@ -111,7 +147,7 @@ def get_aims_and_sockets_calculator(dimensions,
     # **kwargs is a passthrough of keyword arguments
     fhi_calc = get_aims_calculator(dimensions, **kwargs)
     # Add in PIMD command to get sockets working
-    fhi_calc.set(use_pimd_wrapper=[host, port])
+    fhi_calc.parameters['use_pimd_wrapper']=[host, port]
 
     # Setup sockets calculator that "wraps" FHI-aims
     from ase.calculators.socketio import SocketIOCalculator
@@ -137,7 +173,6 @@ def get_aims_and_sockets_calculator(dimensions,
         print("You can turn off this message by setting 'codata_warning' keyword to False.")
 
     return socket_calc, fhi_calc
-
 
 def _check_socket(host, port, verbose=False):
     '''

@@ -5,7 +5,7 @@ Usage example shown first, other tests shown after.
 
 
 def test_povray_render():
-    from carmm.analyse.povray_render import povray_render, atom_sub
+    from carmm.utils.povray_render import povray_render, atom_sub
     from ase.io import read
     import numpy as np
     from ase.data import covalent_radii, atomic_numbers
