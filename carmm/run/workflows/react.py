@@ -415,7 +415,7 @@ class ReactAims:
 
         """Set MACE Pre-optimisation flavor"""
         self.mace_preopt_flavour = None
-        if mace_preopt is None and not minimum_energy_path:
+        if mace_preopt is not None and not minimum_energy_path:
             assert isinstance(n, int), "Integer number of images required for MACE TS preoptimiser"
             assert self._MaceReactor is not None, "Please set MaceReact_Preoptimiser if mace_preopt is True."
             assert input_check, "Mace Preoptimisation workflow requires input be set to 'float'."
