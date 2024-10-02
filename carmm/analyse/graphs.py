@@ -115,18 +115,21 @@ def set_graph_axes_heatmap(plt, x, y):
 
 def plot_energy_profile(data, x_labels, **kwargs):
     '''
-    Author: Igor Kowalec
     This function is used for plotting solid+dashed line style reaction energy profiles, which often require manual
     tweaking using other software.
 
-    Args:
+    Parameters:
         data: dict
             A dictionary of key-value pairs, where the keys are used as the title of the data series, and the values are
             lists of floats to be plotted on the y-axis.
         x_labels: list
             A list of strings containing x-axis labels - intermediates, reaction steps etc.
         **kwargs: dict
-            TODO: Consult what is useful, write them out
+            %% These variables should be optional in the function call. Then the defaults are clear.
+            This is passthrough for all other variables. The following are pulled from
+            if they exist (otherwise defaults are used):
+            font_size; figsize; colours; linestyles; linestyle; x_labels_rotation; x_axis_title; y_axis_title; legend_xy_offset
+
 
     Returns:
         matplotlib.pyplot
