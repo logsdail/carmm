@@ -50,14 +50,14 @@ def test_run_workflows_ReactAims_MACE_preopt():
     atoms1[1].x += 8
     atoms2 = atoms.copy()
     '''Tests each flavour of ML-NEB'''
-    transition_state = reactor.search_ts(atoms1, atoms2, 0.05, 0.03, n=6, input_check=0.01, mace_preopt=2, restart=False)
+    transition_state = reactor.search_ts(atoms1, atoms2, 0.05, 0.03, n=6, input_check=0.01, mace_preopt="tspath", restart=False)
     print(len(reactor.mace_interpolation))
     assert is_converged(reactor.mace_interpolation[3], 0.03), \
         "MACE pre-optimised NEB flavour 2 is not converged"
-    transition_state = reactor.search_ts(atoms1, atoms2, 0.05, 0.03, n=6, input_check=0.01, mace_preopt=1, restart=False)
+    transition_state = reactor.search_ts(atoms1, atoms2, 0.05, 0.03, n=6, input_check=0.01, mace_preopt="fullpath", restart=False)
     assert is_converged(reactor.mace_interpolation[3], 0.03), \
         "MACE pre-optimised NEB flavour 1 is not converged"
-    transition_state = reactor.search_ts(atoms1, atoms2, 0.05, 0.03, n=6, input_check=0.01, mace_preopt=0, restart=False)
+    transition_state = reactor.search_ts(atoms1, atoms2, 0.05, 0.03, n=6, input_check=0.01, mace_preopt=None, restart=False)
     assert isinstance(reactor.interpolation, str), \
         "ML-NEB is somehow running even though not requested"
 
