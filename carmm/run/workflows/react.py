@@ -612,7 +612,7 @@ class ReactAims:
     @property
     def MaceReact_Preoptimiser(self):
         """
-        Get or set the MACE preoptimiser used in aims_optimise or ts_search with setting
+        MACE ASE calculator used in the preoptimisation protocol in aims_optimise or ts_search.
 
         Args:
              MaceReact MaceReact Obj:
@@ -632,11 +632,12 @@ class ReactAims:
 
     def _mace_preoptimise(self, atoms: Atoms, fmax, relax_unit_cell, optimiser, opt_kwargs = {}):
         """
-        Internal function for preoptimisation of structures with a pre-set MACE calculator
+        Invokes geometry optimisation method using the MACE ASE calculator defined in self.MaceReact_Preoptimiser.
+        The resultant geometry is optimised using FHI-aims in self.aims_optimise.
 
         Args:
             atoms: Atoms object
-            fmax: flaot
+            fmax: float
             relax_unit_cell: bool
             optimiser: bool or optimiser class
             opt_kwargs: dict
@@ -660,7 +661,10 @@ class ReactAims:
 
     def _mace_preoptimise_ts(self, initial, final, fmax, n, interpolation, input_check, max_steps=200):
         """
-        Internal function for preoptimisation of NEB with a pre-set MACE calculator
+        Invokes nudged elastic band (NEB) for an input pathway using the MACE ASE calculator 
+        defined in self.MaceReact_Preoptimiser.
+        
+        The resultant reaciton pathway is optimised using FHI-aims in self.search_ts.
 
         Args:
             initial: Atoms object
