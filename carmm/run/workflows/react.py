@@ -633,7 +633,8 @@ class ReactAims:
     def _mace_preoptimise(self, atoms: Atoms, fmax, relax_unit_cell, optimiser, opt_kwargs = {}):
         """
         Invokes geometry optimisation method using the MACE ASE calculator defined in self.MaceReact_Preoptimiser.
-        The resultant geometry is optimised using FHI-aims in self.aims_optimise.
+        The resultant geometry is optimised using FHI-aims in self.aims_optimise. Workflow for optimisation 
+        with MACE defined in ReactMACE module.
 
         Args:
             atoms: Atoms object
@@ -662,7 +663,8 @@ class ReactAims:
     def _mace_preoptimise_ts(self, initial, final, fmax, n, interpolation, input_check, max_steps=200):
         """
         Invokes nudged elastic band (NEB) for an input pathway using the MACE ASE calculator 
-        defined in self.MaceReact_Preoptimiser.
+        defined in self.MaceReact_Preoptimiser. Workflow for optimisation with MACE defined in
+        ReactMACE module.
         
         The resultant reaciton pathway is optimised using FHI-aims in self.search_ts.
 
