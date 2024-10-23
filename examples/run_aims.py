@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 
-'''
-This modules tests aims calculator on different machines
-'''
+"""
+Tests aims calculator on different machines
+"""
+
 
 def test_run_aims():
     from carmm.run.aims_path import set_aims_command
@@ -48,11 +49,36 @@ def test_run_aims():
         # fhi_calc = get_aims_calculator(state)
         sockets_calc, fhi_calc = get_aims_and_sockets_calculator(dimensions=state, verbose=True)
 
-        # Assertion test that the correct calculators are being set
+        default_params = {'relativistic': ('atomic_zora', 'scalar'),
+                          'xc': 'pbe',
+                          'compute_forces': True,
+                          }
+        if state == 2:
+            default_params['use_dipole_correction'] = 'true'
+        if state >= 2:
+            default_params['k_grid'] = True
+
+        # Assertion test that the correct calculators and default arguments are being set
         if ase_env_check('3.22.0'):
             assert (type(sockets_calc.launch_client.calc) == Aims)
         else:
             assert (type(sockets_calc.calc) == Aims)
+            
+        params = getattr(fhi_calc, 'parameters')
+        assert params['relativistic'] == ('atomic_zora', 'scalar')
+        assert params['xc'] == 'pbe'
+        assert params['compute_forces'] is True
+        if state == 2:
+            assert params['use_dipole_correction'] == 'true'
+        if state >= 2:
+            assert params['k_grid'] is None
+
+        # libxc test
+        sockets_calc, fhi_calc = get_aims_and_sockets_calculator(dimensions=state, verbose=True,
+                                                                 xc='libxc MGGA_X_MBEEF+GGA_C_PBE_SOL')
+        params = getattr(fhi_calc, 'parameters')
+        assert params['override_warning_libxc'] == 'true'
+        assert params['xc'] == 'libxc MGGA_X_MBEEF+GGA_C_PBE_SOL'
 
     # Test to make sure that we correctly handle scenario when environment variable isn't
     # set in ASE 3.23. This presents issues downstream, so environment must be set 
@@ -63,5 +89,6 @@ def test_run_aims():
         with test_get_aims_exception.assertRaises(KeyError):
             del os.environ['ASE_AIMS_COMMAND']
             get_aims_calculator(dimensions=0)
+
 
 test_run_aims()
