@@ -61,24 +61,17 @@ def test_run_aims():
         # Assertion test that the correct calculators and default arguments are being set
         if ase_env_check('3.22.0'):
             assert (type(sockets_calc.launch_client.calc) == Aims)
-            params = getattr(fhi_calc, 'parameters')
-            assert params['relativistic'] == ('atomic_zora', 'scalar')
-            assert params['xc'] == 'pbe'
-            assert params['compute_forces'] is True
-            if state == 2:
-                assert params['use_dipole_correction'] == 'true'
-            if state >= 2:
-                assert params['k_grid'] is None
         else:
             assert (type(sockets_calc.calc) == Aims)
-            params = getattr(fhi_calc, 'parameters')
-            assert params['relativistic'] == ('atomic_zora', 'scalar')
-            assert params['xc'] == 'pbe'
-            assert params['compute_forces'] is True
-            if state == 2:
-                assert params['use_dipole_correction'] == 'true'
-            if state >= 2:
-                assert params['k_grid'] is None
+            
+        params = getattr(fhi_calc, 'parameters')
+        assert params['relativistic'] == ('atomic_zora', 'scalar')
+        assert params['xc'] == 'pbe'
+        assert params['compute_forces'] is True
+        if state == 2:
+            assert params['use_dipole_correction'] == 'true'
+        if state >= 2:
+            assert params['k_grid'] is None
 
         # libxc test
         sockets_calc, fhi_calc = get_aims_and_sockets_calculator(dimensions=state, verbose=True,
