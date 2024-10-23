@@ -88,7 +88,7 @@ class ReactAims:
             self.logger.debug(f"            output folder names.                                               ")
 
     def aims_optimise(self, atoms: Atoms, fmax: float = 0.01, post_process: str = None, relax_unit_cell: bool = False,
-                      restart: bool = True, optimiser=None, opt_kwargs: dict = {}):
+                      restart: bool = True, optimiser=None, opt_kwargs: dict = {}, mace_preopt=False):
 
         """
          The function needs information about structure geometry (model), name of hpc system
@@ -132,6 +132,12 @@ class ReactAims:
 
         if initial is not None:
             self.initial = initial
+
+        if mace_preopt and not initial:
+            """Make sure to skip preoptimisations if AIMs restart information is available."""
+            assert self._MaceReactor is not None, "Please set MaceReact_Preoptimiser if mace_preopt is True"
+
+            self.initial = self._mace_preoptimise(self.initial, fmax, relax_unit_cell, optimiser, opt_kwargs)
 
         self._perform_optimization(subdirectory_name, out, counter, fmax, relax_unit_cell, optimiser, opt_kwargs)
         self._finalize_optimization(subdirectory_name, post_process)
@@ -325,11 +331,10 @@ class ReactAims:
 
         return self.initial
 
-
     def search_ts(self, initial: Atoms, final: Atoms,
                   fmax: float, unc: float, interpolation=None,
                   n=0.25, steps=40, restart=True, prev_calcs=None,
-                  input_check=0.01):
+                  input_check=0.01, mace_preopt=0, preopt_maxsteps=200):
         """
         This function allows calculation of the transition state using the CatLearn software package in an
         ASE/sockets/FHI-aims setup. The resulting converged band will be located in the MLNEB.traj file.
@@ -360,12 +365,24 @@ class ReactAims:
             input_check: float or None
                 If float the calculators of the input structures will be checked if the structures are below
                 the requested fmax and an optimisation will be performed if not.
+            mace_preopt: None or str
+                Controls whether to use a MACE preoptimised TS path, and the work flow used for preoptimisation
+                Requires a MACE calculator be attached to the React_AIMs object via the MaceReact_Preoptimiser
+                property.
+                None       -     No MACE pre-optimisation
+                fullpath   -     MACE preoptimises TS before FHI-aims - FHI-aims inherits all structures from MACE.
+                tspath     -     MACE preoptimises after FHI-aims check - MACE receives initial and reactant
+                                 structures from FHI-aims and does not optimise
+            preopt_maxsteps: int
+                Controls the maximum number of steps used in the preoptimiser before giving up and passing the 
+                calculation onto MLNEB with FHI-aims.
 
         Returns: Atoms object
             Transition state geometry structure
         """
 
         from catlearn.optimize.mlneb import MLNEB
+        from ase.io import write
 
         #TODO: calling mlneb.run() generates files in the current directory, reverting to os.chdir() necessary
         assert not self.nodes_per_instance, "ReactAims.nodes_per_instance is not None \n" \
@@ -384,9 +401,35 @@ class ReactAims:
 
         self._initialize_parameters(initial)
 
-
         """Set the environment parameters"""
         set_aims_command(hpc=hpc, basis_set=basis_set, defaults=2020, nodes_per_instance=self.nodes_per_instance)
+
+        '''Setup the TS calculation'''
+        helper = CalculationHelper(calc_type="TS",
+                                   parent_dir=os.getcwd(),
+                                   filename=self.filename,
+                                   restart=restart,
+                                   verbose=self.verbose)
+
+        counter, out, subdirectory_name, minimum_energy_path = helper.restart_setup()
+
+        """Set MACE Pre-optimisation flavor"""
+        self.mace_preopt_flavour = None
+        if mace_preopt is not None and not minimum_energy_path:
+            assert isinstance(n, int), "Integer number of images required for MACE TS preoptimiser"
+            assert self._MaceReactor is not None, "Please set MaceReact_Preoptimiser if mace_preopt is True."
+            assert input_check, "Mace Preoptimisation workflow requires input be set to 'float'."
+            self.mace_preopt_flavour = mace_preopt
+
+        """Run preoptimisation flavour 1"""
+        if self.mace_preopt_flavour == "fullpath":
+
+            preopt_ts = self._mace_preoptimise_ts(initial, final, fmax, n, self.interpolation,
+                                                  input_check, max_steps=preopt_maxsteps)
+
+            initial = preopt_ts[0]
+            final = preopt_ts[-1]
+            self.mace_interpolation = preopt_ts
 
         if input_check:
             filename_copy = self.filename
@@ -401,20 +444,21 @@ class ReactAims:
             """Set original name after input check is complete"""
             self.filename = filename_copy
 
-        '''Setup the TS calculation'''
-        helper = CalculationHelper(calc_type="TS",
-                                   parent_dir=os.getcwd(),
-                                   filename=self.filename,
-                                   restart=restart,
-                                   verbose=self.verbose)
+        """Run preotimisation flavour 2"""
+        if self.mace_preopt_flavour == "tspath":
 
-        counter, out, subdirectory_name, minimum_energy_path = helper.restart_setup()
+            preopt_ts = self._mace_preoptimise_ts(initial, final, fmax, n, self.interpolation,
+                                                  input_check, max_steps=preopt_maxsteps)
+
+            self.mace_interpolation = preopt_ts
+
         if not minimum_energy_path:
             minimum_energy_path = [None, None]
 
         traj_name = f"{subdirectory_name}/ML-NEB.traj"
 
         if not minimum_energy_path[0]:
+
             """Create the sockets calculator - using a with statement means the object is closed at the end."""
             with _calc_generator(params,
                                  out_fn=out,
@@ -434,11 +478,27 @@ class ReactAims:
 
                 iterations = 0
 
+                if (self.mace_preopt_flavour is not None) and (not os.path.exists(traj_name)):
+                    """GAB: ML-NEB misbehaves if a calculator is not provided for interpolated images"""
+                    """     following function ensures correct calculators are attached with closed  """
+                    """     sockets.                                                                 """
+                    self.interpolation = [ image.copy() for image in self.mace_interpolation[1:-1] ]
+                    self.interpolation = [initial] + self.interpolation + [final]
+
+                    for idx, image in enumerate(self.interpolation):
+                        self.attach_calculator(self.interpolation[idx], params,
+                                           out_fn=out, dimensions=self.dimensions, directory=subdirectory_name,
+                                           calc_e=True)
+
+                    initial = self.interpolation[0]
+                    final   = self.interpolation[-1]
+
                 while not os.path.exists(traj_name):
                     if iterations > 0:
                         self.prev_calcs = read(f"{subdirectory_name}/last_predicted_path.traj@:")
 
                     os.chdir(subdirectory_name)
+
                     """Setup the Catlearn object for MLNEB"""
                     neb_catlearn = MLNEB(start=initial,
                                          end=final,
@@ -461,6 +521,8 @@ class ReactAims:
                         iterations += 1
                         os.chdir(parent_dir)
                     else:
+
+                        os.chdir(parent_dir)
                         return None
 
         """Find maximum energy, i.e. transition state to return it"""
@@ -471,7 +533,6 @@ class ReactAims:
         self.ts = sorted(neb, key=lambda k: k.get_potential_energy(), reverse=True)[0]
 
         return self.ts
-
 
     def vibrate(self, atoms: Atoms, indices: list, read_only=False):
         """
@@ -548,6 +609,126 @@ class ReactAims:
             vib.write_mode()
             return vib
 
+    @property
+    def MaceReact_Preoptimiser(self):
+        """
+        MACE ASE calculator used in the preoptimisation protocol in aims_optimise or ts_search.
+
+        Args:
+             MaceReact MaceReact Obj:
+               User-defined MaceReact.
+
+        Returns:
+             self._MaceReactor MaceReact Obj:
+               User-defined MaceReact.
+        """
+
+        return self._MaceReactor
+
+    @MaceReact_Preoptimiser.setter
+    def MaceReact_Preoptimiser(self, MaceReact):
+
+        self._MaceReactor = MaceReact
+
+    def _mace_preoptimise(self, atoms: Atoms, fmax, relax_unit_cell, optimiser, opt_kwargs = {}):
+        """
+        Invokes geometry optimisation method using the MACE ASE calculator defined in self.MaceReact_Preoptimiser.
+        The resultant geometry is optimised using FHI-aims in self.aims_optimise. Workflow for optimisation 
+        with MACE defined in ReactMACE module.
+
+        Args:
+            atoms: Atoms object
+            fmax: float
+            relax_unit_cell: bool
+            optimiser: bool or optimiser class
+            opt_kwargs: dict
+        Return:
+           preopt_atoms: Atoms object
+              Atoms object with the calculator object removed
+        """
+
+        filname = self._MaceReactor.filename
+        self._MaceReactor.filename = "MACE_PREOPT_" + self.filename
+
+        preopt_atoms = self._MaceReactor.mace_optimise(atoms, fmax, restart=False, relax_unit_cell=relax_unit_cell,
+                                                       optimiser = optimiser, opt_kwargs = opt_kwargs)
+
+        self._MaceReactor.filename = filname
+
+        # Clean calculator to prevent future problems
+        preopt_atoms.calc = None
+
+        return preopt_atoms
+
+    def _mace_preoptimise_ts(self, initial, final, fmax, n, interpolation, input_check, max_steps=200):
+        """
+        Invokes nudged elastic band (NEB) for an input pathway using the MACE ASE calculator 
+        defined in self.MaceReact_Preoptimiser. Workflow for optimisation with MACE defined in
+        ReactMACE module.
+        
+        The resultant reaciton pathway is optimised using FHI-aims in self.search_ts.
+
+        Args:
+            initial: Atoms object
+            final: Atoms object
+            fmax: float
+            n: int
+            interpolation: string, list of n Atoms objects 
+            input_check: None or float
+
+        Returns:
+           
+        """
+
+        filname = self._MaceReactor.filename
+        self._MaceReactor.filename = "MACE_PREOPT_" + self.filename
+
+        if self.mace_preopt_flavour == "fullpath":
+            input_check = input_check
+        elif self.mace_preopt_flavour == "tspath":
+            input_check = None
+
+        preopt_ts = self._MaceReactor.search_ts_neb(initial, final, fmax, n, k=0.05, method="improvedtangent",
+                                        interpolation=interpolation, input_check=input_check,
+                                        max_steps=max_steps, restart=True)
+
+        self._MaceReactor.filename = filname
+
+        return self._MaceReactor.interpolation.copy()
+
+    def attach_calculator(self, atoms, params,
+                    out_fn="aims.out",
+                    forces=True,
+                    dimensions=2,
+                    relax_unit_cell=False,
+                    directory=".",
+                    calc_e=False):
+        """
+        Potentially a redundant functionality, but condenses attaching and closing a socket
+        calculator to a given Atoms object
+
+        Args:
+            calc_e: Boolean, optional
+                Calculate total energy through Atoms.get_potential_energy().
+
+        Returns:
+            atoms: Atoms
+                Input atoms object with correctly closed socket.
+
+        """
+
+        with _calc_generator(params, out_fn=out_fn, forces=forces, dimensions=dimensions,
+                             relax_unit_cell=relax_unit_cell,directory=directory)[0] as calculator:
+
+            if self.dry_run:
+                calculator = EMT()
+
+            atoms.calc = calculator
+
+            if calc_e:
+                atoms.get_potential_energy()
+
+        return atoms
 
 def _calc_generator(params,
                     out_fn="aims.out",
