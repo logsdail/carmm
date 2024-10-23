@@ -1,7 +1,7 @@
 import os
 
 
-def get_aims_calculator(dimensions, spin=None, relativistic=None, k_grid=None, xc="pbe", compute_forces="true", directory='./', **kwargs):
+def get_aims_calculator(dimensions, spin=None, relativistic=None, k_grid=None, xc="pbe", compute_forces=True, directory='./', **kwargs):
     '''
     Method to return a "default" FHI-aims calculator.
     Note: This file should not be changed without consultation,
