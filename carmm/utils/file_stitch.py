@@ -1,10 +1,8 @@
-
-# Contains a function to stitch extra data onto the end of an existing .xyz file to create an extxyz file
-
 def file_stitch(path, out_fname, data, lines_per_image=None):
 
     """
-
+    A small function that stitches an array of atomwise data (partial charge, displacement, force, etc) into an xyz file
+    containing geometry data. Allows for construction of extxyz from regular xyz plus extra required data.
     Args:
         path: Path to xyz geometry file (str)
         out_fname: Path to output file (str)
