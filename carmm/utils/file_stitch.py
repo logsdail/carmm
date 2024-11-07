@@ -26,5 +26,5 @@ def file_stitch(path, out_fname, data):
 
             else:
                 # edit file in place to append data. Formatting is defined by location of newline
-                mod = line[0:-2] + '   ' + str(data[((p.lineno() - 1) % n_lines_image) - 2]) + '\n'
+                mod = line[0:-1] + '   ' + str(data[((p.lineno() - 1) % n_lines_image) - 2]) + '\n'
                 print(mod, end='')
