@@ -15,7 +15,6 @@ def test_file_stitch():
                 lines_per_image=8)
     with open('data/H+CH4_CH3+H2_path/H+CH4_CH3+H2_stitched.xyz', 'r') as test:
         lines = test.readlines()
-    print(str(lines))
 
     assert str(lines[0]) == '6\n'
     assert str(lines[1]) == 'Frame 1\n'
