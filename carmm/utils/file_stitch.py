@@ -11,8 +11,6 @@ def file_stitch(path, out_fname, data):
     # File is n_atoms(1) + title(1) + n_coords(n) lines long
     n_lines_image = data.size + 2
 
-    print(n_lines_image)
-
     image = 0
 
     with fileinput.input(out_fname, inplace=True) as p:
