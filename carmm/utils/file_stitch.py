@@ -9,7 +9,7 @@ def file_stitch(path, out_fname, data, lines_per_image=None):
         path: Path to xyz geometry file (str)
         out_fname: Path to output file (str)
         data: Array of data to be appended (array)
-        lines_per_image: Number of lines per image if appending to xyz trajectory (int)
+        lines_per_image: Number of lines per image if appending to xyz trajectory. This is number of atoms + 2 (int)
 
     """
 
