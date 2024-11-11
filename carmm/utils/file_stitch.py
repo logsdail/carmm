@@ -1,4 +1,4 @@
-def file_stitch(path, out_fname, data, lines_per_image=None):
+def file_stitch(path, out_fname, data, lines_per_image=None, mode='1toA'):
 
     """
     A small function that stitches an array of atomwise data (partial charge, displacement, force, etc) into an xyz file
@@ -8,6 +8,9 @@ def file_stitch(path, out_fname, data, lines_per_image=None):
         out_fname: Path to output file (str)
         data: Array of data to be appended (array)
         lines_per_image: Number of lines per image if appending to xyz trajectory. This is number of atoms + 2 (int)
+        mode: determines the mode of the function. 1toA (1 to All) appends a dataset that is n_atoms long to every set
+              of atoms in an image, giving all atoms the dame labels. AtoA (All to All) assumes that the dataset is
+              continuous over n_atoms * n_images, labelling all atoms with all data. (str)
 
     """
 
@@ -35,5 +38,14 @@ def file_stitch(path, out_fname, data, lines_per_image=None):
 
             else:
                 # edit file in place to append data. Formatting is defined by location of newline
-                mod = line[0:-1] + '   ' + str(data[((p.lineno() - 1) % n_lines_image) - 2]) + '\n'
+                if mode == '1toA':
+                    # assign n_atoms data to n_atoms * n_images lines
+                    data_str = str(data[:][((p.lineno()-1) % n_lines_image) - 2])
+                elif mode == 'AtoA':
+                    # assign n_atoms * n_images data to n_atoms * n_images lines
+                    data_str = str(data[:][(p.lineno() - 1) - 2])
+                if '[' in data_str:
+                    data_str = data_str.replace("[","")
+                    data_str = data_str.replace("]","")
+                mod = line[0:-1] + '   ' + data_str + '\n'
                 print(mod, end='')
