@@ -30,6 +30,7 @@ def file_stitch(path, out_fname, data, lines_per_image=None, mode='1toA'):
     with fileinput.input(out_fname, inplace=True) as p:
         for line in p:
             if (p.lineno() - 1) % n_lines_image == 0:
+                # p.lineno() - 1 is used as lines are numbered from 1 and arrays are indexed from 0
                 # Update image number
                 image += 1
             if (p.lineno() - 1) % n_lines_image == 0 or (p.lineno() - 1) % n_lines_image == 1:
@@ -43,7 +44,8 @@ def file_stitch(path, out_fname, data, lines_per_image=None, mode='1toA'):
                     data_str = str(data[:][((p.lineno()-1) % n_lines_image) - 2])
                 elif mode == 'AtoA':
                     # assign n_atoms * n_images data to n_atoms * n_images lines
-                    data_str = str(data[:][(p.lineno() - 1) - 2])
+                    # 2 lines are added per image as the n_atoms and title lines for each individual image
+                    data_str = str(data[:][(p.lineno() - 1) - (2*image)])
                 if '[' in data_str:
                     data_str = data_str.replace("[","")
                     data_str = data_str.replace("]","")
