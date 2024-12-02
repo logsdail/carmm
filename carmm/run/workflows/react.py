@@ -318,7 +318,7 @@ class ReactAims:
             self.initial.get_potential_energy()
 
         if not self.dry_run:
-            charges = extract_mulliken_charge(out, len(self.initial))
+            charges = extract_mulliken_charge(f'{subdirectory_name}/{out}', len(self.initial))
         else:
             """Return dummy charges for testing"""
             charges = [0 for atom in self.initial]
