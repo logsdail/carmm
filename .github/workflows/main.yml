@@ -50,7 +50,7 @@ jobs:
         # python -m pip install torch torchvision torchaudio
         # Restricted MACE as > 0.3.4 fails on Python 3.7
         python -m pip install mace-torch==0.3.4 
-        python -m pip install pymatgen==2023.8.10
+        python -m pip install --upgrade pymatgen
         
         # Debug
         python -m pip freeze
