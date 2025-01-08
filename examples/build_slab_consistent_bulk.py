@@ -4,6 +4,7 @@ Testing the build_slab_consistent_bulk functionality
 '''
 
 def test_build_slab_consistent_bulk():
+    # importing libraries inside the function
     from carmm.build.slab_consistent_bulk_generator import bulk_identifier
     from ase.formula import Formula
     from ase.build import bulk

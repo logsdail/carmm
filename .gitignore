@@ -7,3 +7,4 @@
 /examples/notebooks/external/*.pckl
 /examples/notebooks/external/*.png
 /examples/notebooks/external/AutoNEB_iter
+__pycache__/
