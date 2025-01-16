@@ -20,7 +20,7 @@ def test_build_slab_consistent_bulk():
                             center_slab=True, in_unit_planes=True, lll_reduce=True)
     slabs = slabgen.get_slabs(ftol=0.001, symmetrize=False)
     slab = AseAtomsAdaptor.get_atoms(slabs[0].get_orthogonal_c_slab())
-    # slab = Atoms(slab)
+    slab = Atoms(slab)
     new_bulk = bulk_identifier(slab)
     emp_formula = new_bulk.get_chemical_formula(mode='hill', empirical=True)
     total_atoms = 0
