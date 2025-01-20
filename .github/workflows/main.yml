@@ -17,6 +17,7 @@ jobs:
     # This allows us to find the workflow in checks
     name: ci-test
     
+    # The latest version of ubuntu dropped support for Python 3.7 leading to CI test failure. Therefore, need different os versions for different Python versions
     # The type of runner that the job will run on
     runs-on: ${{ matrix.os }}
     strategy:
