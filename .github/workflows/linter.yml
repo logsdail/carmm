@@ -16,13 +16,19 @@ jobs:
   build:
     # This name makes the workflow identifiable in checks
     name: linter-check
-    
+
+    # The latest version of ubuntu dropped support for Python 3.7 leading to CI test failure. Therefore, need different os versions for different Python versions    
     # The type of runner that the job will run on
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        # python-version: ['3.7', '3.8', '3.9']
-        python-version: ['3.7', '3.8']
+        include:
+          - os: ubuntu-20.04
+            python-version: '3.7'
+          - os: ubuntu-24.04
+            python-version: '3.8'
+          - os: ubuntu-24.04
+            python-version: '3.10'
 
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
