@@ -3,6 +3,11 @@
 
 def bulk_identifier(slab, cutoff_distance=10.0):
     """
+    ---
+    08/01/2024
+    testing ASE version 3.24.0
+    ---
+
     Slab models can be generated using various libraries like ASE, pymatgen, atomman, etc. However, it becomes important
     to check how these slab models are generated within various code bases.
 
