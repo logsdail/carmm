@@ -15,16 +15,20 @@ def is_converged(atoms, fmax=0.01):
     converged = False
 
     if atoms.calc:
-        if not atoms.calc.calculation_required(atoms, ['forces']):
-            f = atoms.get_forces()
-
+        if 'forces' in atoms.calc.results:
+            if not atoms.calc.calculation_required(atoms, ['forces']):
+                f = atoms.get_forces()
             if np.amax([np.linalg.norm(f[x]) for x in range(len(atoms))]) <= fmax:
                 converged = True
+            else:
+                converged = False
 
-        elif not atoms.calc.calculation_required(atoms, ['stress']):
-            s = atoms.get_stress()
-
+        if 'stress' in atoms.calc.results:
+            if not atoms.calc.calculation_required(atoms, ['stress']):
+                s = atoms.get_stress()
             if np.amax([np.linalg.norm(s[x]) for x in range(len(atoms))]) <= fmax:
                 converged = True
+            else:
+                converged = False
 
     return converged
