@@ -174,6 +174,7 @@ class RotationBox():
 
         """
         from carmm.analyse.neighbours import neighbours
+        from ase.geometry import find_mic
         from ase.neighborlist import natural_cutoffs
         import numpy as np
 
@@ -185,6 +186,10 @@ class RotationBox():
         neighbour_atoms, shell_list = neighbours(atoms, [index], 1, cutoff)
 
         vectors = atoms.positions[neighbour_atoms] - atoms.positions[index]
+
+        if np.sum(atoms.get_cell().array) != 0.0:
+            for v_idx, vector in enumerate(vectors):
+                vectors[v_idx,:] = find_mic(vector, atoms.get_cell())[0]
 
         site_norm = np.sum(vectors, axis=0)
 
@@ -213,6 +218,7 @@ class RotationBox():
                 rot_matrix = self.normal_rotation_matrix(theta, z_rot)
 
                 site_norm = np.dot(rot_matrix, site_norm.T).T
+                site_norm = site_norm / np.linalg.norm(site_norm)
 
         return site_norm
 
