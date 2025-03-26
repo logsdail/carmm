@@ -12,7 +12,7 @@ def test_povray_render():
     from ase.data.colors import jmol_colors
 
     # Main example script
-    atoms = read('data/NH3-H3O_traj/nh3-h3o.traj')
+    atoms = read('/data/NH3-H3O_traj/nh3-h3o.traj')
 
     # An alternative to substituting atoms: changing the colour of specific elements (use any of the below methods)
     # Use "'colors': None," for all default colours
