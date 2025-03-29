@@ -1,0 +1,6 @@
+#=======================================================
+# FHI-aims file: ./geometry.in
+# Created using the Atomic Simulation Environment (ASE)
+# Sat Jun 24 13:25:40 2023
+#=======================================================
+atom 0.0 0.0 0.0 Pt
