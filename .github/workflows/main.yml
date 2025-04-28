@@ -24,8 +24,8 @@ jobs:
     strategy:
       matrix:
         include:
-          #- os: ubuntu-22.04
-          #  python-version: '3.7'
+          - os: ubuntu-22.04
+            python-version: '3.7'
           - os: ubuntu-24.04
             python-version: '3.8'
           - os: ubuntu-24.04
@@ -56,9 +56,17 @@ jobs:
         # Removing as presumably MACE will automatically install dependencies
         # python -m pip install torch torchvision torchaudio
         # Restricted MACE as > 0.3.4 fails on Python 3.7
-        python -m pip install torch==2.4.1
-        python -m pip install mace-torch==0.3.4
+        #python -m pip install torch==2.4.1
+        #python -m pip install mace-torch==0.3.4
         python -m pip install --upgrade pymatgen
+
+        if [[ "${{ matrix.python-version }}" == "3.7" ]]; then
+            pip install mace-torch==0.3.4
+        elif [[ "${{ matrix.python-version }}" == "3.8" ]]; then
+            pip install --upgrade mace-torch
+        elif [[ "${{ matrix.python-version }}" == "3.10" ]]; then
+            pip install --upgrade mace-torch
+        fi
         
         # Debug
         python -m pip freeze
